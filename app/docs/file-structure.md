@@ -1,0 +1,145 @@
+# File Structure — Where to Find What
+
+## Top-level directories inside `app/`
+
+```
+app/              ← Next.js App Router root
+components/       ← Shared UI components
+lib/              ← Server-side helpers, utilities, auth wiring
+prisma/           ← Database schema, seed, migrations
+scripts/          ← One-off data-import scripts
+public/           ← Static files served at "/"
+types/            ← TypeScript module augmentations
+docs/             ← This documentation
+```
+
+---
+
+## `app/` — Route tree
+
+```
+app/
+├── layout.tsx                    ← Root HTML shell (font, meta, body)
+├── globals.css                   ← CSS custom properties and base styles
+│
+├── (app)/                        ← Protected group (needs a valid session)
+│   ├── layout.tsx                ← Fetches active user, renders <AppShell>
+│   ├── page.tsx                  ← Dashboard (budget vs actuals + money account balances)
+│   │
+│   ├── budget/
+│   │   ├── page.tsx              ← Budget overview, department CRUD
+│   │   ├── client.tsx            ← Client-side interactive budget forms
+│   │   └── actions.ts            ← Server actions: create/edit/delete budget lines & departments
+│   │
+│   ├── journal/
+│   │   ├── page.tsx              ← Journal entry list, reads ?fromExpenseReport for prefill
+│   │   ├── client.tsx            ← Client page with add-entry modal, filters, sorting
+│   │   └── actions.ts            ← Server actions: create/update/delete journal entries
+│   │
+│   ├── money-accounts/
+│   │   └── page.tsx              ← Money account CRUD, opening balance management
+│   │
+│   ├── cost-centers/
+│   │   └── page.tsx              ← Cost center CRUD
+│   │
+│   ├── expense-reports/
+│   │   ├── page.tsx              ← Expense report form + history table (all users)
+│   │   └── actions.ts            ← Server actions: submit, approve, reject
+│   │
+│   ├── invoices/
+│   │   ├── page.tsx              ← Invoice form + history (admin only)
+│   │   └── client.tsx            ← Interactive invoice builder + QR preview + PDF download
+│   │
+│   ├── templates/
+│   │   ├── page.tsx              ← Document template manager (admin only)
+│   │   └── actions.ts            ← Server actions: create/update/delete/set-default template
+│   │
+│   ├── users/
+│   │   ├── page.tsx              ← User management (admin only)
+│   │   └── actions.ts            ← Server actions: create/update/delete users
+│   │
+│   ├── editions/
+│   │   └── page.tsx              ← Edition management (admin only)
+│   │
+│   └── departments/
+│       └── page.tsx              ← Department list (admin only, read-only reference)
+│
+├── (auth)/
+│   └── login/
+│       └── page.tsx              ← Login form (client component, calls signIn())
+│
+└── api/
+    ├── auth/
+    │   └── [...nextauth]/route.ts  ← NextAuth catch-all handler
+    │
+    ├── preferences/
+    │   └── language/route.ts       ← POST: save locale + user refund profile
+    │
+    ├── documents/
+    │   └── invoice/pdf/route.ts    ← POST: render invoice template → Puppeteer → PDF
+    │
+    ├── invoices/route.ts           ← POST: persist a new Invoice record
+    │
+    ├── expense-reports/
+    │   └── [expenseReportId]/
+    │       └── proof/route.ts      ← GET: serve stored proof file (authenticated)
+    │
+    └── qr/
+        └── swiss/route.ts          ← GET: generate Swiss QR PNG from payload string
+```
+
+---
+
+## `components/` — Shared UI
+
+| File | Purpose |
+|---|---|
+| `app-shell.tsx` | Persistent sidebar navigation, settings modal (locale + refund profile), sign-out |
+| `journal-table.tsx` | Full interactive journal entry table with filter, sort, inline edit |
+| `add-journal-entry-modal.tsx` | Modal for creating/prefilling journal entries; used on journal page and from expense-report approval |
+| `sign-out-button.tsx` | Small sign-out button used inside the app shell |
+
+---
+
+## `lib/` — Server utilities
+
+| File | Purpose |
+|---|---|
+| `auth.ts` | NextAuth config: credentials provider, bcrypt verify, JWT/session callbacks |
+| `access.ts` | `getCurrentUserAccess()` and `requireAdmin()` — the two access-control helpers used by every protected page/action |
+| `db.ts` | Singleton Prisma client (re-used across hot reloads in dev) |
+| `i18n-dictionaries.ts` | Complete EN/FR translation dictionary as a `const` object; also defines `Locale` type and cookie name |
+| `i18n.ts` | `getLocale()` (reads cookie server-side) and `getDictionary()` |
+| `document-templates.ts` | `[[field]]` renderer, `InvoiceDocumentPayload` type, default invoice HTML template, `ensureDefaultInvoiceTemplate()` |
+| `swiss-qr.ts` | `buildSwissQrPayload()` — builds a SPC-format QR string for Swiss ISO 20022 QR invoices |
+| `department-roles.ts` | `syncDepartmentRolesFromDepartments()` — keeps `DepartmentRole` names in sync with active departments |
+| `server-action-helpers.ts` | Tiny shared helpers for server actions: `getRequiredString()`, `getActiveEditionId()` |
+| `utils.ts` | `formatCurrency()`, `decimalToNumber()`, `incrementEditionName()` |
+
+---
+
+## `prisma/`
+
+| File | Purpose |
+|---|---|
+| `schema.prisma` | Single source of truth for the database schema |
+| `seed.ts` | Creates the first admin user (reads `ADMIN_EMAIL`, `ADMIN_PASSWORD` env vars) |
+
+---
+
+## `scripts/`
+
+| File | Purpose |
+|---|---|
+| `import-workbook.ts` | One-off: parse an Excel workbook JOURNAL sheet → seed journal entries + departments + money accounts |
+| `import-budget.ts` | One-off: parse budget department sheets from the same workbook → seed budget lines |
+
+Run with `npx tsx scripts/<file>.ts --workbook ../soa/compta_2025-2026.xlsx`.
+
+---
+
+## `types/`
+
+| File | Purpose |
+|---|---|
+| `next-auth.d.ts` | Module augmentation that adds `role`, `departmentRoleIds`, `departmentRoleNames`, and `id` to the NextAuth `User`, `Session`, and `JWT` types |

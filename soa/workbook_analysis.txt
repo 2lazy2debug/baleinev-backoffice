@@ -1,0 +1,1088 @@
+Workbook: /Users/manuel/Developer/baleicomptes/soa/compta_2025-2026.xlsx
+Sheet count: 23
+Sheets: JOURNAL, RESULTATS, ADMINISTRATION, COMMUNICATION, DÉCORATION, DIVERS, ÉLECTRICITÉ, ENTREES, EVENTS, INFRASTRUCTURE, LOGES, PROGRAMMATION, PMW, RAVITAILLEMENT, SECURITE, SPONSORING, TECHNIQUE, SANS EFFET, Vide, Vide_2, A Propos, Tabelle1, DATA
+Defined names: 0
+
+------------------------------------------------------------------------
+Sheet: JOURNAL
+State: visible
+Dimensions: A1:AE773
+Max row: 773
+Max column: 31
+Merged ranges: 4
+Frozen panes: A5
+Formula cells: 3265
+Cross-sheet references: DATA (4544), REF (6)
+Top non-empty rows:
+  Row 1: B1=JOURNAL 2025-2026
+  Row 2: B2=Bénéfice/Perte | C2==LOOKUP(9^9,Q:Q)-P4
+  Row 3: B3=Compte | C3=N° | D3=Date | E3=Montant | F3=En faveur de | G3=Libellé | H3=Entré par | I3=Coffre/Banque | J3=Centre de coûts | K3=N°Référence | L3=Solde Compte Courant
+  Row 4: C4=0 | D4=2025-07-28 00:00:00 | G4=solde compte initial | L4=4619.01
+  Row 5: B5=EVENTS / Produits | C5==C4+1 | D5=2025-09-11 00:00:00 | E5=24 | F5=BLV | G5=Entrée cash journéée d''accueil | H5=MCA | I5=Coffre | J5=JACC | L5==IF(B5="","",IF(I5="CompteCourant",IF(IF(ISNA(VLOOKUP(B5,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B5,DATA!$A$1:$A$16,1,0))="",L4+E5,L4-E5),L4))
+  Row 6: B6=EVENTS / Charges | C6==C5+1 | D6=2025-09-12 00:00:00 | E6=54 | F6=Landi | G6=JA : Charbon | H6=MCA | I6=CompteCourant | J6=JACC | L6==IF(B6="","",IF(I6="CompteCourant",IF(IF(ISNA(VLOOKUP(B6,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B6,DATA!$A$1:$A$16,1,0))="",L5+E6,L5-E6),L5))
+  Row 7: B7=EVENTS / Charges | C7==C6+1 | D7=2026-09-14 00:00:00 | E7=175.5 | F7=Landi | G7=SG1 : Charbon | H7=MCA | I7=CompteCourant | J7=SEGRILL1 | L7==IF(B7="","",IF(I7="CompteCourant",IF(IF(ISNA(VLOOKUP(B7,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B7,DATA!$A$1:$A$16,1,0))="",L6+E7,L6-E7),L6))
+  Row 8: B8=DIVERS / Charges | C8==C7+1 | D8=2026-09-14 00:00:00 | E8=10.8 | F8=Landi | G8=Bière pour local | H8=MCA | I8=CompteCourant | J8=AFTER | L8==IF(B8="","",IF(I8="CompteCourant",IF(IF(ISNA(VLOOKUP(B8,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B8,DATA!$A$1:$A$16,1,0))="",L7+E8,L7-E8),L7))
+  Row 9: B9=EVENTS / Produits | C9==C8+1 | D9=2025-09-15 00:00:00 | E9=60 | F9=BLV | G9=SG1 15.09  : Recette lundi midi CASH | H9=MCA | I9=Coffre | J9=SEGRILL1 | L9==IF(B9="","",IF(I9="CompteCourant",IF(IF(ISNA(VLOOKUP(B9,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B9,DATA!$A$1:$A$16,1,0))="",L8+E9,L8-E9),L8))
+  Row 10: B10=EVENTS / Produits | C10==C9+1 | D10=2025-09-15 00:00:00 | E10=38 | F10=BLV | G10=SG1 15.09 : Recette lundi après-midi CASH | H10=MCA | I10=Coffre | J10=SEGRILL1 | L10==IF(B10="","",IF(I10="CompteCourant",IF(IF(ISNA(VLOOKUP(B10,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B10,DATA!$A$1:$A$16,1,0))="",L9+E10,L9-E10),L9))
+  Row 11: B11=EVENTS / Produits | C11==C10+1 | D11=2025-09-16 00:00:00 | E11=101.85 | F11=BLV | G11=AL : Entrées au 16.09 (beer money) | H11=MCA | I11=Coffre | J11=AFTER | L11==IF(B11="","",IF(I11="CompteCourant",IF(IF(ISNA(VLOOKUP(B11,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B11,DATA!$A$1:$A$16,1,0))="",L10+E11,L10-E11),L10))
+  Row 12: B12=EVENTS / Produits | C12==C11+1 | D12=2025-09-16 00:00:00 | E12=23 | F12=BLV | G12=SG1 16.09 : Recette CASH | H12=MCA | I12=Coffre | J12=SEGRILL1 | L12==IF(B12="","",IF(I12="CompteCourant",IF(IF(ISNA(VLOOKUP(B12,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B12,DATA!$A$1:$A$16,1,0))="",L11+E12,L11-E12),L11))
+Formula samples:
+  C2: =LOOKUP(9^9,Q:Q)-P4
+  O4: =IF(B4="","",IF(I4="CompteMyPos",IF(IF(ISNA(VLOOKUP(B4,DATA!$A$1:$A$15,1,0)),"",VLOOKUP(B4,DATA!$A$1:$A$15,1,0))="",O3+E4,O3-E4),O3))
+  P4: =IF(L4="", "", SUM(L4,M4,N4,O4))
+  C5: =C4+1
+  L5: =IF(B5="","",IF(I5="CompteCourant",IF(IF(ISNA(VLOOKUP(B5,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B5,DATA!$A$1:$A$16,1,0))="",L4+E5,L4-E5),L4))
+  M5: =IF(B5="","",IF(I5="Coffre",IF(IF(ISNA(VLOOKUP(B5,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B5,DATA!$A$1:$A$16,1,0))="",M4+E5,M4-E5),M4))
+  N5: =IF(B5="","",IF(I5="CompteEpargne",IF(IF(ISNA(VLOOKUP(B5,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B5,DATA!$A$1:$A$16,1,0))="",N4+E5,N4-E5),N4))
+  O5: =IF(B5="","",IF(I5="CompteMyPos",IF(IF(ISNA(VLOOKUP(B5,DATA!$A$1:$A$15,1,0)),"",VLOOKUP(B5,DATA!$A$1:$A$15,1,0))="",O4+E5,O4-E5),O4))
+  P5: =IF(L5="", "", SUM(L5,M5,N5,O5))
+  C6: =C5+1
+  L6: =IF(B6="","",IF(I6="CompteCourant",IF(IF(ISNA(VLOOKUP(B6,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B6,DATA!$A$1:$A$16,1,0))="",L5+E6,L5-E6),L5))
+  M6: =IF(B6="","",IF(I6="Coffre",IF(IF(ISNA(VLOOKUP(B6,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B6,DATA!$A$1:$A$16,1,0))="",M5+E6,M5-E6),M5))
+  N6: =IF(B6="","",IF(I6="CompteEpargne",IF(IF(ISNA(VLOOKUP(B6,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B6,DATA!$A$1:$A$16,1,0))="",N5+E6,N5-E6),N5))
+  O6: =IF(B6="","",IF(I6="CompteMyPos",IF(IF(ISNA(VLOOKUP(B6,DATA!$A$1:$A$15,1,0)),"",VLOOKUP(B6,DATA!$A$1:$A$15,1,0))="",O5+E6,O5-E6),O5))
+  P6: =IF(L6="", "", SUM(L6,M6,N6,O6))
+  C7: =C6+1
+  L7: =IF(B7="","",IF(I7="CompteCourant",IF(IF(ISNA(VLOOKUP(B7,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B7,DATA!$A$1:$A$16,1,0))="",L6+E7,L6-E7),L6))
+  M7: =IF(B7="","",IF(I7="Coffre",IF(IF(ISNA(VLOOKUP(B7,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B7,DATA!$A$1:$A$16,1,0))="",M6+E7,M6-E7),M6))
+  N7: =IF(B7="","",IF(I7="CompteEpargne",IF(IF(ISNA(VLOOKUP(B7,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B7,DATA!$A$1:$A$16,1,0))="",N6+E7,N6-E7),N6))
+  O7: =IF(B7="","",IF(I7="CompteMyPos",IF(IF(ISNA(VLOOKUP(B7,DATA!$A$1:$A$15,1,0)),"",VLOOKUP(B7,DATA!$A$1:$A$15,1,0))="",O6+E7,O6-E7),O6))
+  P7: =IF(L7="", "", SUM(L7,M7,N7,O7))
+  C8: =C7+1
+  L8: =IF(B8="","",IF(I8="CompteCourant",IF(IF(ISNA(VLOOKUP(B8,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B8,DATA!$A$1:$A$16,1,0))="",L7+E8,L7-E8),L7))
+  M8: =IF(B8="","",IF(I8="Coffre",IF(IF(ISNA(VLOOKUP(B8,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B8,DATA!$A$1:$A$16,1,0))="",M7+E8,M7-E8),M7))
+  N8: =IF(B8="","",IF(I8="CompteEpargne",IF(IF(ISNA(VLOOKUP(B8,DATA!$A$1:$A$16,1,0)),"",VLOOKUP(B8,DATA!$A$1:$A$16,1,0))="",N7+E8,N7-E8),N7))
+
+------------------------------------------------------------------------
+Sheet: RESULTATS
+State: visible
+Dimensions: A1:Z229
+Max row: 229
+Max column: 26
+Merged ranges: 4
+Frozen panes: none
+Formula cells: 220
+Cross-sheet references: SECURITE (5), PROGRAMMATION (5), TECHNIQUE (5), INFRASTRUCTURE (5), RAVITAILLEMENT (5), SPONSORING (5), COMMUNICATION (5), ADMINISTRATION (5)
+Top non-empty rows:
+  Row 1: B1=RESULTATS
+  Row 2: B2=Année | C2=2025-2026
+  Row 3: B3=Version du budget | C3=1
+  Row 4: B4=Date: | C4==TODAY()
+  Row 6: C6=Nombre | D6=Prix
+  Row 7: B7=Prélocs
+  Row 8: B8=Entrées
+  Row 9: B9=Billets subventionnés AGE | C9=300
+  Row 11: B11=Départements | C11=BUDGET | I11=Départements | J11=COMPTABILITE
+  Row 12: C12=Charges | E12=Produits | G12=Bénéfices/Pertes | J12=Charges | L12=Produits
+  Row 13: B13==SECURITE!A1 | C13==SECURITE!E14 | D13==C13/$C$29 | E13==SECURITE!E24 | F13==E13/$C$29 | G13==E13-C13 | I13==B13 | J13==SECURITE!E45 | K13==J13/$J$29 | L13==SECURITE!E55
+  Row 14: B14==PROGRAMMATION!A1 | C14==PROGRAMMATION!E20 | D14==C14/$C$29 | E14==PROGRAMMATION!E30 | F14==E14/$C$29 | G14==E14-C14 | I14==B14 | J14==PROGRAMMATION!E75 | K14==J14/$J$29 | L14==PROGRAMMATION!E87
+Formula samples:
+  C4: =TODAY()
+  B13: =SECURITE!A1
+  C13: =SECURITE!E14
+  D13: =C13/$C$29
+  E13: =SECURITE!E24
+  F13: =E13/$C$29
+  G13: =E13-C13
+  I13: =B13
+  J13: =SECURITE!E45
+  K13: =J13/$J$29
+  L13: =SECURITE!E55
+  M13: =L13/$L$29
+  N13: =L13-J13
+  P13: =I13
+  Q13: =N13-G13
+  B14: =PROGRAMMATION!A1
+  C14: =PROGRAMMATION!E20
+  D14: =C14/$C$29
+  E14: =PROGRAMMATION!E30
+  F14: =E14/$C$29
+  G14: =E14-C14
+  I14: =B14
+  J14: =PROGRAMMATION!E75
+  K14: =J14/$J$29
+  L14: =PROGRAMMATION!E87
+
+------------------------------------------------------------------------
+Sheet: ADMINISTRATION
+State: visible
+Dimensions: A1:Z279
+Max row: 279
+Max column: 26
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 239
+Cross-sheet references: JOURNAL (188)
+Top non-empty rows:
+  Row 1: A1=ADMINISTRATION
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges | I4=weezevents | J4=PU | K4=Qte | L4=TOT
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant | I5=solution bracelet activé | J5=2.58 | K5=800 | L5==K5*J5
+  Row 6: B6=Cotisations USLY | E6=50 | I6=solution si bon prix | J6=2 | K6=800 | L6==K6*J6
+  Row 7: B7=Assurance RC | E7=995 | I7=frais distribution | J7=0.02 | K7=30000 | L7==K7*J7
+  Row 8: B8=Petzi | E8=400 | I8=frais remboursement | J8=100 | K8=1 | L8==K8*J8
+  Row 9: B9=Frais divers | E9=300 | I9=assistance mail | J9=0.05 | K9=800 | L9==K9*J9
+  Row 10: B10=POCAMA | E10=400 | I10=bracelets | J10=1.1 | K10=800 | L10==K10*J10
+  Row 11: B11=Weezevent (sans frais activation) | E11=3600 | F11=worst case scenario | I11=transport | J11=130 | K11=1 | L11==K11*J11
+  Row 12: B12=frais de compte | E12=150
+  Row 13: B13=Bracelets staff | E13=85
+Formula samples:
+  L5: =K5*J5
+  L6: =K6*J6
+  L7: =K7*J7
+  L8: =K8*J8
+  L9: =K9*J9
+  L10: =K10*J10
+  L11: =K11*J11
+  E15: =SUM(E6:E14)
+  E25: =SUM(E18:E24)
+  A30: =IF(ISNA(VLOOKUP($A$1&" / "&$A$28,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$28,JOURNAL!$B$5:$I$1115,2,0))
+  B30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,5,0))
+  C30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,2,0))
+  D30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,4,0))
+  E30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,3,0))
+  A31: =IF(A30="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,5,0))
+  C31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,2,0))
+  D31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,4,0))
+  E31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,3,0))
+  A32: =IF(A31="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,5,0))
+  C32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,2,0))
+  D32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,4,0))
+  E32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,3,0))
+  A33: =IF(A32="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G500"),2,0)))
+
+------------------------------------------------------------------------
+Sheet: COMMUNICATION
+State: visible
+Dimensions: A1:Z285
+Max row: 285
+Max column: 26
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 252
+Cross-sheet references: JOURNAL (204)
+Top non-empty rows:
+  Row 1: A1=COMMUNICATION
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant
+  Row 7: A7=Novembre | B7=Stickers Baleinev édition 2026  Online Printers - étiquettes adhésives, ø 5cm, 90g/m² papier blanc structuré, 2000 pièces | E7=155
+  Row 8: A8=Décembre
+  Row 9: A9=Fevrier | B9=Affiches festival, A2, impression recto seul, 115g/m² papier affiche (dos bleu), 500 impressions | E9=145
+  Row 10: A10=Fevrier | B10=Flyers festival, A5, impression recto/verso, 250g/m² papier couché, 1'000 impressions | E10=65
+  Row 11: A11=Fevrier | B11=Bâches PVC affichées à l'écoles, 300 x 150 cm, 500g/m² PVC mat, 2 bâches, Options supplémentaires ourlet et oeillets tout autour | E11=190
+  Row 12: A12=Fevrier | B12=Bâches PVC entrée de la ville, 400 x 50 cm, 500g/m² PVC mat, 2 bâches, Options supplémentaires ourlet et oeillets tout autour | E12=120
+  Row 13: A13=Avril | B13=Mise en place des bâches | E13=400
+  Row 14: A14=Fevrier | B14=T-shirts, hoodies, autre vêtement | E14=3000
+Formula samples:
+  E20: =SUM(E6:E19)
+  E27: =SUM(E23:E26)
+  A32: =IF(ISNA(VLOOKUP($A$1&" / "&$A$30,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$30,JOURNAL!$B$5:$I$277,2,0))
+  B32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,5,0))
+  C32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,2,0))
+  D32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,4,0))
+  E32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,3,0))
+  A33: =IF(A32="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,5,0))
+  C33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,2,0))
+  D33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,4,0))
+  E33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,3,0))
+  A34: =IF(A33="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A33+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A33+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,5,0))
+  C34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,2,0))
+  D34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,4,0))
+  E34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,3,0))
+  A35: =IF(A34="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A34+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A34+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,5,0))
+  C35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,2,0))
+  D35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,4,0))
+  E35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,3,0))
+  A36: =IF(A35="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A35+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A35+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B36: =IF($A36="","",VLOOKUP($A36,JOURNAL!$C$5:$I$1115,5,0))
+  C36: =IF($A36="","",VLOOKUP($A36,JOURNAL!$C$5:$I$1115,2,0))
+
+------------------------------------------------------------------------
+Sheet: DÉCORATION
+State: visible
+Dimensions: A1:Z256
+Max row: 256
+Max column: 26
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 117
+Cross-sheet references: JOURNAL (96)
+Top non-empty rows:
+  Row 1: A1=DÉCORATION
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant
+  Row 6: B6=Décoration festival | E6=500 | F6=Contrôle d'accès par Staff | I6=Contrôle entrée par Balelec | K6=A valider lors de la présentation du thème
+  Row 15: A15=Total | E15==SUM(E6:E14)
+  Row 16: A16=Produits
+  Row 17: A17=Mois de facturation | B17=Libellé | E17=Montant
+  Row 25: A25=Total | E25==SUM(E18:E24)
+  Row 27: A27=COMPTABILITE
+  Row 28: A28=Charges
+  Row 29: A29=N° | B29=Libellé | C29=Date | D29=En faveur de | E29=Montant
+Formula samples:
+  E15: =SUM(E6:E14)
+  E25: =SUM(E18:E24)
+  A30: =IF(ISNA(VLOOKUP($A$1&" / "&$A$28,JOURNAL!$B$5:$I$277,2,0)),"",VLOOKUP($A$1&" / "&$A$28,JOURNAL!$B$5:$I$277,2,0))
+  B30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,5,0))
+  C30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,2,0))
+  D30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,4,0))
+  E30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,3,0))
+  A31: =IF(A30="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,5,0))
+  C31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,2,0))
+  D31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,4,0))
+  E31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,3,0))
+  A32: =IF(A31="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,5,0))
+  C32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,2,0))
+  D32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,4,0))
+  E32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,3,0))
+  A33: =IF(A32="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,5,0))
+  C33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,2,0))
+  D33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,4,0))
+  E33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,3,0))
+  A34: =IF(A33="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A33+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A33+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,5,0))
+  C34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,2,0))
+
+------------------------------------------------------------------------
+Sheet: DIVERS
+State: visible
+Dimensions: A1:Z292
+Max row: 292
+Max column: 26
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 287
+Cross-sheet references: JOURNAL (232)
+Top non-empty rows:
+  Row 1: A1=DIVERS
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | C5=Date | D5=En faveur de | E5=Montant
+  Row 6: B6=Essence/Mobility | E6=1500
+  Row 7: B7=Imprévus | E7=2500
+  Row 17: A17=Total | E17==SUM(E6:E16)
+  Row 18: A18=Produits
+  Row 19: A19=Mois de facturation | B19=Libellé | C19=Date | D19=En faveur de | E19=Montant
+  Row 27: A27=Total | E27==SUM(E20:E26)
+  Row 29: A29=COMPTABILITE
+  Row 30: A30=Charges
+Formula samples:
+  E17: =SUM(E6:E16)
+  E27: =SUM(E20:E26)
+  A32: =IF(ISNA(VLOOKUP($A$1&" / "&$A$30,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$30,JOURNAL!$B$5:$I$1115,2,0))
+  B32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,5,0))
+  C32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,2,0))
+  D32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,4,0))
+  E32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,3,0))
+  A33: =IF(A32="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,5,0))
+  C33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,2,0))
+  D33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,4,0))
+  E33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,3,0))
+  A34: =IF(A33="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A33+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A33+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,5,0))
+  C34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,2,0))
+  D34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,4,0))
+  E34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,3,0))
+  A35: =IF(A34="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A34+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A34+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,5,0))
+  C35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,2,0))
+  D35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,4,0))
+  E35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,3,0))
+  A36: =IF(A35="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A35+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$30,INDIRECT(ADDRESS(A35+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B36: =IF($A36="","",VLOOKUP($A36,JOURNAL!$C$5:$I$1115,5,0))
+  C36: =IF($A36="","",VLOOKUP($A36,JOURNAL!$C$5:$I$1115,2,0))
+
+------------------------------------------------------------------------
+Sheet: ÉLECTRICITÉ
+State: visible
+Dimensions: A1:Z256
+Max row: 256
+Max column: 26
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 118
+Cross-sheet references: JOURNAL (96)
+Top non-empty rows:
+  Row 1: A1=ÉLECTRICITÉ
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant
+  Row 6: B6=Divers | E6=300 | F6=Contrôle d'accès par Staff | I6=Contrôle entrée par Balelec
+  Row 15: A15=Total | E15==SUM(E6:E14)
+  Row 16: A16=Produits
+  Row 17: A17=Mois de facturation | B17=Libellé | E17=Montant
+  Row 25: A25=Total | E25==SUM(E18:E24)
+  Row 27: A27=COMPTABILITE
+  Row 28: A28=Charges
+  Row 29: A29=N° | B29=Libellé | C29=Date | D29=En faveur de | E29=Montant
+Formula samples:
+  E15: =SUM(E6:E14)
+  E25: =SUM(E18:E24)
+  A30: =IF(ISNA(VLOOKUP($A$1&" / "&$A$28,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$28,JOURNAL!$B$5:$I$1115,2,0))
+  B30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,5,0))
+  C30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,2,0))
+  D30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,4,0))
+  E30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,3,0))
+  A31: =IF(A30="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,5,0))
+  C31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,2,0))
+  D31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,4,0))
+  E31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,3,0))
+  A32: =IF(A31="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,5,0))
+  C32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,2,0))
+  D32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,4,0))
+  E32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,3,0))
+  A33: =IF(A32="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,5,0))
+  C33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,2,0))
+  D33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,4,0))
+  E33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,3,0))
+  A34: =IF(A33="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A33+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A33+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,5,0))
+  C34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,2,0))
+
+------------------------------------------------------------------------
+Sheet: ENTREES
+State: visible
+Dimensions: A1:Z299
+Max row: 299
+Max column: 26
+Merged ranges: 4
+Frozen panes: none
+Formula cells: 352
+Cross-sheet references: JOURNAL (276)
+Top non-empty rows:
+  Row 1: A1=ENTREES
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant
+  Row 6: B6=SUISA | D6=0.06 | E6==D6*(E23)
+  Row 7: B7=Infomaniak frais vente en ligne | D7=0.018 | E7==E23*1.8/100
+  Row 8: B8=Infomaniak comission par billet | D8=0.39 | E8==D8*C19
+  Row 12: A12=Total | E12==SUM(E6:E11)
+  Row 13: A13=Produits
+  Row 14: A14=Mois de facturation | B14=Libellé | E14=Montant | F14=vendu 2025 | G14=dont rabais
+  Row 15: B15=Early bird | C15=350 | D15=20 | E15==C15*D15 | F15=348 | G15=161
+  Row 16: B16=Préloc standard | C16=300 | D16=25 | E16==C16*D16 | F16=327 | G16=30
+Formula samples:
+  E6: =D6*(E23)
+  E7: =E23*1.8/100
+  E8: =D8*C19
+  E12: =SUM(E6:E11)
+  E15: =C15*D15
+  E16: =C16*D16
+  E17: =C17*D17
+  E18: =C18*D18
+  C19: =SUM(C15:C17)
+  F20: =SUM(F15:F17)
+  E23: =SUM(E15:E22)
+  A28: =IF(ISNA(VLOOKUP($A$1&" / "&$A$26,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$26,JOURNAL!$B$5:$I$1115,2,0))
+  B28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,5,0))
+  C28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,2,0))
+  D28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,4,0))
+  E28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,3,0))
+  A29: =IF(A28="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A28+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A28+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,5,0))
+  C29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,2,0))
+  D29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,4,0))
+  E29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,3,0))
+  A30: =IF(A29="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A29+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A29+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,5,0))
+  C30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,2,0))
+  D30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,4,0))
+
+------------------------------------------------------------------------
+Sheet: EVENTS
+State: visible
+Dimensions: A1:Z650
+Max row: 650
+Max column: 26
+Merged ranges: 4
+Frozen panes: none
+Formula cells: 2053
+Cross-sheet references: JOURNAL (1651)
+Top non-empty rows:
+  Row 1: A1=EVENTS
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | C5=Date | D5=En faveur de | E5=Montant
+  Row 6: A6=Septembre | B6=Journée d'accueil | E6=54
+  Row 7: A7=Septembre | B7=Semaine Grillades 1 (rentrée) | E7=1075
+  Row 8: B8=Semaine de vin chaud | E8=1700
+  Row 9: B9=Semaine Grillades 2 (montage) | E9=1000
+  Row 10: B10=Grosse Murge GM | E10=600
+  Row 11: B11=Raclette inter-asso | E11=500
+  Row 12: B12=Vestiaire Amalgame | E12=100
+  Row 13: B13=After | E13=800
+Formula samples:
+  E21: =SUM(E6:E20)
+  E39: =SUM(E25:E38)
+  A44: =IF(ISNA(VLOOKUP($A$1&" / "&$A$42,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$42,JOURNAL!$B$5:$I$116,2,0))
+  B44: =IF($A44="","",VLOOKUP($A44,JOURNAL!$C$5:$I$1115,5,0))
+  C44: =IF($A44="","",VLOOKUP($A44,JOURNAL!$C$5:$I$1115,2,0))
+  D44: =IF($A44="","",VLOOKUP($A44,JOURNAL!$C$5:$I$1115,4,0))
+  E44: =IF($A44="","",VLOOKUP($A44,JOURNAL!$C$5:$I$1115,3,0))
+  A45: =IF(A44="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$42,INDIRECT(ADDRESS(A44+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$42,INDIRECT(ADDRESS(A44+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B45: =IF($A45="","",VLOOKUP($A45,JOURNAL!$C$5:$I$1115,5,0))
+  C45: =IF($A45="","",VLOOKUP($A45,JOURNAL!$C$5:$I$1115,2,0))
+  D45: =IF($A45="","",VLOOKUP($A45,JOURNAL!$C$5:$I$1115,4,0))
+  E45: =IF($A45="","",VLOOKUP($A45,JOURNAL!$C$5:$I$1115,3,0))
+  A46: =IF(A45="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$42,INDIRECT(ADDRESS(A45+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$42,INDIRECT(ADDRESS(A45+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B46: =IF($A46="","",VLOOKUP($A46,JOURNAL!$C$5:$I$1115,5,0))
+  C46: =IF($A46="","",VLOOKUP($A46,JOURNAL!$C$5:$I$1115,2,0))
+  D46: =IF($A46="","",VLOOKUP($A46,JOURNAL!$C$5:$I$1115,4,0))
+  E46: =IF($A46="","",VLOOKUP($A46,JOURNAL!$C$5:$I$1115,3,0))
+  A47: =IF(A46="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$42,INDIRECT(ADDRESS(A46+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$42,INDIRECT(ADDRESS(A46+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B47: =IF($A47="","",VLOOKUP($A47,JOURNAL!$C$5:$I$1115,5,0))
+  C47: =IF($A47="","",VLOOKUP($A47,JOURNAL!$C$5:$I$1115,2,0))
+  D47: =IF($A47="","",VLOOKUP($A47,JOURNAL!$C$5:$I$1115,4,0))
+  E47: =IF($A47="","",VLOOKUP($A47,JOURNAL!$C$5:$I$1115,3,0))
+  A48: =IF(A47="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$42,INDIRECT(ADDRESS(A47+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$42,INDIRECT(ADDRESS(A47+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B48: =IF($A48="","",VLOOKUP($A48,JOURNAL!$C$5:$I$1115,5,0))
+  C48: =IF($A48="","",VLOOKUP($A48,JOURNAL!$C$5:$I$1115,2,0))
+
+------------------------------------------------------------------------
+Sheet: INFRASTRUCTURE
+State: visible
+Dimensions: A1:AA288
+Max row: 288
+Max column: 27
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 259
+Cross-sheet references: JOURNAL (208)
+Top non-empty rows:
+  Row 1: A1=INFRASTRUCTURE
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant
+  Row 6: B6=Moquette | E6=600
+  Row 7: B7=matos divers | E7=800
+  Row 8: B8=Gobelets + lavage ECOMANIF | E8=1700
+  Row 9: B9=Poubelles STRID | E9=1600
+  Row 10: B10=Nettoyage Hall HEIG-VD | E10=2290
+  Row 11: B11=Location MobiToil (WC) | E11=1060
+  Row 12: B12=Location d'une tente/cantine | E12=1840 | F12=Ancienne tente -> 6x24m, nouvelle -> 6x18m
+  Row 14: B14=frais remorque | E14=100
+Formula samples:
+  E20: =SUM(E6:E19)
+  E29: =SUM(E23:E28)
+  A34: =IF(ISNA(VLOOKUP($A$1&" / "&$A$32,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$32,JOURNAL!$B$5:$I$1115,2,0))
+  B34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,5,0))
+  C34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,2,0))
+  D34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,4,0))
+  E34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,3,0))
+  A35: =IF(A34="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$32,INDIRECT(ADDRESS(A34+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$32,INDIRECT(ADDRESS(A34+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,5,0))
+  C35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,2,0))
+  D35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,4,0))
+  E35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,3,0))
+  A36: =IF(A35="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$32,INDIRECT(ADDRESS(A35+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$32,INDIRECT(ADDRESS(A35+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B36: =IF($A36="","",VLOOKUP($A36,JOURNAL!$C$5:$I$1115,5,0))
+  C36: =IF($A36="","",VLOOKUP($A36,JOURNAL!$C$5:$I$1115,2,0))
+  D36: =IF($A36="","",VLOOKUP($A36,JOURNAL!$C$5:$I$1115,4,0))
+  E36: =IF($A36="","",VLOOKUP($A36,JOURNAL!$C$5:$I$1115,3,0))
+  A37: =IF(A36="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$32,INDIRECT(ADDRESS(A36+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$32,INDIRECT(ADDRESS(A36+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B37: =IF($A37="","",VLOOKUP($A37,JOURNAL!$C$5:$I$1115,5,0))
+  C37: =IF($A37="","",VLOOKUP($A37,JOURNAL!$C$5:$I$1115,2,0))
+  D37: =IF($A37="","",VLOOKUP($A37,JOURNAL!$C$5:$I$1115,4,0))
+  E37: =IF($A37="","",VLOOKUP($A37,JOURNAL!$C$5:$I$1115,3,0))
+  A38: =IF(A37="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$32,INDIRECT(ADDRESS(A37+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$32,INDIRECT(ADDRESS(A37+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B38: =IF($A38="","",VLOOKUP($A38,JOURNAL!$C$5:$I$1115,5,0))
+  C38: =IF($A38="","",VLOOKUP($A38,JOURNAL!$C$5:$I$1115,2,0))
+
+------------------------------------------------------------------------
+Sheet: LOGES
+State: visible
+Dimensions: A1:Z256
+Max row: 256
+Max column: 26
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 118
+Cross-sheet references: JOURNAL (96)
+Top non-empty rows:
+  Row 1: A1=LOGES
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant
+  Row 6: B6=Linges | E6=40 | F6=Contrôle d'accès par Staff
+  Row 7: B7=Nourritures, boissons | E7=760
+  Row 15: A15=Total | E15==SUM(E6:E14)
+  Row 16: A16=Produits
+  Row 17: A17=Mois de facturation | B17=Libellé | E17=Montant
+  Row 25: A25=Total | E25==SUM(E18:E24)
+  Row 27: A27=COMPTABILITE
+  Row 28: A28=Charges
+Formula samples:
+  E15: =SUM(E6:E14)
+  E25: =SUM(E18:E24)
+  A30: =IF(ISNA(VLOOKUP($A$1&" / "&$A$28,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$28,JOURNAL!$B$5:$I$1115,2,0))
+  B30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,5,0))
+  C30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,2,0))
+  D30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,4,0))
+  E30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,3,0))
+  A31: =IF(A30="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,5,0))
+  C31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,2,0))
+  D31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,4,0))
+  E31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,3,0))
+  A32: =IF(A31="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,5,0))
+  C32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,2,0))
+  D32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,4,0))
+  E32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,3,0))
+  A33: =IF(A32="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,5,0))
+  C33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,2,0))
+  D33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,4,0))
+  E33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,3,0))
+  A34: =IF(A33="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A33+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A33+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,5,0))
+  C34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,2,0))
+
+------------------------------------------------------------------------
+Sheet: PROGRAMMATION
+State: visible
+Dimensions: A1:Z287
+Max row: 287
+Max column: 26
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 249
+Cross-sheet references: JOURNAL (200)
+Top non-empty rows:
+  Row 1: A1=PROGRAMMATION
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant
+  Row 6: B6=Cachet | E6=13000
+  Row 7: B7=Mille4samples E03 | E7=2000 | G7=Acompte Suisa 1000 à payer 27 Mai
+  Row 8: B8=SUISA  (% du cachet)* | D8=0.1 | E8==(E6+E7)*D8
+  Row 9: B9=Hébergement | E9=1500
+  Row 20: A20=Total | E20==SUM(E6:E19)
+  Row 21: A21=Produits
+  Row 22: A22=Mois de facturation | B22=Libellé | E22=Montant
+  Row 30: A30=Total | E30==SUM(E23:E29)
+Formula samples:
+  E8: =(E6+E7)*D8
+  E20: =SUM(E6:E19)
+  E30: =SUM(E23:E29)
+  A35: =IF(ISNA(VLOOKUP($A$1&" / "&$A$33,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$33,JOURNAL!$B$5:$I$1115,2,0))
+  B35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,5,0))
+  C35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,2,0))
+  D35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,4,0))
+  E35: =IF($A35="","",VLOOKUP($A35,JOURNAL!$C$5:$I$1115,3,0))
+  A36: =IF(A35="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$33,INDIRECT(ADDRESS(A35+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$33,INDIRECT(ADDRESS(A35+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B36: =IF($A36="","",VLOOKUP($A36,JOURNAL!$C$5:$I$1115,5,0))
+  C36: =IF($A36="","",VLOOKUP($A36,JOURNAL!$C$5:$I$1115,2,0))
+  D36: =IF($A36="","",VLOOKUP($A36,JOURNAL!$C$5:$I$1115,4,0))
+  E36: =IF($A36="","",VLOOKUP($A36,JOURNAL!$C$5:$I$1115,3,0))
+  A37: =IF(A36="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$33,INDIRECT(ADDRESS(A36+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$33,INDIRECT(ADDRESS(A36+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B37: =IF($A37="","",VLOOKUP($A37,JOURNAL!$C$5:$I$1115,5,0))
+  C37: =IF($A37="","",VLOOKUP($A37,JOURNAL!$C$5:$I$1115,2,0))
+  D37: =IF($A37="","",VLOOKUP($A37,JOURNAL!$C$5:$I$1115,4,0))
+  E37: =IF($A37="","",VLOOKUP($A37,JOURNAL!$C$5:$I$1115,3,0))
+  A38: =IF(A37="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$33,INDIRECT(ADDRESS(A37+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$33,INDIRECT(ADDRESS(A37+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B38: =IF($A38="","",VLOOKUP($A38,JOURNAL!$C$5:$I$1115,5,0))
+  C38: =IF($A38="","",VLOOKUP($A38,JOURNAL!$C$5:$I$1115,2,0))
+  D38: =IF($A38="","",VLOOKUP($A38,JOURNAL!$C$5:$I$1115,4,0))
+  E38: =IF($A38="","",VLOOKUP($A38,JOURNAL!$C$5:$I$1115,3,0))
+  A39: =IF(A38="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$33,INDIRECT(ADDRESS(A38+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$33,INDIRECT(ADDRESS(A38+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B39: =IF($A39="","",VLOOKUP($A39,JOURNAL!$C$5:$I$1115,5,0))
+
+------------------------------------------------------------------------
+Sheet: PMW
+State: visible
+Dimensions: A1:Z256
+Max row: 256
+Max column: 26
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 119
+Cross-sheet references: JOURNAL (96)
+Top non-empty rows:
+  Row 1: A1=PMW
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant
+  Row 6: B6=Divers | E6=100 | F6=Contrôle d'accès par Staff | I6=Contrôle entrée par Balelec
+  Row 15: A15=Total | E15==SUM(E6:E14)
+  Row 16: A16=Produits
+  Row 17: A17=Mois de facturation | B17=Libellé | E17=Montant
+  Row 25: A25=Total | E25==SUM(E18:E24)
+  Row 27: A27=COMPTABILITE
+  Row 28: A28=Charges
+  Row 29: A29=N° | B29=Libellé | C29=Date | D29=En faveur de | E29=Montant
+Formula samples:
+  E15: =SUM(E6:E14)
+  E25: =SUM(E18:E24)
+  A30: =IF(ISNA(VLOOKUP($A$1&" / "&$A$28,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$28,JOURNAL!$B$5:$I$1115,2,0))
+  B30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,5,0))
+  C30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,2,0))
+  D30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,4,0))
+  E30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,3,0))
+  A31: =IF(A30="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,5,0))
+  C31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,2,0))
+  D31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,4,0))
+  E31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,3,0))
+  A32: =IF(A31="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,5,0))
+  C32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,2,0))
+  D32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,4,0))
+  E32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,3,0))
+  A33: =IF(A32="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,5,0))
+  C33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,2,0))
+  D33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,4,0))
+  E33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,3,0))
+  A34: =IF(A33="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A33+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$28,INDIRECT(ADDRESS(A33+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,5,0))
+  C34: =IF($A34="","",VLOOKUP($A34,JOURNAL!$C$5:$I$1115,2,0))
+
+------------------------------------------------------------------------
+Sheet: RAVITAILLEMENT
+State: visible
+Dimensions: A1:Z344
+Max row: 344
+Max column: 26
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 573
+Cross-sheet references: JOURNAL (460)
+Top non-empty rows:
+  Row 1: A1=RAVITAILLEMENT
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant
+  Row 6: B6=Boissons, etc selon 2025 | E6=10500
+  Row 7: B7=Repas staff soirée (10.-/staff, 200pers) | E7=2000
+  Row 8: B8=Repas semaine de montage (10.-/pers/jour, 11jours, 25pers) | E8=2750
+  Row 9: B9=apero collabo + sponso si pas à l'hôtel (60 p) | E9=1500 | G9=moins si possible
+  Row 13: A13=Total | E13==SUM(E6:E12)
+  Row 14: A14=Produits
+  Row 15: A15=Mois de facturation | B15=Libellé | E15=Montant
+  Row 16: B16=Recette bars selon recette 2025 (26'579 CHF) | E16=26500
+Formula samples:
+  E13: =SUM(E6:E12)
+  E22: =SUM(E16:E21)
+  A27: =IF(ISNA(VLOOKUP($A$1&" / "&$A$25,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$25,JOURNAL!$B$5:$I$1115,2,0))
+  B27: =IF($A27="","",VLOOKUP($A27,JOURNAL!$C$5:$I$1115,5,0))
+  C27: =IF($A27="","",VLOOKUP($A27,JOURNAL!$C$5:$I$1115,2,0))
+  D27: =IF($A27="","",VLOOKUP($A27,JOURNAL!$C$5:$I$1115,4,0))
+  E27: =IF($A27="","",VLOOKUP($A27,JOURNAL!$C$5:$I$1115,3,0))
+  A28: =IF(A27="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$25,INDIRECT(ADDRESS(A27+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$25,INDIRECT(ADDRESS(A27+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,5,0))
+  C28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,2,0))
+  D28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,4,0))
+  E28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,3,0))
+  A29: =IF(A28="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$25,INDIRECT(ADDRESS(A28+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$25,INDIRECT(ADDRESS(A28+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,5,0))
+  C29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,2,0))
+  D29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,4,0))
+  E29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,3,0))
+  A30: =IF(A29="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$25,INDIRECT(ADDRESS(A29+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$25,INDIRECT(ADDRESS(A29+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,5,0))
+  C30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,2,0))
+  D30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,4,0))
+  E30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,3,0))
+  A31: =IF(A30="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$25,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$25,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,5,0))
+  C31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,2,0))
+
+------------------------------------------------------------------------
+Sheet: SECURITE
+State: visible
+Dimensions: A1:Z255
+Max row: 255
+Max column: 26
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 117
+Cross-sheet references: JOURNAL (95)
+Top non-empty rows:
+  Row 1: A1=SECURITE
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant
+  Row 6: B6=Postes samaritian / secouriste | E6=2400 | F6=Contrôle d'accès par Staff | I6=Contrôle entrée par Balelec | J6=SAT ambulance
+  Row 7: B7=Location extincteurs | E7=300 | J7=Au Co2 | K7=Entreprise Norex
+  Row 8: B8=Prestations sécurité (prestations + radio) | E8=9000
+  Row 9: B9=Divers | E9=200
+  Row 14: A14=Total | E14==SUM(E6:E13)
+  Row 15: A15=Produits
+  Row 16: A16=Mois de facturation | B16=Libellé | E16=Montant
+  Row 24: A24=Total | E24==SUM(E17:E23)
+Formula samples:
+  E14: =SUM(E6:E13)
+  E24: =SUM(E17:E23)
+  A29: =IF(ISNA(VLOOKUP($A$1&" / "&$A$27,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$27,JOURNAL!$B$5:$I$1115,2,0))
+  C29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,2,0))
+  D29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,4,0))
+  E29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,3,0))
+  B30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,5,0))
+  C30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,2,0))
+  D30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,4,0))
+  E30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,3,0))
+  A31: =IF(A30="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$27,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$27,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,5,0))
+  C31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,2,0))
+  D31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,4,0))
+  E31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,3,0))
+  A32: =IF(A31="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$27,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$27,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,5,0))
+  C32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,2,0))
+  D32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,4,0))
+  E32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,3,0))
+  A33: =IF(A32="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$27,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$27,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,5,0))
+  C33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,2,0))
+  D33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,4,0))
+  E33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,3,0))
+
+------------------------------------------------------------------------
+Sheet: SPONSORING
+State: visible
+Dimensions: A1:Z302
+Max row: 302
+Max column: 26
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 224
+Cross-sheet references: JOURNAL (180)
+Top non-empty rows:
+  Row 1: A1=SPONSORING
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant
+  Row 11: A11=Total | E11==SUM(E6:E10)
+  Row 12: A12=Produits
+  Row 13: A13=Mois de facturation | B13=Libellé | E13=Montant
+  Row 14: B14=HEIG-VD | E14=6000
+  Row 15: B15=Yverdon-les-Bains | E15=8000
+  Row 16: B16=AGE | E16=1500
+  Row 17: B17=Dolci Architectes | E17=1000
+  Row 18: B18=VOE services SA | E18=1000
+Formula samples:
+  E11: =SUM(E6:E10)
+  N15: =L15-L14
+  E50: =SUM(E14:E49)
+  A55: =IF(ISNA(VLOOKUP($A$1&" / "&$A$53,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$53,JOURNAL!$B$5:$I$1115,2,0))
+  B55: =IF($A55="","",VLOOKUP($A55,JOURNAL!$C$5:$I$1115,5,0))
+  C55: =IF($A55="","",VLOOKUP($A55,JOURNAL!$C$5:$I$1115,2,0))
+  D55: =IF($A55="","",VLOOKUP($A55,JOURNAL!$C$5:$I$1115,4,0))
+  E55: =IF($A55="","",VLOOKUP($A55,JOURNAL!$C$5:$I$1115,3,0))
+  A56: =IF(A55="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$53,INDIRECT(ADDRESS(A55+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$53,INDIRECT(ADDRESS(A55+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B56: =IF($A56="","",VLOOKUP($A56,JOURNAL!$C$5:$I$1115,5,0))
+  C56: =IF($A56="","",VLOOKUP($A56,JOURNAL!$C$5:$I$1115,2,0))
+  D56: =IF($A56="","",VLOOKUP($A56,JOURNAL!$C$5:$I$1115,4,0))
+  E56: =IF($A56="","",VLOOKUP($A56,JOURNAL!$C$5:$I$1115,3,0))
+  A57: =IF(A56="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$53,INDIRECT(ADDRESS(A56+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$53,INDIRECT(ADDRESS(A56+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B57: =IF($A57="","",VLOOKUP($A57,JOURNAL!$C$5:$I$1115,5,0))
+  C57: =IF($A57="","",VLOOKUP($A57,JOURNAL!$C$5:$I$1115,2,0))
+  D57: =IF($A57="","",VLOOKUP($A57,JOURNAL!$C$5:$I$1115,4,0))
+  E57: =IF($A57="","",VLOOKUP($A57,JOURNAL!$C$5:$I$1115,3,0))
+  A58: =IF(A57="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$53,INDIRECT(ADDRESS(A57+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$53,INDIRECT(ADDRESS(A57+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B58: =IF($A58="","",VLOOKUP($A58,JOURNAL!$C$5:$I$1115,5,0))
+  C58: =IF($A58="","",VLOOKUP($A58,JOURNAL!$C$5:$I$1115,2,0))
+  D58: =IF($A58="","",VLOOKUP($A58,JOURNAL!$C$5:$I$1115,4,0))
+  E58: =IF($A58="","",VLOOKUP($A58,JOURNAL!$C$5:$I$1115,3,0))
+  A59: =IF(A58="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$53,INDIRECT(ADDRESS(A58+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$53,INDIRECT(ADDRESS(A58+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B59: =IF($A59="","",VLOOKUP($A59,JOURNAL!$C$5:$I$1115,5,0))
+
+------------------------------------------------------------------------
+Sheet: TECHNIQUE
+State: visible
+Dimensions: A1:Z258
+Max row: 258
+Max column: 26
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 132
+Cross-sheet references: JOURNAL (108)
+Top non-empty rows:
+  Row 1: A1=TECHNIQUE
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant
+  Row 6: A6=Mai | B6=Impact Vision | E6=18000 | F6=A discuter avec impact | G6=Prêt de l'Amalgame
+  Row 7: B7=E03 | E7=1000 | F7=a voir
+  Row 8: B8=Ingé Son/Light | E8=1200
+  Row 9: B9=Matériel divers | E9=500
+  Row 14: A14=Total | E14==SUM(E6:E13)
+  Row 15: A15=Produits
+  Row 16: A16=Mois de facturation | B16=Libellé | E16=Montant
+  Row 24: A24=Total | E24==SUM(E17:E23)
+Formula samples:
+  E14: =SUM(E6:E13)
+  E24: =SUM(E17:E23)
+  A29: =IF(ISNA(VLOOKUP($A$1&" / "&$A$27,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$27,JOURNAL!$B$5:$I$1115,2,0))
+  B29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,5,0))
+  C29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,2,0))
+  D29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,4,0))
+  E29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,3,0))
+  B30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,5,0))
+  C30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,2,0))
+  D30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,4,0))
+  E30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,3,0))
+  A31: =IF(A30="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$27,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$27,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,5,0))
+  C31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,2,0))
+  D31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,4,0))
+  E31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,3,0))
+  A32: =IF(A31="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$27,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$27,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,5,0))
+  C32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,2,0))
+  D32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,4,0))
+  E32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,3,0))
+  A33: =IF(A32="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$27,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G700"),2,0)),"",VLOOKUP($A$1&" / "&$A$27,INDIRECT(ADDRESS(A32+5,2,1,,"JOURNAL")&":G700"),2,0)))
+  B33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,5,0))
+  C33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,2,0))
+  D33: =IF($A33="","",VLOOKUP($A33,JOURNAL!$C$5:$I$1115,4,0))
+
+------------------------------------------------------------------------
+Sheet: SANS EFFET
+State: visible
+Dimensions: A1:Z271
+Max row: 271
+Max column: 26
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 203
+Cross-sheet references: JOURNAL (164)
+Top non-empty rows:
+  Row 1: A1=SANS EFFET
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | C5=Date | D5=En faveur de | E5=Montant
+  Row 13: A13=Total | E13==SUM(E6:E12)
+  Row 14: A14=Produits
+  Row 15: A15=Mois de facturation | B15=Libellé | C15=Date | D15=En faveur de | E15=Montant
+  Row 23: A23=Total | E23==SUM(E16:E22)
+  Row 25: A25=COMPTABILITE
+  Row 26: A26=Charges
+  Row 27: A27=N° | B27=Libellé | C27=Date | D27=En faveur de | E27=Montant
+  Row 28: A28==IF(ISNA(VLOOKUP($A$1&" / "&$A$26,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$26,JOURNAL!$B$5:$I$1115,2,0)) | B28==IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,5,0)) | C28==IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,2,0)) | D28==IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,4,0)) | E28==IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,3,0))
+Formula samples:
+  E13: =SUM(E6:E12)
+  E23: =SUM(E16:E22)
+  A28: =IF(ISNA(VLOOKUP($A$1&" / "&$A$26,JOURNAL!$B$5:$I$1115,2,0)),"",VLOOKUP($A$1&" / "&$A$26,JOURNAL!$B$5:$I$1115,2,0))
+  B28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,5,0))
+  C28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,2,0))
+  D28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,4,0))
+  E28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$1115,3,0))
+  A29: =IF(A28="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A28+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A28+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,5,0))
+  C29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,2,0))
+  D29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,4,0))
+  E29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$1115,3,0))
+  A30: =IF(A29="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A29+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A29+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,5,0))
+  C30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,2,0))
+  D30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,4,0))
+  E30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$1115,3,0))
+  A31: =IF(A30="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A30+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,5,0))
+  C31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,2,0))
+  D31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,4,0))
+  E31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$1115,3,0))
+  A32: =IF(A31="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A31+5,2,1,,"JOURNAL")&":G500"),2,0)))
+  B32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,5,0))
+  C32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$1115,2,0))
+
+------------------------------------------------------------------------
+Sheet: Vide
+State: hidden
+Dimensions: A1:Y242
+Max row: 242
+Max column: 25
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 74
+Cross-sheet references: JOURNAL (60)
+Top non-empty rows:
+  Row 1: A1=Vide
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant
+  Row 12: A12=Total | E12==SUM(E6:E11)
+  Row 13: A13=Produits
+  Row 14: A14=Mois de facturation | B14=Libellé | E14=Montant
+  Row 20: A20=Total | E20==SUM(E15:E19)
+  Row 22: A22=COMPTABILITE
+  Row 23: A23=Charges
+  Row 24: A24=N° | B24=Libellé | C24=Date | D24=En faveur de | E24=Montant
+  Row 25: A25==IF(ISNA(VLOOKUP($A$1&" / "&$A$23,JOURNAL!$B$5:$I$277,2,0)),"",VLOOKUP($A$1&" / "&$A$23,JOURNAL!$B$5:$I$277,2,0)) | B25==IF($A25="","",VLOOKUP($A25,JOURNAL!$C$5:$I$277,5,0)) | C25==IF($A25="","",VLOOKUP($A25,JOURNAL!$C$5:$I$277,2,0)) | D25==IF($A25="","",VLOOKUP($A25,JOURNAL!$C$5:$I$277,4,0)) | E25==IF($A25="","",VLOOKUP($A25,JOURNAL!$C$5:$I$277,3,0))
+Formula samples:
+  E12: =SUM(E6:E11)
+  E20: =SUM(E15:E19)
+  A25: =IF(ISNA(VLOOKUP($A$1&" / "&$A$23,JOURNAL!$B$5:$I$277,2,0)),"",VLOOKUP($A$1&" / "&$A$23,JOURNAL!$B$5:$I$277,2,0))
+  B25: =IF($A25="","",VLOOKUP($A25,JOURNAL!$C$5:$I$277,5,0))
+  C25: =IF($A25="","",VLOOKUP($A25,JOURNAL!$C$5:$I$277,2,0))
+  D25: =IF($A25="","",VLOOKUP($A25,JOURNAL!$C$5:$I$277,4,0))
+  E25: =IF($A25="","",VLOOKUP($A25,JOURNAL!$C$5:$I$277,3,0))
+  A26: =IF(A25="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$23,INDIRECT(ADDRESS(A25+4,1,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$23,INDIRECT(ADDRESS(A25+4,1,1,,"JOURNAL")&":G500"),2,0)))
+  B26: =IF($A26="","",VLOOKUP($A26,JOURNAL!$C$5:$I$277,5,0))
+  C26: =IF($A26="","",VLOOKUP($A26,JOURNAL!$C$5:$I$277,2,0))
+  D26: =IF($A26="","",VLOOKUP($A26,JOURNAL!$C$5:$I$277,4,0))
+  E26: =IF($A26="","",VLOOKUP($A26,JOURNAL!$C$5:$I$277,3,0))
+  A27: =IF(A26="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$23,INDIRECT(ADDRESS(A26+4,1,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$23,INDIRECT(ADDRESS(A26+4,1,1,,"JOURNAL")&":G500"),2,0)))
+  B27: =IF($A27="","",VLOOKUP($A27,JOURNAL!$C$5:$I$277,5,0))
+  C27: =IF($A27="","",VLOOKUP($A27,JOURNAL!$C$5:$I$277,2,0))
+  D27: =IF($A27="","",VLOOKUP($A27,JOURNAL!$C$5:$I$277,4,0))
+  E27: =IF($A27="","",VLOOKUP($A27,JOURNAL!$C$5:$I$277,3,0))
+  A28: =IF(A27="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$23,INDIRECT(ADDRESS(A27+4,1,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$23,INDIRECT(ADDRESS(A27+4,1,1,,"JOURNAL")&":G500"),2,0)))
+  B28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$277,5,0))
+  C28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$277,2,0))
+  D28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$277,4,0))
+  E28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$277,3,0))
+  A29: =IF(A28="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$23,INDIRECT(ADDRESS(A28+4,1,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$23,INDIRECT(ADDRESS(A28+4,1,1,,"JOURNAL")&":G500"),2,0)))
+  B29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$277,5,0))
+  C29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$277,2,0))
+
+------------------------------------------------------------------------
+Sheet: Vide_2
+State: hidden
+Dimensions: A1:Y252
+Max row: 252
+Max column: 25
+Merged ranges: 3
+Frozen panes: none
+Formula cells: 109
+Cross-sheet references: JOURNAL (88)
+Top non-empty rows:
+  Row 1: A1=Vide 2
+  Row 3: A3=BUDGET
+  Row 4: A4=Charges
+  Row 5: A5=Mois de facturation | B5=Libellé | E5=Montant
+  Row 13: A13=Total | E13==SUM(E6:E12)
+  Row 14: A14=Produits
+  Row 15: A15=Mois de facturation | B15=Libellé | E15=Montant
+  Row 23: A23=Total | E23==SUM(E16:E22)
+  Row 25: A25=COMPTABILITE
+  Row 26: A26=Charges
+  Row 27: A27=N° | B27=Libellé | C27=Date | D27=En faveur de | E27=Montant
+  Row 28: A28==IF(ISNA(VLOOKUP($A$1&" / "&$A$26,JOURNAL!$B$5:$I$277,2,0)),"",VLOOKUP($A$1&" / "&$A$26,JOURNAL!$B$5:$I$277,2,0)) | B28==IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$277,5,0)) | C28==IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$277,2,0)) | D28==IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$277,4,0)) | E28==IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$277,3,0))
+Formula samples:
+  E13: =SUM(E6:E12)
+  E23: =SUM(E16:E22)
+  A28: =IF(ISNA(VLOOKUP($A$1&" / "&$A$26,JOURNAL!$B$5:$I$277,2,0)),"",VLOOKUP($A$1&" / "&$A$26,JOURNAL!$B$5:$I$277,2,0))
+  B28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$277,5,0))
+  C28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$277,2,0))
+  D28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$277,4,0))
+  E28: =IF($A28="","",VLOOKUP($A28,JOURNAL!$C$5:$I$277,3,0))
+  A29: =IF(A28="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A28+4,1,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A28+4,1,1,,"JOURNAL")&":G500"),2,0)))
+  B29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$277,5,0))
+  C29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$277,2,0))
+  D29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$277,4,0))
+  E29: =IF($A29="","",VLOOKUP($A29,JOURNAL!$C$5:$I$277,3,0))
+  A30: =IF(A29="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A29+4,1,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A29+4,1,1,,"JOURNAL")&":G500"),2,0)))
+  B30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$277,5,0))
+  C30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$277,2,0))
+  D30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$277,4,0))
+  E30: =IF($A30="","",VLOOKUP($A30,JOURNAL!$C$5:$I$277,3,0))
+  A31: =IF(A30="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A30+4,1,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A30+4,1,1,,"JOURNAL")&":G500"),2,0)))
+  B31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$277,5,0))
+  C31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$277,2,0))
+  D31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$277,4,0))
+  E31: =IF($A31="","",VLOOKUP($A31,JOURNAL!$C$5:$I$277,3,0))
+  A32: =IF(A31="","",IF(ISNA(VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A31+4,1,1,,"JOURNAL")&":G500"),2,0)),"",VLOOKUP($A$1&" / "&$A$26,INDIRECT(ADDRESS(A31+4,1,1,,"JOURNAL")&":G500"),2,0)))
+  B32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$277,5,0))
+  C32: =IF($A32="","",VLOOKUP($A32,JOURNAL!$C$5:$I$277,2,0))
+
+------------------------------------------------------------------------
+Sheet: A Propos
+State: visible
+Dimensions: A1:Z220
+Max row: 220
+Max column: 26
+Merged ranges: 0
+Frozen panes: none
+Formula cells: 0
+Top non-empty rows:
+  Row 1: A1=Auteur
+  Row 2: A2=Johan Di Pietrantonio
+  Row 3: A3=joh.dipo@gmail.com
+  Row 4: A4=Document créé en novembre 2012
+  Row 6: A6=But
+  Row 7: A7=Ce document a été créé dans l'optique détablire un cadre de comptailité simple pour Baleinev, qui puisse être repris chaque année pour établire le budget et faire le contrôle de gestion.
+  Row 9: A9=Historique
+  Row 10: A10=Repris en 2014 Par Dylan Collaud Président de l'édition 2015
+  Row 11: A11=Repris en 2015 Par Alex Bretagne comptable de l'édition 2016
+  Row 12: A12=Repris en 2016 Par Max Caduff comptable de l'édition 2017
+  Row 13: A13=Repris en 2017 par André Neuenschwander comptable de l'édition 2018
+  Row 14: A14=Repris en 2021 par Laure Gerber comptable de l'édition 2022
+
+------------------------------------------------------------------------
+Sheet: Tabelle1
+State: hidden
+Dimensions: A1:A1
+Max row: 1
+Max column: 1
+Merged ranges: 0
+Frozen panes: none
+Formula cells: 0
+Top non-empty rows:
+
+------------------------------------------------------------------------
+Sheet: DATA
+State: visible
+Dimensions: A1:Z232
+Max row: 232
+Max column: 26
+Merged ranges: 0
+Frozen panes: none
+Formula cells: 30
+Cross-sheet references: RESULTATS (60)
+Top non-empty rows:
+  Row 1: A1==RESULTATS!B13&" / "&RESULTATS!$C$12 | F1=AFTER
+  Row 2: A2==RESULTATS!B14&" / "&RESULTATS!$C$12 | F2=SEGRILL1
+  Row 3: A3==RESULTATS!B15&" / "&RESULTATS!$C$12 | F3=SEGRILL2
+  Row 4: A4==RESULTATS!B16&" / "&RESULTATS!$C$12 | F4=GM
+  Row 5: A5==RESULTATS!B17&" / "&RESULTATS!$C$12 | F5=SEVINCHAUD
+  Row 6: A6==RESULTATS!B18&" / "&RESULTATS!$C$12 | F6=MDN
+  Row 7: A7==RESULTATS!B19&" / "&RESULTATS!$C$12 | F7=BALEISKI
+  Row 8: A8==RESULTATS!B20&" / "&RESULTATS!$C$12 | F8=CRUNCH
+  Row 9: A9==RESULTATS!B21&" / "&RESULTATS!$C$12 | F9=FESTIVAL
+  Row 10: A10==RESULTATS!B22&" / "&RESULTATS!$C$12 | F10=JACC
+  Row 11: A11==RESULTATS!B23&" / "&RESULTATS!$C$12 | F11=INTERNE
+  Row 12: A12==RESULTATS!B24&" / "&RESULTATS!$C$12 | F12=EVTCHILL
+Formula samples:
+  A1: =RESULTATS!B13&" / "&RESULTATS!$C$12
+  A2: =RESULTATS!B14&" / "&RESULTATS!$C$12
+  A3: =RESULTATS!B15&" / "&RESULTATS!$C$12
+  A4: =RESULTATS!B16&" / "&RESULTATS!$C$12
+  A5: =RESULTATS!B17&" / "&RESULTATS!$C$12
+  A6: =RESULTATS!B18&" / "&RESULTATS!$C$12
+  A7: =RESULTATS!B19&" / "&RESULTATS!$C$12
+  A8: =RESULTATS!B20&" / "&RESULTATS!$C$12
+  A9: =RESULTATS!B21&" / "&RESULTATS!$C$12
+  A10: =RESULTATS!B22&" / "&RESULTATS!$C$12
+  A11: =RESULTATS!B23&" / "&RESULTATS!$C$12
+  A12: =RESULTATS!B24&" / "&RESULTATS!$C$12
+  A13: =RESULTATS!B25&" / "&RESULTATS!$C$12
+  A14: =RESULTATS!B26&" / "&RESULTATS!$C$12
+  A15: =RESULTATS!B27&" / "&RESULTATS!$C$12
+  A17: =RESULTATS!B13&" / "&RESULTATS!$E$12
+  A18: =RESULTATS!B14&" / "&RESULTATS!$E$12
+  A19: =RESULTATS!B15&" / "&RESULTATS!$E$12
+  A20: =RESULTATS!B16&" / "&RESULTATS!$E$12
+  A21: =RESULTATS!B17&" / "&RESULTATS!$E$12
+  A22: =RESULTATS!B18&" / "&RESULTATS!$E$12
+  A23: =RESULTATS!B19&" / "&RESULTATS!$E$12
+  A24: =RESULTATS!B20&" / "&RESULTATS!$E$12
+  A25: =RESULTATS!B21&" / "&RESULTATS!$E$12
+  A26: =RESULTATS!B22&" / "&RESULTATS!$E$12

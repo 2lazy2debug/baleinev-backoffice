@@ -1,0 +1,48 @@
+# macOS
+.DS_Store
+
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Build artifacts
+.next/
+**/.next/
+out/
+**/out/
+build/
+**/build/
+coverage/
+**/coverage/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment files (prevent secrets from being committed)
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Keep env templates tracked
+!.env.example
+!**/.env.example
+
+# TypeScript/Next generated files
+*.tsbuildinfo
+next-env.d.ts
+
+# Yarn PnP
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Vercel
+.vercel/
