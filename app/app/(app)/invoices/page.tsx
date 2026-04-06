@@ -147,7 +147,6 @@ export default async function InvoicesPage() {
     <InvoicesClient
       locale={locale}
       editionId={activeEdition.id}
-      editionName={activeEdition.name}
       accounts={accounts}
       history={history}
       earningEntries={payableEntries}

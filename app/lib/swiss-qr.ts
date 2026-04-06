@@ -57,7 +57,7 @@ function splitReference(reference: string | undefined, message: string | undefin
   return {
     type: "NON",
     reference: "",
-    message: cleanedMessage ? `${cleanedMessage} | Ref: ${cleanedReference}` : `Ref: ${cleanedReference}`,
+    message: cleanedMessage,
   };
 }
 
