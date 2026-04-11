@@ -36,14 +36,83 @@ function TaskTypeLabel({
 }
 
 interface TasksPageClientProps {
-  todos: any[];
-  ungroupedTasks: any[];
-  access: any;
+  todos: TodoItem[];
+  ungroupedTasks: StandaloneTask[];
+  access: UserAccess;
   copy: any;
   locale: string;
-  users: any[];
-  activeEdition: any;
+  users: UserSummary[];
+  activeEdition: { id: string } | null;
   permissionError?: boolean;
+}
+
+interface UserSummary {
+  id: string;
+  name: string;
+}
+
+interface UserAccess {
+  id: string;
+  role: "ADMIN" | "DEPARTMENT";
+}
+
+interface ExpenseReportSummary {
+  id: string;
+  description: string;
+  amount: { toString(): string } | number | null;
+}
+
+interface EventSummary {
+  name: string;
+}
+
+interface EventDaySummary {
+  date: Date | string;
+  event: EventSummary | null;
+}
+
+interface ShiftSummary {
+  role: string | null;
+  startTime: string;
+  endTime: string;
+  eventDay: EventDaySummary | null;
+}
+
+interface StaffAssignmentSummary {
+  shift: ShiftSummary | null;
+}
+
+interface TodoTaskItem {
+  id: string;
+  title: string;
+  description: string | null;
+  status: "PENDING" | "DONE";
+  dueDate: Date | string | null;
+  assignedToUser: UserSummary | null;
+}
+
+interface TodoItem {
+  id: string;
+  title: string;
+  description: string | null;
+  createdById: string;
+  assignedToUserId: string | null;
+  assignedToUser: UserSummary | null;
+  tasks: TodoTaskItem[];
+}
+
+interface StandaloneTask {
+  id: string;
+  title: string;
+  description: string | null;
+  type: TaskType;
+  status: "PENDING" | "DONE";
+  dueDate: Date | string | null;
+  createdById: string | null;
+  assignedToUserId: string | null;
+  assignedToUser: UserSummary | null;
+  expenseReport: ExpenseReportSummary | null;
+  staffAssignment: StaffAssignmentSummary | null;
 }
 
 export function TasksPageClient({
@@ -254,10 +323,10 @@ export function TasksPageClient({
 }
 
 interface TodoCardProps {
-  todo: any;
-  users: any[];
+  todo: TodoItem;
+  users: UserSummary[];
   isAdmin: boolean;
-  access: any;
+  access: UserAccess;
   copy: any;
   locale: string;
 }
