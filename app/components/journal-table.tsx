@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
@@ -16,6 +16,7 @@ type JournalEntry = {
   accountType: "CHARGES" | "PRODUITS";
   amount: string;
   label: string;
+  counterparty: string | null;
   linkedInvoice: { id: string; invoiceNumber: string } | null;
   moneyAccount: { name: string };
   moneyAccountId: string;
@@ -49,6 +50,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
     type: "",
     amount: "",
     label: "",
+    beneficiary: "",
     account: "",
     costCenter: "",
   });
@@ -67,6 +69,52 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
+  const tableRef = useRef<HTMLTableElement | null>(null);
+
+  useEffect(() => {
+    function onSidebarToggled(e: any) {
+      const extra: number = Number(e?.detail?.extra ?? 0);
+      const table = tableRef.current;
+      if (!table) return;
+
+      const colgroup = table.querySelectorAll("colgroup > col");
+      if (!colgroup || colgroup.length === 0) return;
+
+      // flexible columns are those without Tailwind w- classes (fixed widths)
+      const flexibleIndexes: number[] = [];
+      colgroup.forEach((c, idx) => {
+        const cls = c.getAttribute("class") || "";
+        if (!/\bw-\d+/.test(cls)) flexibleIndexes.push(idx);
+      });
+
+      if (flexibleIndexes.length === 0) return;
+
+      if (extra === 0) {
+        // clear inline widths
+        colgroup.forEach((c) => c.removeAttribute("style"));
+        return;
+      }
+
+      // measure header cell widths to compute current sizes
+      const headerRow = table.querySelector("thead tr");
+      if (!headerRow) return;
+      const ths = Array.from(headerRow.querySelectorAll("th"));
+
+      const addPer = Math.floor(extra / flexibleIndexes.length);
+
+      flexibleIndexes.forEach((colIdx) => {
+        const th = ths[colIdx];
+        if (!th) return;
+        const current = Math.round(th.getBoundingClientRect().width);
+        const newW = current + addPer;
+        const col = colgroup[colIdx] as HTMLElement;
+        if (col) col.style.width = `${newW}px`;
+      });
+    }
+
+    window.addEventListener("sidebar:toggled", onSidebarToggled as any);
+    return () => window.removeEventListener("sidebar:toggled", onSidebarToggled as any);
+  }, []);
 
   // Build deterministic running balances from opening balances and journal sequence.
   const runningBalanceByEntryId: Record<string, number> = {};
@@ -105,6 +153,9 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
       return false;
     }
     if (filters.label && !entry.label.toLowerCase().includes(filters.label.toLowerCase())) {
+      return false;
+    }
+    if (filters.beneficiary && !String(entry.counterparty ?? "").toLowerCase().includes(filters.beneficiary.toLowerCase())) {
       return false;
     }
     if (filters.account && !entry.moneyAccount.name.toLowerCase().includes(filters.account.toLowerCase())) {
@@ -211,13 +262,14 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
       </div>
 
       <div className="flex-1 overflow-auto">
-        <table className="w-full table-fixed text-left text-sm">
+        <table ref={tableRef} className="w-full table-fixed text-left text-sm">
           <colgroup>
             <col className="w-32" />
             <col className="w-40" />
             <col className="w-32" />
             <col className="w-36" />
             <col />
+            <col className="w-40" />
             <col className="w-40" />
             <col className="w-20" />
             <col className="w-44" />
@@ -236,6 +288,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                 {copy.amount}
               </th>
               <th className="px-4 py-2 font-medium">{copy.label}</th>
+              <th className="px-4 py-2 font-medium">{copy.beneficiary}</th>
               <th className="px-4 py-2 font-medium">{copy.account}</th>
               <th className="px-4 py-2 font-medium">CC</th>
               <th className="px-4 py-2 font-medium">{copy.balance}</th>
@@ -291,6 +344,15 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                   placeholder={copy.filter}
                   value={filters.label}
                   onChange={(e) => handleFilterChange("label", e.target.value)}
+                  className="w-full text-xs rounded border border-[var(--line)] bg-[var(--panel-strong)] px-2 py-1"
+                />
+              </th>
+              <th className="px-4 py-2">
+                <input
+                  type="text"
+                  placeholder={copy.filter}
+                  value={filters.beneficiary}
+                  onChange={(e) => handleFilterChange("beneficiary", e.target.value)}
                   className="w-full text-xs rounded border border-[var(--line)] bg-[var(--panel-strong)] px-2 py-1"
                 />
               </th>
@@ -384,6 +446,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                       <span className="truncate">{entry.label}</span>
                     )}
                   </td>
+                    <td className={cellCls}>{entry.counterparty ?? "-"}</td>
                   <td className={cellCls}>
                     {isEditing ? (
                       <select value={editDraft!.moneyAccountId} onChange={(e) => setEditDraft({ ...editDraft!, moneyAccountId: e.target.value })} className={inputCls}>

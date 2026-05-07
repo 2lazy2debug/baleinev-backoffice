@@ -16,8 +16,10 @@ import {
   Users,
   Wallet,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 import { SignOutButton } from "@/components/sign-out-button";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
@@ -49,6 +51,8 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
   const [refundZip, setRefundZip] = useState(refundProfile.zip ?? "");
   const [refundCity, setRefundCity] = useState(refundProfile.city ?? "");
   const [saving, setSaving] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const asideRef = useRef<HTMLElement | null>(null);
   const copy = dictionaries[locale].shell;
 
   type NavigationItem = {
@@ -113,12 +117,37 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
     }
   }
 
+  const COLLAPSED_WIDTH = 64;
+
+  function toggleCollapse() {
+    const asideEl = asideRef.current;
+    if (!asideEl) {
+      setIsCollapsed((v) => !v);
+      document.documentElement.style.setProperty("--content-extra", "0px");
+      window.dispatchEvent(new CustomEvent("sidebar:toggled", { detail: { collapsed: !isCollapsed, extra: 0 } }));
+      return;
+    }
+
+    if (!isCollapsed) {
+      const prior = asideEl.offsetWidth || 280;
+      const extra = Math.max(0, prior - COLLAPSED_WIDTH);
+      document.documentElement.style.setProperty("--content-extra", `${extra}px`);
+      window.dispatchEvent(new CustomEvent("sidebar:toggled", { detail: { collapsed: true, extra } }));
+    } else {
+      document.documentElement.style.setProperty("--content-extra", "0px");
+      window.dispatchEvent(new CustomEvent("sidebar:toggled", { detail: { collapsed: false, extra: 0 } }));
+    }
+
+    setIsCollapsed((v) => !v);
+  }
+
   return (
     <div className="min-h-screen bg-[var(--page)] text-[var(--ink)]">
       <div className="flex min-h-screen">
         <aside
-          className="sticky top-0 flex h-screen shrink-0 flex-col border-r border-[var(--line)] bg-[color:rgba(16,30,43,0.9)] backdrop-blur"
-          style={{ width: "clamp(220px, 14.285vw, 320px)" }}
+          ref={asideRef}
+          className={`sticky top-0 flex h-screen shrink-0 flex-col border-r border-[var(--line)] bg-[color:rgba(16,30,43,0.9)] backdrop-blur ${isCollapsed ? "collapsed" : ""}`}
+          style={{ width: isCollapsed ? `${COLLAPSED_WIDTH}px` : "clamp(220px, 14.285vw, 320px)" }}
         >
           <div className="shrink-0 border-b border-[var(--line)] px-5 py-5">
             <Image src="/logo_blv.png" alt="Baleinev" width={320} height={128} className="w-full object-contain" priority />
@@ -146,10 +175,10 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
                       : "text-[var(--muted)] hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
                   }`}
                 >
-                  <span className="inline-flex items-center gap-2">
-                    <Icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </span>
+                    <span className="inline-flex items-center gap-2">
+                      <Icon className="h-4 w-4" />
+                      {!isCollapsed ? <span>{item.label}</span> : null}
+                    </span>
                   {item.href === "/tasks" && pendingTaskCount > 0 ? (
                     <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[10px] font-bold text-white">
                       {pendingTaskCount}
@@ -161,15 +190,26 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
           </nav>
 
           <div className="shrink-0 border-t border-[var(--line)] p-3">
-            <p className="truncate text-sm font-medium">{userName}</p>
-            <button
-              type="button"
-              onClick={() => setIsSettingsOpen(true)}
-              className="mt-2 inline-flex h-9 w-full items-center justify-center gap-2 border border-[var(--line)] px-4 whitespace-nowrap text-sm font-semibold text-[var(--muted)] transition hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
-            >
-              <Settings className="h-4 w-4" />
-              {copy.settings}
-            </button>
+            <p className="truncate text-sm font-medium">{!isCollapsed ? userName : userName?.split(" ")[0]}</p>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setIsSettingsOpen(true)}
+                className="flex-1 inline-flex h-9 items-center justify-center gap-2 border border-[var(--line)] px-4 whitespace-nowrap text-sm font-semibold text-[var(--muted)] transition hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
+              >
+                <Settings className="h-4 w-4" />
+                {!isCollapsed ? <span>{copy.settings}</span> : null}
+              </button>
+
+              <button
+                type="button"
+                onClick={toggleCollapse}
+                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                className="inline-flex h-9 items-center justify-center gap-2 border border-[var(--line)] px-3 text-[var(--muted)] hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
+              >
+                {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </button>
+            </div>
             <div className="mt-2">
               <SignOutButton label={copy.signOut} />
             </div>

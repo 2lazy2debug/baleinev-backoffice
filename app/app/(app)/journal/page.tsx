@@ -110,6 +110,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
             accountType: entry.accountType,
             amount: entry.amount.toString(),
             label: entry.label,
+            counterparty: entry.counterparty,
             moneyAccount: entry.moneyAccount,
             costCenter: entry.costCenter,
             isOpeningEntry: entry.isOpeningEntry,

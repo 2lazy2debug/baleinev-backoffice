@@ -22,6 +22,7 @@ type JournalPageClientProps = {
       accountType: "CHARGES" | "PRODUITS";
       amount: string;
       label: string;
+      counterparty: string | null;
       moneyAccount: { name: string };
       costCenter: { code: string } | null;
       isOpeningEntry: boolean;
