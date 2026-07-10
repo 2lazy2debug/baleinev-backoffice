@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 
+import { allowedProofMimeTypes } from "@/lib/proof-upload";
+
 import { createExpenseReportAction } from "./actions";
 
 type DepartmentOption = {
@@ -212,6 +214,7 @@ export default function CreateExpenseReportForm({ departments, drivingRatePerKm,
               type="file"
               name="proof"
               required
+              accept={allowedProofMimeTypes.join(",")}
               className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-[var(--panel-strong)] file:px-3 file:py-1.5 file:text-xs file:font-semibold"
             />
           </label>

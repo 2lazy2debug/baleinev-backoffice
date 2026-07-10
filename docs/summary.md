@@ -54,9 +54,12 @@ A `DepartmentRole` links a user to a department *by name*, so the link survives 
 ## Key business processes
 
 **Expense claim → ledger.** A user submits an `ExpenseReport`
-([app/app/(app)/expense-reports/actions.ts](../app/app/(app)/expense-reports/actions.ts)). A
-standard claim requires a proof file, stored as bytes directly in the `ExpenseReport.proofData`
-column; a driving claim requires departure/arrival/kilometers and derives the amount from the
+([app/app/(app)/expense-reports/actions.ts](../app/app/(app)/expense-reports/actions.ts)) against a
+department that must belong to the active edition and (for non-admins) to one of their own. A
+standard claim requires a proof file — validated for size and type by magic-byte sniffing
+([app/lib/proof-upload.ts](../app/lib/proof-upload.ts)) and stored as bytes directly in the
+`ExpenseReport.proofData` column, then served back only to the submitter or an admin as a sandboxed
+attachment; a driving claim requires departure/arrival/kilometers and derives the amount from the
 edition's `drivingRatePerKm`. Submission creates a `REVIEW_EXPENSE_REPORT` task assigned to the
 ADMIN role. On approval, that task is resolved and a follow-up `RECORD_JOURNAL` task is created.
 When an admin then creates the journal entry with `?fromExpenseReport=<id>`, the follow-up task is

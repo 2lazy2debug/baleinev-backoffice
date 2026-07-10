@@ -8,28 +8,34 @@ suspicions that should be confirmed by running the relevant flow before acting.
 
 ## Security issues
 
-### S1. Any authenticated user can download any expense-report proof file (IDOR) — high
+### S1. Any authenticated user can download any expense-report proof file (IDOR) — high — **FIXED**
 [app/app/api/expense-reports/[expenseReportId]/proof/route.ts](../app/app/api/expense-reports/%5BexpenseReportId%5D/proof/route.ts)
-calls `getCurrentUserAccess()` (authentication only) and then looks up the report **by id with no
-ownership or department check**. Any DEPARTMENT user can enumerate ids and fetch every uploaded
-receipt, which may contain other people's personal and financial documents. It should restrict to
-admins, or to the submitter / their department.
+called `getCurrentUserAccess()` (authentication only) and then looked up the report **by id with no
+ownership or department check**. Any DEPARTMENT user could enumerate ids and fetch every uploaded
+receipt.
 
-### S2. Uploaded proof files are served inline with a client-controlled content type (stored XSS) — high
-In [expense-reports/actions.ts](../app/app/(app)/expense-reports/actions.ts#L100-L102) the proof's
-`proofMimeType` and `proofFilename` are taken straight from the uploaded `File`. The proof route
-(above) then returns the bytes with `Content-Type: <that mime>` and `Content-Disposition: inline`.
-A DEPARTMENT user can upload an HTML file declared as `text/html`; when it is opened it executes
-JavaScript in the app's own origin. Combined with S1 this is a same-origin stored-XSS vector.
-Serve proofs with `Content-Disposition: attachment` and a fixed/allow-listed content type, and
-sanitize the filename (it is interpolated into the header unescaped, so a `"` or newline in the
-name can also break the header).
+The route now serves a proof only to an ADMIN or to the report's own `submittedById`, answering
+`404` (not `403`) otherwise so ids cannot be enumerated. The expense-reports **page** had the same
+leak — it listed every report with proof links to every user — and is now scoped to the submitter's
+own reports for non-admins, with the department picker limited to the user's own departments.
 
-### S3. No validation of proof upload type or size — medium
-Same code path: any file, any size, is read fully into memory (`await proof.arrayBuffer()`) and
-stored as bytes in the `ExpenseReport.proofData` Postgres column. There is no size cap or MIME
-allow-list, so a single large upload can exhaust memory / bloat the database (DoS). Enforce a max
-size and accept only images / PDFs.
+### S2. Uploaded proof files are served inline with a client-controlled content type (stored XSS) — high — **FIXED**
+The proof's `proofMimeType` and `proofFilename` were taken straight from the uploaded `File`, and the
+route returned the bytes with that mime and `Content-Disposition: inline`, so an HTML file declared
+as `text/html` executed JavaScript in the app's origin.
+
+Now the stored mime type is derived by sniffing the file's magic bytes
+([lib/proof-upload.ts](../app/lib/proof-upload.ts)), the route serves proofs with
+`Content-Disposition: attachment`, `X-Content-Type-Options: nosniff`, a sandboxing CSP, and a
+content type re-validated against the allow-list. The filename is sanitized (directory separators,
+control characters and quotes stripped) and emitted with both an ASCII `filename` and an RFC 5987
+`filename*`, so it can no longer break the header.
+
+### S3. No validation of proof upload type or size — medium — **FIXED**
+Any file, any size, was read fully into memory and stored as bytes. `validateProofUpload()` in
+[lib/proof-upload.ts](../app/lib/proof-upload.ts) now enforces a 10 MB cap and accepts only PDF /
+JPEG / PNG / WebP / HEIC (verified by magic bytes, not the declared type). The upload form also sets
+an `accept` filter as a first, non-authoritative hint.
 
 ### S4. Role-gating middleware may not be registered, and does not enforce authentication — medium **(verify)**
 [app/proxy.ts](../app/proxy.ts) contains the route-gating logic, but Next.js middleware
@@ -84,11 +90,10 @@ sequence.
 line items. A malformed or malicious client can persist an invoice whose printed total disagrees with
 its lines. Recompute the total server-side from the line items.
 
-### F4. Expense-report department is not validated — medium
-[expense-reports/actions.ts](../app/app/(app)/expense-reports/actions.ts#L64) reads `departmentId`
-from the form and never checks that it belongs to the active edition or to one of the submitter's own
-departments. A user can file a claim against any department (or an invalid id, producing a raw FK
-error). Validate the id against the edition and the user's `departmentRoleNames`.
+### F4. Expense-report department is not validated — medium — **FIXED**
+`createExpenseReportAction` now confirms the submitted `departmentId` belongs to the active edition
+and — for non-admins — that its name is in the user's `departmentRoleNames`, before creating the
+report.
 
 ### F5. Budget line update/delete are not edition-scoped — low
 [budget/actions.ts](../app/app/(app)/budget/actions.ts#L60-L86) `updateBudgetLineAction` and

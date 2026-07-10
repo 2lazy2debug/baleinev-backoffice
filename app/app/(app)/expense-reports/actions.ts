@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { getCurrentUserAccess, requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { validateProofUpload, type ProofMimeType } from "@/lib/proof-upload";
 import { getActiveEditionId, getRequiredString } from "@/lib/server-action-helpers";
 import { createAdminTask, resolvePendingTask } from "@/lib/tasks";
 
@@ -68,6 +69,19 @@ export async function createExpenseReportAction(formData: FormData) {
     select: { drivingRatePerKm: true },
   });
 
+  const department = await prisma.department.findFirst({
+    where: { id: departmentId, editionId },
+    select: { name: true },
+  });
+
+  if (!department) {
+    throw new Error("Selected department does not belong to the active edition.");
+  }
+
+  if (access.role !== "ADMIN" && !access.departmentRoleNames.includes(department.name)) {
+    throw new Error("You can only file expenses for a department you belong to.");
+  }
+
   let description: string;
   let amount: number;
   let departure: string | null = null;
@@ -76,7 +90,7 @@ export async function createExpenseReportAction(formData: FormData) {
   let ratePerKm: number | null = null;
   let paymentMethod: ExpensePaymentMethod;
   let proofData: Uint8Array<ArrayBuffer> | null = null;
-  let proofMimeType: string | null = null;
+  let proofMimeType: ProofMimeType | null = null;
   let proofFilename: string | null = null;
 
   if (reportType === ExpenseReportType.DRIVING) {
@@ -97,9 +111,10 @@ export async function createExpenseReportAction(formData: FormData) {
       throw new Error("Proof file is required.");
     }
 
-    proofData = new Uint8Array(await proof.arrayBuffer()) as Uint8Array<ArrayBuffer>;
-    proofMimeType = proof.type || "application/octet-stream";
-    proofFilename = proof.name || "proof";
+    const validated = await validateProofUpload(proof);
+    proofData = validated.data;
+    proofMimeType = validated.mimeType;
+    proofFilename = validated.filename;
   }
 
   const expenseReport = await prisma.expenseReport.create({

@@ -22,6 +22,7 @@ export default async function ExpenseReportsPage() {
     include: {
       departments: { orderBy: { name: "asc" } },
       expenseReports: {
+        where: access.role === "ADMIN" ? undefined : { submittedById: access.id },
         include: {
           department: { select: { name: true } },
           submittedBy: {
@@ -61,7 +62,9 @@ export default async function ExpenseReportsPage() {
 
       <section className="grid gap-6 xl:grid-cols-[420px_1fr]">
         <CreateExpenseReportForm
-          departments={activeEdition.departments.map((department) => ({ id: department.id, name: department.name }))}
+          departments={activeEdition.departments
+            .filter((department) => access.role === "ADMIN" || access.departmentRoleNames.includes(department.name))
+            .map((department) => ({ id: department.id, name: department.name }))}
           drivingRatePerKm={decimalToNumber(activeEdition.drivingRatePerKm)}
           copy={{
             create: copy.expenseReports.create,
