@@ -69,13 +69,6 @@ Two concurrent creations can read the same max and collide on `@@unique([edition
 throwing an unhandled error to the user. Allocate the sequence inside a transaction or with a DB
 sequence.
 
-### F3. Invoice `totalAmount` is trusted, not derived — medium
-[api/invoices/route.ts](../app/app/api/invoices/route.ts#L109-L110) stores `totalAmount` and
-`lineItems` as independent client-supplied values with no check that the total equals the sum of the
-line items. A malformed or malicious client can persist an invoice whose printed total disagrees with
-its lines. Recompute the total server-side from the line items.
-
-
 ### F6. `app/.env.example` is missing — low
 The [README](../README.md) step 2 instructs `cp .env.example .env` inside `app/`, but only
 `docker/.env.example` exists. New setups will fail that step and have no template for `AUTH_SECRET`,

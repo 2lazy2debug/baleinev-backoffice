@@ -12,14 +12,6 @@ function getRequiredString(body: Record<string, unknown>, key: string) {
   return value;
 }
 
-function getRequiredNumber(body: Record<string, unknown>, key: string) {
-  const raw = body[key];
-  if (typeof raw !== "number" || !Number.isFinite(raw) || raw <= 0) {
-    throw new Error(`${key} must be a positive number.`);
-  }
-  return raw;
-}
-
 function getOptionalDate(body: Record<string, unknown>, key: string) {
   const value = String(body[key] ?? "").trim();
   if (!value) {
@@ -75,6 +67,12 @@ function getLineItems(body: Record<string, unknown>) {
   });
 }
 
+function computeTotal(lineItems: { quantity: number; unitPrice: number }[]) {
+  const total = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  // Round to cents so the stored total matches the printed line-item sum.
+  return Math.round(total * 100) / 100;
+}
+
 export async function POST(request: Request) {
   try {
     await requireAdmin();
@@ -82,6 +80,7 @@ export async function POST(request: Request) {
 
     const invoiceNumber = getRequiredString(body, "invoiceNumber");
     const editionId = getRequiredString(body, "editionId");
+    const lineItems = getLineItems(body);
 
     const created = await prisma.invoice.create({
       data: {
@@ -106,8 +105,8 @@ export async function POST(request: Request) {
         iban: getRequiredString(body, "iban"),
         paymentReference: String(body.paymentReference ?? "").trim() || null,
         message: String(body.message ?? "").trim() || null,
-        totalAmount: getRequiredNumber(body, "totalAmount"),
-        lineItems: getLineItems(body),
+        totalAmount: computeTotal(lineItems),
+        lineItems,
         qrPayload: getRequiredString(body, "qrPayload"),
       },
       select: {
@@ -247,6 +246,8 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Paid invoices cannot be edited." }, { status: 409 });
     }
 
+    const lineItems = getLineItems(body);
+
     const updated = await prisma.invoice.update({
       where: { id: invoiceId },
       data: {
@@ -269,8 +270,8 @@ export async function PUT(request: Request) {
         iban: getRequiredString(body, "iban"),
         paymentReference: String(body.paymentReference ?? "").trim() || null,
         message: String(body.message ?? "").trim() || null,
-        totalAmount: getRequiredNumber(body, "totalAmount"),
-        lineItems: getLineItems(body),
+        totalAmount: computeTotal(lineItems),
+        lineItems,
         qrPayload: getRequiredString(body, "qrPayload"),
       },
       select: {
