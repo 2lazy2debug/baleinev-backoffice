@@ -79,13 +79,6 @@ The project uses `prisma db push` only ([package.json](../app/package.json)); th
 `prisma/migrations` directory. Schema history is untracked and production schema changes are
 non-reproducible/destructive. Adopt `prisma migrate` before deploying.
 
-### F8. Fragile Prisma-client workaround for the Appointment model — low
-[calendar/actions.ts](../app/app/(app)/calendar/actions.ts#L96-L104) casts the client to `unknown` to
-access `prisma.appointment` and throws "Run db:generate and restart the app." at runtime if it is
-missing. This is a leftover workaround for a stale generated client; other models are used directly.
-It should be removed once the client is regenerated, since it hides real errors behind a misleading
-message.
-
 ---
 
 ## UX issues
