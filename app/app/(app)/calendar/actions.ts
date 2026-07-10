@@ -47,17 +47,7 @@ export async function createAppointmentAction(formData: FormData) {
       .filter(Boolean),
   ));
 
-  const appointmentDelegate = (prisma as unknown as {
-    appointment?: {
-      create: (args: unknown) => Promise<unknown>;
-    };
-  }).appointment;
-
-  if (!appointmentDelegate) {
-    throw new Error("Calendar models are not available in the Prisma client. Run db:generate and restart the app.");
-  }
-
-  await appointmentDelegate.create({
+  await prisma.appointment.create({
     data: {
       editionId,
       createdById: access.id,
@@ -92,18 +82,7 @@ export async function updateAppointmentAction(formData: FormData) {
     throw new Error("End date must be after start date.");
   }
 
-  const appointmentDelegate = (prisma as unknown as {
-    appointment?: {
-      findUnique: (args: unknown) => Promise<{ id: string; createdById: string } | null>;
-      update: (args: unknown) => Promise<unknown>;
-    };
-  }).appointment;
-
-  if (!appointmentDelegate) {
-    throw new Error("Calendar models are not available in the Prisma client. Run db:generate and restart the app.");
-  }
-
-  const existing = await appointmentDelegate.findUnique({
+  const existing = await prisma.appointment.findUnique({
     where: { id: appointmentId },
     select: { id: true, createdById: true },
   });
@@ -116,7 +95,7 @@ export async function updateAppointmentAction(formData: FormData) {
     throw new Error("Only the creator can edit this appointment.");
   }
 
-  await appointmentDelegate.update({
+  await prisma.appointment.update({
     where: { id: appointmentId },
     data: {
       title,
@@ -133,18 +112,7 @@ export async function deleteAppointmentAction(formData: FormData) {
   const access = await getCurrentUserAccess();
   const appointmentId = getRequiredString(formData, "appointmentId");
 
-  const appointmentDelegate = (prisma as unknown as {
-    appointment?: {
-      findUnique: (args: unknown) => Promise<{ id: string; createdById: string } | null>;
-      delete: (args: unknown) => Promise<unknown>;
-    };
-  }).appointment;
-
-  if (!appointmentDelegate) {
-    throw new Error("Calendar models are not available in the Prisma client. Run db:generate and restart the app.");
-  }
-
-  const existing = await appointmentDelegate.findUnique({
+  const existing = await prisma.appointment.findUnique({
     where: { id: appointmentId },
     select: { id: true, createdById: true },
   });
@@ -157,6 +125,6 @@ export async function deleteAppointmentAction(formData: FormData) {
     throw new Error("Only the creator can delete this appointment.");
   }
 
-  await appointmentDelegate.delete({ where: { id: appointmentId } });
+  await prisma.appointment.delete({ where: { id: appointmentId } });
   revalidatePath("/calendar");
 }

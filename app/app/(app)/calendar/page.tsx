@@ -32,46 +32,31 @@ export default async function CalendarPage() {
     .filter((department) => access.departmentRoleNames.includes(department.name))
     .map((department) => department.id);
 
-  const appointmentDelegate = (prisma as unknown as {
-    appointment?: {
-      findMany: (args: unknown) => Promise<Array<{
-        id: string;
-        createdById: string;
-        title: string;
-        description: string;
-        startAt: Date;
-        endAt: Date | null;
-      }>>;
-    };
-  }).appointment;
-
   const [pendingTasks, appointments, users] = await Promise.all([
     getPendingTasksForUser(access),
-    appointmentDelegate
-      ? appointmentDelegate.findMany({
-        where: {
-          editionId: activeEdition.id,
-          ...(access.role === "ADMIN"
-            ? {}
-            : {
-              OR: [
-                { inviteAll: true },
-                { inviteUsers: { some: { userId: access.id } } },
-                { inviteDepartments: { some: { departmentId: { in: departmentIdsForUser } } } },
-              ],
-            }),
-        },
-        orderBy: { startAt: "asc" },
-        select: {
-          id: true,
-          createdById: true,
-          title: true,
-          description: true,
-          startAt: true,
-          endAt: true,
-        },
-      })
-      : Promise.resolve([]),
+    prisma.appointment.findMany({
+      where: {
+        editionId: activeEdition.id,
+        ...(access.role === "ADMIN"
+          ? {}
+          : {
+            OR: [
+              { inviteAll: true },
+              { inviteUsers: { some: { userId: access.id } } },
+              { inviteDepartments: { some: { departmentId: { in: departmentIdsForUser } } } },
+            ],
+          }),
+      },
+      orderBy: { startAt: "asc" },
+      select: {
+        id: true,
+        createdById: true,
+        title: true,
+        description: true,
+        startAt: true,
+        endAt: true,
+      },
+    }),
     access.role === "ADMIN"
       ? prisma.user.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } })
       : Promise.resolve([]),
