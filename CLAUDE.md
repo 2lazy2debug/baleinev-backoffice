@@ -11,15 +11,30 @@ No branches creation.
 
 ## Design system rules
 
-All design tokens are defined in `app/app/globals.css` as CSS variables. Never use
-a hardcoded color, spacing, or radius value outside that file.
+**Colors** are the only CSS-variable tokens, defined in `:root` in `app/app/globals.css`.
+Use these variables (via Tailwind arbitrary values like `bg-[var(--panel)]` or
+`text-[var(--muted)]`) — do not introduce new hardcoded hex colors:
 
-**Aesthetic direction:** dense and functional.  No large paddings, no heavy rounding, few decorative elements. 
+- `--page` — app background
+- `--panel` / `--panel-strong` — surface backgrounds (strong = raised/nested)
+- `--line` — borders and dividers
+- `--ink` — primary text
+- `--muted` — secondary text and labels
+- `--accent` / `--accent-strong` — primary action color and its hover/pressed state
 
+There are **no** `--space-*` or `--radius-*` tokens. Spacing and rounding come from Tailwind
+utilities, and destructive/error states use Tailwind `rose-*` utilities directly
+(e.g. `border-rose-400/30 bg-rose-950/30 text-rose-200`). Never write `var(--space-…)` or
+`var(--radius-…)` — those variables are undefined and render as no spacing/no rounding.
 
-Component padding standard: `var(--space-2)` to `var(--space-3)` for dense
-elements, `var(--space-4)` maximum for cards. Default border-radius is
-`var(--radius-sm)`.
+**Radius conventions (match the surrounding element):**
+- Inputs, buttons, and most controls: `rounded-xl`
+- Pills, badges, and icon buttons: `rounded-full`
+- Cards and panels: `rounded-2xl` (or `rounded-[28px]` for large outer cards)
+- Small chips / list rows: `rounded-lg`
+
+**Spacing:** dense elements use `p-2`–`p-3`; cards use `p-4`–`p-5`. Vertical rhythm is
+`space-y-*` / `gap-*`. Keep it functional — few decorative elements, no gratuitous padding.
 
 UI copy rules:
 - Name things by what they do, not what they are internally

@@ -4,23 +4,12 @@ Findings from a read-through of the codebase, grouped by category and ordered ro
 within each group. Each item points at the code it concerns. Items marked **(verify)** are strong
 suspicions that should be confirmed by running the relevant flow before acting.
 
+Issue IDs are stable: a missing number (e.g. F1, F2, F6, F8, U5) means that item was resolved and
+removed, not renumbered.
+
 ---
 
 ## Security issues
-
-
-The route now serves a proof only to an ADMIN or to the report's own `submittedById`, answering
-`404` (not `403`) otherwise so ids cannot be enumerated. The expense-reports **page** had the same
-leak — it listed every report with proof links to every user — and is now scoped to the submitter's
-own reports for non-admins, with the department picker limited to the user's own departments.
-
-
-Now the stored mime type is derived by sniffing the file's magic bytes
-([lib/proof-upload.ts](../app/lib/proof-upload.ts)), the route serves proofs with
-`Content-Disposition: attachment`, `X-Content-Type-Options: nosniff`, a sandboxing CSP, and a
-content type re-validated against the allow-list. The filename is sanitized (directory separators,
-control characters and quotes stripped) and emitted with both an ASCII `filename` and an RFC 5987
-`filename*`, so it can no longer break the header.
 
 ### S4. Role-gating middleware may not be registered, and does not enforce authentication — medium **(verify)**
 [app/proxy.ts](../app/proxy.ts) contains the route-gating logic, but Next.js middleware
@@ -55,25 +44,6 @@ same-origin/`Origin` check on these mutating endpoints.
 
 ## Functional issues
 
-### F1. Journal entries are attributed to the wrong user — high
-[journal/actions.ts](../app/app/(app)/journal/actions.ts#L44-L45) sets `enteredById` from
-`prisma.user.findFirst({ orderBy: { createdAt: "asc" } })` — i.e. **the oldest user in the system**,
-not the admin actually creating the entry. Every journal entry's "entered by" is therefore the same
-(usually the seeded admin), regardless of author. It should use the authenticated user's id
-(`await requireAdmin()` already returns it).
-
-### F2. Journal sequence numbers are assigned with a read-then-write race — medium
-Same file: the next `sequenceNumber` is computed as `max(sequenceNumber) + 1`
-([lines 41-47](../app/app/(app)/journal/actions.ts#L41-L47)) and then inserted in a separate query.
-Two concurrent creations can read the same max and collide on `@@unique([editionId, sequenceNumber])`,
-throwing an unhandled error to the user. Allocate the sequence inside a transaction or with a DB
-sequence.
-
-### F6. `app/.env.example` is missing — low
-The [README](../README.md) step 2 instructs `cp .env.example .env` inside `app/`, but only
-`docker/.env.example` exists. New setups will fail that step and have no template for `AUTH_SECRET`,
-`ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME`, `DATABASE_URL`. Add `app/.env.example`.
-
 ### F7. No Prisma migrations — low
 The project uses `prisma db push` only ([package.json](../app/package.json)); there is no
 `prisma/migrations` directory. Schema history is untracked and production schema changes are
@@ -98,6 +68,15 @@ departments, money accounts, cost centers — apparently no explicit confirmatio
 at all. Pick one consistent, localized confirmation pattern for destructive actions.
 
 ### U6. Login always redirects to `/`, then bounces — low
-[login/page.tsx](../app/app/(auth)/login/page.tsx#L18) signs in with `callbackUrl: "/"`. DEPARTMENT
-users are then redirected from `/` to `/budget` by the route gating, producing a visible double
-navigation on every department login. Redirect by role after authentication.
+[login/login-form.tsx](../app/app/(auth)/login/login-form.tsx#L27) signs in with `callbackUrl: "/"`.
+DEPARTMENT users are then redirected from `/` to `/budget` by the route gating, producing a visible
+double navigation on every department login. Redirect by role after authentication.
+
+### U7. Undefined `var(--radius-sm)` renders with no rounding — low
+[components/app-shell.tsx](../app/components/app-shell.tsx#L316) styles an error banner with
+`rounded-[var(--radius-sm)]`, but no `--radius-*` token is defined in
+[app/app/globals.css](../app/app/globals.css) (only the eight colour tokens are). The undefined
+variable makes the element render with square corners instead of the intended rounding. The same
+pattern existed in the tasks page and was replaced with a real Tailwind radius; do the same here.
+Note that the design-token conventions this depended on are documented in
+[CLAUDE.md](../CLAUDE.md) — radius and spacing come from Tailwind utilities, not CSS variables.
