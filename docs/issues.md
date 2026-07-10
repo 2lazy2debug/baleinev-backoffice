@@ -97,12 +97,6 @@ belong…", etc.) bubble up as unhandled exceptions, giving the user Next's gene
 instead of an inline, localized message next to the field. Add route-level `error.tsx` boundaries
 and/or return typed error state to the forms.
 
-### U3. Login screen is not localized — medium
-The rest of the app is bilingual (EN/FR) via [i18n dictionaries](../app/lib/i18n-dictionaries.ts),
-but [login/page.tsx](../app/app/(auth)/login/page.tsx) hardcodes English: "Sign in - Private
-workspace", "Invalid email or password.", "Signing in...", "Enter workspace". French users hit
-English at the first screen.
-
 ### U4. Inconsistent delete-confirmation patterns — low
 Deletions use three different confirmation styles: typing the word `delete`
 ([tasks/actions.ts](../app/app/(app)/tasks/actions.ts#L126-L130)), a native `window.confirm`
