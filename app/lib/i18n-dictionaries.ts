@@ -33,6 +33,7 @@ export const dictionaries = {
       refundCity: "Town / City",
       cancel: "Cancel",
       save: "Save",
+      saveFailed: "Could not save your settings. Check your connection and try again.",
       signOut: "Sign out",
     },
     common: {
@@ -43,6 +44,14 @@ export const dictionaries = {
       result: "Result",
       total: "Total",
       delta: "Delta",
+    },
+    login: {
+      badge: "Sign in - Private workspace",
+      email: "Email",
+      password: "Password",
+      invalidCredentials: "Invalid email or password.",
+      signingIn: "Signing in...",
+      submit: "Enter workspace",
     },
     dashboard: {
       title: "Dashboard",
@@ -480,6 +489,7 @@ export const dictionaries = {
       refundCity: "Ville",
       cancel: "Annuler",
       save: "Enregistrer",
+      saveFailed: "Impossible d'enregistrer vos paramètres. Vérifiez votre connexion et réessayez.",
       signOut: "Se déconnecter",
     },
     common: {
@@ -490,6 +500,14 @@ export const dictionaries = {
       result: "Résultat",
       total: "Total",
       delta: "Écart",
+    },
+    login: {
+      badge: "Connexion - Espace privé",
+      email: "Email",
+      password: "Mot de passe",
+      invalidCredentials: "Email ou mot de passe incorrect.",
+      signingIn: "Connexion...",
+      submit: "Accéder à l'espace",
     },
     dashboard: {
       title: "Tableau de bord",

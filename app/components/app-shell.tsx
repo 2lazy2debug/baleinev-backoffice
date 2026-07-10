@@ -51,6 +51,7 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
   const [refundZip, setRefundZip] = useState(refundProfile.zip ?? "");
   const [refundCity, setRefundCity] = useState(refundProfile.city ?? "");
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const asideRef = useRef<HTMLElement | null>(null);
   const copy = dictionaries[locale].shell;
@@ -97,8 +98,9 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
 
   async function saveSettings() {
     setSaving(true);
+    setSaveError(false);
     try {
-      await fetch("/api/preferences/language", {
+      const response = await fetch("/api/preferences/language", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -110,8 +112,14 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
           refundCity,
         }),
       });
+      if (!response.ok) {
+        setSaveError(true);
+        return;
+      }
       setIsSettingsOpen(false);
       router.refresh();
+    } catch {
+      setSaveError(true);
     } finally {
       setSaving(false);
     }
@@ -194,7 +202,7 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
             <div className="mt-2 flex gap-2">
               <button
                 type="button"
-                onClick={() => setIsSettingsOpen(true)}
+                onClick={() => { setSaveError(false); setIsSettingsOpen(true); }}
                 className="flex-1 inline-flex h-9 items-center justify-center gap-2 border border-[var(--line)] px-4 whitespace-nowrap text-sm font-semibold text-[var(--muted)] transition hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
               >
                 <Settings className="h-4 w-4" />
@@ -303,6 +311,12 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
                 </div>
               </div>
             </div>
+
+            {saveError ? (
+              <p className="mt-4 rounded-[var(--radius-sm)] border border-rose-400/20 bg-rose-950/35 px-3 py-2 text-sm text-rose-200">
+                {copy.saveFailed}
+              </p>
+            ) : null}
 
             <div className="mt-6 flex items-center justify-end gap-2">
               <button

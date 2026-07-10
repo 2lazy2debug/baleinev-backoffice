@@ -97,12 +97,6 @@ belong…", etc.) bubble up as unhandled exceptions, giving the user Next's gene
 instead of an inline, localized message next to the field. Add route-level `error.tsx` boundaries
 and/or return typed error state to the forms.
 
-### U2. Settings/preferences save failures are swallowed — medium
-[components/app-shell.tsx](../app/components/app-shell.tsx#L98-L118) `saveSettings()` `await`s the
-`fetch` but never checks `response.ok`; on any failure it still closes the dialog and calls
-`router.refresh()`, so the user believes their language / refund-bank details were saved when they
-were not. Check the response and show an error.
-
 ### U3. Login screen is not localized — medium
 The rest of the app is bilingual (EN/FR) via [i18n dictionaries](../app/lib/i18n-dictionaries.ts),
 but [login/page.tsx](../app/app/(auth)/login/page.tsx) hardcodes English: "Sign in - Private
