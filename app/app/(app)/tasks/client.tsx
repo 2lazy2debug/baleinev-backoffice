@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { TaskType } from "@prisma/client";
-import { Check, Circle, Pencil, Trash2 } from "lucide-react";
+import { Check, Circle, Pencil, Trash2, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { buttonClasses } from "@/lib/button-classes";
@@ -127,31 +127,55 @@ export function TasksPageClient({
 }: TasksPageClientProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [notice, setNotice] = useState<string | null>(() =>
+    permissionError
+      ? locale === "fr"
+        ? "Vous n'avez pas la permission de modifier ou supprimer cette tache."
+        : "You do not have permission to edit or delete this task."
+      : null
+  );
 
   useEffect(() => {
-    if (!permissionError) {
-      return;
+    if (permissionError) {
+      router.replace(pathname);
     }
+  }, [pathname, permissionError, router]);
 
-    const message =
-      locale === "fr"
-        ? "Vous n'avez pas la permission de modifier ou supprimer cette tache."
-        : "You do not have permission to edit or delete this task.";
-
-    window.alert(message);
-    router.replace(pathname);
-  }, [locale, pathname, permissionError, router]);
+  const noticeBanner = notice ? (
+    <div className="flex items-start justify-between gap-3 rounded-xl border border-rose-400/30 bg-rose-950/30 px-3 py-2 text-sm text-rose-200">
+      <span className="break-words">{notice}</span>
+      <button
+        type="button"
+        onClick={() => setNotice(null)}
+        className="shrink-0 text-rose-200/80 hover:text-rose-100"
+        aria-label={copy.common.cancel ?? "Dismiss"}
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  ) : null;
 
   if (!activeEdition) {
-    return <p className="text-sm text-[var(--muted)]">{copy.common.noActiveEdition}</p>;
+    return (
+      <div className="space-y-4">
+        {noticeBanner}
+        <p className="text-sm text-[var(--muted)]">{copy.common.noActiveEdition}</p>
+      </div>
+    );
   }
 
   if (todos.length === 0 && ungroupedTasks.length === 0) {
-    return <p className="text-sm text-[var(--muted)]">{copy.tasks.noPendingTasks}</p>;
+    return (
+      <div className="space-y-4">
+        {noticeBanner}
+        <p className="text-sm text-[var(--muted)]">{copy.tasks.noPendingTasks}</p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-4">
+      {noticeBanner}
       {todos.map((todo) => (
         <TodoCard
           key={todo.id}

@@ -97,11 +97,6 @@ Deletions use three different confirmation styles: typing the word `delete`
 departments, money accounts, cost centers — apparently no explicit confirmation guard in the action
 at all. Pick one consistent, localized confirmation pattern for destructive actions.
 
-### U5. Native `window.alert` for task feedback — low
-[tasks/client.tsx](../app/app/(app)/tasks/client.tsx#L141) surfaces messages with `window.alert`,
-which is jarring and unstyled compared to the rest of the UI. Use the app's own notification/toast
-styling.
-
 ### U6. Login always redirects to `/`, then bounces — low
 [login/page.tsx](../app/app/(auth)/login/page.tsx#L18) signs in with `callbackUrl: "/"`. DEPARTMENT
 users are then redirected from `/` to `/budget` by the route gating, producing a visible double
