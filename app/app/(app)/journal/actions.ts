@@ -20,7 +20,7 @@ function toPositiveAmount(raw: string) {
 }
 
 export async function createJournalEntryAction(formData: FormData) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const editionId = await getActiveEditionId();
 
   const departmentId = getRequiredString(formData, "departmentId");
@@ -37,40 +37,41 @@ export async function createJournalEntryAction(formData: FormData) {
 
   const amount = toPositiveAmount(amountRaw);
 
-  const [maxSequence, user] = await Promise.all([
-    prisma.journalEntry.aggregate({
-      where: { editionId, sequenceNumber: { gt: 0 } },
-      _max: { sequenceNumber: true },
-    }),
-    prisma.user.findFirst({ orderBy: { createdAt: "asc" }, select: { id: true } }),
-  ]);
-
-  const nextSequence = (maxSequence._max.sequenceNumber ?? 0) + 1;
   const counterparty = String(formData.get("counterparty") ?? "").trim() || null;
   const referenceNumber = String(formData.get("referenceNumber") ?? "").trim() || null;
   const costCenterId = String(formData.get("costCenterId") ?? "").trim() || null;
 
-  await prisma.journalEntry.create({
-    data: {
-      editionId,
-      sequenceNumber: nextSequence,
-      departmentId,
-      moneyAccountId,
-      accountType,
-      date,
-      amount,
-      label,
-      counterparty,
-      referenceNumber,
-      costCenterId,
-      enteredById: user?.id ?? null,
-      isOpeningEntry: false,
-    },
+  await prisma.$transaction(async (tx) => {
+    // Serialize sequence allocation per edition so two concurrent creations
+    // cannot read the same max and collide on @@unique([editionId, sequenceNumber]).
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${editionId})::bigint)`;
+
+    const maxSequence = await tx.journalEntry.aggregate({
+      where: { editionId, sequenceNumber: { gt: 0 } },
+      _max: { sequenceNumber: true },
+    });
+
+    await tx.journalEntry.create({
+      data: {
+        editionId,
+        sequenceNumber: (maxSequence._max.sequenceNumber ?? 0) + 1,
+        departmentId,
+        moneyAccountId,
+        accountType,
+        date,
+        amount,
+        label,
+        counterparty,
+        referenceNumber,
+        costCenterId,
+        enteredById: admin.id,
+        isOpeningEntry: false,
+      },
+    });
   });
 
   const fromExpenseReportId = String(formData.get("fromExpenseReportId") ?? "").trim() || null;
   if (fromExpenseReportId) {
-    const admin = await requireAdmin();
     await resolvePendingTask({ type: TaskType.RECORD_JOURNAL, expenseReportId: fromExpenseReportId, resolvedById: admin.id });
   }
 
