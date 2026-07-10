@@ -8,21 +8,12 @@ suspicions that should be confirmed by running the relevant flow before acting.
 
 ## Security issues
 
-### S1. Any authenticated user can download any expense-report proof file (IDOR) — high — **FIXED**
-[app/app/api/expense-reports/[expenseReportId]/proof/route.ts](../app/app/api/expense-reports/%5BexpenseReportId%5D/proof/route.ts)
-called `getCurrentUserAccess()` (authentication only) and then looked up the report **by id with no
-ownership or department check**. Any DEPARTMENT user could enumerate ids and fetch every uploaded
-receipt.
 
 The route now serves a proof only to an ADMIN or to the report's own `submittedById`, answering
 `404` (not `403`) otherwise so ids cannot be enumerated. The expense-reports **page** had the same
 leak — it listed every report with proof links to every user — and is now scoped to the submitter's
 own reports for non-admins, with the department picker limited to the user's own departments.
 
-### S2. Uploaded proof files are served inline with a client-controlled content type (stored XSS) — high — **FIXED**
-The proof's `proofMimeType` and `proofFilename` were taken straight from the uploaded `File`, and the
-route returned the bytes with that mime and `Content-Disposition: inline`, so an HTML file declared
-as `text/html` executed JavaScript in the app's origin.
 
 Now the stored mime type is derived by sniffing the file's magic bytes
 ([lib/proof-upload.ts](../app/lib/proof-upload.ts)), the route serves proofs with
@@ -30,12 +21,6 @@ Now the stored mime type is derived by sniffing the file's magic bytes
 content type re-validated against the allow-list. The filename is sanitized (directory separators,
 control characters and quotes stripped) and emitted with both an ASCII `filename` and an RFC 5987
 `filename*`, so it can no longer break the header.
-
-### S3. No validation of proof upload type or size — medium — **FIXED**
-Any file, any size, was read fully into memory and stored as bytes. `validateProofUpload()` in
-[lib/proof-upload.ts](../app/lib/proof-upload.ts) now enforces a 10 MB cap and accepts only PDF /
-JPEG / PNG / WebP / HEIC (verified by magic bytes, not the declared type). The upload form also sets
-an `accept` filter as a first, non-authoritative hint.
 
 ### S4. Role-gating middleware may not be registered, and does not enforce authentication — medium **(verify)**
 [app/proxy.ts](../app/proxy.ts) contains the route-gating logic, but Next.js middleware
@@ -90,17 +75,6 @@ sequence.
 line items. A malformed or malicious client can persist an invoice whose printed total disagrees with
 its lines. Recompute the total server-side from the line items.
 
-### F4. Expense-report department is not validated — medium — **FIXED**
-`createExpenseReportAction` now confirms the submitted `departmentId` belongs to the active edition
-and — for non-admins — that its name is in the user's `departmentRoleNames`, before creating the
-report.
-
-### F5. Budget line update/delete are not edition-scoped — low
-[budget/actions.ts](../app/app/(app)/budget/actions.ts#L60-L86) `updateBudgetLineAction` and
-`deleteBudgetLineAction` operate on any `budgetLineId` without confirming it belongs to the active
-edition. It is admin-only so it is not a privilege escalation, but a stale page from a previous
-edition could silently mutate the wrong edition's data. (`createBudgetLineAction` does scope its
-department correctly.)
 
 ### F6. `app/.env.example` is missing — low
 The [README](../README.md) step 2 instructs `cp .env.example .env` inside `app/`, but only

@@ -57,14 +57,30 @@ export async function createBudgetLineAction(formData: FormData) {
   revalidatePath("/");
 }
 
+async function requireEditionBudgetLine(budgetLineId: string, editionId: string) {
+  const budgetLine = await prisma.budgetLine.findFirst({
+    where: { id: budgetLineId, department: { editionId } },
+    select: { id: true },
+  });
+
+  if (!budgetLine) {
+    throw new Error("Budget line does not belong to the active edition.");
+  }
+
+  return budgetLine.id;
+}
+
 export async function updateBudgetLineAction(formData: FormData) {
   await requireAdmin();
+  const editionId = await getActiveEditionId();
   const budgetLineId = getRequiredString(formData, "budgetLineId");
   const label = getRequiredString(formData, "label");
   const amountRaw = getRequiredString(formData, "amount");
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
   const amount = toPositiveAmount(amountRaw);
+
+  await requireEditionBudgetLine(budgetLineId, editionId);
 
   await prisma.budgetLine.update({
     where: { id: budgetLineId },
@@ -77,7 +93,10 @@ export async function updateBudgetLineAction(formData: FormData) {
 
 export async function deleteBudgetLineAction(formData: FormData) {
   await requireAdmin();
+  const editionId = await getActiveEditionId();
   const budgetLineId = getRequiredString(formData, "budgetLineId");
+
+  await requireEditionBudgetLine(budgetLineId, editionId);
 
   await prisma.budgetLine.delete({ where: { id: budgetLineId } });
 
