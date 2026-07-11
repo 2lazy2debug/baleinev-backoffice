@@ -88,3 +88,9 @@ This is a consistency/governance issue rather than a single bug: decide whether 
 toward the stated dense/minimal intent or the directives should keep documenting what exists, then
 make the two agree and add a guard (grep/lint) against undefined `var(--radius-*)` / `var(--space-*)`
 usage so they cannot silently reappear.
+
+#### Developer's note for U8 
+please take a look at /home/mcabras/Developer/LeadDesk_3.0 folder. you will find the CLAUDE.md instructions
+of that repo that outlines that repo's rules for UI. Please adapt this codebase with the same ruleset and take
+inspiration from the styling of this repo. keep baleinev's color scheme but basically apply the same UI 
+architecture from that repo. 
