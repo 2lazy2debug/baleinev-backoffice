@@ -12,7 +12,7 @@ export function SignOutButton({ compact = false, label = "Sign out" }: SignOutBu
     <button
       type="button"
       onClick={() => signOut({ callbackUrl: "/login" })}
-      className={`inline-flex items-center justify-center border border-transparent bg-[var(--accent)] text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)] ${
+      className={`inline-flex items-center justify-center rounded-md border border-transparent bg-[var(--accent)] text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)] ${
         compact ? "h-9 w-9" : "h-9 w-full px-4 whitespace-nowrap"
       }`}
       title={compact ? label : undefined}

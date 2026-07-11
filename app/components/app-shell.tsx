@@ -177,7 +177,7 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center justify-between px-3 py-2 text-sm ${
+                  className={`flex items-center justify-between rounded-md px-3 py-2 text-sm ${
                     isActive
                       ? "bg-[var(--panel-strong)] font-semibold text-[var(--ink)]"
                       : "text-[var(--muted)] hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
@@ -203,7 +203,7 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
               <button
                 type="button"
                 onClick={() => { setSaveError(false); setIsSettingsOpen(true); }}
-                className="flex-1 inline-flex h-9 items-center justify-center gap-2 border border-[var(--line)] px-4 whitespace-nowrap text-sm font-semibold text-[var(--muted)] transition hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
+                className="flex-1 inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[var(--line)] px-4 whitespace-nowrap text-sm font-semibold text-[var(--muted)] transition hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
               >
                 <Settings className="h-4 w-4" />
                 {!isCollapsed ? <span>{copy.settings}</span> : null}
@@ -213,7 +213,7 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
                 type="button"
                 onClick={toggleCollapse}
                 aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                className="inline-flex h-9 items-center justify-center gap-2 border border-[var(--line)] px-3 text-[var(--muted)] hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[var(--line)] px-3 text-[var(--muted)] hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
               >
                 {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
               </button>
@@ -232,7 +232,7 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
       {isSettingsOpen ? (
         <>
           <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setIsSettingsOpen(false)} />
-          <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
+          <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-xl font-semibold">{copy.settings}</h2>
               <button
@@ -322,7 +322,7 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
               <button
                 type="button"
                 onClick={() => setIsSettingsOpen(false)}
-                className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold hover:bg-[var(--panel-strong)]"
+                className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold hover:bg-[var(--panel-strong)]"
               >
                 {copy.cancel}
               </button>
@@ -330,7 +330,7 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
                 type="button"
                 onClick={saveSettings}
                 disabled={saving}
-                className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
+                className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
               >
                 {saving ? "..." : copy.save}
               </button>
