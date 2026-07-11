@@ -28,7 +28,7 @@ session() callback                           ← lib/auth.ts
   Copies token fields onto session.user so client components can read them
         │
         ▼
-User is redirected to /  (dashboard)
+Client reads session role and redirects: ADMIN → /  (dashboard), DEPARTMENT → /budget
 ```
 
 ### Session object shape

@@ -4,8 +4,8 @@ Findings from a read-through of the codebase, grouped by category and ordered ro
 within each group. Each item points at the code it concerns. Items marked **(verify)** are strong
 suspicions that should be confirmed by running the relevant flow before acting.
 
-Issue IDs are stable: a missing number (e.g. F1, F2, F6, F8, U5) means that item was resolved and
-removed, not renumbered.
+Issue IDs are stable: a missing number (e.g. F1, F2, F6, F8, U5, U6, U7) means that item was resolved
+and removed, not renumbered.
 
 ---
 
@@ -66,11 +66,6 @@ Deletions use three different confirmation styles: typing the word `delete`
 ([calendar/client.tsx](../app/app/(app)/calendar/client.tsx#L338)), and — for journal entries, users,
 departments, money accounts, cost centers — apparently no explicit confirmation guard in the action
 at all. Pick one consistent, localized confirmation pattern for destructive actions.
-
-### U6. Login always redirects to `/`, then bounces — low
-[login/login-form.tsx](../app/app/(auth)/login/login-form.tsx#L27) signs in with `callbackUrl: "/"`.
-DEPARTMENT users are then redirected from `/` to `/budget` by the route gating, producing a visible
-double navigation on every department login. Redirect by role after authentication.
 
 ### U8. UI diverges from the stated design directives — medium
 [CLAUDE.md](../CLAUDE.md)'s design system describes a dense, functional aesthetic with "few

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 
 type LoginCopy = {
   badge: string;
@@ -24,18 +24,19 @@ export default function LoginForm({ copy }: { copy: LoginCopy }) {
     const result = await signIn("credentials", {
       email: String(formData.get("email") ?? ""),
       password: String(formData.get("password") ?? ""),
-      callbackUrl: "/",
       redirect: false,
     });
 
-    setPending(false);
-
     if (!result || result.error) {
+      setPending(false);
       setError(copy.invalidCredentials);
       return;
     }
 
-    window.location.href = result.url ?? "/";
+    // Send each role straight to its landing page so DEPARTMENT users don't
+    // load "/" only to be bounced to "/budget" by the route gating.
+    const session = await getSession();
+    window.location.href = session?.user?.role === "DEPARTMENT" ? "/budget" : "/";
   }
 
   return (
