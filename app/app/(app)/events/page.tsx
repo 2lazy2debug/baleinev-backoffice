@@ -84,7 +84,7 @@ export default async function EventsPage() {
           <h2 className="text-lg font-semibold">{copy.events.eventTypes}</h2>
           <div className="flex flex-wrap gap-2">
             {eventTypes.map((et) => (
-              <form key={et.id} action={deleteEventTypeAction} className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-1.5 text-sm">
+              <form key={et.id} action={deleteEventTypeAction} className="inline-flex items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-1.5 text-sm">
                 <span>{et.name}</span>
                 <input type="hidden" name="id" value={et.id} />
                 <button
@@ -111,7 +111,7 @@ export default async function EventsPage() {
               placeholder={copy.events.eventTypeDescription}
               className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
             />
-            <button className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
+            <button className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
               {copy.events.createEventType}
             </button>
           </form>
@@ -120,7 +120,7 @@ export default async function EventsPage() {
 
       {/* ── Admin: Create event ───────────────────────────────────────────── */}
       {isAdmin ? (
-        <section className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-6 space-y-4">
+        <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6 space-y-4">
           <h2 className="text-lg font-semibold">{copy.events.createEvent}</h2>
           {eventTypes.length === 0 ? (
             <p className="text-sm text-[var(--muted)]">{copy.events.noEventTypes}</p>
@@ -189,7 +189,7 @@ export default async function EventsPage() {
               />
             </label>
             <div className="sm:col-span-2 lg:col-span-3">
-              <button className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
+              <button className="rounded-md bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
                 {copy.events.createEvent}
               </button>
             </div>
@@ -204,7 +204,7 @@ export default async function EventsPage() {
       ) : (
         <div className="space-y-8">
           {activeEdition.events.map((event) => (
-            <section key={event.id} className="overflow-hidden rounded-[28px] border border-[var(--line)]">
+            <section key={event.id} className="overflow-hidden rounded-2xl border border-[var(--line)]">
               {/* Event header */}
               <div className="flex items-start justify-between gap-4 border-b border-[var(--line)] bg-[var(--panel-strong)] px-5 py-4">
                 <div>
@@ -288,14 +288,14 @@ export default async function EventsPage() {
                                     {signed ? (
                                       <form action={withdrawFromShiftAction}>
                                         <input type="hidden" name="shiftId" value={shift.id} />
-                                        <button className="rounded-full border border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-950/40">
+                                        <button className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-950/40">
                                           {copy.events.withdraw}
                                         </button>
                                       </form>
                                     ) : !isFull ? (
                                       <form action={signUpForShiftAction}>
                                         <input type="hidden" name="shiftId" value={shift.id} />
-                                        <button className="rounded-full bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--accent-strong)]">
+                                        <button className="rounded-md bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--accent-strong)]">
                                           {copy.events.signUp}
                                         </button>
                                       </form>
@@ -317,7 +317,7 @@ export default async function EventsPage() {
                                               <option key={u.id} value={u.id}>{u.name}</option>
                                             ))}
                                         </select>
-                                        <button className="rounded-full border border-[var(--line)] px-2 py-1.5 text-xs font-semibold hover:bg-[var(--panel-strong)]">
+                                        <button className="rounded-md border border-[var(--line)] px-2 py-1.5 text-xs font-semibold hover:bg-[var(--panel-strong)]">
                                           +
                                         </button>
                                       </form>

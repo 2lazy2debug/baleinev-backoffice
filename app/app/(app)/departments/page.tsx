@@ -43,12 +43,12 @@ export default async function DepartmentsPage() {
       <section className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="grid gap-4 md:grid-cols-2">
           {activeEdition.departments.length === 0 ? (
-            <div className="rounded-[28px] border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)] md:col-span-2">
+            <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)] md:col-span-2">
               No departments yet for this edition.
             </div>
           ) : (
             activeEdition.departments.map((department) => (
-              <article key={department.id} className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+              <article key={department.id} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <h2 className="text-lg font-semibold">{department.name}</h2>
@@ -59,7 +59,7 @@ export default async function DepartmentsPage() {
 
                   <form action={deleteDepartmentAction}>
                     <input type="hidden" name="departmentId" value={department.id} />
-                    <button title="Delete" className="rounded-full border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40">
+                    <button title="Delete" className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </form>
@@ -69,7 +69,7 @@ export default async function DepartmentsPage() {
           )}
         </div>
 
-        <section className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+        <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
           <h2 className="text-xl font-semibold">Create a department</h2>
           <form action={createDepartmentAction} className="mt-6 space-y-4">
             <label className="block space-y-2">
@@ -83,7 +83,7 @@ export default async function DepartmentsPage() {
               />
             </label>
 
-            <button className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
+            <button className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
               Add department
             </button>
           </form>

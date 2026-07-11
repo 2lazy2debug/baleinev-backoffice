@@ -49,7 +49,7 @@ export default async function JournalEntryEditPage({ params }: JournalEntryEditP
         <p className="text-sm text-[var(--muted)]">{copy.journal.subtitle}</p>
       </header>
 
-      <section className="rounded-[28px] border border-[var(--line)] bg-[var(--panel)] p-6">
+      <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6">
         <form action={updateJournalEntryAction} className="space-y-4">
           <input type="hidden" name="journalEntryId" value={entry.id} />
 
@@ -177,10 +177,10 @@ export default async function JournalEntryEditPage({ params }: JournalEntryEditP
           </label>
 
           <div className="flex items-center gap-3">
-            <button className="rounded-full bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
+            <button className="rounded-md bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
               {copy.shell.save}
             </button>
-            <Link href="/journal" className="rounded-full border border-[var(--line)] px-5 py-2 text-sm font-semibold hover:bg-[var(--panel-strong)]">
+            <Link href="/journal" className="rounded-md border border-[var(--line)] px-5 py-2 text-sm font-semibold hover:bg-[var(--panel-strong)]">
               {copy.shell.cancel}
             </Link>
           </div>

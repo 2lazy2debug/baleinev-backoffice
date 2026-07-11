@@ -116,7 +116,7 @@ export default function CreateMoneyAccountForm({ locale }: Props) {
         </>
       ) : null}
 
-      <button className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
+      <button className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
         {copy.moneyAccounts.add}
       </button>
     </form>

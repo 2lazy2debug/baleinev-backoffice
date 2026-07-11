@@ -49,7 +49,7 @@ export default async function CostCentersPage() {
       <section className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="grid gap-4 md:grid-cols-2">
           {activeEdition.costCenters.length === 0 ? (
-            <div className="rounded-[28px] border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)] md:col-span-2">
+            <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)] md:col-span-2">
               {copy.costCenters.noCostCenters}
             </div>
           ) : (
@@ -66,7 +66,7 @@ export default async function CostCentersPage() {
               }, 0);
 
               return (
-                <article key={costCenter.id} className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+                <article key={costCenter.id} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{costCenter.code}</p>
@@ -90,7 +90,7 @@ export default async function CostCentersPage() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-end gap-2">
                         <details className="group">
-                          <summary className="list-none cursor-pointer rounded-full border border-[var(--line)] p-2 text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]">
+                          <summary className="list-none cursor-pointer rounded-md border border-[var(--line)] p-2 text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]">
                             <Pencil className="h-3.5 w-3.5" />
                           </summary>
                           <form action={updateCostCenterNameAction} className="mt-3 flex items-center gap-2">
@@ -102,7 +102,7 @@ export default async function CostCentersPage() {
                               required
                               className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]"
                             />
-                            <button className="rounded-full border border-[var(--line)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]">
+                            <button className="rounded-md border border-[var(--line)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]">
                               {copy.shell.save}
                             </button>
                           </form>
@@ -113,7 +113,7 @@ export default async function CostCentersPage() {
                           <button
                             disabled={costCenter._count.journalEntries > 0}
                             title={costCenter._count.journalEntries > 0 ? copy.costCenters.cannotDelete : copy.budget.deleteDepartment}
-                            className="rounded-full border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
+                            className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -127,7 +127,7 @@ export default async function CostCentersPage() {
           )}
         </div>
 
-        <section className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+        <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
           <h2 className="text-xl font-semibold">{copy.costCenters.create}</h2>
           <form action={createCostCenterAction} className="mt-6 space-y-4">
             <label className="block space-y-2">
@@ -152,7 +152,7 @@ export default async function CostCentersPage() {
               />
             </label>
 
-            <button className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
+            <button className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
               {copy.costCenters.add}
             </button>
           </form>

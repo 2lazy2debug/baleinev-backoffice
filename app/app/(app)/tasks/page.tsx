@@ -57,7 +57,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
         />
       </header>
 
-      <section className="space-y-5 rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+      <section className="space-y-5 rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
         <h2 className="text-xl font-semibold">{copy.tasks.allTasks}</h2>
         <TasksPageClient
           todos={todos}

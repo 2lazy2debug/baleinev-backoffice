@@ -64,7 +64,7 @@ export default function JournalPageClient({ activeEdition, accountBalances, loca
       <button
         onClick={() => setIsModalOpen(true)}
         title={copy.addEntry}
-        className="self-start w-10 h-10 rounded-full bg-[var(--accent)] text-white font-bold text-lg hover:bg-[var(--accent-strong)] flex items-center justify-center"
+        className="self-start w-10 h-10 rounded-md bg-[var(--accent)] text-white font-bold text-lg hover:bg-[var(--accent-strong)] flex items-center justify-center"
       >
         +
       </button>

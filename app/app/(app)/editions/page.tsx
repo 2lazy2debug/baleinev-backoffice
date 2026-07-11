@@ -36,7 +36,7 @@ export default async function EditionsPage() {
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-4">
           {editions.map((edition) => (
-            <article key={edition.id} className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+            <article key={edition.id} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <div className="flex flex-wrap items-center gap-3">
@@ -66,7 +66,7 @@ export default async function EditionsPage() {
                       defaultValue={Number(edition.drivingRatePerKm).toFixed(2)}
                       className="w-24 rounded-lg border border-[var(--line)] bg-[var(--panel)] px-2 py-1 text-sm outline-none"
                     />
-                    <button className="rounded-full border border-[var(--line)] px-3 py-1 text-xs font-medium hover:bg-[var(--panel)]">
+                    <button className="rounded-md border border-[var(--line)] px-3 py-1 text-xs font-medium hover:bg-[var(--panel)]">
                       {copy.shell.save}
                     </button>
                   </form>
@@ -76,7 +76,7 @@ export default async function EditionsPage() {
                   {!edition.isActive ? (
                     <form action={setActiveEditionAction}>
                       <input type="hidden" name="editionId" value={edition.id} />
-                      <button className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-medium hover:bg-[var(--panel)]">
+                      <button className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-medium hover:bg-[var(--panel)]">
                         {copy.editions.makeActive}
                       </button>
                     </form>
@@ -85,7 +85,7 @@ export default async function EditionsPage() {
                   {!edition.closedAt ? (
                     <form action={closeEditionAction}>
                       <input type="hidden" name="editionId" value={edition.id} />
-                      <button className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
+                      <button className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
                         {copy.editions.closeYear}
                       </button>
                     </form>
@@ -93,7 +93,7 @@ export default async function EditionsPage() {
 
                   <form action={deleteEditionAction}>
                     <input type="hidden" name="editionId" value={edition.id} />
-                    <button title="Delete" className="rounded-full border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40">
+                    <button title="Delete" className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </form>
@@ -103,7 +103,7 @@ export default async function EditionsPage() {
           ))}
         </div>
 
-        <section className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+        <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
           <h2 className="text-xl font-semibold">{copy.editions.create}</h2>
           <form action={createEditionAction} className="mt-6 space-y-4">
             <label className="block space-y-2">
@@ -155,7 +155,7 @@ export default async function EditionsPage() {
               {copy.editions.makeImmediatelyActive}
             </label>
 
-            <button className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
+            <button className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
               {copy.editions.createButton}
             </button>
           </form>

@@ -68,7 +68,7 @@ export default function CreateExpenseReportForm({ departments, drivingRatePerKm,
   }, [kilometers, drivingRatePerKm]);
 
   return (
-    <section className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+    <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
       <h2 className="text-xl font-semibold">{copy.create}</h2>
 
       <form action={createExpenseReportAction} className="mt-6 space-y-4">
@@ -215,7 +215,7 @@ export default function CreateExpenseReportForm({ departments, drivingRatePerKm,
               name="proof"
               required
               accept={allowedProofMimeTypes.join(",")}
-              className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-[var(--panel-strong)] file:px-3 file:py-1.5 file:text-xs file:font-semibold"
+              className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-md file:border-0 file:bg-[var(--panel-strong)] file:px-3 file:py-1.5 file:text-xs file:font-semibold"
             />
           </label>
         )}
@@ -235,7 +235,7 @@ export default function CreateExpenseReportForm({ departments, drivingRatePerKm,
           </select>
         </label>
 
-        <button className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
+        <button className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
           {copy.submit}
         </button>
       </form>

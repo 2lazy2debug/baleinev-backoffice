@@ -35,7 +35,7 @@ export default async function UsersPage() {
           {users.map((user) => {
             const isSelf = user.id === access.id;
             return (
-              <article key={user.id} className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+              <article key={user.id} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <form action={updateUserAction} className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_170px_200px]">
@@ -111,7 +111,7 @@ export default async function UsersPage() {
                     <button
                       disabled={isSelf}
                       title={isSelf ? copy.users.cannotDeleteSelf : copy.users.deleteButton}
-                      className="rounded-full border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
+                      className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -122,7 +122,7 @@ export default async function UsersPage() {
           })}
         </div>
 
-        <section className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+        <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
           <h2 className="text-xl font-semibold">{copy.users.create}</h2>
           <p className="mt-2 text-sm text-[var(--muted)]">{copy.users.passwordRules}</p>
           <form action={createUserAction} className="mt-6 space-y-4">
@@ -185,7 +185,7 @@ export default async function UsersPage() {
               </select>
             </label>
 
-            <button className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
+            <button className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
               {copy.users.createButton}
             </button>
           </form>

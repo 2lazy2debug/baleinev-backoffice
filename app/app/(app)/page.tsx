@@ -124,7 +124,7 @@ export default async function DashboardPage() {
         )}
       </section>
 
-      <section className="overflow-hidden rounded-[28px] border border-[var(--line)]">
+      <section className="overflow-hidden rounded-2xl border border-[var(--line)]">
         <div className="border-b border-[var(--line)] bg-[var(--panel-strong)] px-5 py-4">
           <h2 className="text-lg font-semibold">{copy.dashboard.budgetVsActuals}</h2>
         </div>
@@ -190,7 +190,7 @@ export default async function DashboardPage() {
       </section>
 
       {pendingTasks.length > 0 ? (
-        <section className="overflow-hidden rounded-[28px] border border-[var(--line)]">
+        <section className="overflow-hidden rounded-2xl border border-[var(--line)]">
           <div className="flex items-center justify-between border-b border-[var(--line)] bg-[var(--panel-strong)] px-5 py-4">
             <h2 className="text-lg font-semibold">{copy.tasks.title}</h2>
             <a href="/tasks" className="text-xs font-semibold text-[var(--accent)] hover:underline">{copy.tasks.allTasks} →</a>
@@ -221,21 +221,21 @@ export default async function DashboardPage() {
                   {task.type === TaskType.RECORD_JOURNAL && expenseReport ? (
                     <a
                       href={`/journal?fromExpenseReport=${expenseReport.id}`}
-                      className="shrink-0 rounded-full border border-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10"
+                      className="shrink-0 rounded-md border border-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10"
                     >
                       {copy.tasks.recordJournal}
                     </a>
                   ) : task.type === TaskType.REVIEW_EXPENSE_REPORT ? (
                     <a
                       href="/expense-reports"
-                      className="shrink-0 rounded-full border border-[var(--line)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--panel)]"
+                      className="shrink-0 rounded-md border border-[var(--line)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--panel)]"
                     >
                       {copy.tasks.reviewExpenseReport} →
                     </a>
                   ) : (
                     <a
                       href="/tasks"
-                      className="shrink-0 rounded-full border border-[var(--line)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--panel)]"
+                      className="shrink-0 rounded-md border border-[var(--line)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--panel)]"
                     >
                       {copy.tasks.allTasks} →
                     </a>

@@ -83,7 +83,7 @@ export default function AddShiftForm({ eventDayId, existingShifts, copy }: Props
         defaultValue="1"
         className="w-16 rounded-lg border border-[var(--line)] bg-[var(--panel)] px-2 py-1.5 text-xs outline-none focus:border-[var(--accent)]"
       />
-      <button className="rounded-full border border-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10">
+      <button className="rounded-md border border-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10">
         {copy.addShift}
       </button>
     </form>

@@ -70,7 +70,7 @@ export function AddJournalEntryModal({
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
+      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold">{copy.addEntry}</h2>
           <button
@@ -217,7 +217,7 @@ export function AddJournalEntryModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-[var(--line)] px-5 py-2 text-sm font-semibold hover:bg-[var(--panel-strong)]"
+              className="rounded-md border border-[var(--line)] px-5 py-2 text-sm font-semibold hover:bg-[var(--panel-strong)]"
             >
               {copy.close}
             </button>
@@ -227,7 +227,7 @@ export function AddJournalEntryModal({
               name="submitMode"
               value="close"
               disabled={pending}
-              className="rounded-full bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
+              className="rounded-md bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
             >
               {pending ? copy.saving : copy.saveAndClose}
             </button>
@@ -237,7 +237,7 @@ export function AddJournalEntryModal({
               name="submitMode"
               value="new"
               disabled={pending}
-              className="rounded-full border border-[var(--accent)] px-5 py-2 text-sm font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10 disabled:opacity-60"
+              className="rounded-md border border-[var(--accent)] px-5 py-2 text-sm font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10 disabled:opacity-60"
             >
               {pending ? copy.saving : copy.saveAndNew}
             </button>

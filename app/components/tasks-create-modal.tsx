@@ -40,7 +40,7 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]"
+        className="inline-flex items-center gap-2 rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]"
       >
         <Plus className="h-4 w-4" />
         {copy.openCreateModal}
@@ -54,7 +54,7 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-full border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel)]"
+                className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel)]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -95,7 +95,7 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
                     </select>
                   </label>
                 ) : null}
-                <button className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel-strong)]">
+                <button className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel-strong)]">
                   {copy.createTodo}
                 </button>
               </form>
@@ -142,7 +142,7 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
                     </select>
                   </label>
                 ) : null}
-                <button className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel-strong)]">
+                <button className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel-strong)]">
                   {copy.createTask}
                 </button>
               </form>
@@ -152,7 +152,7 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel)]"
+                className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel)]"
               >
                 {copy.closeCreateModal}
               </button>

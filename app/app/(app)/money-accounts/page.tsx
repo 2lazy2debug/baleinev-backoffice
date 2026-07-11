@@ -49,7 +49,7 @@ export default async function MoneyAccountsPage() {
       <section className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="grid gap-4 md:grid-cols-2">
           {activeEdition.moneyAccounts.length === 0 ? (
-            <div className="rounded-[28px] border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)] md:col-span-2">
+            <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)] md:col-span-2">
               {copy.moneyAccounts.noMoneyAccounts}
             </div>
           ) : (
@@ -63,7 +63,7 @@ export default async function MoneyAccountsPage() {
               const canDelete = account.journalEntries.length === 0;
 
               return (
-                <article key={account.id} className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+                <article key={account.id} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{account.type}</p>
@@ -157,7 +157,7 @@ export default async function MoneyAccountsPage() {
                       <button
                         disabled={!canDelete}
                         title={canDelete ? copy.moneyAccounts.deleteAccount : copy.moneyAccounts.cannotDelete}
-                        className="rounded-full border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
+                        className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -169,7 +169,7 @@ export default async function MoneyAccountsPage() {
           )}
         </div>
 
-        <section className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+        <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
           <h2 className="text-xl font-semibold">{copy.moneyAccounts.create}</h2>
           <CreateMoneyAccountForm locale={locale} />
         </section>

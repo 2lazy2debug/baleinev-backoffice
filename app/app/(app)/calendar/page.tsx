@@ -88,7 +88,7 @@ export default async function CalendarPage() {
       />
 
       {access.role === "ADMIN" ? (
-        <section className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+        <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
           <h2 className="text-lg font-semibold">{copy.calendar.createAppointment}</h2>
           <form action={createAppointmentAction} className="mt-4 grid gap-3 md:grid-cols-2">
             <label className="block space-y-1 md:col-span-2">
@@ -159,7 +159,7 @@ export default async function CalendarPage() {
             </div>
 
             <div className="md:col-span-2">
-              <button className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
+              <button className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
                 {copy.calendar.submitAppointment}
               </button>
             </div>

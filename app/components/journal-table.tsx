@@ -255,7 +255,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   const uniqueCostCenters = [...new Set(entries.map((e) => e.costCenter?.code).filter(Boolean))];
 
   return (
-    <div className="border border-[var(--line)] bg-[var(--panel)] rounded-[28px] overflow-hidden flex flex-col h-full">
+    <div className="border border-[var(--line)] bg-[var(--panel)] rounded-2xl overflow-hidden flex flex-col h-full">
       <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-3 shrink-0">
         <h2 className="text-lg font-semibold">{copy.entries}</h2>
         <p className="text-xs text-[var(--muted)]">{copy.showing} {sortedEntries.length} {copy.of} {entries.length}</p>
@@ -474,16 +474,16 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                       <span className="text-xs text-[var(--muted)]">{copy.locked}</span>
                     ) : isEditing ? (
                       <div className="flex items-center gap-2">
-                        <button onClick={() => handleSaveEntry(entry.id)} disabled={isSaving} title={dictionaries[locale].shell.save} className="rounded-full border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
+                        <button onClick={() => handleSaveEntry(entry.id)} disabled={isSaving} title={dictionaries[locale].shell.save} className="rounded-md border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
                           <Check className="h-3.5 w-3.5" />
                         </button>
-                        <button onClick={() => { setEditingId(null); setEditDraft(null); }} title={dictionaries[locale].shell.cancel} className="rounded-full border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
+                        <button onClick={() => { setEditingId(null); setEditDraft(null); }} title={dictionaries[locale].shell.cancel} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
                           <X className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     ) : (
                       <div className="flex items-center gap-3">
-                        <button onClick={() => handleEditStart(entry)} title={copy.edit} className="rounded-full border border-[var(--line)] p-1.5 text-[var(--accent)] hover:bg-[var(--panel-strong)]">
+                        <button onClick={() => handleEditStart(entry)} title={copy.edit} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--accent)] hover:bg-[var(--panel-strong)]">
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                         <form action={deleteJournalEntryAction}>

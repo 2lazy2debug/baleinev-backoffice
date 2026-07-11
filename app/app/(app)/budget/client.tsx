@@ -119,7 +119,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
 
       <section className="grid gap-4 md:grid-cols-2">
         {departments.length === 0 ? (
-          <div className="rounded-[28px] border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)] md:col-span-2">
+          <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)] md:col-span-2">
             {emptyStateMessage}
           </div>
         ) : (
@@ -134,7 +134,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
             const canDeleteDept = department.budgetLines.length === 0 && department.journalEntriesCount === 0;
 
             return (
-              <article key={department.id} className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+              <article key={department.id} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h2 className="text-lg font-semibold">{department.name}</h2>
@@ -155,7 +155,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                         type="button"
                         onClick={() => setDetailsDepartment(department)}
                         title={copy.budget.viewDetails}
-                        className="rounded-full border border-[var(--line)] p-2 text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]"
+                        className="rounded-md border border-[var(--line)] p-2 text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]"
                       >
                         <Eye className="h-3.5 w-3.5" />
                       </button>
@@ -165,7 +165,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                         type="button"
                         onClick={() => setEntryModalDepartment({ id: department.id, name: department.name })}
                         title={copy.budget.addBudgetEntry}
-                        className="rounded-full border border-[var(--line)] p-2 text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]"
+                        className="rounded-md border border-[var(--line)] p-2 text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]"
                       >
                         <Plus className="h-3.5 w-3.5" />
                       </button>
@@ -174,7 +174,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                         <button
                           disabled={!canDeleteDept}
                           title={canDeleteDept ? copy.budget.deleteDepartment : copy.budget.cannotDeleteDepartment}
-                          className="rounded-full border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
+                          className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -226,21 +226,21 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                                   <td className="px-3 py-2">
                                     {canManage && isEditingLine ? (
                                       <div className="flex items-center justify-end gap-2">
-                                        <button onClick={() => handleSaveBudgetLine(line.id)} disabled={isSavingBudgetEdit} className="rounded-full border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
+                                        <button onClick={() => handleSaveBudgetLine(line.id)} disabled={isSavingBudgetEdit} className="rounded-md border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
                                           <Check className="h-3 w-3" />
                                         </button>
-                                        <button onClick={() => { setEditingBudgetLineId(null); setEditBudgetDraft(null); }} className="rounded-full border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
+                                        <button onClick={() => { setEditingBudgetLineId(null); setEditBudgetDraft(null); }} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
                                           <X className="h-3 w-3" />
                                         </button>
                                       </div>
                                     ) : canManage ? (
                                       <div className="flex items-center justify-end gap-2">
-                                        <button onClick={() => { setEditingBudgetLineId(line.id); setEditBudgetDraft({ label: line.label, amount: line.amount.toString(), notes: line.notes ?? "" }); }} className="rounded-full border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
+                                        <button onClick={() => { setEditingBudgetLineId(line.id); setEditBudgetDraft({ label: line.label, amount: line.amount.toString(), notes: line.notes ?? "" }); }} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
                                           <Pencil className="h-3 w-3" />
                                         </button>
                                         <form action={deleteBudgetLineAction}>
                                           <input type="hidden" name="budgetLineId" value={line.id} />
-                                          <button title={copy.budget.deleteDepartment} className="rounded-full border border-rose-300 p-1.5 text-rose-300 hover:bg-rose-950/40">
+                                          <button title={copy.budget.deleteDepartment} className="rounded-md border border-rose-300 p-1.5 text-rose-300 hover:bg-rose-950/40">
                                             <Trash2 className="h-3 w-3" />
                                           </button>
                                         </form>
@@ -306,21 +306,21 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                                   <td className="px-3 py-2">
                                     {canManage && isEditingLine ? (
                                       <div className="flex items-center justify-end gap-2">
-                                        <button onClick={() => handleSaveBudgetLine(line.id)} disabled={isSavingBudgetEdit} className="rounded-full border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
+                                        <button onClick={() => handleSaveBudgetLine(line.id)} disabled={isSavingBudgetEdit} className="rounded-md border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
                                           <Check className="h-3 w-3" />
                                         </button>
-                                        <button onClick={() => { setEditingBudgetLineId(null); setEditBudgetDraft(null); }} className="rounded-full border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
+                                        <button onClick={() => { setEditingBudgetLineId(null); setEditBudgetDraft(null); }} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
                                           <X className="h-3 w-3" />
                                         </button>
                                       </div>
                                     ) : canManage ? (
                                       <div className="flex items-center justify-end gap-2">
-                                        <button onClick={() => { setEditingBudgetLineId(line.id); setEditBudgetDraft({ label: line.label, amount: line.amount.toString(), notes: line.notes ?? "" }); }} className="rounded-full border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
+                                        <button onClick={() => { setEditingBudgetLineId(line.id); setEditBudgetDraft({ label: line.label, amount: line.amount.toString(), notes: line.notes ?? "" }); }} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
                                           <Pencil className="h-3 w-3" />
                                         </button>
                                         <form action={deleteBudgetLineAction}>
                                           <input type="hidden" name="budgetLineId" value={line.id} />
-                                          <button title={copy.budget.deleteDepartment} className="rounded-full border border-rose-300 p-1.5 text-rose-300 hover:bg-rose-950/40">
+                                          <button title={copy.budget.deleteDepartment} className="rounded-md border border-rose-300 p-1.5 text-rose-300 hover:bg-rose-950/40">
                                             <Trash2 className="h-3 w-3" />
                                           </button>
                                         </form>
@@ -370,7 +370,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
           return (
             <>
               <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setDetailsDepartment(null)} />
-              <div className="fixed left-1/2 top-1/2 z-50 h-[90vh] w-[95vw] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[28px] border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
+              <div className="fixed left-1/2 top-1/2 z-50 h-[90vh] w-[95vw] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
                 <div className="mb-5 flex items-center justify-between">
                   <h2 className="text-xl font-semibold">{copy.budget.detailsTitle} - {detailsDepartment.name}</h2>
                   <button
@@ -508,7 +508,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
       {canManage && isDepartmentModalOpen ? (
         <>
           <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setIsDepartmentModalOpen(false)} />
-          <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
+          <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-xl font-semibold">{copy.budget.addDepartment}</h2>
               <button
@@ -534,14 +534,14 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                 <button
                   type="button"
                   onClick={() => setIsDepartmentModalOpen(false)}
-                  className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold hover:bg-[var(--panel-strong)]"
+                  className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold hover:bg-[var(--panel-strong)]"
                 >
                   {copy.shell.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingDepartment}
-                  className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
+                  className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
                 >
                   {isSavingDepartment ? copy.journal.saving : copy.budget.addDepartment}
                 </button>
@@ -554,7 +554,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
       {canManage && entryModalDepartment ? (
         <>
           <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setEntryModalDepartment(null)} />
-          <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
+          <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-xl font-semibold">{copy.budget.addBudgetEntry} - {entryModalDepartment.name}</h2>
               <button
@@ -617,14 +617,14 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                 <button
                   type="button"
                   onClick={() => setEntryModalDepartment(null)}
-                  className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold hover:bg-[var(--panel-strong)]"
+                  className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold hover:bg-[var(--panel-strong)]"
                 >
                   {copy.shell.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingBudgetLine}
-                  className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
+                  className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
                 >
                   {isSavingBudgetLine ? copy.journal.saving : copy.budget.addBudgetEntry}
                 </button>

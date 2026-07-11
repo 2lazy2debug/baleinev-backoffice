@@ -627,12 +627,12 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
       <button
         onClick={openCreateModal}
         title={copy.invoices.create}
-        className="self-start h-10 w-10 rounded-full bg-[var(--accent)] text-lg font-bold text-white hover:bg-[var(--accent-strong)] flex items-center justify-center"
+        className="self-start h-10 w-10 rounded-md bg-[var(--accent)] text-lg font-bold text-white hover:bg-[var(--accent-strong)] flex items-center justify-center"
       >
         +
       </button>
 
-      <section className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+      <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
         <h2 className="text-xl font-semibold">{copy.invoices.historyTitle}</h2>
 
         {invoiceHistory.length === 0 ? (
@@ -673,7 +673,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                             type="button"
                             onClick={() => handleDownloadHistoryPdf(item)}
                             disabled={downloadingHistoryId === item.id}
-                            className="inline-flex rounded-full border border-[var(--line)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--panel)] disabled:opacity-60"
+                            className="inline-flex rounded-md border border-[var(--line)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--panel)] disabled:opacity-60"
                           >
                             {downloadingHistoryId === item.id ? "..." : copy.invoices.generatePdf}
                           </button>
@@ -683,7 +683,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                               onClick={() => handleSetInvoiceUnpaid(item)}
                               disabled={statusActionInvoiceId === item.id}
                               title={copy.invoices.setUnpaid}
-                              className="inline-flex rounded-full border border-amber-300 p-2 text-amber-300 hover:bg-amber-950/40 disabled:opacity-60"
+                              className="inline-flex rounded-md border border-amber-300 p-2 text-amber-300 hover:bg-amber-950/40 disabled:opacity-60"
                             >
                               <RotateCcw className="h-3.5 w-3.5" />
                             </button>
@@ -697,7 +697,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                               }}
                               disabled={statusActionInvoiceId === item.id}
                               title={copy.invoices.setPaid}
-                              className="inline-flex rounded-full border border-emerald-300 p-2 text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-60"
+                              className="inline-flex rounded-md border border-emerald-300 p-2 text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-60"
                             >
                               <Check className="h-3.5 w-3.5" />
                             </button>
@@ -706,7 +706,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                             type="button"
                             onClick={() => duplicateFromHistory(item)}
                             title="Duplicate invoice"
-                            className="inline-flex rounded-full border border-[var(--line)] p-2 hover:bg-[var(--panel)]"
+                            className="inline-flex rounded-md border border-[var(--line)] p-2 hover:bg-[var(--panel)]"
                           >
                             <Copy className="h-3.5 w-3.5" />
                           </button>
@@ -715,7 +715,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                             onClick={() => handleDeleteInvoice(item)}
                             disabled={Boolean(item.paidAt) || deleteActionInvoiceId === item.id}
                             title={item.paidAt ? copy.invoices.deleteBlockedPaid : copy.invoices.deleteInvoice}
-                            className="inline-flex rounded-full border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
+                            className="inline-flex rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -733,7 +733,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
       {isModalOpen ? (
         <>
           <div className="fixed inset-0 z-40 bg-black/50" onClick={closeFormModal} />
-          <section className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-full max-w-3xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+          <section className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-full max-w-3xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h3 className="text-xl font-semibold">
                 {editingInvoiceId ? copy.invoices.saveModifications : copy.invoices.create}
@@ -741,7 +741,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
               <button
                 type="button"
                 onClick={closeFormModal}
-                className="rounded-full border border-[var(--line)] px-4 py-1.5 text-xs font-semibold hover:bg-[var(--panel)]"
+                className="rounded-md border border-[var(--line)] px-4 py-1.5 text-xs font-semibold hover:bg-[var(--panel)]"
               >
                 {copy.shell.cancel}
               </button>
@@ -870,7 +870,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                       type="button"
                       onClick={addLineItem}
                       disabled={isEditingPaidInvoice}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--panel)]"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-[var(--line)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--panel)]"
                     >
                       <Plus className="h-3 w-3" />
                       {copy.invoices.addLineItem}
@@ -934,7 +934,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                                   type="button"
                                   onClick={() => removeLineItem(item.id)}
                                   disabled={isEditingPaidInvoice}
-                                  className="rounded-full border border-rose-300 p-1.5 text-rose-300 hover:bg-rose-950/40"
+                                  className="rounded-md border border-rose-300 p-1.5 text-rose-300 hover:bg-rose-950/40"
                                 >
                                   <Trash2 className="h-3 w-3" />
                                 </button>
@@ -983,13 +983,13 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                   <button
                     type="button"
                     onClick={closeFormModal}
-                    className="rounded-full border border-[var(--line)] px-5 py-3 text-sm font-semibold hover:bg-[var(--panel)]"
+                    className="rounded-md border border-[var(--line)] px-5 py-3 text-sm font-semibold hover:bg-[var(--panel)]"
                   >
                     {copy.shell.cancel}
                   </button>
                   <button
                     disabled={savingInvoice || isEditingPaidInvoice}
-                    className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
+                    className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
                   >
                     {savingInvoice
                       ? "..."
@@ -1035,7 +1035,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                   setPaidModalInvoice(null);
                   setSelectedJournalEntryId("");
                 }}
-                className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel)]"
+                className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel)]"
               >
                 {copy.shell.cancel}
               </button>
@@ -1043,7 +1043,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                 type="button"
                 onClick={handleSetInvoicePaid}
                 disabled={statusActionInvoiceId === paidModalInvoice.id}
-                className="rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
+                className="rounded-md bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
               >
                 {statusActionInvoiceId === paidModalInvoice.id ? "..." : copy.invoices.confirmSetPaid}
               </button>

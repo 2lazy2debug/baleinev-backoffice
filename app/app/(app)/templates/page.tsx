@@ -37,12 +37,12 @@ export default async function TemplatesPage() {
       <section className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="grid gap-4">
           {templates.length === 0 ? (
-            <div className="rounded-[28px] border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)]">
+            <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)]">
               {copy.templates.noTemplates}
             </div>
           ) : (
             templates.map((template) => (
-              <article key={template.id} className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+              <article key={template.id} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 space-y-3">
                     <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
@@ -100,7 +100,7 @@ export default async function TemplatesPage() {
                       <button
                         disabled={template.isDefault}
                         title={template.isDefault ? copy.templates.cannotDeleteDefault : copy.templates.deleteButton}
-                        className="rounded-full border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
+                        className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -113,7 +113,7 @@ export default async function TemplatesPage() {
         </div>
 
         <section className="space-y-6">
-          <section className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+          <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
             <h2 className="text-xl font-semibold">{copy.templates.create}</h2>
             <form action={createDocumentTemplateAction} className="mt-6 space-y-4">
               <label className="block space-y-2">
@@ -158,13 +158,13 @@ export default async function TemplatesPage() {
                 />
               </label>
 
-              <button className="rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
+              <button className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
                 {copy.templates.createButton}
               </button>
             </form>
           </section>
 
-          <section className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+          <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
             <h2 className="text-xl font-semibold">{copy.templates.placeholders}</h2>
             <ul className="mt-4 space-y-2 font-mono text-xs text-[var(--muted)]">
               {invoiceTemplatePlaceholders.map((placeholder) => (

@@ -364,7 +364,7 @@ export default function CalendarPageClient({
       </header>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-4 rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+        <div className="space-y-4 rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-semibold">{copy.monthView}: {monthStart.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</p>
             <div className="flex gap-2">
@@ -375,7 +375,7 @@ export default function CalendarPageClient({
                   d.setMonth(d.getMonth() - 1);
                   setCurrentMonth(toDayStart(d));
                 }}
-                className="rounded-full border border-[var(--line)] px-3 py-1 text-xs font-semibold hover:bg-[var(--panel)]"
+                className="rounded-md border border-[var(--line)] px-3 py-1 text-xs font-semibold hover:bg-[var(--panel)]"
               >
                 {copy.previousMonth}
               </button>
@@ -386,7 +386,7 @@ export default function CalendarPageClient({
                   d.setMonth(d.getMonth() + 1);
                   setCurrentMonth(toDayStart(d));
                 }}
-                className="rounded-full border border-[var(--line)] px-3 py-1 text-xs font-semibold hover:bg-[var(--panel)]"
+                className="rounded-md border border-[var(--line)] px-3 py-1 text-xs font-semibold hover:bg-[var(--panel)]"
               >
                 {copy.nextMonth}
               </button>
@@ -397,7 +397,7 @@ export default function CalendarPageClient({
                   setCurrentMonth(now);
                   setSelectedDay(toDayKey(now));
                 }}
-                className="rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-semibold text-white hover:bg-[var(--accent-strong)]"
+                className="rounded-md bg-[var(--accent)] px-3 py-1 text-xs font-semibold text-white hover:bg-[var(--accent-strong)]"
               >
                 {copy.today}
               </button>
@@ -447,7 +447,7 @@ export default function CalendarPageClient({
           </div>
         </div>
 
-        <div className="space-y-4 rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+        <div className="space-y-4 rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
           <p className="text-sm font-semibold">
             {copy.dayView}: {selectedDate.toLocaleDateString(undefined, { weekday: "long", day: "2-digit", month: "long" })}
           </p>
@@ -559,7 +559,7 @@ export default function CalendarPageClient({
               <button
                 type="button"
                 onClick={closeAppointmentDetails}
-                className="rounded-full border border-[var(--line)] px-3 py-1 text-xs font-semibold hover:bg-[var(--panel)]"
+                className="rounded-md border border-[var(--line)] px-3 py-1 text-xs font-semibold hover:bg-[var(--panel)]"
               >
                 {copy.closeDetails}
               </button>
@@ -639,7 +639,7 @@ export default function CalendarPageClient({
                     type="button"
                     onClick={submitAppointmentUpdate}
                     disabled={isPending}
-                    className="rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
+                    className="rounded-md bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
                   >
                     {copy.saveAppointment}
                   </button>
@@ -648,7 +648,7 @@ export default function CalendarPageClient({
                     type="button"
                     onClick={() => setIsEditingAppointment(true)}
                     disabled={isPending}
-                    className="rounded-full border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel)] disabled:opacity-60"
+                    className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel)] disabled:opacity-60"
                   >
                     {copy.editAppointment}
                   </button>
@@ -658,7 +658,7 @@ export default function CalendarPageClient({
                   type="button"
                   onClick={submitAppointmentDelete}
                   disabled={isPending}
-                  className="rounded-full border border-rose-300 px-4 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-950/40 disabled:opacity-60"
+                  className="rounded-md border border-rose-300 px-4 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-950/40 disabled:opacity-60"
                 >
                   {copy.deleteAppointment}
                 </button>

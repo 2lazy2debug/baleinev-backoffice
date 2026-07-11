@@ -92,7 +92,7 @@ export default async function ExpenseReportsPage() {
           }}
         />
 
-        <section className="rounded-[28px] border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+        <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
           <h2 className="text-xl font-semibold">{copy.expenseReports.history}</h2>
 
           {activeEdition.expenseReports.length === 0 ? (
