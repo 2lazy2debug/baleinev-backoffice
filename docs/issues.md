@@ -72,11 +72,24 @@ at all. Pick one consistent, localized confirmation pattern for destructive acti
 DEPARTMENT users are then redirected from `/` to `/budget` by the route gating, producing a visible
 double navigation on every department login. Redirect by role after authentication.
 
-### U7. Undefined `var(--radius-sm)` renders with no rounding — low
-[components/app-shell.tsx](../app/components/app-shell.tsx#L316) styles an error banner with
-`rounded-[var(--radius-sm)]`, but no `--radius-*` token is defined in
-[app/app/globals.css](../app/app/globals.css) (only the eight colour tokens are). The undefined
-variable makes the element render with square corners instead of the intended rounding. The same
-pattern existed in the tasks page and was replaced with a real Tailwind radius; do the same here.
-Note that the design-token conventions this depended on are documented in
-[CLAUDE.md](../CLAUDE.md) — radius and spacing come from Tailwind utilities, not CSS variables.
+### U8. UI diverges from the stated design directives — medium
+[CLAUDE.md](../CLAUDE.md)'s design system describes a dense, functional aesthetic with "few
+decorative elements, no gratuitous padding," yet the implemented UI does not consistently follow it,
+and the directives themselves had to be rewritten to match reality rather than the reverse:
+
+- **Rounding is heavier than "functional."** The directives were reverse-engineered from the code
+  (`rounded-[28px]` outer cards, `rounded-full` pills/buttons everywhere) instead of the code being
+  tightened toward a dense/minimal-rounding intent. The documented conventions now codify the
+  existing heaviness rather than a deliberate scale.
+- **Undefined design tokens leak into markup.** `var(--radius-*)` / `var(--space-*)` references
+  have appeared in components even though only the eight colour tokens exist — a sign the directives
+  and the implementation drifted apart and were maintained independently. The last known instance was
+  the app-shell error banner, since fixed, but nothing prevents a recurrence.
+- **No single source of truth for spacing/radius.** Because spacing and rounding live only as
+  ad-hoc Tailwind utilities per component, there is nothing to lint against, so drift from the
+  directives is invisible until read by hand.
+
+This is a consistency/governance issue rather than a single bug: decide whether the code should move
+toward the stated dense/minimal intent or the directives should keep documenting what exists, then
+make the two agree and add a guard (grep/lint) against undefined `var(--radius-*)` / `var(--space-*)`
+usage so they cannot silently reappear.

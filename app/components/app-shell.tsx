@@ -313,7 +313,7 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
             </div>
 
             {saveError ? (
-              <p className="mt-4 rounded-[var(--radius-sm)] border border-rose-400/20 bg-rose-950/35 px-3 py-2 text-sm text-rose-200">
+              <p className="mt-4 rounded-xl border border-rose-400/20 bg-rose-950/35 px-3 py-2 text-sm text-rose-200">
                 {copy.saveFailed}
               </p>
             ) : null}
