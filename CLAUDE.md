@@ -11,9 +11,19 @@ No branches creation.
 
 ## Design system rules
 
-**Colors** are the only CSS-variable tokens, defined in `:root` in `app/app/globals.css`.
-Use these variables (via Tailwind arbitrary values like `bg-[var(--panel)]` or
-`text-[var(--muted)]`) — do not introduce new hardcoded hex colors:
+Design tokens live in `app/app/globals.css` (`:root` for colors, `@theme` for the
+radius scale) and are the **single source of truth**. Never hardcode a color or an
+arbitrary radius (`#0f171f`, `rounded-[28px]`) in a component — pull from the tokens
+below. Run `npm run check:design` to catch violations. Before building UI, reuse what
+exists: shared components in `app/components/` and the button styles in
+`app/lib/button-classes.ts`.
+
+**Aesthetic direction: dense and functional.** No large paddings, no heavy rounding,
+few decorative elements. Prefer flat, token-driven surfaces over gradients, glows, and
+large shadows.
+
+**Colors** are the eight Baleinev tokens, used via Tailwind arbitrary values like
+`bg-[var(--panel)]` or `text-[var(--muted)]` — do not introduce new hardcoded hex:
 
 - `--page` — app background
 - `--panel` / `--panel-strong` — surface backgrounds (strong = raised/nested)
@@ -22,19 +32,25 @@ Use these variables (via Tailwind arbitrary values like `bg-[var(--panel)]` or
 - `--muted` — secondary text and labels
 - `--accent` / `--accent-strong` — primary action color and its hover/pressed state
 
-There are **no** `--space-*` or `--radius-*` tokens. Spacing and rounding come from Tailwind
-utilities, and destructive/error states use Tailwind `rose-*` utilities directly
-(e.g. `border-rose-400/30 bg-rose-950/30 text-rose-200`). Never write `var(--space-…)` or
-`var(--radius-…)` — those variables are undefined and render as no spacing/no rounding.
+Destructive/error states use Tailwind `rose-*` utilities directly
+(e.g. `border-rose-400/30 bg-rose-950/30 text-rose-200`).
 
-**Radius conventions (match the surrounding element):**
-- Inputs, buttons, and most controls: `rounded-xl`
-- Pills, badges, and icon buttons: `rounded-full`
-- Cards and panels: `rounded-2xl` (or `rounded-[28px]` for large outer cards)
-- Small chips / list rows: `rounded-lg`
+**Radius** is a deliberately tight scale defined as tokens in `@theme`, so every
+`rounded-*` utility already resolves to it. Use the utilities — never an arbitrary
+`rounded-[Npx]`:
+- Buttons and most controls: `rounded-md` (5px)
+- Inputs / selects: `rounded-md`–`rounded-xl` (5–8px)
+- Cards and panels: `rounded-2xl` (10px) — the heaviest rounding in the app
+- Small chips / list rows: `rounded-lg` (8px) or `rounded-sm` (3px)
+- Pills, badges, status dots, count bubbles, avatars: `rounded-full`
 
-**Spacing:** dense elements use `p-2`–`p-3`; cards use `p-4`–`p-5`. Vertical rhythm is
-`space-y-*` / `gap-*`. Keep it functional — few decorative elements, no gratuitous padding.
+`rounded-full` is only for genuinely circular/pill elements (badges, dots, avatars) —
+action buttons are `rounded-md`, not pills.
+
+**Spacing** comes from Tailwind utilities on the 4px grid — the utilities *are* the
+scale, there are no `--space-*` tokens (never write `var(--space-…)`). Dense elements
+use `p-2`–`p-3`; cards use `p-4`–`p-5`. Vertical rhythm is `space-y-*` / `gap-*`. Keep
+it functional — no gratuitous padding.
 
 UI copy rules:
 - Name things by what they do, not what they are internally
