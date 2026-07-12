@@ -4,7 +4,7 @@ Findings from a read-through of the codebase, grouped by category and ordered ro
 within each group. Each item points at the code it concerns. Items marked **(verify)** are strong
 suspicions that should be confirmed by running the relevant flow before acting.
 
-Issue IDs are stable: a missing number (e.g. F1, F2, F6, F8, U5, U6, U7) means that item was resolved
+Issue IDs are stable: a missing number (e.g. F1, F2, F6, F8, U5, U6, U7, U8) means that item was resolved
 and removed, not renumbered.
 
 ---
@@ -66,31 +66,3 @@ Deletions use three different confirmation styles: typing the word `delete`
 ([calendar/client.tsx](../app/app/(app)/calendar/client.tsx#L338)), and — for journal entries, users,
 departments, money accounts, cost centers — apparently no explicit confirmation guard in the action
 at all. Pick one consistent, localized confirmation pattern for destructive actions.
-
-### U8. UI diverges from the stated design directives — medium
-[CLAUDE.md](../CLAUDE.md)'s design system describes a dense, functional aesthetic with "few
-decorative elements, no gratuitous padding," yet the implemented UI does not consistently follow it,
-and the directives themselves had to be rewritten to match reality rather than the reverse:
-
-- **Rounding is heavier than "functional."** The directives were reverse-engineered from the code
-  (`rounded-[28px]` outer cards, `rounded-full` pills/buttons everywhere) instead of the code being
-  tightened toward a dense/minimal-rounding intent. The documented conventions now codify the
-  existing heaviness rather than a deliberate scale.
-- **Undefined design tokens leak into markup.** `var(--radius-*)` / `var(--space-*)` references
-  have appeared in components even though only the eight colour tokens exist — a sign the directives
-  and the implementation drifted apart and were maintained independently. The last known instance was
-  the app-shell error banner, since fixed, but nothing prevents a recurrence.
-- **No single source of truth for spacing/radius.** Because spacing and rounding live only as
-  ad-hoc Tailwind utilities per component, there is nothing to lint against, so drift from the
-  directives is invisible until read by hand.
-
-This is a consistency/governance issue rather than a single bug: decide whether the code should move
-toward the stated dense/minimal intent or the directives should keep documenting what exists, then
-make the two agree and add a guard (grep/lint) against undefined `var(--radius-*)` / `var(--space-*)`
-usage so they cannot silently reappear.
-
-#### Developer's note for U8 
-please take a look at /home/mcabras/Developer/LeadDesk_3.0 folder. you will find the CLAUDE.md instructions
-of that repo that outlines that repo's rules for UI. Please adapt this codebase with the same ruleset and take
-inspiration from the styling of this repo. keep baleinev's color scheme but basically apply the same UI 
-architecture from that repo. 
