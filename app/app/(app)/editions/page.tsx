@@ -113,8 +113,11 @@ export default async function EditionsPage() {
                 name="name"
                 placeholder="2025-2026"
                 required
+                pattern="\d{4}-\d{4}"
+                title={copy.editions.editionNameHint}
                 className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
               />
+              <span className="block text-xs text-[var(--muted)]">{copy.editions.editionNameHint}</span>
             </label>
 
             <div className="grid gap-4 md:grid-cols-2">

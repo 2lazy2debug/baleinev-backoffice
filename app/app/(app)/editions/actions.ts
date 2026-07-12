@@ -6,7 +6,7 @@ import { AccountType, Prisma } from "@prisma/client";
 
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
-import { decimalToNumber, incrementEditionName } from "@/lib/utils";
+import { decimalToNumber, incrementEditionName, isValidEditionName } from "@/lib/utils";
 
 function getRequiredString(formData: FormData, key: string) {
   const value = String(formData.get(key) ?? "").trim();
@@ -16,6 +16,16 @@ function getRequiredString(formData: FormData, key: string) {
   }
 
   return value;
+}
+
+function getEditionName(formData: FormData) {
+  const name = getRequiredString(formData, "name");
+
+  if (!isValidEditionName(name)) {
+    throw new Error("Edition name must follow the YYYY-YYYY format (e.g. 2025-2026).");
+  }
+
+  return name;
 }
 
 function parsePositiveDecimal(raw: string, fieldName: string) {
@@ -31,7 +41,7 @@ function parsePositiveDecimal(raw: string, fieldName: string) {
 
 export async function createEditionAction(formData: FormData) {
   await requireAdmin();
-  const name = getRequiredString(formData, "name");
+  const name = getEditionName(formData);
   const startDate = String(formData.get("startDate") ?? "").trim();
   const endDate = String(formData.get("endDate") ?? "").trim();
   const drivingRatePerKm = parsePositiveDecimal(String(formData.get("drivingRatePerKm") ?? "0.30"), "Driving rate per km");
