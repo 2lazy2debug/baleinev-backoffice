@@ -56,8 +56,9 @@ The middleware protects the entire `(app)` route group. It checks two things:
 
 1. **Is the user authenticated?** If not, redirect to `/login`.
 2. **Is the user a `DEPARTMENT` role trying to access an admin route?**
-   - Allowed routes for `DEPARTMENT`: `/`, `/budget`, `/expense-reports`
-   - All other routes (e.g. `/journal`, `/invoices`, `/users`, `/editions`, etc.) redirect `DEPARTMENT` users back to `/`.
+   - Blocked routes for `DEPARTMENT`: `/`, `/editions`, `/journal`, `/money-accounts`, `/cost-centers`,
+     `/invoices`, `/templates`, `/departments`, `/users` — these redirect to `/budget`.
+   - Everything else (`/budget`, `/tasks`, `/calendar`, `/events`, `/expense-reports`, etc.) is allowed.
 
 The middleware reads the role from the **JWT token** (no database round-trip).
 
@@ -65,8 +66,8 @@ The middleware reads the role from the **JWT token** (no database round-trip).
 // proxy.ts — simplified logic
 const token = await getToken({ req })
 if (!token) return redirect("/login")
-if (token.role === "DEPARTMENT" && !ALLOWED_DEPARTMENT_PATHS.includes(pathname)) {
-  return redirect("/")
+if (token.role === "DEPARTMENT" && BLOCKED_DEPARTMENT_PATHS.some((p) => pathname.startsWith(p))) {
+  return redirect("/budget")
 }
 ```
 

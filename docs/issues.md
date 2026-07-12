@@ -4,22 +4,12 @@ Findings from a read-through of the codebase, grouped by category and ordered ro
 within each group. Each item points at the code it concerns. Items marked **(verify)** are strong
 suspicions that should be confirmed by running the relevant flow before acting.
 
-Issue IDs are stable: a missing number (e.g. F1, F2, F6, F8, U5, U6, U7, U8) means that item was resolved
-and removed, not renumbered.
+Issue IDs are stable: a missing number (e.g. F1, F2, F6, F8, S1, S2, S3, S4, U5, U6, U7, U8) means that
+item was resolved and removed, not renumbered.
 
 ---
 
 ## Security issues
-
-### S4. Role-gating middleware may not be registered, and does not enforce authentication — medium **(verify)**
-[app/proxy.ts](../app/proxy.ts) contains the route-gating logic, but Next.js middleware
-conventionally lives in `middleware.ts`. Confirm this file is actually wired up as middleware in
-this Next.js 16 setup; if it is not, DEPARTMENT users are gated only by page-level checks. Separately,
-even when it runs, the handler returns `NextResponse.next()` when there is **no** token
-([lines 27-29](../app/proxy.ts#L27-L29)), so it never enforces authentication — it only redirects
-already-authenticated DEPARTMENT users away from admin routes. Real protection currently rests
-entirely on `getCurrentUserAccess()` / `requireAdmin()` in each page and route; the middleware is
-not a reliable second layer.
 
 ### S5. Invoice PDF templates are rendered HTML executed by Puppeteer with `--no-sandbox` — medium
 [app/app/api/invoices/[invoiceId]/pdf/route.ts](../app/app/api/invoices/%5BinvoiceId%5D/pdf/route.ts)

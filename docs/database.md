@@ -53,7 +53,10 @@ Represents an authenticated application user.
 | `refundCity` | String? | |
 | `departmentRoles` | `DepartmentRole[]` | Which departments this user belongs to |
 
-**Role enum:** `ADMIN` can access all routes and all admin actions. `DEPARTMENT` is restricted by middleware to budget and expense-reports only.
+**Role enum:** `ADMIN` can access all routes and all admin actions. `DEPARTMENT` is blocked by
+middleware from admin routes (editions, journal, money accounts, cost centers, invoices, templates,
+departments, users) and redirected to `/budget`; budget, tasks, calendar, events, and expense reports
+remain accessible.
 
 ---
 
