@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useActionState, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { deleteJournalEntryAction, updateJournalEntryAction } from "@/app/(app)/journal/actions";
+import { FormError } from "@/components/form-error";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
+import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
 type JournalEntry = {
   id: string;
@@ -67,7 +69,6 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
     moneyAccountId: string;
     costCenterId: string;
   } | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
   const tableRef = useRef<HTMLTableElement | null>(null);
 
@@ -228,27 +229,33 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
     });
   }
 
-  async function handleSaveEntry(entryId: string) {
-    if (!editDraft) return;
-    setIsSaving(true);
-    try {
-      const formData = new FormData();
-      formData.set("journalEntryId", entryId);
-      formData.set("departmentId", editDraft.departmentId);
-      formData.set("moneyAccountId", editDraft.moneyAccountId);
-      formData.set("accountType", editDraft.accountType);
-      formData.set("date", editDraft.date);
-      formData.set("amount", editDraft.amount);
-      formData.set("label", editDraft.label);
-      formData.set("costCenterId", editDraft.costCenterId);
-      await updateJournalEntryAction(formData);
-      setEditingId(null);
-      setEditDraft(null);
-      router.refresh();
-    } finally {
-      setIsSaving(false);
+  async function handleSaveEntry(_prevState: ActionState): Promise<ActionState> {
+    if (!editingId || !editDraft) {
+      return { error: null };
     }
+
+    const formData = new FormData();
+    formData.set("journalEntryId", editingId);
+    formData.set("departmentId", editDraft.departmentId);
+    formData.set("moneyAccountId", editDraft.moneyAccountId);
+    formData.set("accountType", editDraft.accountType);
+    formData.set("date", editDraft.date);
+    formData.set("amount", editDraft.amount);
+    formData.set("label", editDraft.label);
+    formData.set("costCenterId", editDraft.costCenterId);
+    const result = await updateJournalEntryAction(_prevState, formData);
+
+    if (result.error) {
+      return result;
+    }
+
+    setEditingId(null);
+    setEditDraft(null);
+    router.refresh();
+    return result;
   }
+  const [saveState, saveFormAction, isSaving] = useActionState(handleSaveEntry, initialActionState);
+  const [deleteState, deleteFormAction, isDeleting] = useActionState(deleteJournalEntryAction, initialActionState);
 
   const uniqueDepartments = [...new Set(entries.map((e) => e.department?.name).filter(Boolean))];
   const uniqueAccounts = [...new Set(entries.map((e) => e.moneyAccount.name))];
@@ -260,6 +267,11 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
         <h2 className="text-lg font-semibold">{copy.entries}</h2>
         <p className="text-xs text-[var(--muted)]">{copy.showing} {sortedEntries.length} {copy.of} {entries.length}</p>
       </div>
+      {(saveState.error || deleteState.error) ? (
+        <div className="border-b border-[var(--line)] px-4 py-2 shrink-0">
+          <FormError message={saveState.error ?? deleteState.error} />
+        </div>
+      ) : null}
 
       <div className="flex-1 overflow-auto">
         <table ref={tableRef} className="w-full table-fixed text-left text-sm">
@@ -474,7 +486,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                       <span className="text-xs text-[var(--muted)]">{copy.locked}</span>
                     ) : isEditing ? (
                       <div className="flex items-center gap-2">
-                        <button onClick={() => handleSaveEntry(entry.id)} disabled={isSaving} title={dictionaries[locale].shell.save} className="rounded-md border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
+                        <button onClick={() => saveFormAction()} disabled={isSaving} title={dictionaries[locale].shell.save} className="rounded-md border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
                           <Check className="h-3.5 w-3.5" />
                         </button>
                         <button onClick={() => { setEditingId(null); setEditDraft(null); }} title={dictionaries[locale].shell.cancel} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
@@ -486,11 +498,11 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                         <button onClick={() => handleEditStart(entry)} title={copy.edit} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--accent)] hover:bg-[var(--panel-strong)]">
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
-                        <form action={deleteJournalEntryAction}>
+                        <form action={deleteFormAction}>
                           <input type="hidden" name="journalEntryId" value={entry.id} />
                           <button
                             title={entry.linkedInvoice ? copy.locked : copy.actions}
-                            disabled={Boolean(entry.linkedInvoice)}
+                            disabled={Boolean(entry.linkedInvoice) || isDeleting}
                             className="text-rose-700 hover:text-rose-400 disabled:cursor-not-allowed disabled:text-[var(--muted)]"
                           >
                             <Trash2 className="h-3.5 w-3.5" />

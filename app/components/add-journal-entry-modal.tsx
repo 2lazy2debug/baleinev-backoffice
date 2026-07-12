@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState } from "react";
 
 import { createJournalEntryAction } from "@/app/(app)/journal/actions";
+import { FormError } from "@/components/form-error";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
+import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
 type AddJournalEntryModalProps = {
   isOpen: boolean;
@@ -35,33 +37,33 @@ export function AddJournalEntryModal({
   initialValues,
   fromExpenseReportId,
 }: AddJournalEntryModalProps) {
-  const [pending, setPending] = useState(false);
   const copy = dictionaries[locale].journal;
   const common = dictionaries[locale].common;
 
-  async function handleSubmit(formData: FormData) {
-    setPending(true);
+  async function handleSubmit(prevState: ActionState, formData: FormData): Promise<ActionState> {
+    const result = await createJournalEntryAction(prevState, formData);
 
-    try {
-      await createJournalEntryAction(formData);
-      const mode = formData.get("submitMode");
-
-      if (onAfterSubmit) {
-        onAfterSubmit();
-      }
-
-      if (mode === "close") {
-        onClose();
-      } else if (mode === "new") {
-        const form = document.querySelector("form") as HTMLFormElement;
-        form?.reset();
-      }
-    } catch (error) {
-      console.error("Error creating journal entry:", error);
-    } finally {
-      setPending(false);
+    if (result.error) {
+      return result;
     }
+
+    const mode = formData.get("submitMode");
+
+    if (onAfterSubmit) {
+      onAfterSubmit();
+    }
+
+    if (mode === "close") {
+      onClose();
+    } else if (mode === "new") {
+      const form = document.querySelector("form") as HTMLFormElement;
+      form?.reset();
+    }
+
+    return result;
   }
+
+  const [state, formAction, pending] = useActionState(handleSubmit, initialActionState);
 
   if (!isOpen) {
     return null;
@@ -84,7 +86,8 @@ export function AddJournalEntryModal({
           </button>
         </div>
 
-        <form action={handleSubmit} className="space-y-4">
+        <form action={formAction} className="space-y-4">
+          <FormError message={state.error} />
           {fromExpenseReportId ? (
             <input type="hidden" name="fromExpenseReportId" value={fromExpenseReportId} />
           ) : null}
