@@ -460,6 +460,17 @@ export const dictionaries = {
       deleteAppointmentConfirm: "Delete this appointment?",
       actionFailed: "The operation failed. Please try again.",
     },
+    errorPage: {
+      title: "Something went wrong",
+      description: "The page ran into an unexpected error. You can try again or head back to the dashboard.",
+      retry: "Try again",
+      backToDashboard: "Back to dashboard",
+    },
+    notFoundPage: {
+      title: "Page not found",
+      description: "This page doesn't exist or may have moved.",
+      backToDashboard: "Back to dashboard",
+    },
   },
   fr: {
     shell: {
@@ -916,6 +927,17 @@ export const dictionaries = {
       saveAppointment: "Enregistrer les modifications",
       deleteAppointmentConfirm: "Supprimer ce rendez-vous ?",
       actionFailed: "L'opération a échoué. Veuillez réessayer.",
+    },
+    errorPage: {
+      title: "Une erreur est survenue",
+      description: "Cette page a rencontré une erreur inattendue. Vous pouvez réessayer ou retourner au tableau de bord.",
+      retry: "Réessayer",
+      backToDashboard: "Retour au tableau de bord",
+    },
+    notFoundPage: {
+      title: "Page introuvable",
+      description: "Cette page n'existe pas ou a été déplacée.",
+      backToDashboard: "Retour au tableau de bord",
     },
   },
 } as const;
