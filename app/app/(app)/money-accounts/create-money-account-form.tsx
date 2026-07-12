@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 
+import { FormError } from "@/components/form-error";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
+import { initialActionState } from "@/lib/server-action-helpers";
 
 import { createMoneyAccountAction } from "./actions";
 
@@ -13,9 +15,11 @@ type Props = {
 export default function CreateMoneyAccountForm({ locale }: Props) {
   const copy = dictionaries[locale];
   const [type, setType] = useState<"BANK" | "CASH">("BANK");
+  const [createState, createFormAction, isCreating] = useActionState(createMoneyAccountAction, initialActionState);
 
   return (
-    <form action={createMoneyAccountAction} className="mt-6 space-y-4">
+    <form action={createFormAction} className="mt-6 space-y-4">
+      <FormError message={createState.error} />
       <label className="block space-y-2">
         <span className="text-sm font-medium">{copy.moneyAccounts.accountName}</span>
         <input
@@ -116,7 +120,10 @@ export default function CreateMoneyAccountForm({ locale }: Props) {
         </>
       ) : null}
 
-      <button className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
+      <button
+        disabled={isCreating}
+        className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
+      >
         {copy.moneyAccounts.add}
       </button>
     </form>
