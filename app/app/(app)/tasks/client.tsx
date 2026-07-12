@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { TaskType } from "@prisma/client";
-import { Check, Circle, Pencil, Trash2, X } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { Check, Circle, Pencil, Trash2 } from "lucide-react";
 
+import { FormError } from "@/components/form-error";
 import { buttonClasses } from "@/lib/button-classes";
+import { initialActionState } from "@/lib/server-action-helpers";
 import { decimalToNumber, formatCurrency } from "@/lib/utils";
 
 import {
@@ -43,7 +44,6 @@ interface TasksPageClientProps {
   locale: string;
   users: UserSummary[];
   activeEdition: { id: string } | null;
-  permissionError?: boolean;
 }
 
 interface UserSummary {
@@ -123,42 +123,24 @@ export function TasksPageClient({
   locale,
   users,
   activeEdition,
-  permissionError,
 }: TasksPageClientProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [notice, setNotice] = useState<string | null>(() =>
-    permissionError
-      ? locale === "fr"
-        ? "Vous n'avez pas la permission de modifier ou supprimer cette tache."
-        : "You do not have permission to edit or delete this task."
-      : null
+  const [resolveState, resolveFormAction, isResolving] = useActionState(resolveTaskAction, initialActionState);
+  const [updateTaskState, updateTaskFormAction, isUpdatingTask] = useActionState(
+    updateTodoTaskAction,
+    initialActionState
   );
-
-  useEffect(() => {
-    if (permissionError) {
-      router.replace(pathname);
-    }
-  }, [pathname, permissionError, router]);
-
-  const noticeBanner = notice ? (
-    <div className="flex items-start justify-between gap-3 rounded-xl border border-rose-400/30 bg-rose-950/30 px-3 py-2 text-sm text-rose-200">
-      <span className="break-words">{notice}</span>
-      <button
-        type="button"
-        onClick={() => setNotice(null)}
-        className="shrink-0 text-rose-200/80 hover:text-rose-100"
-        aria-label={copy.common.cancel ?? "Dismiss"}
-      >
-        <X className="h-4 w-4" />
-      </button>
-    </div>
-  ) : null;
+  const [statusState, statusFormAction, isTogglingStatus] = useActionState(
+    setTodoTaskStatusAction,
+    initialActionState
+  );
+  const [deleteTaskState, deleteTaskFormAction, isDeletingTask] = useActionState(
+    deleteTodoTaskAction,
+    initialActionState
+  );
 
   if (!activeEdition) {
     return (
       <div className="space-y-4">
-        {noticeBanner}
         <p className="text-sm text-[var(--muted)]">{copy.common.noActiveEdition}</p>
       </div>
     );
@@ -167,7 +149,6 @@ export function TasksPageClient({
   if (todos.length === 0 && ungroupedTasks.length === 0) {
     return (
       <div className="space-y-4">
-        {noticeBanner}
         <p className="text-sm text-[var(--muted)]">{copy.tasks.noPendingTasks}</p>
       </div>
     );
@@ -175,7 +156,6 @@ export function TasksPageClient({
 
   return (
     <div className="space-y-4">
-      {noticeBanner}
       {todos.map((todo) => (
         <TodoCard
           key={todo.id}
@@ -191,6 +171,10 @@ export function TasksPageClient({
       {ungroupedTasks.length > 0 ? (
         <div className="space-y-2 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4">
           <h3 className="text-sm font-semibold">{copy.tasks.standaloneTasks}</h3>
+          <FormError message={updateTaskState.error} />
+          <FormError message={statusState.error} />
+          <FormError message={deleteTaskState.error} />
+          <FormError message={resolveState.error} />
           {ungroupedTasks.map((task) => {
             const expenseReport = task.expenseReport;
             const shift = task.staffAssignment?.shift;
@@ -206,7 +190,7 @@ export function TasksPageClient({
                 {isGeneral ? (
                   <>
                     {canManageTask ? (
-                      <form action={updateTodoTaskAction} className="mt-2 grid gap-2 md:grid-cols-2">
+                      <form action={updateTaskFormAction} className="mt-2 grid gap-2 md:grid-cols-2">
                         <input type="hidden" name="todoTaskId" value={task.id} />
                         <input
                           type="text"
@@ -242,7 +226,7 @@ export function TasksPageClient({
                           </select>
                         ) : null}
                         <div className="md:col-span-2">
-                          <button className={buttonClasses.text.primary}>
+                          <button disabled={isUpdatingTask} className={buttonClasses.text.primary}>
                             {copy.tasks.saveTask}
                           </button>
                         </div>
@@ -272,21 +256,21 @@ export function TasksPageClient({
                     </div>
 
                     <div className="mt-2 flex flex-wrap gap-2">
-                      <form action={setTodoTaskStatusAction}>
+                      <form action={statusFormAction}>
                         <input type="hidden" name="todoTaskId" value={task.id} />
                         <input
                           type="hidden"
                           name="status"
                           value={task.status === "DONE" ? "PENDING" : "DONE"}
                         />
-                        <button className={buttonClasses.text.primary}>
+                        <button disabled={isTogglingStatus} className={buttonClasses.text.primary}>
                           {task.status === "DONE" ? copy.tasks.markPending : copy.tasks.markDone}
                         </button>
                       </form>
                       {canManageTask ? (
-                        <form action={deleteTodoTaskAction}>
+                        <form action={deleteTaskFormAction}>
                           <input type="hidden" name="todoTaskId" value={task.id} />
-                          <button className={buttonClasses.text.delete}>
+                          <button disabled={isDeletingTask} className={buttonClasses.text.delete}>
                             {copy.tasks.deleteTask}
                           </button>
                         </form>
@@ -329,9 +313,9 @@ export function TasksPageClient({
                       </p>
                     ) : null}
 
-                    <form action={resolveTaskAction} className="mt-2">
+                    <form action={resolveFormAction} className="mt-2">
                       <input type="hidden" name="taskId" value={task.id} />
-                      <button className={buttonClasses.text.primary}>
+                      <button disabled={isResolving} className={buttonClasses.text.primary}>
                         {copy.tasks.markDone}
                       </button>
                     </form>
@@ -363,10 +347,30 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
   const isEditing = editingTodoId === todo.id;
   const isDeleting = deletingTodoId === todo.id;
 
+  const [updateTodoState, updateTodoFormAction, isSavingTodo] = useActionState(updateTodoAction, initialActionState);
+  const [deleteTodoState, deleteTodoFormAction, isDeletingTodo] = useActionState(deleteTodoAction, initialActionState);
+  const [createTaskState, createTaskFormAction, isCreatingTask] = useActionState(
+    createTodoTaskAction,
+    initialActionState
+  );
+  const [statusState, statusFormAction, isTogglingStatus] = useActionState(
+    setTodoTaskStatusAction,
+    initialActionState
+  );
+  const [updateTaskState, updateTaskFormAction, isUpdatingTask] = useActionState(
+    updateTodoTaskAction,
+    initialActionState
+  );
+  const [deleteTaskState, deleteTaskFormAction, isDeletingTask] = useActionState(
+    deleteTodoTaskAction,
+    initialActionState
+  );
+
   return (
     <article className="space-y-3 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4">
       {isEditing ? (
-        <form action={updateTodoAction} className="grid gap-3 md:grid-cols-2">
+        <form action={updateTodoFormAction} className="grid gap-3 md:grid-cols-2">
+          <FormError message={updateTodoState.error} className="md:col-span-2" />
           <input type="hidden" name="todoId" value={todo.id} />
           <label className="block space-y-1 md:col-span-2">
             <span className="text-sm font-medium">{copy.tasks.todoTitle}</span>
@@ -405,7 +409,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
             </label>
           ) : null}
           <div className="md:col-span-2 flex gap-2">
-            <button className={buttonClasses.text.primary}>
+            <button disabled={isSavingTodo} className={buttonClasses.text.primary}>
               {copy.tasks.saveTodo}
             </button>
             <button
@@ -457,9 +461,10 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
 
       {isDeleting ? (
         <form
-          action={deleteTodoAction}
+          action={deleteTodoFormAction}
           className="grid gap-2 rounded-xl border border-dashed border-rose-400/50 bg-rose-950/20 p-3 md:grid-cols-[1fr_auto]"
         >
+          <FormError message={deleteTodoState.error} className="md:col-span-2" />
           <input type="hidden" name="todoId" value={todo.id} />
           <label className="block space-y-1">
             <span className="text-xs font-semibold uppercase tracking-[0.14em] text-rose-300">
@@ -475,7 +480,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
             />
           </label>
           <div className="flex items-end gap-2">
-            <button className={buttonClasses.text.delete}>
+            <button disabled={isDeletingTodo} className={buttonClasses.text.delete}>
               {copy.tasks.delete}
             </button>
             <button
@@ -493,7 +498,8 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
         <p className="text-sm font-semibold">{copy.tasks.todoTasks}</p>
 
         {canManageTodoTasks ? (
-          <form action={createTodoTaskAction} className="grid gap-2 md:grid-cols-2">
+          <form action={createTaskFormAction} className="grid gap-2 md:grid-cols-2">
+            <FormError message={createTaskState.error} className="md:col-span-2" />
             <input type="hidden" name="todoId" value={todo.id} />
             <input
               type="text"
@@ -528,12 +534,16 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
               </select>
             ) : null}
             <div className="md:col-span-2">
-              <button className={buttonClasses.text.primary}>
+              <button disabled={isCreatingTask} className={buttonClasses.text.primary}>
                 {copy.tasks.createTask}
               </button>
             </div>
           </form>
         ) : null}
+
+        <FormError message={statusState.error} />
+        <FormError message={updateTaskState.error} />
+        <FormError message={deleteTaskState.error} />
 
         {todo.tasks.length === 0 ? (
           <p className="text-xs text-[var(--muted)]">{copy.tasks.noTasks}</p>
@@ -570,7 +580,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-1">
-                  <form action={setTodoTaskStatusAction} className="inline">
+                  <form action={statusFormAction} className="inline">
                     <input type="hidden" name="todoTaskId" value={task.id} />
                     <input
                       type="hidden"
@@ -578,6 +588,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
                       value={task.status === "DONE" ? "PENDING" : "DONE"}
                     />
                     <button
+                      disabled={isTogglingStatus}
                       className={buttonClasses.icon.action}
                       title={
                         task.status === "DONE" ? "Mark pending" : "Mark done"
@@ -592,18 +603,20 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
                   </form>
                   {canManageTodoTasks ? (
                     <>
-                      <form action={updateTodoTaskAction} className="inline">
+                      <form action={updateTaskFormAction} className="inline">
                         <input type="hidden" name="todoTaskId" value={task.id} />
                         <button
+                          disabled={isUpdatingTask}
                           className={buttonClasses.icon.edit}
                           title="Edit"
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                       </form>
-                      <form action={deleteTodoTaskAction} className="inline">
+                      <form action={deleteTaskFormAction} className="inline">
                         <input type="hidden" name="todoTaskId" value={task.id} />
                         <button
+                          disabled={isDeletingTask}
                           className={buttonClasses.icon.delete}
                           title="Delete"
                         >

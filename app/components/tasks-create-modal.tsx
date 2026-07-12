@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { Plus, X } from "lucide-react";
+
+import { FormError } from "@/components/form-error";
+import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
 type UserItem = {
   id: string;
@@ -28,12 +31,17 @@ type Props = {
   copy: TasksCopy;
   users: UserItem[];
   isAdmin: boolean;
-  createTodoAction: (formData: FormData) => Promise<void>;
-  createTodoTaskAction: (formData: FormData) => Promise<void>;
+  createTodoAction: (prevState: ActionState, formData: FormData) => Promise<ActionState>;
+  createTodoTaskAction: (prevState: ActionState, formData: FormData) => Promise<ActionState>;
 };
 
 export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, createTodoTaskAction }: Props) {
   const [open, setOpen] = useState(false);
+  const [createTodoState, createTodoFormAction, isCreatingTodo] = useActionState(createTodoAction, initialActionState);
+  const [createTaskState, createTaskFormAction, isCreatingTask] = useActionState(
+    createTodoTaskAction,
+    initialActionState
+  );
 
   return (
     <>
@@ -61,8 +69,9 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <form action={createTodoAction} className="space-y-3 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4">
+              <form action={createTodoFormAction} className="space-y-3 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4">
                 <h4 className="font-semibold">{copy.createTodo}</h4>
+                <FormError message={createTodoState.error} />
                 <label className="block space-y-1">
                   <span className="text-sm">{copy.todoTitle}</span>
                   <input
@@ -95,13 +104,17 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
                     </select>
                   </label>
                 ) : null}
-                <button className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel-strong)]">
+                <button
+                  disabled={isCreatingTodo}
+                  className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel-strong)] disabled:opacity-60"
+                >
                   {copy.createTodo}
                 </button>
               </form>
 
-              <form action={createTodoTaskAction} className="space-y-3 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4">
+              <form action={createTaskFormAction} className="space-y-3 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4">
                 <h4 className="font-semibold">{copy.createStandaloneTask}</h4>
+                <FormError message={createTaskState.error} />
                 <label className="block space-y-1">
                   <span className="text-sm">{copy.todoTaskTitle}</span>
                   <input
@@ -142,7 +155,10 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
                     </select>
                   </label>
                 ) : null}
-                <button className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel-strong)]">
+                <button
+                  disabled={isCreatingTask}
+                  className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel-strong)] disabled:opacity-60"
+                >
                   {copy.createTask}
                 </button>
               </form>

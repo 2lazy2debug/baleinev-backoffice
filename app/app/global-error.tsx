@@ -31,6 +31,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
               >
                 {copy.retry}
               </button>
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- global-error replaces the root layout, so the router context Link needs may not be mounted */}
               <a
                 href="/"
                 className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel-strong)]"

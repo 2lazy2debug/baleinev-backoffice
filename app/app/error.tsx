@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 
 import { dictionaries, localeCookieName, type Locale } from "@/lib/i18n-dictionaries";
@@ -35,12 +36,12 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
           >
             {copy.retry}
           </button>
-          <a
+          <Link
             href="/"
             className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel-strong)]"
           >
             {copy.backToDashboard}
-          </a>
+          </Link>
         </div>
       </div>
     </div>

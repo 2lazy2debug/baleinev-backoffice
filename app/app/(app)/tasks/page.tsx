@@ -7,16 +7,10 @@ import { getStandaloneTodoTasksForUser, getVisibleTodosForUser } from "@/lib/tas
 import { TasksPageClient } from "./client";
 import { createTodoAction, createTodoTaskAction } from "./actions";
 
-type TasksPageProps = {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
-};
-
-export default async function TasksPage({ searchParams }: TasksPageProps) {
+export default async function TasksPage() {
   const access = await getCurrentUserAccess();
   const locale = await getLocale();
   const copy = getDictionary(locale);
-  const resolvedSearchParams = searchParams ? await searchParams : {};
-  const permissionError = resolvedSearchParams.error === "task-manage-permission";
 
   const [activeEdition, users, ungroupedTasks] = await Promise.all([
     prisma.edition.findFirst({ where: { isActive: true }, select: { id: true } }),
@@ -67,7 +61,6 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
           locale={locale}
           users={users}
           activeEdition={activeEdition}
-          permissionError={permissionError}
         />
       </section>
     </div>

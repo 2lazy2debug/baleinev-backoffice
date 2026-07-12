@@ -25,10 +25,10 @@ export const buttonClasses = {
   // Text buttons with padding
   text: {
     // Edit with text
-    edit: "rounded-md border border-[var(--line)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--panel-strong)]",
+    edit: "rounded-md border border-[var(--line)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--panel-strong)] disabled:opacity-50",
 
     // Delete with text
-    delete: "rounded-md border border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-950/40",
+    delete: "rounded-md border border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-950/40 disabled:opacity-50",
 
     // Save with text
     save: "rounded-md border border-emerald-400 px-3 py-1.5 text-xs font-semibold text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50",
@@ -37,7 +37,7 @@ export const buttonClasses = {
     cancel: "rounded-md border border-[var(--line)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--panel-strong)]",
 
     // Primary button (filled background)
-    primary: "rounded-md bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--accent-strong)]",
+    primary: "rounded-md bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60",
   },
 
   // Full-sized primary buttons
