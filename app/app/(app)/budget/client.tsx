@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Eye, Pencil, Plus, TrendingDown, TrendingUp, Trash2, X } from "lucide-react";
 
+import { FormError } from "@/components/form-error";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
+import { type ActionState, initialActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
 import { createDepartmentAction, deleteDepartmentAction } from "@/app/(app)/departments/actions";
 
@@ -50,52 +52,71 @@ export default function BudgetPageClient({ locale, editionName, departments, can
 
   const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false);
   const [entryModalDepartment, setEntryModalDepartment] = useState<{ id: string; name: string } | null>(null);
-  const [isSavingDepartment, setIsSavingDepartment] = useState(false);
-  const [isSavingBudgetLine, setIsSavingBudgetLine] = useState(false);
   const [editingBudgetLineId, setEditingBudgetLineId] = useState<string | null>(null);
   const [editBudgetDraft, setEditBudgetDraft] = useState<{ label: string; amount: string; notes: string } | null>(null);
-  const [isSavingBudgetEdit, setIsSavingBudgetEdit] = useState(false);
   const [detailsDepartment, setDetailsDepartment] = useState<DepartmentItem | null>(null);
 
-  async function handleCreateDepartment(formData: FormData) {
-    setIsSavingDepartment(true);
-    try {
-      await createDepartmentAction(formData);
+  async function handleCreateDepartment(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+    const result = await createDepartmentAction(_prevState, formData);
+    if (!result.error) {
       setIsDepartmentModalOpen(false);
       router.refresh();
-    } finally {
-      setIsSavingDepartment(false);
     }
+    return result;
   }
+  const [createDeptState, createDeptFormAction, isSavingDepartment] = useActionState(
+    handleCreateDepartment,
+    initialActionState
+  );
 
-  async function handleCreateBudgetLine(formData: FormData) {
-    setIsSavingBudgetLine(true);
-    try {
-      await createBudgetLineAction(formData);
+  async function handleCreateBudgetLine(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+    const result = await createBudgetLineAction(_prevState, formData);
+    if (!result.error) {
       setEntryModalDepartment(null);
       router.refresh();
-    } finally {
-      setIsSavingBudgetLine(false);
     }
+    return result;
   }
+  const [createLineState, createLineFormAction, isSavingBudgetLine] = useActionState(
+    handleCreateBudgetLine,
+    initialActionState
+  );
 
-  async function handleSaveBudgetLine(lineId: string) {
-    if (!editBudgetDraft) return;
-    setIsSavingBudgetEdit(true);
+  const [deleteDeptState, deleteDeptFormAction, isDeletingDept] = useActionState(
+    deleteDepartmentAction,
+    initialActionState
+  );
+  const [deleteLineState, deleteLineFormAction, isDeletingLine] = useActionState(
+    deleteBudgetLineAction,
+    initialActionState
+  );
+
+  async function handleSaveBudgetLine(_prevState: ActionState): Promise<ActionState> {
+    if (!editingBudgetLineId || !editBudgetDraft) {
+      return { error: null };
+    }
     try {
       const formData = new FormData();
-      formData.set("budgetLineId", lineId);
+      formData.set("budgetLineId", editingBudgetLineId);
       formData.set("label", editBudgetDraft.label);
       formData.set("amount", editBudgetDraft.amount);
       formData.set("notes", editBudgetDraft.notes);
-      await updateBudgetLineAction(formData);
+      const result = await updateBudgetLineAction(_prevState, formData);
+      if (result.error) {
+        return result;
+      }
       setEditingBudgetLineId(null);
       setEditBudgetDraft(null);
       router.refresh();
-    } finally {
-      setIsSavingBudgetEdit(false);
+      return result;
+    } catch (err) {
+      return { error: toActionErrorMessage(err) };
     }
   }
+  const [saveLineState, saveLineFormAction, isSavingBudgetEdit] = useActionState(
+    handleSaveBudgetLine,
+    initialActionState
+  );
 
   const inp = "w-full text-xs rounded border border-[var(--line)] bg-[var(--panel)] px-2 py-1 outline-none focus:border-[var(--accent)]";
 
@@ -118,6 +139,9 @@ export default function BudgetPageClient({ locale, editionName, departments, can
       </header>
 
       <section className="grid gap-4 md:grid-cols-2">
+        <FormError message={deleteDeptState.error} className="md:col-span-2" />
+        <FormError message={deleteLineState.error} className="md:col-span-2" />
+        <FormError message={saveLineState.error} className="md:col-span-2" />
         {departments.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)] md:col-span-2">
             {emptyStateMessage}
@@ -169,10 +193,10 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                       >
                         <Plus className="h-3.5 w-3.5" />
                       </button>
-                      <form action={deleteDepartmentAction}>
+                      <form action={deleteDeptFormAction}>
                         <input type="hidden" name="departmentId" value={department.id} />
                         <button
-                          disabled={!canDeleteDept}
+                          disabled={!canDeleteDept || isDeletingDept}
                           title={canDeleteDept ? copy.budget.deleteDepartment : copy.budget.cannotDeleteDepartment}
                           className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
                         >
@@ -226,7 +250,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                                   <td className="px-3 py-2">
                                     {canManage && isEditingLine ? (
                                       <div className="flex items-center justify-end gap-2">
-                                        <button onClick={() => handleSaveBudgetLine(line.id)} disabled={isSavingBudgetEdit} className="rounded-md border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
+                                        <button onClick={() => saveLineFormAction()} disabled={isSavingBudgetEdit} className="rounded-md border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
                                           <Check className="h-3 w-3" />
                                         </button>
                                         <button onClick={() => { setEditingBudgetLineId(null); setEditBudgetDraft(null); }} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
@@ -238,9 +262,9 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                                         <button onClick={() => { setEditingBudgetLineId(line.id); setEditBudgetDraft({ label: line.label, amount: line.amount.toString(), notes: line.notes ?? "" }); }} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
                                           <Pencil className="h-3 w-3" />
                                         </button>
-                                        <form action={deleteBudgetLineAction}>
+                                        <form action={deleteLineFormAction}>
                                           <input type="hidden" name="budgetLineId" value={line.id} />
-                                          <button title={copy.budget.deleteDepartment} className="rounded-md border border-rose-300 p-1.5 text-rose-300 hover:bg-rose-950/40">
+                                          <button disabled={isDeletingLine} title={copy.budget.deleteDepartment} className="rounded-md border border-rose-300 p-1.5 text-rose-300 hover:bg-rose-950/40 disabled:opacity-50">
                                             <Trash2 className="h-3 w-3" />
                                           </button>
                                         </form>
@@ -306,7 +330,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                                   <td className="px-3 py-2">
                                     {canManage && isEditingLine ? (
                                       <div className="flex items-center justify-end gap-2">
-                                        <button onClick={() => handleSaveBudgetLine(line.id)} disabled={isSavingBudgetEdit} className="rounded-md border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
+                                        <button onClick={() => saveLineFormAction()} disabled={isSavingBudgetEdit} className="rounded-md border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
                                           <Check className="h-3 w-3" />
                                         </button>
                                         <button onClick={() => { setEditingBudgetLineId(null); setEditBudgetDraft(null); }} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
@@ -318,9 +342,9 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                                         <button onClick={() => { setEditingBudgetLineId(line.id); setEditBudgetDraft({ label: line.label, amount: line.amount.toString(), notes: line.notes ?? "" }); }} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
                                           <Pencil className="h-3 w-3" />
                                         </button>
-                                        <form action={deleteBudgetLineAction}>
+                                        <form action={deleteLineFormAction}>
                                           <input type="hidden" name="budgetLineId" value={line.id} />
-                                          <button title={copy.budget.deleteDepartment} className="rounded-md border border-rose-300 p-1.5 text-rose-300 hover:bg-rose-950/40">
+                                          <button disabled={isDeletingLine} title={copy.budget.deleteDepartment} className="rounded-md border border-rose-300 p-1.5 text-rose-300 hover:bg-rose-950/40 disabled:opacity-50">
                                             <Trash2 className="h-3 w-3" />
                                           </button>
                                         </form>
@@ -520,7 +544,8 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <form action={handleCreateDepartment} className="space-y-4">
+            <form action={createDeptFormAction} className="space-y-4">
+              <FormError message={createDeptState.error} />
               <label className="block space-y-2">
                 <span className="text-sm font-medium">{copy.budget.departmentName}</span>
                 <input
@@ -566,7 +591,8 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <form action={handleCreateBudgetLine} className="space-y-4">
+            <form action={createLineFormAction} className="space-y-4">
+              <FormError message={createLineState.error} />
               <input type="hidden" name="departmentId" value={entryModalDepartment.id} />
 
               <label className="block space-y-2">
