@@ -1,6 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
+
+import { FormError } from "@/components/form-error";
+import { initialActionState } from "@/lib/server-action-helpers";
 
 import { addShiftAction } from "./actions";
 
@@ -28,6 +31,7 @@ function toMinutes(value: string) {
 export default function AddShiftForm({ eventDayId, existingShifts, copy }: Props) {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [state, formAction, isPending] = useActionState(addShiftAction, initialActionState);
 
   const hasOverlap = useMemo(() => {
     const start = toMinutes(startTime);
@@ -44,7 +48,7 @@ export default function AddShiftForm({ eventDayId, existingShifts, copy }: Props
 
   return (
     <form
-      action={addShiftAction}
+      action={formAction}
       className="flex flex-wrap items-end gap-2 pt-1"
       onSubmit={(event) => {
         if (hasOverlap && !window.confirm(copy.shiftOverlapWarning)) {
@@ -52,6 +56,7 @@ export default function AddShiftForm({ eventDayId, existingShifts, copy }: Props
         }
       }}
     >
+      <FormError message={state.error} className="w-full" />
       <input type="hidden" name="eventDayId" value={eventDayId} />
       <input
         type="time"
@@ -83,7 +88,10 @@ export default function AddShiftForm({ eventDayId, existingShifts, copy }: Props
         defaultValue="1"
         className="w-16 rounded-lg border border-[var(--line)] bg-[var(--panel)] px-2 py-1.5 text-xs outline-none focus:border-[var(--accent)]"
       />
-      <button className="rounded-md border border-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10">
+      <button
+        disabled={isPending}
+        className="rounded-md border border-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10 disabled:opacity-50"
+      >
         {copy.addShift}
       </button>
     </form>
