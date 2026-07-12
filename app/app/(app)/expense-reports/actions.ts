@@ -6,7 +6,12 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUserAccess, requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { validateProofUpload, type ProofMimeType } from "@/lib/proof-upload";
-import { getActiveEditionId, getRequiredString } from "@/lib/server-action-helpers";
+import {
+  type ActionState,
+  getActiveEditionId,
+  getRequiredString,
+  toActionErrorMessage,
+} from "@/lib/server-action-helpers";
 import { createAdminTask, resolvePendingTask } from "@/lib/tasks";
 
 function parsePositiveAmount(raw: string) {
@@ -56,137 +61,161 @@ function parsePositiveNumber(raw: string, fieldName: string) {
   return value;
 }
 
-export async function createExpenseReportAction(formData: FormData) {
-  const access = await getCurrentUserAccess();
-  const editionId = await getActiveEditionId();
-  const reportType = parseReportType(getRequiredString(formData, "reportType"));
-  const submittedPaymentMethod = String(formData.get("paymentMethod") ?? "").trim();
-  const date = parseDate(getRequiredString(formData, "date"));
-  const departmentId = getRequiredString(formData, "departmentId");
+export async function createExpenseReportAction(
+  _prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  try {
+    const access = await getCurrentUserAccess();
+    const editionId = await getActiveEditionId();
+    const reportType = parseReportType(getRequiredString(formData, "reportType"));
+    const submittedPaymentMethod = String(formData.get("paymentMethod") ?? "").trim();
+    const date = parseDate(getRequiredString(formData, "date"));
+    const departmentId = getRequiredString(formData, "departmentId");
 
-  const activeEdition = await prisma.edition.findUniqueOrThrow({
-    where: { id: editionId },
-    select: { drivingRatePerKm: true },
-  });
+    const activeEdition = await prisma.edition.findUniqueOrThrow({
+      where: { id: editionId },
+      select: { drivingRatePerKm: true },
+    });
 
-  const department = await prisma.department.findFirst({
-    where: { id: departmentId, editionId },
-    select: { name: true },
-  });
+    const department = await prisma.department.findFirst({
+      where: { id: departmentId, editionId },
+      select: { name: true },
+    });
 
-  if (!department) {
-    throw new Error("Selected department does not belong to the active edition.");
-  }
-
-  if (access.role !== "ADMIN" && !access.departmentRoleNames.includes(department.name)) {
-    throw new Error("You can only file expenses for a department you belong to.");
-  }
-
-  let description: string;
-  let amount: number;
-  let departure: string | null = null;
-  let arrival: string | null = null;
-  let kilometers: number | null = null;
-  let ratePerKm: number | null = null;
-  let paymentMethod: ExpensePaymentMethod;
-  let proofData: Uint8Array<ArrayBuffer> | null = null;
-  let proofMimeType: ProofMimeType | null = null;
-  let proofFilename: string | null = null;
-
-  if (reportType === ExpenseReportType.DRIVING) {
-    description = getRequiredString(formData, "drivingReason");
-    departure = getRequiredString(formData, "departure");
-    arrival = getRequiredString(formData, "arrival");
-    kilometers = parsePositiveNumber(getRequiredString(formData, "kilometers"), "Kilometers");
-    ratePerKm = Number(activeEdition.drivingRatePerKm.toString());
-    amount = Number((kilometers * ratePerKm).toFixed(2));
-    paymentMethod = ExpensePaymentMethod.MY_MONEY;
-  } else {
-    description = getRequiredString(formData, "description");
-    amount = parsePositiveAmount(getRequiredString(formData, "amount"));
-    paymentMethod = parsePaymentMethod(submittedPaymentMethod || getRequiredString(formData, "paymentMethod"));
-
-    const proof = formData.get("proof");
-    if (!(proof instanceof File) || proof.size === 0) {
-      throw new Error("Proof file is required.");
+    if (!department) {
+      throw new Error("Selected department does not belong to the active edition.");
     }
 
-    const validated = await validateProofUpload(proof);
-    proofData = validated.data;
-    proofMimeType = validated.mimeType;
-    proofFilename = validated.filename;
+    if (access.role !== "ADMIN" && !access.departmentRoleNames.includes(department.name)) {
+      throw new Error("You can only file expenses for a department you belong to.");
+    }
+
+    let description: string;
+    let amount: number;
+    let departure: string | null = null;
+    let arrival: string | null = null;
+    let kilometers: number | null = null;
+    let ratePerKm: number | null = null;
+    let paymentMethod: ExpensePaymentMethod;
+    let proofData: Uint8Array<ArrayBuffer> | null = null;
+    let proofMimeType: ProofMimeType | null = null;
+    let proofFilename: string | null = null;
+
+    if (reportType === ExpenseReportType.DRIVING) {
+      description = getRequiredString(formData, "drivingReason");
+      departure = getRequiredString(formData, "departure");
+      arrival = getRequiredString(formData, "arrival");
+      kilometers = parsePositiveNumber(getRequiredString(formData, "kilometers"), "Kilometers");
+      ratePerKm = Number(activeEdition.drivingRatePerKm.toString());
+      amount = Number((kilometers * ratePerKm).toFixed(2));
+      paymentMethod = ExpensePaymentMethod.MY_MONEY;
+    } else {
+      description = getRequiredString(formData, "description");
+      amount = parsePositiveAmount(getRequiredString(formData, "amount"));
+      paymentMethod = parsePaymentMethod(submittedPaymentMethod || getRequiredString(formData, "paymentMethod"));
+
+      const proof = formData.get("proof");
+      if (!(proof instanceof File) || proof.size === 0) {
+        throw new Error("Proof file is required.");
+      }
+
+      const validated = await validateProofUpload(proof);
+      proofData = validated.data;
+      proofMimeType = validated.mimeType;
+      proofFilename = validated.filename;
+    }
+
+    const expenseReport = await prisma.expenseReport.create({
+      data: {
+        editionId,
+        departmentId,
+        submittedById: access.id,
+        reportType,
+        description,
+        departure,
+        arrival,
+        kilometers,
+        ratePerKm,
+        amount,
+        paymentMethod,
+        date,
+        proofData,
+        proofMimeType,
+        proofFilename,
+        status: ExpenseReportStatus.PENDING,
+      },
+    });
+
+    await createAdminTask(TaskType.REVIEW_EXPENSE_REPORT, `Review: ${description}`, expenseReport.id);
+    revalidatePath("/expense-reports");
+    revalidatePath("/tasks");
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
   }
-
-  const expenseReport = await prisma.expenseReport.create({
-    data: {
-      editionId,
-      departmentId,
-      submittedById: access.id,
-      reportType,
-      description,
-      departure,
-      arrival,
-      kilometers,
-      ratePerKm,
-      amount,
-      paymentMethod,
-      date,
-      proofData,
-      proofMimeType,
-      proofFilename,
-      status: ExpenseReportStatus.PENDING,
-    },
-  });
-
-  await createAdminTask(TaskType.REVIEW_EXPENSE_REPORT, `Review: ${description}`, expenseReport.id);
-  revalidatePath("/expense-reports");
-  revalidatePath("/tasks");
 }
 
-export async function approveExpenseReportAction(formData: FormData) {
-  const access = await requireAdmin();
-  const expenseReportId = getRequiredString(formData, "expenseReportId");
+export async function approveExpenseReportAction(
+  _prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  try {
+    const access = await requireAdmin();
+    const expenseReportId = getRequiredString(formData, "expenseReportId");
 
-  // Find the report to get its description for the follow-up task title
-  const report = await prisma.expenseReport.findUniqueOrThrow({
-    where: { id: expenseReportId },
-    select: { description: true },
-  });
+    // Find the report to get its description for the follow-up task title
+    const report = await prisma.expenseReport.findUniqueOrThrow({
+      where: { id: expenseReportId },
+      select: { description: true },
+    });
 
-  await prisma.expenseReport.update({
-    where: { id: expenseReportId },
-    data: {
-      status: ExpenseReportStatus.APPROVED,
-      rejectionReason: null,
-      reviewedAt: new Date(),
-      reviewedById: access.id,
-    },
-  });
+    await prisma.expenseReport.update({
+      where: { id: expenseReportId },
+      data: {
+        status: ExpenseReportStatus.APPROVED,
+        rejectionReason: null,
+        reviewedAt: new Date(),
+        reviewedById: access.id,
+      },
+    });
 
-  await resolvePendingTask({ type: TaskType.REVIEW_EXPENSE_REPORT, expenseReportId, resolvedById: access.id });
-  await createAdminTask(TaskType.RECORD_JOURNAL, `Record in journal: ${report.description}`, expenseReportId);
+    await resolvePendingTask({ type: TaskType.REVIEW_EXPENSE_REPORT, expenseReportId, resolvedById: access.id });
+    await createAdminTask(TaskType.RECORD_JOURNAL, `Record in journal: ${report.description}`, expenseReportId);
 
-  revalidatePath("/expense-reports");
-  revalidatePath("/tasks");
+    revalidatePath("/expense-reports");
+    revalidatePath("/tasks");
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
 }
 
-export async function rejectExpenseReportAction(formData: FormData) {
-  const access = await requireAdmin();
-  const expenseReportId = getRequiredString(formData, "expenseReportId");
-  const rejectionReason = String(formData.get("rejectionReason") ?? "").trim() || null;
+export async function rejectExpenseReportAction(
+  _prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  try {
+    const access = await requireAdmin();
+    const expenseReportId = getRequiredString(formData, "expenseReportId");
+    const rejectionReason = String(formData.get("rejectionReason") ?? "").trim() || null;
 
-  await prisma.expenseReport.update({
-    where: { id: expenseReportId },
-    data: {
-      status: ExpenseReportStatus.REJECTED,
-      rejectionReason,
-      reviewedAt: new Date(),
-      reviewedById: access.id,
-    },
-  });
+    await prisma.expenseReport.update({
+      where: { id: expenseReportId },
+      data: {
+        status: ExpenseReportStatus.REJECTED,
+        rejectionReason,
+        reviewedAt: new Date(),
+        reviewedById: access.id,
+      },
+    });
 
-  await resolvePendingTask({ type: TaskType.REVIEW_EXPENSE_REPORT, expenseReportId, resolvedById: access.id });
+    await resolvePendingTask({ type: TaskType.REVIEW_EXPENSE_REPORT, expenseReportId, resolvedById: access.id });
 
-  revalidatePath("/expense-reports");
-  revalidatePath("/tasks");
+    revalidatePath("/expense-reports");
+    revalidatePath("/tasks");
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
 }

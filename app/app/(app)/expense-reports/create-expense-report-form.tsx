@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 
+import { FormError } from "@/components/form-error";
 import { allowedProofMimeTypes } from "@/lib/proof-upload";
+import { initialActionState } from "@/lib/server-action-helpers";
 
 import { createExpenseReportAction } from "./actions";
 
@@ -57,6 +59,7 @@ type ExpenseReportTypeValue = (typeof EXPENSE_REPORT_TYPE)[keyof typeof EXPENSE_
 export default function CreateExpenseReportForm({ departments, drivingRatePerKm, copy }: Props) {
   const [reportType, setReportType] = useState<ExpenseReportTypeValue>(EXPENSE_REPORT_TYPE.STANDARD);
   const [kilometers, setKilometers] = useState("");
+  const [createState, createFormAction, isCreating] = useActionState(createExpenseReportAction, initialActionState);
 
   const computedAmount = useMemo(() => {
     const km = Number(kilometers.replace(",", "."));
@@ -71,7 +74,8 @@ export default function CreateExpenseReportForm({ departments, drivingRatePerKm,
     <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
       <h2 className="text-xl font-semibold">{copy.create}</h2>
 
-      <form action={createExpenseReportAction} className="mt-6 space-y-4">
+      <form action={createFormAction} className="mt-6 space-y-4">
+        <FormError message={createState.error} />
         <label className="block space-y-2">
           <span className="text-sm font-medium">{copy.reportType}</span>
           <select
@@ -235,7 +239,10 @@ export default function CreateExpenseReportForm({ departments, drivingRatePerKm,
           </select>
         </label>
 
-        <button className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)]">
+        <button
+          disabled={isCreating}
+          className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
+        >
           {copy.submit}
         </button>
       </form>
