@@ -112,6 +112,12 @@ baleinev-backoffice/
 - **Mutations:** almost everything is a `"use server"` server action posting a `FormData`. The
   exceptions are invoices, PDF rendering, proof download, QR rendering, and language/refund
   preferences, which are REST route handlers.
+- **Error handling:** every server action takes `(prevState: ActionState, formData)` and returns
+  `{ error: string | null }` instead of throwing for expected validation/permission failures (see
+  `app/lib/server-action-helpers.ts`). Forms consume this via React's `useActionState` and render
+  the message inline through `<FormError>` (`app/components/form-error.tsx`). `app/app/error.tsx`,
+  `global-error.tsx`, and `not-found.tsx` are the fallback boundaries for anything unexpected that
+  still throws.
 - **PDF:** Puppeteer launched per request, `page.setContent(html)` then `page.pdf()`.
 - **i18n:** English and French dictionaries in
   [app/lib/i18n-dictionaries.ts](../app/lib/i18n-dictionaries.ts), locale held in a cookie.

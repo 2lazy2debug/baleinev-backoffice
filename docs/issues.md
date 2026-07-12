@@ -4,8 +4,8 @@ Findings from a read-through of the codebase, grouped by category and ordered ro
 within each group. Each item points at the code it concerns. Items marked **(verify)** are strong
 suspicions that should be confirmed by running the relevant flow before acting.
 
-Issue IDs are stable: a missing number (e.g. F1, F2, F6, F8, S1, S2, S3, S4, U5, U6, U7, U8) means that
-item was resolved and removed, not renumbered.
+Issue IDs are stable: a missing number (e.g. F1, F2, F6, F8, S1, S2, S3, S4, U1, U5, U6, U7, U8) means
+that item was resolved and removed, not renumbered.
 
 ---
 
@@ -42,13 +42,6 @@ non-reproducible/destructive. Adopt `prisma migrate` before deploying.
 ---
 
 ## UX issues
-
-### U1. Server-action failures surface as raw errors — high
-There is no `error.tsx`, `loading.tsx`, or `not-found.tsx` anywhere under `app/`. Server actions
-throughout (`throw new Error("Amount must be a positive number.")`, "Selected department does not
-belong…", etc.) bubble up as unhandled exceptions, giving the user Next's generic error screen
-instead of an inline, localized message next to the field. Add route-level `error.tsx` boundaries
-and/or return typed error state to the forms.
 
 ### U4. Inconsistent delete-confirmation patterns — low
 Deletions use three different confirmation styles: typing the word `delete`

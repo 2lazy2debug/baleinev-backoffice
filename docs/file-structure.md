@@ -22,6 +22,10 @@ app/
 ├── layout.tsx                    ← Root HTML shell (font, meta, body)
 ├── globals.css                   ← CSS custom properties and base styles
 │
+├── error.tsx                     ← Route-level error boundary (styled, localized, "try again")
+├── global-error.tsx              ← Fallback boundary for errors in the root layout itself
+├── not-found.tsx                 ← Styled 404 page
+│
 ├── (app)/                        ← Protected group (needs a valid session)
 │   ├── layout.tsx                ← Fetches active user, renders <AppShell>
 │   ├── page.tsx                  ← Dashboard (budget vs actuals + money account balances)
@@ -37,13 +41,18 @@ app/
 │   │   └── actions.ts            ← Server actions: create/update/delete journal entries
 │   │
 │   ├── money-accounts/
-│   │   └── page.tsx              ← Money account CRUD, opening balance management
+│   │   ├── page.tsx              ← Money account CRUD, opening balance management (data-fetching only)
+│   │   ├── client.tsx            ← Client-side interactive update/delete forms
+│   │   └── actions.ts            ← Server actions: create/update/delete money accounts
 │   │
 │   ├── cost-centers/
-│   │   └── page.tsx              ← Cost center CRUD
+│   │   ├── page.tsx              ← Cost center CRUD (data-fetching only)
+│   │   ├── client.tsx            ← Client-side interactive create/update/delete forms
+│   │   └── actions.ts            ← Server actions: create/update/delete cost centers
 │   │
 │   ├── expense-reports/
-│   │   ├── page.tsx              ← Expense report form + history table (all users)
+│   │   ├── page.tsx              ← Expense report form + history table (data-fetching only)
+│   │   ├── client.tsx            ← Client-side approve/reject history table
 │   │   └── actions.ts            ← Server actions: submit, approve, reject
 │   │
 │   ├── invoices/
@@ -51,18 +60,24 @@ app/
 │   │   └── client.tsx            ← Interactive invoice builder + QR preview + PDF download
 │   │
 │   ├── templates/
-│   │   ├── page.tsx              ← Document template manager (admin only)
+│   │   ├── page.tsx              ← Document template manager (admin only, data-fetching only)
+│   │   ├── client.tsx            ← Client-side create/update/delete/set-default forms
 │   │   └── actions.ts            ← Server actions: create/update/delete/set-default template
 │   │
 │   ├── users/
-│   │   ├── page.tsx              ← User management (admin only)
+│   │   ├── page.tsx              ← User management (admin only, data-fetching only)
+│   │   ├── client.tsx            ← Client-side create/update/delete forms
 │   │   └── actions.ts            ← Server actions: create/update/delete users
 │   │
 │   ├── editions/
-│   │   └── page.tsx              ← Edition management (admin only)
+│   │   ├── page.tsx              ← Edition management (admin only, data-fetching only)
+│   │   ├── client.tsx            ← Client-side create/activate/close/delete forms
+│   │   └── actions.ts            ← Server actions: create/set-active/delete/close edition, update driving rate
 │   │
 │   └── departments/
-│       └── page.tsx              ← Department list (admin only, read-only reference)
+│       ├── page.tsx              ← Department list (admin only, data-fetching only)
+│       ├── client.tsx            ← Client-side create/delete forms
+│       └── actions.ts            ← Server actions: create/delete department
 │
 ├── (auth)/
 │   └── login/
@@ -113,7 +128,7 @@ app/
 | `document-templates.ts` | `[[field]]` renderer, `InvoiceDocumentPayload` type, default invoice HTML template, `ensureDefaultInvoiceTemplate()` |
 | `swiss-qr.ts` | `buildSwissQrPayload()` — builds a SPC-format QR string for Swiss ISO 20022 QR invoices |
 | `department-roles.ts` | `syncDepartmentRolesFromDepartments()` — keeps `DepartmentRole` names in sync with active departments |
-| `server-action-helpers.ts` | Tiny shared helpers for server actions: `getRequiredString()`, `getActiveEditionId()` |
+| `server-action-helpers.ts` | Shared helpers for server actions: `getRequiredString()`, `getActiveEditionId()`, plus the `ActionState` type (`{ error: string \| null }`), `initialActionState`, and `toActionErrorMessage()` used by every action to report validation failures instead of throwing |
 | `utils.ts` | `formatCurrency()`, `decimalToNumber()`, `incrementEditionName()` |
 
 ---
