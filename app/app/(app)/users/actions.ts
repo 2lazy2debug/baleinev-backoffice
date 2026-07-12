@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { syncDepartmentRolesFromDepartments } from "@/lib/department-roles";
+import { type ActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
 
 function getRequiredString(formData: FormData, key: string) {
   const value = String(formData.get(key) ?? "").trim();
@@ -77,72 +78,87 @@ async function assertAdminCanBeRemoved(userId: string, nextRole?: UserRole) {
   }
 }
 
-export async function createUserAction(formData: FormData) {
-  await requireAdmin();
-  await syncDepartmentRolesFromDepartments();
+export async function createUserAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    await syncDepartmentRolesFromDepartments();
 
-  const name = getRequiredString(formData, "name");
-  const email = getRequiredString(formData, "email").toLowerCase();
-  const password = getRequiredString(formData, "password");
-  const { role, departmentRoleIds } = getRoleAndDepartmentRoleIds(formData);
+    const name = getRequiredString(formData, "name");
+    const email = getRequiredString(formData, "email").toLowerCase();
+    const password = getRequiredString(formData, "password");
+    const { role, departmentRoleIds } = getRoleAndDepartmentRoleIds(formData);
 
-  await ensureDepartmentRolesExist(departmentRoleIds);
+    await ensureDepartmentRolesExist(departmentRoleIds);
 
-  await prisma.user.create({
-    data: {
-      name,
-      email,
-      passwordHash: await hash(password, 12),
-      role,
-      departmentRoles: {
-        connect: departmentRoleIds.map((id) => ({ id })),
+    await prisma.user.create({
+      data: {
+        name,
+        email,
+        passwordHash: await hash(password, 12),
+        role,
+        departmentRoles: {
+          connect: departmentRoleIds.map((id) => ({ id })),
+        },
       },
-    },
-  });
+    });
 
-  revalidatePath("/users");
-}
-
-export async function updateUserAction(formData: FormData) {
-  await requireAdmin();
-  await syncDepartmentRolesFromDepartments();
-
-  const userId = getRequiredString(formData, "userId");
-  const name = getRequiredString(formData, "name");
-  const email = getRequiredString(formData, "email").toLowerCase();
-  const newPassword = String(formData.get("newPassword") ?? "").trim();
-  const { role, departmentRoleIds } = getRoleAndDepartmentRoleIds(formData);
-
-  await ensureDepartmentRolesExist(departmentRoleIds);
-  await assertAdminCanBeRemoved(userId, role);
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      name,
-      email,
-      role,
-      departmentRoles: {
-        set: departmentRoleIds.map((id) => ({ id })),
-      },
-      ...(newPassword ? { passwordHash: await hash(newPassword, 12) } : {}),
-    },
-  });
-
-  revalidatePath("/users");
-}
-
-export async function deleteUserAction(formData: FormData) {
-  const access = await requireAdmin();
-  const userId = getRequiredString(formData, "userId");
-
-  if (access.id === userId) {
-    throw new Error("You cannot delete your own account.");
+    revalidatePath("/users");
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
   }
+}
 
-  await assertAdminCanBeRemoved(userId);
+export async function updateUserAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    await syncDepartmentRolesFromDepartments();
 
-  await prisma.user.delete({ where: { id: userId } });
+    const userId = getRequiredString(formData, "userId");
+    const name = getRequiredString(formData, "name");
+    const email = getRequiredString(formData, "email").toLowerCase();
+    const newPassword = String(formData.get("newPassword") ?? "").trim();
+    const { role, departmentRoleIds } = getRoleAndDepartmentRoleIds(formData);
 
-  revalidatePath("/users");
+    await ensureDepartmentRolesExist(departmentRoleIds);
+    await assertAdminCanBeRemoved(userId, role);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name,
+        email,
+        role,
+        departmentRoles: {
+          set: departmentRoleIds.map((id) => ({ id })),
+        },
+        ...(newPassword ? { passwordHash: await hash(newPassword, 12) } : {}),
+      },
+    });
+
+    revalidatePath("/users");
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+export async function deleteUserAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    const access = await requireAdmin();
+    const userId = getRequiredString(formData, "userId");
+
+    if (access.id === userId) {
+      throw new Error("You cannot delete your own account.");
+    }
+
+    await assertAdminCanBeRemoved(userId);
+
+    await prisma.user.delete({ where: { id: userId } });
+
+    revalidatePath("/users");
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
 }
