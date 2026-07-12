@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { type ActionState } from "@/lib/server-action-helpers";
+
 type CalendarTask = {
   id: string;
   title: string;
@@ -59,8 +61,8 @@ type Copy = {
 type Props = {
   copy: Copy;
   currentUserId: string;
-  updateAppointmentAction: (formData: FormData) => Promise<void>;
-  deleteAppointmentAction: (formData: FormData) => Promise<void>;
+  updateAppointmentAction: (prevState: ActionState, formData: FormData) => Promise<ActionState>;
+  deleteAppointmentAction: (prevState: ActionState, formData: FormData) => Promise<ActionState>;
   tasks: CalendarTask[];
   appointments: CalendarAppointment[];
 };
@@ -320,12 +322,12 @@ export default function CalendarPageClient({
     formData.set("endAt", appointmentEndAt);
 
     startTransition(async () => {
-      try {
-        await updateAppointmentAction(formData);
+      const result = await updateAppointmentAction({ error: null }, formData);
+      if (result.error) {
+        setAppointmentActionError(result.error);
+      } else {
         closeAppointmentDetails();
         router.refresh();
-      } catch {
-        setAppointmentActionError(copy.actionFailed);
       }
     });
   }
@@ -345,12 +347,12 @@ export default function CalendarPageClient({
     formData.set("appointmentId", selectedAppointment.id);
 
     startTransition(async () => {
-      try {
-        await deleteAppointmentAction(formData);
+      const result = await deleteAppointmentAction({ error: null }, formData);
+      if (result.error) {
+        setAppointmentActionError(result.error);
+      } else {
         closeAppointmentDetails();
         router.refresh();
-      } catch {
-        setAppointmentActionError(copy.actionFailed);
       }
     });
   }
