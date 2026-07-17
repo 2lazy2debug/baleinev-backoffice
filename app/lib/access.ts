@@ -69,3 +69,25 @@ export async function requireAdmin() {
 
   return access;
 }
+
+export function isAdmin(access: AccessContext): boolean {
+  return access.role === "ADMIN";
+}
+
+/**
+ * Department-role ids a user is allowed to see, or `null` for admins (who see
+ * everything). Use to build a Prisma `where` filter for department-scoped data.
+ */
+export function accessibleDepartmentRoleIds(access: AccessContext): string[] | null {
+  return access.role === "ADMIN" ? null : access.departmentRoleIds;
+}
+
+/** True when the user shares at least one department with the given entry (admins always). */
+export function canAccessDepartments(access: AccessContext, departmentRoleIds: string[]): boolean {
+  if (access.role === "ADMIN") {
+    return true;
+  }
+
+  const allowed = new Set(access.departmentRoleIds);
+  return departmentRoleIds.some((id) => allowed.has(id));
+}
