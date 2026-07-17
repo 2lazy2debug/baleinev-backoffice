@@ -72,6 +72,24 @@ Join model linking a User to a Department. A user may belong to multiple departm
 
 ---
 
+### `PasswordEntry`
+Shared, department-scoped credential store (the Passwords tab). **Not** edition-scoped — entries persist across editions. Secret fields are encrypted at rest with AES-256-GCM; see [passwords.md](passwords.md).
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `name` | String | Display name (e.g. "Canva") |
+| `login` | String | Email / login — plaintext, so entries stay searchable |
+| `website` | String? | Link to the page that uses the login |
+| `passwordCipher` / `passwordIv` / `passwordTag` | String | AES-256-GCM sealed password (base64) |
+| `totpCipher` / `totpIv` / `totpTag` | String? | AES-256-GCM sealed 2FA seed (base32 or `otpauth://` URI); null when no 2FA |
+| `createdById` | String? | FK → User (`onDelete: SetNull`) |
+| `departmentRoles` | `DepartmentRole[]` | Many-to-many: which departments can see this entry |
+
+Visibility: a user sees an entry if they share at least one `DepartmentRole` with it; admins see all. Secret columns never leave the server except through the authorized reveal actions.
+
+---
+
 ### `Edition`
 Top-level scoping unit for a fiscal year / accounting period.
 

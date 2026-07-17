@@ -154,3 +154,4 @@ There is no self-service signup — all accounts are created by an admin.
 | `NEXTAUTH_URL` | NextAuth (base URL of the app) |
 | `ADMIN_EMAIL` | Seed script initial admin email |
 | `ADMIN_PASSWORD` | Seed script initial admin password |
+| `PASSWORD_VAULT_KEY` | AES-256-GCM master key for the Passwords vault (32 bytes, base64). See [passwords.md](passwords.md) |

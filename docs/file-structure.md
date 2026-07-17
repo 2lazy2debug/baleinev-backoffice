@@ -64,6 +64,11 @@ app/
 │   │   ├── client.tsx            ← Client-side create/update/delete/set-default forms
 │   │   └── actions.ts            ← Server actions: create/update/delete/set-default template
 │   │
+│   ├── passwords/
+│   │   ├── page.tsx              ← Department-scoped shared password manager (data-fetching, no ciphertext to client)
+│   │   ├── client.tsx            ← Cards + create/edit/delete modals, reveal & 2FA on demand
+│   │   └── actions.ts            ← Server actions: create/update/delete + revealPassword/getTotpCode (see docs/passwords.md)
+│   │
 │   ├── users/
 │   │   ├── page.tsx              ← User management (admin only, data-fetching only)
 │   │   ├── client.tsx            ← Client-side create/update/delete forms
@@ -121,7 +126,9 @@ app/
 | File | Purpose |
 |---|---|
 | `auth.ts` | NextAuth config: credentials provider, bcrypt verify, JWT/session callbacks |
-| `access.ts` | `getCurrentUserAccess()` and `requireAdmin()` — the two access-control helpers used by every protected page/action |
+| `access.ts` | `getCurrentUserAccess()`, `requireAdmin()`, plus department helpers (`isAdmin`, `accessibleDepartmentRoleIds`, `canAccessDepartments`) used by every protected page/action |
+| `secret-crypto.ts` | AES-256-GCM seal/open for the Passwords vault (`encryptSecret`/`decryptSecret`/`isVaultConfigured`), keyed by `PASSWORD_VAULT_KEY`. See docs/passwords.md |
+| `totp.ts` | Generates live TOTP codes from a stored 2FA seed (`otpauth`); `generateTotpCode`/`assertValidTotpSeed` |
 | `db.ts` | Singleton Prisma client (re-used across hot reloads in dev) |
 | `i18n-dictionaries.ts` | Complete EN/FR translation dictionary as a `const` object; also defines `Locale` type and cookie name |
 | `i18n.ts` | `getLocale()` (reads cookie server-side) and `getDictionary()` |
