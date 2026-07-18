@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useState, useTransition } from "react";
-import { Check, Copy, Eye, EyeOff, KeyRound, Pencil, Plus, ShieldCheck, Trash2, X } from "lucide-react";
+import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import { Check, Copy, Eye, EyeOff, KeyRound, Pencil, Plus, Search, ShieldCheck, Trash2, X } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import { buttonClasses } from "@/lib/button-classes";
@@ -66,23 +66,47 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editing, setEditing] = useState<PasswordEntryItem | null>(null);
   const [deleting, setDeleting] = useState<PasswordEntryItem | null>(null);
+  const [query, setQuery] = useState("");
 
   const [createState, createAction, isCreating] = useActionState(createPasswordEntryAction, initialActionState);
   const [updateState, updateAction, isUpdating] = useActionState(updatePasswordEntryAction, initialActionState);
   const [deleteState, deleteAction, isDeleting] = useActionState(deletePasswordEntryAction, initialActionState);
 
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) {
+      return entries;
+    }
+    return entries.filter((entry) =>
+      [entry.name, entry.login, entry.website ?? ""].some((field) => field.toLowerCase().includes(q)),
+    );
+  }, [entries, query]);
+
   return (
-    <section className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-[var(--muted)]">
-          {entries.length} {entries.length === 1 ? copy.entrySingular : copy.entryPlural}
-        </p>
-        <button type="button" onClick={() => setIsCreateOpen(true)} className={buttonClasses.primary}>
-          <span className="inline-flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            {copy.add}
-          </span>
-        </button>
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="relative min-w-0 flex-1 sm:max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={copy.search}
+            aria-label={copy.search}
+            className={`${inputClass} pl-9`}
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-[var(--muted)]">
+            {filtered.length} {filtered.length === 1 ? copy.entrySingular : copy.entryPlural}
+          </p>
+          <button type="button" onClick={() => setIsCreateOpen(true)} className={buttonClasses.primary}>
+            <span className="inline-flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              {copy.add}
+            </span>
+          </button>
+        </div>
       </div>
 
       <FormError message={deleteState.error} />
@@ -91,10 +115,14 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
         <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)]">
           {copy.empty}
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)]">
+          {copy.noResults}
+        </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {entries.map((entry) => (
-            <EntryCard
+        <ul className="divide-y divide-[var(--line)] overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)]">
+          {filtered.map((entry) => (
+            <EntryRow
               key={entry.id}
               entry={entry}
               copy={copy}
@@ -102,7 +130,7 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
               onDelete={() => setDeleting(entry)}
             />
           ))}
-        </div>
+        </ul>
       )}
 
       {isCreateOpen ? (
@@ -151,7 +179,7 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
 
 type Copy = (typeof dictionaries)[Locale]["passwords"];
 
-function EntryCard({
+function EntryRow({
   entry,
   copy,
   onEdit,
@@ -207,28 +235,22 @@ function EntryCard({
   }
 
   return (
-    <article className="flex flex-col gap-3 rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-4">
-      <div className="flex items-start justify-between gap-3">
+    <li className="flex flex-col gap-3 p-3 lg:flex-row lg:items-center lg:gap-4">
+      {/* Identity */}
+      <div className="flex min-w-0 items-center gap-2.5 lg:w-56 lg:shrink-0">
+        <KeyRound className="h-4 w-4 shrink-0 text-[var(--accent)]" />
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <KeyRound className="h-4 w-4 shrink-0 text-[var(--accent)]" />
-            <h2 className="truncate text-base font-semibold">{entry.name}</h2>
+          <p className="truncate text-sm font-semibold">{entry.name}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="truncate text-xs text-[var(--muted)]">{entry.login}</p>
+            <CopyButton getValue={async () => entry.login} label={copy.fieldLogin} />
           </div>
-          <p className="mt-1 truncate text-sm text-[var(--muted)]">{entry.login}</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <button type="button" onClick={onEdit} title={copy.edit} aria-label={copy.edit} className={buttonClasses.icon.edit}>
-            <Pencil className="h-3.5 w-3.5" />
-          </button>
-          <button type="button" onClick={onDelete} title={copy.delete} aria-label={copy.delete} className={buttonClasses.icon.delete}>
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
         </div>
       </div>
 
-      <div className="space-y-2 text-sm">
+      {/* Secrets */}
+      <div className="min-w-0 flex-1 space-y-1.5">
         <div className="flex items-center gap-2">
-          <span className="w-16 shrink-0 text-xs uppercase tracking-[0.12em] text-[var(--muted)]">{copy.fieldPassword}</span>
           <code className="min-w-0 flex-1 truncate rounded-md bg-[var(--panel)] px-2 py-1 font-mono text-xs">
             {revealed ?? "••••••••••"}
           </code>
@@ -243,51 +265,44 @@ function EntryCard({
             {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
           </button>
           <CopyButton getValue={fetchPasswordValue} label={copy.copyPassword} />
-        </div>
-        {revealError ? <p className="text-xs text-rose-300">{revealError}</p> : null}
-
-        {entry.has2fa ? (
-          <div className="flex items-center gap-2">
-            <span className="w-16 shrink-0 text-xs uppercase tracking-[0.12em] text-[var(--muted)]">{copy.field2fa}</span>
-            {totp ? (
-              <>
-                <code className="flex-1 rounded-md bg-[var(--panel)] px-2 py-1 font-mono text-sm tracking-[0.3em]">
-                  {totp.code}
-                </code>
-                <span className="w-8 shrink-0 text-right text-xs tabular-nums text-[var(--muted)]">{totp.secondsRemaining}s</span>
+          {entry.has2fa ? (
+            totp ? (
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-[var(--panel)] px-2 py-1">
+                <code className="font-mono text-xs tracking-[0.2em]">{totp.code}</code>
+                <span className="w-6 text-right text-[10px] tabular-nums text-[var(--muted)]">{totp.secondsRemaining}s</span>
                 <CopyButton getValue={async () => totp.code} label={copy.copyCode} />
-              </>
+              </span>
             ) : (
               <button
                 type="button"
                 onClick={loadTotp}
                 disabled={isLoadingTotp}
-                className="inline-flex flex-1 items-center gap-2 rounded-md border border-[var(--line)] px-2 py-1 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)] disabled:opacity-60"
+                title={copy.show2faCode}
+                aria-label={copy.show2faCode}
+                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--line)] px-2 py-1 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)] disabled:opacity-60"
               >
                 <ShieldCheck className="h-3.5 w-3.5" />
-                {isLoadingTotp ? copy.loading : copy.show2faCode}
+                {isLoadingTotp ? copy.loading : copy.field2fa}
               </button>
-            )}
-          </div>
-        ) : null}
+            )
+          ) : null}
+        </div>
+        {revealError ? <p className="text-xs text-rose-300">{revealError}</p> : null}
         {totpError ? <p className="text-xs text-rose-300">{totpError}</p> : null}
-
-        {entry.website ? (
-          <div className="flex items-center gap-2">
-            <span className="w-16 shrink-0 text-xs uppercase tracking-[0.12em] text-[var(--muted)]">{copy.fieldWebsite}</span>
-            <a
-              href={entry.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="min-w-0 flex-1 truncate text-xs text-[var(--accent)] hover:underline"
-            >
-              {entry.website}
-            </a>
-          </div>
-        ) : null}
       </div>
 
-      <div className="mt-auto flex flex-wrap gap-1.5 pt-1">
+      {/* Meta: website + departments */}
+      <div className="flex flex-wrap items-center gap-1.5 lg:w-64 lg:shrink-0 lg:justify-end">
+        {entry.website ? (
+          <a
+            href={entry.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="max-w-full truncate text-xs text-[var(--accent)] hover:underline"
+          >
+            {entry.website.replace(/^https?:\/\//, "")}
+          </a>
+        ) : null}
         {entry.departmentRoles.map((role) => (
           <span
             key={role.id}
@@ -297,7 +312,17 @@ function EntryCard({
           </span>
         ))}
       </div>
-    </article>
+
+      {/* Actions */}
+      <div className="flex shrink-0 items-center gap-1.5">
+        <button type="button" onClick={onEdit} title={copy.edit} aria-label={copy.edit} className={buttonClasses.icon.edit}>
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+        <button type="button" onClick={onDelete} title={copy.delete} aria-label={copy.delete} className={buttonClasses.icon.delete}>
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </li>
   );
 }
 
