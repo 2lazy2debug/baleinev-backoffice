@@ -235,92 +235,95 @@ function EntryRow({
   }
 
   return (
-    <li className="flex flex-col gap-3 p-3 lg:flex-row lg:items-center lg:gap-4">
-      {/* Identity */}
-      <div className="flex min-w-0 items-center gap-2.5 lg:w-56 lg:shrink-0">
-        <KeyRound className="h-4 w-4 shrink-0 text-[var(--accent)]" />
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{entry.name}</p>
-          <div className="flex items-center gap-1.5">
-            <p className="truncate text-xs text-[var(--muted)]">{entry.login}</p>
-            <CopyButton getValue={async () => entry.login} label={copy.fieldLogin} />
-          </div>
+    <li className="space-y-2.5 p-3">
+      {/* Title: name (full width, never truncated) + actions */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <KeyRound className="h-4 w-4 shrink-0 text-[var(--accent)]" />
+          <p className="break-words text-sm font-semibold">{entry.name}</p>
         </div>
-      </div>
-
-      {/* Secrets */}
-      <div className="min-w-0 flex-1 space-y-1.5">
-        <div className="flex items-center gap-2">
-          <code className="min-w-0 flex-1 truncate rounded-md bg-[var(--panel)] px-2 py-1 font-mono text-xs">
-            {revealed ?? "••••••••••"}
-          </code>
-          <button
-            type="button"
-            onClick={toggleReveal}
-            disabled={isRevealing}
-            title={revealed ? copy.hide : copy.reveal}
-            aria-label={revealed ? copy.hide : copy.reveal}
-            className={buttonClasses.icon.action}
-          >
-            {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button type="button" onClick={onEdit} title={copy.edit} aria-label={copy.edit} className={buttonClasses.icon.edit}>
+            <Pencil className="h-3.5 w-3.5" />
           </button>
-          <CopyButton getValue={fetchPasswordValue} label={copy.copyPassword} />
-          {entry.has2fa ? (
-            totp ? (
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-[var(--panel)] px-2 py-1">
-                <code className="font-mono text-xs tracking-[0.2em]">{totp.code}</code>
-                <span className="w-6 text-right text-[10px] tabular-nums text-[var(--muted)]">{totp.secondsRemaining}s</span>
-                <CopyButton getValue={async () => totp.code} label={copy.copyCode} />
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={loadTotp}
-                disabled={isLoadingTotp}
-                title={copy.show2faCode}
-                aria-label={copy.show2faCode}
-                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--line)] px-2 py-1 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)] disabled:opacity-60"
-              >
-                <ShieldCheck className="h-3.5 w-3.5" />
-                {isLoadingTotp ? copy.loading : copy.field2fa}
-              </button>
-            )
-          ) : null}
+          <button type="button" onClick={onDelete} title={copy.delete} aria-label={copy.delete} className={buttonClasses.icon.delete}>
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
         </div>
-        {revealError ? <p className="text-xs text-rose-300">{revealError}</p> : null}
-        {totpError ? <p className="text-xs text-rose-300">{totpError}</p> : null}
       </div>
 
-      {/* Meta: website + departments */}
-      <div className="flex flex-wrap items-center gap-1.5 lg:w-64 lg:shrink-0 lg:justify-end">
-        {entry.website ? (
-          <a
-            href={entry.website}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="max-w-full truncate text-xs text-[var(--accent)] hover:underline"
-          >
-            {entry.website.replace(/^https?:\/\//, "")}
-          </a>
-        ) : null}
-        {entry.departmentRoles.map((role) => (
-          <span
-            key={role.id}
-            className="rounded-full border border-[var(--line)] bg-[var(--panel)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]"
-          >
-            {role.name}
-          </span>
-        ))}
-      </div>
+      {/* Details: username, password, info — column on mobile, row on desktop */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
+        {/* Username (never truncated) */}
+        <div className="flex min-w-0 items-center gap-1.5 lg:w-56 lg:shrink-0">
+          <span className="break-all text-xs text-[var(--muted)]">{entry.login}</span>
+          <CopyButton getValue={async () => entry.login} label={copy.fieldLogin} />
+        </div>
 
-      {/* Actions */}
-      <div className="flex shrink-0 items-center gap-1.5">
-        <button type="button" onClick={onEdit} title={copy.edit} aria-label={copy.edit} className={buttonClasses.icon.edit}>
-          <Pencil className="h-3.5 w-3.5" />
-        </button>
-        <button type="button" onClick={onDelete} title={copy.delete} aria-label={copy.delete} className={buttonClasses.icon.delete}>
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
+        {/* Password + 2FA */}
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex items-center gap-2">
+            <code className="min-w-0 flex-1 truncate rounded-md bg-[var(--panel)] px-2 py-1 font-mono text-xs">
+              {revealed ?? "••••••••••"}
+            </code>
+            <button
+              type="button"
+              onClick={toggleReveal}
+              disabled={isRevealing}
+              title={revealed ? copy.hide : copy.reveal}
+              aria-label={revealed ? copy.hide : copy.reveal}
+              className={buttonClasses.icon.action}
+            >
+              {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+            </button>
+            <CopyButton getValue={fetchPasswordValue} label={copy.copyPassword} />
+            {entry.has2fa ? (
+              totp ? (
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-[var(--panel)] px-2 py-1">
+                  <code className="font-mono text-xs tracking-[0.2em]">{totp.code}</code>
+                  <span className="w-6 text-right text-[10px] tabular-nums text-[var(--muted)]">{totp.secondsRemaining}s</span>
+                  <CopyButton getValue={async () => totp.code} label={copy.copyCode} />
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={loadTotp}
+                  disabled={isLoadingTotp}
+                  title={copy.show2faCode}
+                  aria-label={copy.show2faCode}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-[var(--line)] px-2 py-1 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)] disabled:opacity-60"
+                >
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  {isLoadingTotp ? copy.loading : copy.field2fa}
+                </button>
+              )
+            ) : null}
+          </div>
+          {revealError ? <p className="text-xs text-rose-300">{revealError}</p> : null}
+          {totpError ? <p className="text-xs text-rose-300">{totpError}</p> : null}
+        </div>
+
+        {/* Info: website + departments */}
+        <div className="flex flex-wrap items-center gap-1.5 lg:w-56 lg:shrink-0 lg:justify-end">
+          {entry.website ? (
+            <a
+              href={entry.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="max-w-full truncate text-xs text-[var(--accent)] hover:underline"
+            >
+              {entry.website.replace(/^https?:\/\//, "")}
+            </a>
+          ) : null}
+          {entry.departmentRoles.map((role) => (
+            <span
+              key={role.id}
+              className="rounded-full border border-[var(--line)] bg-[var(--panel)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]"
+            >
+              {role.name}
+            </span>
+          ))}
+        </div>
       </div>
     </li>
   );
