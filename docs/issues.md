@@ -34,10 +34,12 @@ same-origin/`Origin` check on these mutating endpoints.
 
 ## Functional issues
 
-### F7. No Prisma migrations — low
-The project uses `prisma db push` only ([package.json](../app/package.json)); there is no
-`prisma/migrations` directory. Schema history is untracked and production schema changes are
-non-reproducible/destructive. Adopt `prisma migrate` before deploying.
+### F7. No Prisma migrations — resolved
+Was: the project used `prisma db push` only, so schema history was untracked and production
+schema changes were non-reproducible. `app/prisma/migrations/` now exists, baselined at `0_init`
+(generated from the schema `db push` had produced, verified as zero-drift against the dev
+database), and `npm run db:deploy` runs `prisma migrate deploy`. Schema changes ship as
+migrations from here on.
 
 ---
 

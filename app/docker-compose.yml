@@ -1,0 +1,32 @@
+# Postgres for this app, in dev and in production alike.
+#
+# The project name is pinned to `blv` on purpose: this file lives in a directory
+# called `app/`, and on the production box LeadDesk already owns a compose project
+# named `app`. Without `name:` both projects would fight over `app-db-1`.
+#
+# Compose reads `.env` from this directory — the same `app/.env` the Next app reads,
+# so POSTGRES_* and DATABASE_URL are declared once and cannot drift apart.
+name: blv
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in app/.env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in app/.env}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in app/.env}
+    ports:
+      # Loopback only. 5432 and 5433 are taken on the production box.
+      - "127.0.0.1:${POSTGRES_PORT:-5434}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data:

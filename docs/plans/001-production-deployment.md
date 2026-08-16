@@ -176,7 +176,7 @@ Three structural facts that shape every script below:
 | App user | `blv` (system user, home `/home/blv`, in `docker` group) | Mirrors `leaddesk`; the docker group is needed for `docker compose exec db pg_dump` |
 | App port | **3100** | 3000 is LeadDesk's |
 | Postgres host port | **5434**, bound to `127.0.0.1` | 5432 is the legacy container, 5433 is LeadDesk's — and 5434 is already what the workstation uses, so one `DATABASE_URL` shape fits both |
-| Compose file | `app/docker-compose.yml`, one `db` service | Compose reads `.env` from its own directory, and the app's `.env` is `app/.env`. One directory, one `.env`, one set of `POSTGRES_*` — no duplication |
+| Compose file | `app/docker-compose.yml`, one `db` service, project pinned `name: blv` | Compose reads `.env` from its own directory, and the app's `.env` is `app/.env`. One directory, one `.env`, one set of `POSTGRES_*` — no duplication. The explicit `name` keeps `app/` from colliding with LeadDesk's `app` project (A5) |
 | TLS | Its own `/opt/caddy` compose project | Port 443 can only be held once |
 | Service name | `blv` → `blv.service`, `blv-updater.{service,timer}` | |
 | Health URL | `http://127.0.0.1:3100/api/health` | Real DB round trip, so it proves Postgres too |
@@ -259,10 +259,32 @@ pass on `next.config.ts` itself — the config that was meant to save the build 
 that breaks it. Nothing is needed: the rehearsal above builds all 26 routes with eslint absent.
 That advice applies to Next ≤ 15, which is where the reference repos are.
 
-**A5 — `app/docker-compose.yml`.** One `db` service: `postgres:16-alpine`, `restart:
-unless-stopped`, `ports: ["127.0.0.1:5434:5432"]`, `pg_isready` healthcheck, named volume.
-Delete `docker/` and point `README`/docs at the new file. Local dev then runs
-`docker compose up -d db` from `app/`, on the same port it already uses.
+**A5 — `app/docker-compose.yml`.** — **DONE — 2026-08-16 19:12** One `db` service:
+`postgres:16-alpine`, `restart: unless-stopped`, `ports: ["127.0.0.1:5434:5432"]`, `pg_isready`
+healthcheck, named volume. Delete `docker/` and point `README`/docs at the new file. Local dev
+then runs `docker compose up -d db` from `app/`, on the same port it already uses.
+
+**Correction — the compose project must be named `blv` explicitly.** Compose derives the project
+name from the directory, and this file lives in `app/` — which is exactly the project name
+LeadDesk already uses on the box (§1: `app-caddy-1`, `app-db-1`, workdir `/opt/leaddesk/app`).
+Left to default, `/opt/blv/checkout/app` would claim the container name `app-db-1`, which
+LeadDesk's Postgres already holds, and `docker compose exec db` from either directory could
+reach the other project's database. `name: blv` at the top of the file gives `blv-db-1` and
+`blv_postgres_data` instead. B7's `docker compose exec -T db …` is unaffected — run from
+`/opt/blv/checkout/app` it resolves through this file.
+
+Two consequences of the move, handled here rather than left to discover:
+
+- **The volume changes identity.** The old `docker/` project owned `docker_postgres_data`; the
+  new one creates `blv_postgres_data`. The workstation's database — including the 6 vault
+  entries B7 exports — was carried across with `pg_dump` → `compose down` → `up -d db` →
+  restore, and verified: 6 entries, 6 role links, 1 user, 2 roles, `migrate status` clean.
+  `docker_postgres_data` is deliberately left in place as a rollback until B12.
+- **`POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` / `POSTGRES_PORT` now live in
+  `app/.env`** alongside `DATABASE_URL`, and are documented in `app/.env.example`. They are
+  declared with `${VAR:?}` so a missing value fails compose loudly instead of silently
+  initialising a database with different credentials than `DATABASE_URL` expects — the §6
+  "Postgres never became ready" trap, caught at the right moment.
 
 **A6 — `deploy/`.** Ported from `NurseAsAService/deploy` (the more refined generation), with
 LeadDesk's in-script `pg_dump` backup (this repo has no `npm run backup`, and a shell backup

@@ -1,13 +1,13 @@
 # Baleicomptes - Run Guide
 
-This project has two main parts:
-- `docker/` for PostgreSQL
-- `app/` for the Next.js web application
+Everything runs from `app/`: the Next.js application, and the Postgres container it
+talks to (`app/docker-compose.yml`). The repo root also holds `docs/` and `soa/` —
+the latter is read at runtime by the invoice PDF routes, so it is not optional.
 
 ## Prerequisites
 
 - Docker + Docker Compose
-- Node.js + npm
+- Node.js 20 (see `.nvmrc`) + npm
 
 ### macOS: install Docker with Homebrew
 
@@ -29,12 +29,26 @@ docker compose version
 
 If `docker compose` is available, you are ready to continue.
 
-## 1. Start PostgreSQL (Docker)
+## 1. Configure the environment
 
 ```bash
-cd docker
+cd app
 cp .env.example .env
-docker compose up -d
+```
+
+Both the app and the database read this one file. Set real values for:
+- `AUTH_SECRET`
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME`
+- `PASSWORD_VAULT_KEY`
+
+The `POSTGRES_*` defaults work as-is; `DATABASE_URL` must agree with them.
+
+## 2. Start PostgreSQL
+
+From `app/`:
+
+```bash
+docker compose up -d db
 ```
 
 Check status:
@@ -43,26 +57,11 @@ Check status:
 docker compose ps
 ```
 
-Stop database:
+Stop the database:
 
 ```bash
 docker compose down
 ```
-
-## 2. Configure app environment
-
-```bash
-cd ../app
-cp .env.example .env
-```
-
-Open `app/.env` and set real values for:
-- `AUTH_SECRET`
-- `ADMIN_EMAIL`
-- `ADMIN_PASSWORD`
-- `ADMIN_NAME`
-
-If you keep Docker defaults, `DATABASE_URL` can stay as-is.
 
 ## 3. Install dependencies
 
@@ -70,12 +69,15 @@ If you keep Docker defaults, `DATABASE_URL` can stay as-is.
 npm install
 ```
 
-## 4. Prepare database schema
+## 4. Prepare the database schema
 
 ```bash
-npm run db:push
+npm run db:deploy
 npm run db:generate
 ```
+
+`db:deploy` applies `prisma/migrations/`. Use `npm run db:push` only for throwaway
+experiments — anything that ships needs a migration.
 
 ## 5. Seed first admin user
 
@@ -96,17 +98,18 @@ Login using `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `app/.env`.
 
 ## Useful commands
 
-From `app/`:
+All from `app/`:
 
 ```bash
 npm run lint
+npm run check:design
 npm run build
 npm run start
+
+docker compose logs -f db
+docker compose down -v      # also deletes the database volume
 ```
 
-From `docker/`:
+## Deploying
 
-```bash
-docker compose logs -f postgres
-docker compose down -v
-```
+See [docs/plans/001-production-deployment.md](docs/plans/001-production-deployment.md).

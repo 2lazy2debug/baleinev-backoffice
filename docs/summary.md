@@ -92,17 +92,19 @@ baleinev-backoffice/
 │   ├── app/api/         Route handlers: auth, invoices, PDF, expense proof, QR, preferences
 │   ├── components/      Shared client components (app shell, tables, modals)
 │   ├── lib/             auth, access control, prisma client, i18n, QR, templates, tasks
-│   ├── prisma/          schema.prisma + seed.ts (first admin from env)
+│   ├── prisma/          schema.prisma + migrations/ + seed.ts (first admin from env)
 │   ├── scripts/         One-off importers from the legacy Excel workbook
+│   ├── docker-compose.yml  PostgreSQL (compose project `blv`, 127.0.0.1:5434)
 │   └── proxy.ts         Next.js 16 middleware (route gating by role)
-├── docker/              PostgreSQL via docker compose
 ├── soa/                 Legacy Excel workbook + Python analysis + QR bill reference material
 └── assets/              Logo, Bebas Kai font for QR bills
 ```
 
 - **Framework:** Next.js 16 (App Router, Turbopack), React 19, TypeScript, Tailwind.
-- **Data:** PostgreSQL via Prisma. Schema pushed with `prisma db push` — there is no migrations
-  directory, so schema history is not tracked.
+- **Data:** PostgreSQL via Prisma, in a container defined by `app/docker-compose.yml` (compose
+  project `blv`, published on `127.0.0.1:5434`). Schema history lives in `app/prisma/migrations/`,
+  baselined at `0_init` from the schema that years of `prisma db push` produced; deployments run
+  `prisma migrate deploy`.
 - **Auth:** NextAuth v4, credentials provider, JWT session strategy, bcrypt password hashes.
   Role and department-role ids are copied into the JWT.
 - **Authorization:** two layers. `proxy.ts` blocks DEPARTMENT users from admin routes at the edge;
@@ -124,10 +126,8 @@ baleinev-backoffice/
 
 ## Running it
 
-Per the [README](../README.md): start Postgres with `docker compose up -d` in `docker/`, configure
-`app/.env` (`DATABASE_URL`, `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME`), then from
-`app/`: `npm install`, `npm run db:push`, `npm run db:generate`, `npm run db:seed`, `npm run dev`.
-The seed upserts a single admin from the env vars; every other user is created from the Users page.
-
-Note that the README's step 2 says `cp .env.example .env` inside `app/`, but no `app/.env.example`
-exists in the repository — see [issues.md](./issues.md).
+Per the [README](../README.md), everything runs from `app/`: `cp .env.example .env` and fill it in
+(`POSTGRES_*`, `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_*`, `PASSWORD_VAULT_KEY`), then
+`docker compose up -d db`, `npm install`, `npm run db:deploy`, `npm run db:generate`,
+`npm run db:seed`, `npm run dev`. One `.env` feeds both the app and the container. The seed upserts
+a single admin from the env vars; every other user is created from the Users page.
