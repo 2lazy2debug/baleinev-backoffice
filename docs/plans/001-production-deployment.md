@@ -211,9 +211,9 @@ the account key are the existing ones, carried over with the volume.
 
 Each step is a commit. Nothing here changes the server.
 
-**A1 — `.gitignore` hygiene.** `soa/.venv` is a committed Python virtualenv: 854 tracked
-files. `git rm -r --cached soa/.venv`, add `.venv/` and `**/.venv/` to `.gitignore`. Keep
-`soa/qr/*` — the PDF routes read the logo from there at runtime.
+**A1 — `.gitignore` hygiene.** — **DONE — 2026-08-16 18:34** `soa/.venv` is a committed Python
+virtualenv: 844 tracked files. `git rm -r --cached soa/.venv`, add `.venv/` and `**/.venv/` to
+`.gitignore`. Keep `soa/qr/*` — the PDF routes read the logo from there at runtime.
 
 **A2 — Baseline the Prisma migrations.** The pipeline runs `prisma migrate deploy`, which
 requires `prisma/migrations/`. The app has only ever used `db push`, so generate the baseline
