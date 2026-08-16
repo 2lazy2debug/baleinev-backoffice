@@ -301,7 +301,10 @@ no key: `sudo -iu blv git clone https://github.com/2lazy2debug/baleinev-backoffi
 /opt/blv/checkout`, then `git checkout tags/v0.1.0`. (If it is ever made private, add a deploy
 key at `/home/blv/.ssh/id_ed25519` and switch the remote to SSH, exactly as `leaddesk` has.)
 
-**B4 — Chromium's system libraries, as root, before the first `npm ci`.** `puppeteer` is a
+**B4 — Chromium's system libraries, as root, before the first `npm ci` — DONE 2026-08-16.**
+On Ubuntu 24.04 three of these are `Provides` of the time_t transition packages, so apt
+installs `libatk-bridge2.0-0t64`, `libatk1.0-0t64` and `libcups2t64` — `dpkg -l libcups2`
+reporting *not-installed* afterwards is expected, not a failure. `puppeteer` is a
 runtime dependency of both PDF routes; its postinstall downloads a browser into
 `/home/blv/.cache/puppeteer` (persisted across deploys), but the shared objects it links
 against are not installed by npm:
