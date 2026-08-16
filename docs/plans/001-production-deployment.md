@@ -233,7 +233,7 @@ older than that and gets caught up by hand once, in B7 — the standard Prisma b
 recipe, not a migration this repo carries. From here on, schema changes ship as real
 migrations and the tag message says `requires-migration`.
 
-**A3 — Add `/api/health`.** `app/app/api/health/route.ts`: `export const dynamic =
+**A3 — Add `/api/health`.** — **DONE — 2026-08-16 18:44** `app/app/api/health/route.ts`: `export const dynamic =
 "force-dynamic"`, `SELECT 1` through `prisma.$queryRaw`, `200 {status:"ok"}` or `503`. Must
 not require a session — `proxy.ts` currently redirects everything unauthenticated to
 `/login`, so add `/api/health` to its early-return list, otherwise the pipeline's health gate
