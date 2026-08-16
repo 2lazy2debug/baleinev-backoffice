@@ -286,9 +286,9 @@ Two consequences of the move, handled here rather than left to discover:
   initialising a database with different credentials than `DATABASE_URL` expects — the §6
   "Postgres never became ready" trap, caught at the right moment.
 
-**A6 — `deploy/`.** Ported from `NurseAsAService/deploy` (the more refined generation), with
-LeadDesk's in-script `pg_dump` backup (this repo has no `npm run backup`, and a shell backup
-has no dependency on the app building):
+**A6 — `deploy/`.** — **DONE — 2026-08-16 19:00** Ported from `NurseAsAService/deploy` (the more
+refined generation), with LeadDesk's in-script `pg_dump` backup (this repo has no
+`npm run backup`, and a shell backup has no dependency on the app building):
 
 | File | Notes |
 | --- | --- |
@@ -305,6 +305,48 @@ has no dependency on the app building):
 Path handling in every script: `CHECKOUT_ROOT="$SCRIPT_DIR/.."`, `PROJECT_ROOT="$CHECKOUT_ROOT/app"`,
 `STATE_DIR="${BLV_STATE_DIR:-$CHECKOUT_ROOT/../state}"`, same for `backups`. State lives beside
 the checkout so a tag checkout cannot touch it.
+
+**What was verified locally, and what was not.** Everything that does not need the server was
+exercised against a scratch clone and the workstation's database, not merely written:
+
+- Every non-building path of `self-update.sh` — no tags, lightweight tag, repeat tick,
+  `no-deploy`, the `requires-env` halt, `approve.sh`, and the `failed-<tag>` quarantine — each
+  producing the right `state/` markers and `last-deploy.json`.
+- `make_backup` against the live dev database: the zip carries `dump.sql` + `.env`, the dump
+  **restores into a scratch database with all 45 foreign keys and the 6 vault entries intact**,
+  a truncated archive is refused, and `BACKUP_KEEP=3` prunes to exactly three.
+- Both unit templates render with no placeholder left and pass `systemd-analyze verify`.
+- `blv.caddy` passes `caddy validate` inside a two-site config alongside a `leaddesk.cabras.ch`
+  block — the arrangement B9 builds.
+
+Not verifiable off the box, so B6/B8/B9 are the first real test of them: `install-service.sh`,
+`install-updater.sh`, `install-firewall.sh`, `install-caddy-site.sh`, and the build half of
+`build_and_start`.
+
+Three deviations from the table above, each deliberate:
+
+- **`blv-firewall.sh` was written from §1's description of `leaddesk-firewall.sh`, not copied
+  from it** — the box was not reachable while A6 was written. The rules are the ones §1
+  specifies (ACCEPT `127.0.0.1`, ACCEPT `172.16.0.0/12`, DROP the rest, `-I` so they land at the
+  top of INPUT). **At B8, diff it against `/usr/local/sbin/leaddesk-firewall.sh` before running
+  it**; if LeadDesk's does something extra, that something is probably load-bearing.
+- **`install-caddy-site.sh` validates against a staged temp copy of `/opt/caddy`**, not by
+  mounting `/opt/caddy` directly as B9.3 does, so the live directory never holds an unvalidated
+  file even for a moment. It then reloads with `docker compose exec caddy caddy reload` — no
+  recreate, no downtime, no certificate re-issue.
+- **`blv.caddy` sets `Strict-Transport-Security: max-age=31536000`**, which LeadDesk's block does
+  not. That is fine and is not a change to LeadDesk: `blv.cabras.ch` is a new host, so nothing is
+  being walked back. B9.1's rule that `leaddesk.caddy` reproduce the current block *exactly*
+  still stands.
+
+**Two prerequisites this adds to Phase B.** `self-update.sh` shells out to `zip` and `unzip` for
+every snapshot, and to `docker compose exec db` for the `pg_dump` itself. So:
+
+- Add `zip unzip` to B4's `apt-get install` line. Without them every deploy fails at the
+  snapshot — safely, since nothing is changed before it, but no tag ever lands.
+- `blv` must be in the `docker` group before B10, exactly as B2 does it. `install-updater.sh`
+  warns when it is not, because the symptom otherwise is a pipeline that backs up nothing and
+  deploys nothing.
 
 **A7 — `install.sh`** at the repo root, modelled on `NurseAsAService/install.sh`: Node check
 against `.nvmrc` → Docker check → `npm ci --omit=dev` in `app/` → interactive `.env` →
@@ -400,11 +442,14 @@ against are not installed by npm:
 ```bash
 apt-get update && apt-get install -y libnss3 libatk-bridge2.0-0 libatk1.0-0 libcups2 \
   libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 \
-  libpango-1.0-0 libcairo2 libasound2t64
+  libpango-1.0-0 libcairo2 libasound2t64 \
+  zip unzip
 ```
 
-Skipping this does not fail the install — it fails the first invoice PDF, months later, with a
-missing-`.so` error nobody connects to deploy day.
+Skipping the Chromium libraries does not fail the install — it fails the first invoice PDF,
+months later, with a missing-`.so` error nobody connects to deploy day. `zip`/`unzip` are the
+pipeline's own dependency: `self-update.sh` writes and reads its snapshots with them, and
+without them every deploy stops at the backup.
 
 **B5 — `./install.sh` as `blv`**, from `/opt/blv/checkout`. Three values are **copied from the
 workstation's `app/.env`, not generated**, because generating them breaks something later:

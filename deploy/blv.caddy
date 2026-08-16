@@ -1,0 +1,30 @@
+# The blv.cabras.ch site block, imported by /opt/caddy/Caddyfile.
+#
+# Caddy is a SHARED proxy on this box: one container, one Caddyfile, one file
+# per site in conf.d/. leaddesk.cabras.ch is the other one. That means a parse
+# error here takes down both hosts — install-caddy-site.sh validates before it
+# reloads, and there is no path that skips it.
+#
+# The upstream is the `next start` process on the Docker HOST, not a container,
+# so it is reached through host.docker.internal — which resolves only because
+# /opt/caddy/docker-compose.yml gives the proxy
+# `extra_hosts: ["host.docker.internal:host-gateway"]`. Port 3100, because 3000
+# is LeadDesk's.
+#
+# TLS is not configured here on purpose: the global block in /opt/caddy/Caddyfile
+# sets the ACME account email, and Caddy obtains blv.cabras.ch's certificate over
+# HTTP-01 on the first request and renews it on its own, continuously, ~30 days
+# before expiry. No certbot, no cron entry, no timer.
+
+blv.cabras.ch {
+	encode zstd gzip
+
+	# One year, no includeSubDomains, no preload. The app is HTTPS-only the
+	# moment this proxy is in front of it, and the two omitted flags are the
+	# ones that are hard to walk back: preload is a browser-baked list, and
+	# includeSubDomains commits hosts this config knows nothing about —
+	# leaddesk.cabras.ch among them.
+	header Strict-Transport-Security "max-age=31536000"
+
+	reverse_proxy host.docker.internal:3100
+}

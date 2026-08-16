@@ -1,0 +1,28 @@
+[Unit]
+Description=blv tag-driven self-update (one tick)
+After=network-online.target docker.service blv.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=@USER@
+Group=@GROUP@
+# The CHECKOUT ROOT, not app/: the tick starts with git operations on the
+# checkout. self-update.sh cd's into app/ itself for every npm call.
+WorkingDirectory=@WORKDIR@
+Environment=NODE_ENV=production
+
+# node/npm/npx may live at a version-manager path that is not on the system
+# PATH. install-updater.sh resolves the absolute bin dir on this box and pins it
+# here, so the pipeline's `npm ci`, `npx prisma` and `npm run build` resolve
+# without a login shell. Re-run install-updater.sh after any Node upgrade.
+Environment=PATH=@NODE_BIN_DIR@:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=@WORKDIR@/deploy/self-update.sh
+
+# No NoNewPrivileges here: the pipeline restarts the app through the narrow
+# sudoers rule install-updater.sh writes, and that needs setuid.
+
+# A Next build on one vCPU with ~1 GB of RAM is slow, and it swaps. Do not let
+# systemd kill a legitimate long tick — the flock already prevents two of them
+# overlapping.
+TimeoutStartSec=1800

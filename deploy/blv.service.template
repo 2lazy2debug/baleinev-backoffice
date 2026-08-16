@@ -1,0 +1,48 @@
+[Unit]
+Description=blv (Baleinev backoffice, Next.js production server)
+# Postgres runs in Docker, so wait for Docker and the network. The app also
+# retries its connection and /api/health reports the truth either way, so exact
+# ordering is a convenience rather than a correctness requirement.
+After=network-online.target docker.service
+Wants=network-online.target
+# Never give up after repeated fast failures — at boot the database container is
+# routinely not ready yet, and a service that has permanently failed by the time
+# the box finishes starting is the worst possible outcome.
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=@USER@
+Group=@GROUP@
+# The npm project, not the checkout root. It is also what makes the PDF routes
+# work: they resolve process.cwd()/../soa/qr/blv-logo-noir-render.png, so the
+# service must run from inside the git checkout and not from a copied-out build.
+WorkingDirectory=@WORKDIR@
+
+# Next auto-loads .env from the working directory, so DATABASE_URL, AUTH_SECRET
+# and PASSWORD_VAULT_KEY are not repeated here. Keeping them in exactly one
+# place is what makes the `requires-env` directive meaningful.
+Environment=NODE_ENV=production
+
+# node may come from a version manager, at a per-user, version-specific path
+# that is NOT on the system PATH — the single most common reason a naive
+# `next start` unit fails. install-service.sh resolves the ABSOLUTE path on this
+# machine and pins it here, and puts its bin dir on PATH so child processes
+# resolve `node` too. Re-run install-service.sh after any Node upgrade.
+Environment=PATH=@NODE_BIN_DIR@:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# 3100, because 3000 is LeadDesk's on this box.
+ExecStart=@NODE_BIN@ node_modules/next/dist/bin/next start -p @PORT@
+
+# The app never escalates. (Deliberately absent from the updater unit, which
+# has to run `sudo systemctl restart` and would be blocked by this.)
+NoNewPrivileges=true
+# A private /tmp namespace. Puppeteer's Chromium is happy with it — it wants a
+# writable /tmp, not a shared one — and the PDF routes are the only thing here
+# that touches /tmp at all.
+PrivateTmp=true
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
