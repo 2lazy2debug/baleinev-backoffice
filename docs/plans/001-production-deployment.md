@@ -382,9 +382,21 @@ complete 26-route production build. The vault-key check rejects a bad paste and 
 one, `migrate deploy` is a clean no-op on an up-to-date database, and `urlencode` walks bytes
 under `LC_ALL=C` so a non-ASCII password percent-encodes as UTF-8 rather than one wrong `%XX`.
 
-**A8 — `docs/production.md`.** Server facts, the port map, the tag vocabulary table, the
-first-install runbook, the `/opt/caddy` arrangement, and the failure modes in §6 below. Link
-it from `docs/overview.md`. Per `CLAUDE.md`, this ships *with* the code, not after it.
+**A8 — `docs/production.md`.** — **DONE — 2026-08-16 19:20** Server facts, the port map, the tag
+vocabulary table, the first-install runbook, the `/opt/caddy` arrangement, and the failure modes
+in §6 below. Linked from `docs/overview.md`. Per `CLAUDE.md`, this ships *with* the code, not
+after it.
+
+It opens with a **Status** section saying plainly that the repository half is done and the server
+half has not run — `/opt/blv` does not exist yet — and points at Phase B here for the one-time
+migration. `production.md` is the durable description of how the box works; this plan is the
+record of how it got that way, and the two must not be merged.
+
+Two corrections to `docs/overview.md` made in the same commit, because the link went there and
+the surrounding text was wrong: its root-layout tree showed `docs/` *inside* `app/` and omitted
+`deploy/`, `soa/` and `install.sh` entirely, which is exactly the "the npm project is not the
+repo root" confusion §2 warns about. It now says so in one line above the tree, and a short
+"where to look next" list points at the other docs.
 
 **A9 — Tag `v0.1.0`** (annotated, message `non-breaking`) and push. This is what the box
 installs first.

@@ -69,6 +69,9 @@ All colours are defined as CSS custom properties in `app/globals.css` (e.g. `--a
 
 ## Project root layout
 
+The npm project is **not** the repo root. The root is the git checkout; `app/` is the
+Next project, and every `npm`, `npx` and `docker compose` call runs from there.
+
 ```
 app/               ← the Next.js application (this is the package root)
 ├── app/           ← Next.js `app/` router directory
@@ -81,5 +84,17 @@ app/               ← the Next.js application (this is the package root)
 ├── scripts/       ← one-off import scripts (workbook, budget)
 ├── public/        ← static assets (logo, favicon)
 ├── types/         ← TypeScript declaration augments (next-auth.d.ts)
-└── docs/          ← this documentation
+└── docker-compose.yml ← the Postgres container, dev and production alike
+deploy/            ← the tag-driven deploy pipeline (see production.md)
+docs/              ← this documentation
+soa/               ← the original workbook, and the logo the PDF routes read at runtime
+install.sh         ← first-time server install
 ```
+
+## Where to look next
+
+- [production.md](production.md) — the server, the ports, the tag vocabulary, and the
+  first-install runbook.
+- [file-structure.md](file-structure.md) — where each route and helper lives.
+- [database.md](database.md) · [auth.md](auth.md) · [passwords.md](passwords.md) —
+  the data model, the session layer, and the vault.
