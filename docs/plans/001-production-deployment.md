@@ -139,7 +139,6 @@ The two reference repos ship a complete deploy surface. This one ships none of i
 | `/api/health` | The pipeline's health gate has nothing to poll |
 | `prisma/migrations/` | The app has only ever used `db push`. **`prisma migrate deploy` fails with no migrations directory** |
 | Build-time deps in `devDependencies` | `typescript`, `@types/*`, `tailwindcss`, `@tailwindcss/postcss`, `prisma`, `tsx` are all dev deps — `npm ci --omit=dev` then breaks `next build` |
-| `eslint.ignoreDuringBuilds` | Next fails a build when a lint config exists but eslint was omitted |
 | `.nvmrc` | Nothing records which Node the app is built against |
 | A production `docker-compose.yml` | `docker/docker-compose.yml` is a dev-only DB whose port comes from an untracked `.env` |
 | Backup/restore tooling | Nothing to snapshot before a deploy |
@@ -239,19 +238,26 @@ not require a session — `proxy.ts` currently redirects everything unauthentica
 `/login`, so add `/api/health` to its early-return list, otherwise the pipeline's health gate
 sees a 307 and `curl -f` fails every deploy.
 
-**A4 — Make the build survive `npm ci --omit=dev`.** Move `typescript`, `@types/*`,
-`tailwindcss`, `@tailwindcss/postcss`, `prisma`, `tsx` into `dependencies`; leave `eslint` and
-`eslint-config-next` in `devDependencies` and set `eslint: { ignoreDuringBuilds: true }` in
-`app/next.config.ts`. Then regenerate the lockfile **with the server's npm major** and rehearse
-the production install in a scratch copy:
+**A4 — Make the build survive `npm ci --omit=dev`.** — **DONE — 2026-08-16 18:56** Move
+`typescript`, `@types/*`, `tailwindcss`, `@tailwindcss/postcss`, `prisma`, `tsx` into
+`dependencies`; leave `eslint` and `eslint-config-next` in `devDependencies`. Then regenerate
+the lockfile **with the server's npm major** and rehearse the production install in a scratch
+copy:
 
 ```bash
 npx npm@10.8.2 install --package-lock-only
 npx npm@10.8.2 ci --omit=dev --ignore-scripts   # in a scratch copy
-npm run build
+npx prisma generate && npm run build
 ```
 
 Add `.nvmrc` containing `20`.
+
+**Correction — no `eslint.ignoreDuringBuilds`.** An earlier draft called for it. Next 16
+**removed the `eslint` key from `NextConfig`**: `next build` no longer runs eslint at all, so
+the key is rejected (`Unrecognized key(s) in object: 'eslint'`) *and* it fails the TypeScript
+pass on `next.config.ts` itself — the config that was meant to save the build is the one thing
+that breaks it. Nothing is needed: the rehearsal above builds all 26 routes with eslint absent.
+That advice applies to Next ≤ 15, which is where the reference repos are.
 
 **A5 — `app/docker-compose.yml`.** One `db` service: `postgres:16-alpine`, `restart:
 unless-stopped`, `ports: ["127.0.0.1:5434:5432"]`, `pg_isready` healthcheck, named volume.
