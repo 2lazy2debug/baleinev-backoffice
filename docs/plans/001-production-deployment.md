@@ -348,17 +348,39 @@ every snapshot, and to `docker compose exec db` for the `pg_dump` itself. So:
   warns when it is not, because the symptom otherwise is a pipeline that backs up nothing and
   deploys nothing.
 
-**A7 — `install.sh`** at the repo root, modelled on `NurseAsAService/install.sh`: Node check
-against `.nvmrc` → Docker check → `npm ci --omit=dev` in `app/` → interactive `.env` →
-create `state/` and `backups/` (mode 700) → `docker compose up -d db` and wait for
-`pg_isready` → `prisma generate` → `prisma migrate deploy` → optional `db:seed` → `npm run
-build`. It **does not start the app** — `.env` gets read by a human first. Idempotent.
+**A7 — `install.sh`** at the repo root, modelled on `NurseAsAService/install.sh`: — **DONE —
+2026-08-16 19:14** Node check against `.nvmrc` → Docker check → `npm ci --omit=dev` in `app/` →
+interactive `.env` → create `state/` and `backups/` (mode 700) → `docker compose up -d db` and
+wait for `pg_isready` → `prisma generate` → `prisma migrate deploy` → optional `db:seed` →
+`npm run build`. It **does not start the app** — `.env` gets read by a human first. Idempotent.
 
 The `.env` prompts generate `AUTH_SECRET` and the Postgres password (percent-encoded into
 `DATABASE_URL` on port 5434), default `NEXTAUTH_URL` to `https://blv.cabras.ch`, and — the one
 deviation from InFaaS — **offer to paste an existing `PASSWORD_VAULT_KEY` instead of
 generating one**, because a generated key makes every imported vault entry permanently
 unreadable. Same for `ADMIN_EMAIL` / `ADMIN_PASSWORD`: prompted, never defaulted in code.
+
+Four deviations from the reference installer, each deliberate:
+
+- **It installs neither Node nor Docker**, where `NurseAsAService/install.sh` installs both. On
+  a box that is shared with a live app, an nvm Node under `blv` would shadow the system one the
+  units pin (§3, decision 6), and installing or restarting the Docker daemon would bounce
+  LeadDesk's database. Both are checked and explained instead, which is the half that was ever
+  useful here.
+- **The pasted `PASSWORD_VAULT_KEY` is validated to decode to exactly 32 bytes**, the same rule
+  `app/lib/secret-crypto.ts` enforces at runtime — so a truncated paste is one retry at install
+  time rather than a vault that throws on first read months later.
+- **`zip`/`unzip` are checked and warned about, not required.** They are the *pipeline's*
+  dependency (B4), not this script's; a missing one must not block the install, but it must be
+  visible on the day someone can fix it.
+- **`POSTGRES_USER` defaults to `blv`**, not `.env.example`'s dev default of `postgres`. The
+  legacy dump B7 restores was taken `--no-owner --no-privileges`, so it loads under any user.
+
+Rehearsed end to end three times against a scratch clone and the workstation's database — fresh
+`.env`, rewrite-existing (`.env.bak.<stamp>`, mode 600), and keep-existing — each ending in a
+complete 26-route production build. The vault-key check rejects a bad paste and accepts a good
+one, `migrate deploy` is a clean no-op on an up-to-date database, and `urlencode` walks bytes
+under `LC_ALL=C` so a non-ASCII password percent-encodes as UTF-8 rather than one wrong `%XX`.
 
 **A8 — `docs/production.md`.** Server facts, the port map, the tag vocabulary table, the
 first-install runbook, the `/opt/caddy` arrangement, and the failure modes in §6 below. Link
