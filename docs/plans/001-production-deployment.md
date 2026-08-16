@@ -399,7 +399,26 @@ repo root" confusion §2 warns about. It now says so in one line above the tree,
 "where to look next" list points at the other docs.
 
 **A9 — Tag `v0.1.0`** (annotated, message `non-breaking`) and push. This is what the box
-installs first.
+installs first. — **NOT DONE — the only Phase A step still open.** `main` is 17 commits ahead
+of `origin/main` and carries no tags; both the tag and the push have to be run by hand:
+
+```bash
+git tag -a v0.1.0 -m "non-breaking"
+git push origin main
+git push origin v0.1.0
+```
+
+The message matters as much as the tag: `self-update.sh` reads it as the directive, and a
+**lightweight** tag (`git tag v0.1.0`, no `-m`) carries no message at all — the pipeline
+records it as seen and deploys nothing. `-a` is not optional.
+
+Pushing `main` is not incidental to the tag. B3 clones from GitHub over HTTPS, so everything
+A1–A8 added exists on the box only once `origin/main` has it. Nothing in the 17 commits is a
+credential — `app/.env` is gitignored and the only tracked env file is `app/.env.example`,
+whose values are placeholders — but the repo is public, so it is worth confirming that once
+more before the first push in three months.
+
+Phase A ends here; there is no A10.
 
 ---
 
