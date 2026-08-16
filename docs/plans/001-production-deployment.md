@@ -283,7 +283,8 @@ df -h /                                        # target: >= 6 GB free before B5
 The container, its volume and the checkout's git metadata stay until B12 — they are the
 rollback for the data migration.
 
-**B2 — Create the app user and layout.**
+**B2 — Create the app user and layout — DONE 2026-08-16.** `blv` is uid 996, gid 988, in
+`docker` (990); `/opt/blv/{checkout,state,backups}` are `blv:blv`, `state` and `backups` 700.
 
 ```bash
 useradd --system --create-home --home-dir /home/blv --shell /bin/bash blv
