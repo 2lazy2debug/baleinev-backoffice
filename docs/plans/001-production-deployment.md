@@ -6,8 +6,12 @@ pipeline the LeadDesk and InFaaS repos use: push an annotated `vX.Y.Z` tag, a sy
 timer on the box notices within two minutes, backs up, builds, health-checks, and rolls
 back on failure.
 
-Nothing here has been executed. Every step below is ordered, and each numbered step is
-one commit (per `CLAUDE.md`).
+**Phase A is done** and `v0.1.0` is on `origin`. **Phase B has not started** — nothing on the
+server has been touched. Every step below is ordered, and each numbered step is one commit
+(per `CLAUDE.md`).
+
+**Keep output minimal.** Say what changed and what is blocked, in a few lines. Do not narrate
+steps, restate what this file already says, or summarise work back at the reader.
 
 ---
 
@@ -17,7 +21,7 @@ Written so this file is sufficient on its own, with no prior conversation.
 
 **The repo.** `/home/mcabras/Developer/baleinev-backoffice`, branch `main`, remote
 `git@github.com:2lazy2debug/baleinev-backoffice.git` — **public**. The npm project is `app/`,
-*not* the repo root; the root also holds `docker/`, `docs/`, `soa/`.
+*not* the repo root; the root also holds `deploy/`, `docs/`, `soa/` and `install.sh`.
 
 **Rules that bind this work.** `CLAUDE.md` at the repo root: no branches, one commit per
 completed step (`git add . && git commit -am "…"`), keep `.gitignore` current, and never let
@@ -25,24 +29,19 @@ completed step (`git add . && git commit -am "…"`), keep `.gitignore` current,
 `app/app/globals.css`, `npm run check:design`) apply to any UI touched — here only A3, which
 renders nothing.
 
-**Reference implementations.** Two sibling repos already run this exact pipeline in
-production. Copy from them rather than inventing:
-
-- `../NurseAsAService/deploy/` — the more refined generation: `self-update.sh`,
-  `install-service.sh`, `install-updater.sh`, `approve.sh`, the `*.service.template` and
-  `*.timer` files. `../NurseAsAService/install.sh` is the model for A7.
-- `../LeadDesk_3.0/deploy/self-update.sh` — its in-script `pg_dump` backup, which this repo
-  needs because it has no `npm run backup`.
-- Read first: `../NurseAsAService/docs/production.md`, `../LeadDesk_3.0/docs/production.md`,
-  `../LeadDesk_3.0/docs/tls-and-certificates.md`.
+**Sibling repos on this workstation.** `../LeadDesk_3.0` is the app already live on the box —
+read its `docs/production.md` and `docs/tls-and-certificates.md` before B9, since the Caddy
+extraction changes what they describe. `../NurseAsAService` runs the same pipeline this repo's
+`deploy/` was ported from.
 
 **Server access.** `ssh -i ~/.ssh/id_ed25519 root@leaddesk.cabras.ch` (`194.99.21.120`).
 Become an app user with `sudo -iu leaddesk` / `sudo -iu blv`. LeadDesk is live on that box;
 every step below is written to leave it running.
 
-**Local database.** Container `baleicomptes-postgres` on `127.0.0.1:5434`, database
-`baleinev_comptes`, user `postgres` —
-`docker exec baleicomptes-postgres psql -U postgres -d baleinev_comptes`.
+**Workstation database.** Container `blv-db-1` (compose project `blv`) on `127.0.0.1:5434`,
+database `baleinev_comptes`, user `postgres`. Reach it with `docker compose exec db psql -U
+postgres -d baleinev_comptes` from `app/`. It holds the 6 password-vault entries B7 exports.
+Not to be confused with `baleicomptes-postgres`, which is the **server's** legacy container.
 
 **Secrets.** `app/.env` (gitignored at `app/.gitignore:34`) holds `DATABASE_URL`,
 `AUTH_SECRET`, `NEXTAUTH_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME`,
@@ -50,11 +49,10 @@ every step below is written to leave it running.
 write any of them into a tracked file** — this repo is public, so a credential committed here
 is a credential published.
 
-**Order.** A1→A9 locally, one commit each, then B0→B12 on the server. Do not reorder: A9's
-tag must exist before B3 clones it, B7's restore depends on B1's dump, and B9's cutover
-assumes B6 has the app answering on 3100. Every B step says what "good" looks like — if a
-verification fails, stop there. B9 is the only step that interrupts a live service, and it
-carries an explicit rollback.
+**Order.** B0→B12 on the server, in order. Do not reorder: B7's restore depends on B1's dump,
+and B9's cutover assumes B6 has the app answering on 3100. Every B step says what "good" looks
+like — if a verification fails, stop there. B9 is the only step that interrupts a live service,
+and it carries an explicit rollback.
 
 **If reality disagrees with this document, the document is wrong.** Re-survey, correct the
 file, and commit that correction as part of the step.
@@ -128,27 +126,13 @@ get merged on the box.
 
 ---
 
-## 2. What this repo is missing
+## 2. Three structural facts
 
-The two reference repos ship a complete deploy surface. This one ships none of it.
+They shape every script and every step below.
 
-| Missing | Consequence |
-| --- | --- |
-| `deploy/` (self-update, unit templates, timer, approve, installers) | No pipeline at all |
-| `install.sh` | No first-time install |
-| `/api/health` | The pipeline's health gate has nothing to poll |
-| `prisma/migrations/` | The app has only ever used `db push`. **`prisma migrate deploy` fails with no migrations directory** |
-| Build-time deps in `devDependencies` | `typescript`, `@types/*`, `tailwindcss`, `@tailwindcss/postcss`, `prisma`, `tsx` are all dev deps — `npm ci --omit=dev` then breaks `next build` |
-| `.nvmrc` | Nothing records which Node the app is built against |
-| A production `docker-compose.yml` | `docker/docker-compose.yml` is a dev-only DB whose port comes from an untracked `.env` |
-| Backup/restore tooling | Nothing to snapshot before a deploy |
-| Deployment docs | `docs/` has no `production.md` |
-
-Three structural facts that shape every script below:
-
-1. **The npm project is not the repo root.** The git checkout root holds `app/`, `docker/`,
+1. **The npm project is not the repo root.** The git checkout root holds `app/`, `deploy/`,
    `docs/`, `soa/`; the Next project is `<checkout>/app`. So `git checkout tags/<tag>` runs at
-   the checkout root while every `npm`/`npx` runs in `app/`.
+   the checkout root while every `npm`, `npx` and `docker compose` runs in `app/`.
 2. **The app reads `soa/` at runtime.** `app/api/invoices/[invoiceId]/pdf/route.ts` resolves
    `process.cwd()/../soa/qr/blv-logo-noir-render.png`. The checkout must keep `soa/qr/*`, and
    the service's `WorkingDirectory` must be `<checkout>/app` — not a copied-out build.
@@ -184,14 +168,9 @@ Three structural facts that shape every script below:
 
 ### The proxy decision
 
-Caddy currently reads one file, from inside LeadDesk's checkout, describing one site.
-
-- **Extract Caddy into its own `/opt/caddy` compose project** owned by neither app.
-  Architecturally the cleanest, but it means stopping the running proxy and re-attaching the
-  `app_caddy_data` volume (which holds the certificates *and* the ACME account key) as an
-  external volume. More moving parts for the same outcome.
-
-Two consequences to accept up front:
+Caddy today reads one file describing one site, from inside LeadDesk's checkout. B9 extracts it
+into `/opt/caddy`, owned by neither app, re-attaching `app_caddy_data` (the certificates *and*
+the ACME account key) as an external volume. Two consequences to accept up front:
 
 - **A cutover window of ~10 seconds on 443**, for both hosts, while the old container is
   stopped and the new one starts. Rollback is one command (B9.7) as long as it is needed
@@ -206,219 +185,47 @@ the account key are the existing ones, carried over with the volume.
 
 ---
 
-## 4. Phase A — repository work (local, before touching the server)
+## 4. Phase A — repository work — **DONE**
 
-Each step is a commit. Nothing here changes the server.
+Committed and pushed; `v0.1.0` (annotated, `non-breaking`) is on `origin`. This is what exists
+now, and only what Phase B depends on.
 
-**A1 — `.gitignore` hygiene.** — **DONE — 2026-08-16 18:34** `soa/.venv` is a committed Python
-virtualenv: 844 tracked files. `git rm -r --cached soa/.venv`, add `.venv/` and `**/.venv/` to
-`.gitignore`. Keep `soa/qr/*` — the PDF routes read the logo from there at runtime.
-
-**A2 — Baseline the Prisma migrations.** — **DONE — 2026-08-16 18:38** The pipeline runs `prisma migrate deploy`, which
-requires `prisma/migrations/`. The app has only ever used `db push`, so generate the baseline
-from the schema:
-
-```bash
-cd app
-mkdir -p prisma/migrations/0_init
-npx prisma migrate diff --from-empty \
-  --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/0_init/migration.sql
-npx prisma migrate resolve --applied 0_init   # against the workstation database
-```
-
-Add `"db:deploy": "prisma migrate deploy"` to `app/package.json`. `0_init` describes the
-**current** schema, so it applies as-is to a fresh database. The server's legacy database is
-older than that and gets caught up by hand once, in B7 — the standard Prisma baselining
-recipe, not a migration this repo carries. From here on, schema changes ship as real
-migrations and the tag message says `requires-migration`.
-
-**A3 — Add `/api/health`.** — **DONE — 2026-08-16 18:44** `app/app/api/health/route.ts`: `export const dynamic =
-"force-dynamic"`, `SELECT 1` through `prisma.$queryRaw`, `200 {status:"ok"}` or `503`. Must
-not require a session — `proxy.ts` currently redirects everything unauthenticated to
-`/login`, so add `/api/health` to its early-return list, otherwise the pipeline's health gate
-sees a 307 and `curl -f` fails every deploy.
-
-**A4 — Make the build survive `npm ci --omit=dev`.** — **DONE — 2026-08-16 18:56** Move
-`typescript`, `@types/*`, `tailwindcss`, `@tailwindcss/postcss`, `prisma`, `tsx` into
-`dependencies`; leave `eslint` and `eslint-config-next` in `devDependencies`. Then regenerate
-the lockfile **with the server's npm major** and rehearse the production install in a scratch
-copy:
-
-```bash
-npx npm@10.8.2 install --package-lock-only
-npx npm@10.8.2 ci --omit=dev --ignore-scripts   # in a scratch copy
-npx prisma generate && npm run build
-```
-
-Add `.nvmrc` containing `20`.
-
-**Correction — no `eslint.ignoreDuringBuilds`.** An earlier draft called for it. Next 16
-**removed the `eslint` key from `NextConfig`**: `next build` no longer runs eslint at all, so
-the key is rejected (`Unrecognized key(s) in object: 'eslint'`) *and* it fails the TypeScript
-pass on `next.config.ts` itself — the config that was meant to save the build is the one thing
-that breaks it. Nothing is needed: the rehearsal above builds all 26 routes with eslint absent.
-That advice applies to Next ≤ 15, which is where the reference repos are.
-
-**A5 — `app/docker-compose.yml`.** — **DONE — 2026-08-16 19:12** One `db` service:
-`postgres:16-alpine`, `restart: unless-stopped`, `ports: ["127.0.0.1:5434:5432"]`, `pg_isready`
-healthcheck, named volume. Delete `docker/` and point `README`/docs at the new file. Local dev
-then runs `docker compose up -d db` from `app/`, on the same port it already uses.
-
-**Correction — the compose project must be named `blv` explicitly.** Compose derives the project
-name from the directory, and this file lives in `app/` — which is exactly the project name
-LeadDesk already uses on the box (§1: `app-caddy-1`, `app-db-1`, workdir `/opt/leaddesk/app`).
-Left to default, `/opt/blv/checkout/app` would claim the container name `app-db-1`, which
-LeadDesk's Postgres already holds, and `docker compose exec db` from either directory could
-reach the other project's database. `name: blv` at the top of the file gives `blv-db-1` and
-`blv_postgres_data` instead. B7's `docker compose exec -T db …` is unaffected — run from
-`/opt/blv/checkout/app` it resolves through this file.
-
-Two consequences of the move, handled here rather than left to discover:
-
-- **The volume changes identity.** The old `docker/` project owned `docker_postgres_data`; the
-  new one creates `blv_postgres_data`. The workstation's database — including the 6 vault
-  entries B7 exports — was carried across with `pg_dump` → `compose down` → `up -d db` →
-  restore, and verified: 6 entries, 6 role links, 1 user, 2 roles, `migrate status` clean.
-  `docker_postgres_data` is deliberately left in place as a rollback until B12.
-- **`POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` / `POSTGRES_PORT` now live in
-  `app/.env`** alongside `DATABASE_URL`, and are documented in `app/.env.example`. They are
-  declared with `${VAR:?}` so a missing value fails compose loudly instead of silently
-  initialising a database with different credentials than `DATABASE_URL` expects — the §6
-  "Postgres never became ready" trap, caught at the right moment.
-
-**A6 — `deploy/`.** — **DONE — 2026-08-16 19:00** Ported from `NurseAsAService/deploy` (the more
-refined generation), with LeadDesk's in-script `pg_dump` backup (this repo has no
-`npm run backup`, and a shell backup has no dependency on the app building):
-
-| File | Notes |
+| # | What exists |
 | --- | --- |
-| `self-update.sh` | flock · `git fetch --tags` · highest semver · directive flags · pre-deploy `pg_dump` zip (`BACKUP_KEEP=3`) · `git checkout --detach` at the **checkout root** · `npm ci --omit=dev` + `prisma generate` + optional `migrate deploy` + `npm run build` in **`app/`** · `sudo systemctl restart blv` · health-poll `:3100/api/health` for 90 s · rollback (restoring the dump only if a migration ran) · quarantine `failed-<tag>` · `last-deploy.json`. `main "$@"` stays the **last line** — the script rewrites itself mid-run |
+| A1 | `soa/.venv` untracked, `.venv/` in `.gitignore`. `soa/qr/*` stays tracked — the PDF routes read the logo from there at runtime. |
+| A2 | `app/prisma/migrations/0_init`, generated from the schema, so it applies as-is to a **fresh** database. `npm run db:deploy` = `prisma migrate deploy`. The server's legacy database is older and is baselined by hand once, in B7. |
+| A3 | `app/app/api/health/route.ts` — `SELECT 1` through Prisma, `200 {status:"ok"}` or `503`, `force-dynamic`. Sessionless: `/api/health` is in `proxy.ts`'s early-return list, so the health gate sees 200 and not a 307 to `/login`. |
+| A4 | `typescript`, `@types/*`, `tailwindcss`, `@tailwindcss/postcss`, `prisma`, `tsx` are in `dependencies` so `npm ci --omit=dev` still builds; only `eslint` and `eslint-config-next` are dev deps. Lockfile regenerated with npm 10.8.2, the server's major. `.nvmrc` = `20`. **Next 16 has no `eslint` key in `NextConfig`** — adding one fails the build it was meant to save. |
+| A5 | `app/docker-compose.yml`: one `db` service, `postgres:16-alpine`, `127.0.0.1:5434`, `pg_isready` healthcheck, project pinned `name: blv` so the containers are `blv-db-1` / `blv_postgres_data` and never collide with LeadDesk's `app` project. `POSTGRES_{USER,PASSWORD,DB,PORT}` live in `app/.env` beside `DATABASE_URL`, declared `${VAR:?}` so a missing one fails compose loudly. `docker/` is gone. |
+| A6 | `deploy/` — the pipeline, below. |
+| A7 | `install.sh` at the checkout root: preflight → `npm ci --omit=dev` in `app/` → interactive `app/.env` → `state/` and `backups/` (700) → `docker compose up -d db` → `prisma generate` → `migrate deploy` → optional seed → `npm run build`. Idempotent, and it **does not start the app**. It installs neither Node nor Docker on purpose: a per-user Node would shadow the one the units pin, and a daemon restart would bounce LeadDesk's containers. |
+| A8 | `docs/production.md` — the durable description of the box, linked from `docs/overview.md`. This plan is the one-time migration; the two are not merged. |
+| A9 | `v0.1.0` on `origin`, and `origin/main` carries A1–A8. B3 clones from there. |
+
+### `deploy/`
+
+| File | What it does |
+| --- | --- |
+| `self-update.sh` | flock · `git fetch --tags` · highest semver · directive flags · pre-deploy `pg_dump` zip (`BACKUP_KEEP=3`) · `git checkout --detach` at the **checkout root** · `npm ci --omit=dev` + `prisma generate` + optional `migrate deploy` + `npm run build` in **`app/`** · `sudo systemctl restart blv` · health-poll `:3100/api/health` for 90 s · rollback (restoring the dump only if a migration ran) · quarantine `failed-<tag>` · `last-deploy.json`. `main "$@"` is the **last line** — the script rewrites itself mid-run |
 | `blv.service.template` | `WorkingDirectory=<checkout>/app`, absolute pinned node path, `next start -p 3100`, `Restart=always`, `NoNewPrivileges=true` |
 | `blv-updater.service.template` | oneshot, `TimeoutStartSec=1800`, **no** `NoNewPrivileges` (it needs sudo), pinned node bin dir on `PATH` |
 | `blv-updater.timer` | `OnBootSec=3min`, `OnUnitActiveSec=2min` — offset from LeadDesk's so the two rarely tick together |
 | `install-service.sh` | Resolves the absolute node path on the box, refuses to install without `app/.env` and a `.next/BUILD_ID`, `chmod 600 app/.env` |
 | `install-updater.sh` | Renders the units, writes `/etc/sudoers.d/blv-deploy` (`systemctl restart blv`, `systemctl status blv` — no wildcard, `visudo -c` first), enables the timer |
 | `approve.sh` | Writes `state/approved-<tag>`, warns when no `pending-<tag>` exists |
-| `blv-firewall.sh` + `install-firewall.sh` | Same shape as `leaddesk-firewall.sh`, for **3100**: ACCEPT from `127.0.0.1` and `172.16.0.0/12`, DROP the rest; installs `blv-firewall.service` and persists with `iptables-save > /etc/iptables/rules.v4` |
-| `blv.caddy` + `install-caddy-site.sh` | The site block, version-controlled here. The installer copies it to `/opt/caddy/conf.d/blv.caddy`, runs `caddy validate`, then `caddy reload` — no container recreate, no downtime |
+| `blv-firewall.sh` + `install-firewall.sh` | For **3100**: ACCEPT from `127.0.0.1` and `172.16.0.0/12`, DROP the rest; installs `blv-firewall.service` and persists with `iptables-save > /etc/iptables/rules.v4` |
+| `blv.caddy` + `install-caddy-site.sh` | The site block. The installer stages it into a temp copy of `/opt/caddy`, runs `caddy validate` on the whole config, then copies it in and `caddy reload`s — no recreate, no downtime |
 
-Path handling in every script: `CHECKOUT_ROOT="$SCRIPT_DIR/.."`, `PROJECT_ROOT="$CHECKOUT_ROOT/app"`,
-`STATE_DIR="${BLV_STATE_DIR:-$CHECKOUT_ROOT/../state}"`, same for `backups`. State lives beside
-the checkout so a tag checkout cannot touch it.
+Paths in every script: `CHECKOUT_ROOT="$SCRIPT_DIR/.."`, `PROJECT_ROOT="$CHECKOUT_ROOT/app"`,
+`STATE_DIR="${BLV_STATE_DIR:-$CHECKOUT_ROOT/../state}"`, same for `backups`.
 
-**What was verified locally, and what was not.** Everything that does not need the server was
-exercised against a scratch clone and the workstation's database, not merely written:
-
-- Every non-building path of `self-update.sh` — no tags, lightweight tag, repeat tick,
-  `no-deploy`, the `requires-env` halt, `approve.sh`, and the `failed-<tag>` quarantine — each
-  producing the right `state/` markers and `last-deploy.json`.
-- `make_backup` against the live dev database: the zip carries `dump.sql` + `.env`, the dump
-  **restores into a scratch database with all 45 foreign keys and the 6 vault entries intact**,
-  a truncated archive is refused, and `BACKUP_KEEP=3` prunes to exactly three.
-- Both unit templates render with no placeholder left and pass `systemd-analyze verify`.
-- `blv.caddy` passes `caddy validate` inside a two-site config alongside a `leaddesk.cabras.ch`
-  block — the arrangement B9 builds.
-
-Not verifiable off the box, so B6/B8/B9 are the first real test of them: `install-service.sh`,
+**Never exercised off the box, so B6/B8/B9 are their first real test:** `install-service.sh`,
 `install-updater.sh`, `install-firewall.sh`, `install-caddy-site.sh`, and the build half of
-`build_and_start`.
-
-Three deviations from the table above, each deliberate:
-
-- **`blv-firewall.sh` was written from §1's description of `leaddesk-firewall.sh`, not copied
-  from it** — the box was not reachable while A6 was written. The rules are the ones §1
-  specifies (ACCEPT `127.0.0.1`, ACCEPT `172.16.0.0/12`, DROP the rest, `-I` so they land at the
-  top of INPUT). **At B8, diff it against `/usr/local/sbin/leaddesk-firewall.sh` before running
-  it**; if LeadDesk's does something extra, that something is probably load-bearing.
-- **`install-caddy-site.sh` validates against a staged temp copy of `/opt/caddy`**, not by
-  mounting `/opt/caddy` directly as B9.3 does, so the live directory never holds an unvalidated
-  file even for a moment. It then reloads with `docker compose exec caddy caddy reload` — no
-  recreate, no downtime, no certificate re-issue.
-- **`blv.caddy` sets `Strict-Transport-Security: max-age=31536000`**, which LeadDesk's block does
-  not. That is fine and is not a change to LeadDesk: `blv.cabras.ch` is a new host, so nothing is
-  being walked back. B9.1's rule that `leaddesk.caddy` reproduce the current block *exactly*
-  still stands.
-
-**Two prerequisites this adds to Phase B.** `self-update.sh` shells out to `zip` and `unzip` for
-every snapshot, and to `docker compose exec db` for the `pg_dump` itself. So:
-
-- Add `zip unzip` to B4's `apt-get install` line. Without them every deploy fails at the
-  snapshot — safely, since nothing is changed before it, but no tag ever lands.
-- `blv` must be in the `docker` group before B10, exactly as B2 does it. `install-updater.sh`
-  warns when it is not, because the symptom otherwise is a pipeline that backs up nothing and
-  deploys nothing.
-
-**A7 — `install.sh`** at the repo root, modelled on `NurseAsAService/install.sh`: — **DONE —
-2026-08-16 19:14** Node check against `.nvmrc` → Docker check → `npm ci --omit=dev` in `app/` →
-interactive `.env` → create `state/` and `backups/` (mode 700) → `docker compose up -d db` and
-wait for `pg_isready` → `prisma generate` → `prisma migrate deploy` → optional `db:seed` →
-`npm run build`. It **does not start the app** — `.env` gets read by a human first. Idempotent.
-
-The `.env` prompts generate `AUTH_SECRET` and the Postgres password (percent-encoded into
-`DATABASE_URL` on port 5434), default `NEXTAUTH_URL` to `https://blv.cabras.ch`, and — the one
-deviation from InFaaS — **offer to paste an existing `PASSWORD_VAULT_KEY` instead of
-generating one**, because a generated key makes every imported vault entry permanently
-unreadable. Same for `ADMIN_EMAIL` / `ADMIN_PASSWORD`: prompted, never defaulted in code.
-
-Four deviations from the reference installer, each deliberate:
-
-- **It installs neither Node nor Docker**, where `NurseAsAService/install.sh` installs both. On
-  a box that is shared with a live app, an nvm Node under `blv` would shadow the system one the
-  units pin (§3, decision 6), and installing or restarting the Docker daemon would bounce
-  LeadDesk's database. Both are checked and explained instead, which is the half that was ever
-  useful here.
-- **The pasted `PASSWORD_VAULT_KEY` is validated to decode to exactly 32 bytes**, the same rule
-  `app/lib/secret-crypto.ts` enforces at runtime — so a truncated paste is one retry at install
-  time rather than a vault that throws on first read months later.
-- **`zip`/`unzip` are checked and warned about, not required.** They are the *pipeline's*
-  dependency (B4), not this script's; a missing one must not block the install, but it must be
-  visible on the day someone can fix it.
-- **`POSTGRES_USER` defaults to `blv`**, not `.env.example`'s dev default of `postgres`. The
-  legacy dump B7 restores was taken `--no-owner --no-privileges`, so it loads under any user.
-
-Rehearsed end to end three times against a scratch clone and the workstation's database — fresh
-`.env`, rewrite-existing (`.env.bak.<stamp>`, mode 600), and keep-existing — each ending in a
-complete 26-route production build. The vault-key check rejects a bad paste and accepts a good
-one, `migrate deploy` is a clean no-op on an up-to-date database, and `urlencode` walks bytes
-under `LC_ALL=C` so a non-ASCII password percent-encodes as UTF-8 rather than one wrong `%XX`.
-
-**A8 — `docs/production.md`.** — **DONE — 2026-08-16 19:20** Server facts, the port map, the tag
-vocabulary table, the first-install runbook, the `/opt/caddy` arrangement, and the failure modes
-in §6 below. Linked from `docs/overview.md`. Per `CLAUDE.md`, this ships *with* the code, not
-after it.
-
-It opens with a **Status** section saying plainly that the repository half is done and the server
-half has not run — `/opt/blv` does not exist yet — and points at Phase B here for the one-time
-migration. `production.md` is the durable description of how the box works; this plan is the
-record of how it got that way, and the two must not be merged.
-
-Two corrections to `docs/overview.md` made in the same commit, because the link went there and
-the surrounding text was wrong: its root-layout tree showed `docs/` *inside* `app/` and omitted
-`deploy/`, `soa/` and `install.sh` entirely, which is exactly the "the npm project is not the
-repo root" confusion §2 warns about. It now says so in one line above the tree, and a short
-"where to look next" list points at the other docs.
-
-**A9 — Tag `v0.1.0`** (annotated, message `non-breaking`) and push. This is what the box
-installs first. — **NOT DONE — the only Phase A step still open.** `main` is 17 commits ahead
-of `origin/main` and carries no tags; both the tag and the push have to be run by hand:
-
-```bash
-git tag -a v0.1.0 -m "non-breaking"
-git push origin main
-git push origin v0.1.0
-```
-
-The message matters as much as the tag: `self-update.sh` reads it as the directive, and a
-**lightweight** tag (`git tag v0.1.0`, no `-m`) carries no message at all — the pipeline
-records it as seen and deploys nothing. `-a` is not optional.
-
-Pushing `main` is not incidental to the tag. B3 clones from GitHub over HTTPS, so everything
-A1–A8 added exists on the box only once `origin/main` has it. Nothing in the 17 commits is a
-credential — `app/.env` is gitignored and the only tracked env file is `app/.env.example`,
-whose values are placeholders — but the repo is public, so it is worth confirming that once
-more before the first push in three months.
-
-Phase A ends here; there is no A10.
+`self-update.sh`'s `build_and_start`. Everything else — every non-building path of
+`self-update.sh`, `make_backup` and its restore, both unit templates under
+`systemd-analyze verify`, `blv.caddy` under `caddy validate` in a two-site config, and all three
+`install.sh` paths ending in a full build — was verified against a scratch clone and the
+workstation's database.
 
 ---
 
@@ -556,14 +363,15 @@ Then the 6 vault entries, from the workstation. Two columns cannot travel as-is:
   case-insensitive.
 
 ```bash
-# workstation — COPY … TO STDOUT, *not* \copy: \copy would write the file inside the
-# container (psql is the client there), where scp cannot see it.
-docker exec baleicomptes-postgres psql -U postgres -d baleinev_comptes -c \
+# workstation, from app/ — the container is blv-db-1, NOT the server's
+# baleicomptes-postgres. COPY … TO STDOUT, *not* \copy: \copy would write the file
+# inside the container (psql is the client there), where scp cannot see it.
+docker compose exec -T db psql -U postgres -d baleinev_comptes -c \
  "COPY (select id,name,login,website,\"passwordCipher\",\"passwordIv\",\"passwordTag\",
          \"totpCipher\",\"totpIv\",\"totpTag\",null::text,\"createdAt\",\"updatedAt\"
     from \"PasswordEntry\") TO STDOUT WITH CSV" > vault-entries.csv
 
-docker exec baleicomptes-postgres psql -U postgres -d baleinev_comptes -c \
+docker compose exec -T db psql -U postgres -d baleinev_comptes -c \
  "COPY (select j.\"B\", r.name from \"_DepartmentRoleToPasswordEntry\" j
           join \"DepartmentRole\" r on r.id = j.\"A\") TO STDOUT WITH CSV" > vault-roles.csv
 
@@ -624,8 +432,18 @@ sudo systemctl restart blv
 The legacy database already carries `compta@baleinev.ch` (ADMIN) and one DEPARTMENT user; the
 seed adds the président as a third and leaves both untouched.
 
-**B8 — Firewall.** `sudo ./deploy/install-firewall.sh`. Verify from the workstation that
-`nc -vz 194.99.21.120 3100` times out.
+**B8 — Firewall.** `blv-firewall.sh` was written from §1's description of
+`leaddesk-firewall.sh`, not copied from it — the box was not reachable at the time. **Diff the
+two before running the installer**; anything LeadDesk's does that ours does not is probably
+load-bearing:
+
+```bash
+diff /usr/local/sbin/leaddesk-firewall.sh /opt/blv/checkout/deploy/blv-firewall.sh
+sudo /opt/blv/checkout/deploy/install-firewall.sh
+```
+
+Verify from the workstation that `nc -vz 194.99.21.120 3100` **times out** — a refused
+connection means the DROP is missing.
 
 **B9 — Extract Caddy into `/opt/caddy`.** Build the whole thing before touching the running
 proxy; the only irreversible-feeling moment is step 5, and step 7 undoes it.
@@ -766,8 +584,5 @@ listed here so a later reader knows which choices were deliberate.
 | 9 | **No scheduled jobs**, and tags are cut **from this workstation only** — no CI. | — |
 | 10 | Importing `soa/compta_2025-2026.xlsx` through the workbook scripts is **deferred**, out of scope here. | — |
 
-**One security note, deliberately kept.** An earlier draft of this file carried the admin
-password in plaintext. It was removed before any commit — `git log --all -S` confirms it never
-entered history — but it did exist in the working tree of a **public** repository. Credentials
-belong in `app/.env` (gitignored) and nowhere else in this repo; rotating that one password at
-some point is cheap insurance.
+The repo is public. Credentials belong in `app/.env` (gitignored) and nowhere else — not in
+this file, not in a commit message.
