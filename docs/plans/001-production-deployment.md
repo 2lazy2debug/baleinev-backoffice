@@ -6,9 +6,9 @@ pipeline the LeadDesk and InFaaS repos use: push an annotated `vX.Y.Z` tag, a sy
 timer on the box notices within two minutes, backs up, builds, health-checks, and rolls
 back on failure.
 
-**Phase A is done** and `v0.1.0` is on `origin`. **Phase B is in progress** — B1 is done, B0 has
-not been run. Every step below is ordered, and each numbered step is one commit
-(per `CLAUDE.md`).
+**Phase A is done** and `v0.1.0` is on `origin`. **Phase B is in progress** — B1–B5 are done,
+B0 has not been run, B6 is next. Every step below is ordered, and each numbered step is one
+commit (per `CLAUDE.md`).
 
 **Keep output minimal.** Briefly mention what changed and what is blocked, in a few lines. Do not narrate
 steps, restate what this file already says, or summarise work back at the reader.
@@ -321,8 +321,16 @@ months later, with a missing-`.so` error nobody connects to deploy day. `zip`/`u
 pipeline's own dependency: `self-update.sh` writes and reads its snapshots with them, and
 without them every deploy stops at the backup.
 
-**B5 — `./install.sh` as `blv`**, from `/opt/blv/checkout`. Three values are **copied from the
-workstation's `app/.env`, not generated**, because generating them breaks something later:
+**B5 — `./install.sh` as `blv` — DONE 2026-08-16.** `app/.env` is mode 600 `blv:blv`;
+`PASSWORD_VAULT_KEY` and `ADMIN_PASSWORD` hash identically to the workstation's, `ADMIN_EMAIL`
+is `presidence@baleinev.ch`, `DATABASE_URL` points at `blv@127.0.0.1:5434/baleinev_comptes`.
+`blv-db-1` is healthy, `0_init` applied ("Database schema is up to date"), 0 users — the seed
+was skipped as intended — and `.next/BUILD_ID` exists. **Disk is back to 4.1 GB free**: `npm ci`
+and the build cost ~1.3 GB and puppeteer's Chromium another 628 MB in `/home/blv/.cache`. B0 was
+never run, so its ~750 MB is still on the table and should be reclaimed before B11's test deploy.
+
+From `/opt/blv/checkout`, three values are **copied from the workstation's `app/.env`, not
+generated**, because generating them breaks something later:
 
 | Prompt | Value | If generated instead |
 | --- | --- | --- |
