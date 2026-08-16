@@ -294,7 +294,9 @@ chown -R blv:blv /opt/blv
 chmod 700 /opt/blv/state /opt/blv/backups
 ```
 
-**B3 — Clone.** The GitHub repo answers anonymous `ls-remote`, so it is public and HTTPS needs
+**B3 — Clone — DONE 2026-08-16.** `/opt/blv/checkout` is detached at `v0.1.0` (`ab4bb45`),
+clean, `blv`-owned, `soa/qr/blv-logo-noir-render.png` present.
+The GitHub repo answers anonymous `ls-remote`, so it is public and HTTPS needs
 no key: `sudo -iu blv git clone https://github.com/2lazy2debug/baleinev-backoffice.git
 /opt/blv/checkout`, then `git checkout tags/v0.1.0`. (If it is ever made private, add a deploy
 key at `/home/blv/.ssh/id_ed25519` and switch the remote to SSH, exactly as `leaddesk` has.)
