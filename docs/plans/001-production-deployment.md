@@ -215,7 +215,7 @@ Each step is a commit. Nothing here changes the server.
 virtualenv: 844 tracked files. `git rm -r --cached soa/.venv`, add `.venv/` and `**/.venv/` to
 `.gitignore`. Keep `soa/qr/*` — the PDF routes read the logo from there at runtime.
 
-**A2 — Baseline the Prisma migrations.** The pipeline runs `prisma migrate deploy`, which
+**A2 — Baseline the Prisma migrations.** — **DONE — 2026-08-16 18:38** The pipeline runs `prisma migrate deploy`, which
 requires `prisma/migrations/`. The app has only ever used `db push`, so generate the baseline
 from the schema:
 

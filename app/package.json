@@ -10,6 +10,7 @@
     "check:design": "node scripts/check-design.mjs",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
+    "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:import:workbook": "tsx scripts/import-workbook.ts",
     "db:import:budget": "tsx scripts/import-budget.ts"
