@@ -6,11 +6,11 @@ pipeline the LeadDesk and InFaaS repos use: push an annotated `vX.Y.Z` tag, a sy
 timer on the box notices within two minutes, backs up, builds, health-checks, and rolls
 back on failure.
 
-**Phase A is done** and `v0.1.0` is on `origin`. **Phase B has not started** — nothing on the
-server has been touched. Every step below is ordered, and each numbered step is one commit
+**Phase A is done** and `v0.1.0` is on `origin`. **Phase B is in progress** — B1 is done, B0 has
+not been run. Every step below is ordered, and each numbered step is one commit
 (per `CLAUDE.md`).
 
-**Keep output minimal.** Say what changed and what is blocked, in a few lines. Do not narrate
+**Keep output minimal.** Briefly mention what changed and what is blocked, in a few lines. Do not narrate
 steps, restate what this file already says, or summarise work back at the reader.
 
 ---
@@ -233,8 +233,9 @@ workstation's database.
 
 Run as `root@leaddesk.cabras.ch` unless stated. Every step is verifiable before the next.
 
+
 **B0 — Purge logs and caches.** Nothing on this box older than a week is worth keeping, and
-this is the cheapest disk on offer:
+this is the cheapest disk on offer. Please also uninstall pm2 from node : 
 
 ```bash
 journalctl --disk-usage                       # 318 MB before
@@ -261,8 +262,11 @@ MaxRetentionSec=1week
 container on the box — including LeadDesk's database — to fix a problem that does not exist.
 Revisit only if `docker inspect --format '{{.LogPath}}'` ever shows real growth.
 
-**B1 — Snapshot the legacy database and reclaim the stale build.** The dump is the safety net
-for everything in B7, so verify it before deleting anything:
+**B1 — Snapshot the legacy database and reclaim the stale build — DONE 2026-08-16.**
+`/root/blv-legacy-2026-08-16.sql` is 137 KB, 22 `CREATE TABLE` + 22 `COPY public` blocks, one
+completion marker. Disk went 4.0 GB → **6.0 GB free** (node_modules 962 MB + `.next` 188 MB +
+two LeadDesk backups ~900 MB); `docker image prune` reclaimed nothing — both images are in use.
+The dump is the safety net for everything in B7, so verify it before deleting anything:
 
 ```bash
 docker exec baleicomptes-postgres pg_dump -U postgres -d baleinev_comptes \
