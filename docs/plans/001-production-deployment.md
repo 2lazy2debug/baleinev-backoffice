@@ -7,8 +7,8 @@ timer on the box notices within two minutes, backs up, builds, health-checks, an
 back on failure.
 
 **This plan is finished.** Phase A and **all of Phase B, B0 through B12**, are done. The app is
-live at `https://blv.cabras.ch` on `v0.1.2`, the tag-driven pipeline has deployed a real release
-and survived a reboot, and the legacy deployment is gone. 4.8 GB free.
+live at `https://blv.cabras.ch` on `v0.1.3`, the tag-driven pipeline has deployed three real
+releases and survived a reboot, and the legacy deployment is gone. 4.8 GB free.
 
 Two things outlive it, both written up under the step that found them: **delete
 `/root/blv-legacy-2026-08-16.sql` on or after 2026-08-24** (B12), and **`/opt/caddy` is versioned
@@ -746,7 +746,26 @@ is the same failure, far easier to hit, and it would land inside a timer where n
 
 **Both installers now refuse to write a node path the run user cannot execute**, and say how to
 retry (`sudo env PATH=/usr/bin:/bin …`). That is the actual fix and it holds whether or not nvm
-is ever removed. Removing the directory is then just 466 MB and one less way to be confused:
+is ever removed. It shipped as **`v0.1.3`** and was tested on the box against both paths:
+
+```
+$ ssh root@… 'bash -lic "/opt/blv/checkout/deploy/install-updater.sh"'     # interactive → nvm
+ERROR: blv cannot execute /root/.nvm/versions/node/v24.14.1/bin/node, so every deploy would fail.
+       Re-run with the system node:
+         sudo env PATH=/usr/bin:/bin /opt/blv/checkout/deploy/install-updater.sh
+exit=1
+
+$ ssh root@… '/opt/blv/checkout/deploy/install-updater.sh'                 # non-interactive
+  node bin dir=/usr/bin
+Leaving /opt/blv/state/deployed-tag alone (already records: v0.1.3).
+```
+
+The first invocation is precisely what a human at a terminal would have typed, and before this
+change it would have written that unreachable path into the unit without a word. Note it exits
+**before** installing anything, so a refusal leaves a working install untouched.
+
+Removing the directory is then just 466 MB and one less way to be confused — not a correctness
+issue any more. It is the one command in this plan that was not run:
 
 ```bash
 rm -rf /root/.nvm     # the .bashrc lines are guarded with [ -s … ] and go quiet on their own
