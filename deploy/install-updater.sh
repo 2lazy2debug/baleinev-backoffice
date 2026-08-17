@@ -10,10 +10,14 @@
 # pins it into the unit, so the pipeline's npm/npx run without a login shell.
 # **Re-run it after every Node upgrade.**
 #
-# Usage (on the server, as the `blv` user, from the checkout root):
+# Usage (on the server, from the checkout root):
 #   ./deploy/install-updater.sh
 #
-# Needs sudo: writes /etc/systemd/system and /etc/sudoers.d, enables the timer.
+# Needs root: writes /etc/systemd/system and /etc/sudoers.d, enables the timer.
+# Run it as root, or through sudo from a user who has it — `blv` is a system
+# account with no sudo rights. The units still run as `blv`: the user they are
+# rendered with is the OWNER OF THE CHECKOUT, not the caller (BLV_RUN_USER=…
+# overrides it).
 
 set -euo pipefail
 
@@ -34,7 +38,9 @@ fi
 NODE_BIN="$(readlink -f "$NODE_BIN")"
 NODE_BIN_DIR="$(dirname "$NODE_BIN")"
 
-RUN_USER="${SUDO_USER:-$(id -un)}"
+# The checkout's owner, not the caller — see install-service.sh for why. Getting
+# this wrong here also writes a sudoers rule for the wrong user.
+RUN_USER="${BLV_RUN_USER:-$(stat -c '%U' "$CHECKOUT_ROOT")}"
 RUN_GROUP="$(id -gn "$RUN_USER")"
 
 # The pipeline's backup runs `docker compose exec db pg_dump`, which needs the

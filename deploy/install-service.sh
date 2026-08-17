@@ -10,10 +10,14 @@
 # **Re-run it after every Node upgrade** — an upgrade moves that path and the
 # service stops starting with an error that says only "no such file".
 #
-# Usage (on the server, as the `blv` user, from the checkout root):
+# Usage (on the server, from the checkout root):
 #   ./deploy/install-service.sh
 #
-# Needs sudo: it writes /etc/systemd/system and enables the service.
+# Needs root: it writes /etc/systemd/system and enables the service. Run it as
+# root, or through sudo from a user who has it — `blv` is a system account with
+# no sudo rights, so it cannot install its own unit. The service still runs as
+# `blv`: the user baked into the unit is the OWNER OF THE CHECKOUT, not whoever
+# typed the command (override with BLV_RUN_USER=…).
 
 set -euo pipefail
 
@@ -34,7 +38,13 @@ fi
 NODE_BIN="$(readlink -f "$NODE_BIN")"   # de-reference symlinks to the real path
 NODE_BIN_DIR="$(dirname "$NODE_BIN")"
 
-RUN_USER="${SUDO_USER:-$(id -un)}"
+# Whose app is this? The checkout's owner. That answer is right in every way the
+# installer is actually run — as root, through sudo, or as the app user itself —
+# whereas "the caller" is wrong the moment the app user has no sudo rights and
+# root has to do the installing, which is exactly the case here: the unit would
+# silently be written with User=root and the app would run as root over blv's
+# 600-mode .env.
+RUN_USER="${BLV_RUN_USER:-$(stat -c '%U' "$CHECKOUT_ROOT")}"
 RUN_GROUP="$(id -gn "$RUN_USER")"
 
 if [[ ! -f "$PROJECT_ROOT/.next/BUILD_ID" ]]; then
