@@ -11,9 +11,9 @@ live at `https://blv.cabras.ch` on `v0.1.3`, the tag-driven pipeline has deploye
 releases and survived a reboot, and the legacy deployment is gone. **5.2 GB free.** Nothing here
 is outstanding.
 
-Two things outlive it, both written up under the step that found them: **delete
-`/root/blv-legacy-2026-08-16.sql` on or after 2026-08-24** (B12), and **`/opt/caddy` is versioned
-nowhere** (B9). Every step below is ordered, and each was one commit (per `CLAUDE.md`).
+One thing outlives it: **`/opt/caddy` is versioned nowhere** (B9). The legacy dump that used to
+be the other item was deleted on 2026-08-18 — see B12, including what that costs. Every step
+below is ordered, and each was one commit (per `CLAUDE.md`).
 
 **Keep output minimal.** Briefly mention what changed and what is blocked, in a few lines. Do not narrate
 steps, restate what this file already says, or summarise work back at the reader.
@@ -727,9 +727,19 @@ and remains a complete rollback. The fresh copy was then deleted rather than kep
 plaintext copies of the ledger is one more than the risk is worth. Do this check before deleting
 any database volume; "we took a dump last week" is not the same claim.
 
-Keep `/root/blv-legacy-2026-08-16.sql` until the app has been used in anger for a week, then
-delete it — it contains the whole ledger in plaintext. **That week starts 2026-08-17; delete on
-or after 2026-08-24.**
+**`/root/blv-legacy-2026-08-16.sql` is deleted (2026-08-18), on the owner's instruction and
+ahead of the week this plan asked for.** The plan wanted it kept until 2026-08-24 as the rollback
+for B7's migration; that was raised and overruled, which is the owner's call to make about the
+owner's ledger. Recorded here so nobody later reads the old instruction and hunts for a file that
+is deliberately gone.
+
+**What this means for recovery, stated plainly.** There is no longer any path back to the
+pre-migration data. B12 destroyed the legacy container and volume, and this dump was the last
+copy — the migration is now one-way. `/opt/blv/backups/` holds three `pre-v0.1.x` snapshots, but
+those are backups of the **migrated** database taken before each deploy: they protect against a
+bad release, not against a fault in the migration itself. If B7 mis-mapped something, the
+evidence is gone. The live data was verified intact immediately after deletion (214 journal
+entries, 6 vault entries).
 
 **Still to reclaim: `/root/.nvm`, 466 MB.** Flagged in B0, and the reason it matters is not the
 disk. Root's `.bashrc` sources nvm, so an **interactive** root shell resolves `node` to
