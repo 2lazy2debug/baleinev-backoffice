@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 #
-# Install blv-firewall.sh as a boot-time unit and persist its rules.
+# Install blv-firewall.sh as a boot-time unit and snapshot the table.
 #
-# Two mechanisms on purpose, because this box already has both and they cover
-# different failures:
-#   - blv-firewall.service re-applies the rules at every boot, so a flushed or
-#     rebuilt table comes back closed.
-#   - iptables-save > /etc/iptables/rules.v4 keeps them across a restart of
-#     netfilter-persistent, which is what LeadDesk's rules rely on.
+# blv-firewall.service re-applying the rules at every boot is the ONLY thing
+# keeping this port closed — a flushed or rebuilt table comes back closed
+# because the unit runs again, not because anything replays a file. LeadDesk's
+# rules work the same way, via docker-egress-nat.service.
+#
+# /etc/iptables/rules.v4 is written as a diagnostic snapshot, nothing more.
+# There is no netfilter-persistent and no iptables-persistent on this box
+# (checked below), so nothing restores it. Writing it is still worth doing: the
+# file already exists, it predates the switch to "iptables": false in
+# daemon.json, and restoring THAT version today would set FORWARD to DROP and
+# recreate DOCKER chains bound to bridges that no longer exist. A current
+# snapshot is the safer thing to leave lying around than a stale one.
 #
 # Usage (on the server, as root, from the checkout root):
 #   sudo ./deploy/install-firewall.sh
@@ -65,17 +71,34 @@ iptables -S INPUT | grep -- "--dport $PORT" || {
   exit 1
 }
 
-# Persist for netfilter-persistent. This rewrites the file LeadDesk's rules also
-# live in, which is correct: it is a snapshot of the whole current table, and
-# the current table contains both apps' rules.
+# Snapshot the whole current table — both apps' rules and the NAT rule, since
+# that is what a snapshot is. Back up any existing file first: the one this
+# replaces may be older than the box's current networking model, and throwing
+# it away silently would destroy the only record of what changed.
 if [[ -d /etc/iptables ]]; then
   echo
-  echo "Persisting the full table to /etc/iptables/rules.v4…"
+  if [[ -f /etc/iptables/rules.v4 ]]; then
+    BACKUP="/etc/iptables/rules.v4.bak-$(date +%Y-%m-%d)"
+    if [[ ! -f "$BACKUP" ]]; then
+      echo "Backing up the existing rules.v4 to $BACKUP…"
+      cp -a /etc/iptables/rules.v4 "$BACKUP"
+    fi
+  fi
+  echo "Writing a snapshot of the current table to /etc/iptables/rules.v4…"
   iptables-save > /etc/iptables/rules.v4
+
+  # Say so plainly rather than letting the line above imply persistence.
+  if ! systemctl list-unit-files 2>/dev/null |
+       grep -qE '^(netfilter|iptables)-persistent\.service'; then
+    echo "NOTE: nothing restores rules.v4 on this box — no netfilter-persistent," >&2
+    echo "      no iptables-persistent. $SERVICE_NAME-firewall.service is what" >&2
+    echo "      re-applies the rules at boot. The file is a diagnostic only." >&2
+  fi
 else
   echo
-  echo "WARNING: /etc/iptables does not exist, so nothing was persisted." >&2
-  echo "         The unit still re-applies the rules at boot." >&2
+  echo "NOTE: /etc/iptables does not exist, so no snapshot was written." >&2
+  echo "      The unit still re-applies the rules at boot, which is the part" >&2
+  echo "      that matters." >&2
 fi
 
 echo

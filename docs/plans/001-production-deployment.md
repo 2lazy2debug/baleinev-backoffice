@@ -488,18 +488,40 @@ sudo systemctl restart blv
 The legacy database already carries `compta@baleinev.ch` (ADMIN) and one DEPARTMENT user; the
 seed adds the président as a third and leaves both untouched.
 
-**B8 — Firewall.** `blv-firewall.sh` was written from §1's description of
-`leaddesk-firewall.sh`, not copied from it — the box was not reachable at the time. **Diff the
-two before running the installer**; anything LeadDesk's does that ours does not is probably
-load-bearing:
+**B8 — Firewall. DONE (2026-08-17).** `blv-firewall.sh` was written from §1's description of
+`leaddesk-firewall.sh`, not copied from it, so the plan called for diffing the two first.
+
+The diff's one substantive finding: LeadDesk's script also installs
+`-t nat -A POSTROUTING -s 172.16.0.0/12 -o eth0 -j MASQUERADE`, which gives containers
+egress (Caddy's ACME needs it). It is load-bearing — and correctly **absent** from ours,
+because it is a single global rule already owned by `docker-egress-nat.service`, not a
+per-port one. Two units maintaining the same rule is worse than one. Everything else in the
+diff is style: LeadDesk check-then-appends (`-C || -A`), ours deletes-then-inserts.
+
+Run as root, from the checkout:
 
 ```bash
-diff /usr/local/sbin/leaddesk-firewall.sh /opt/blv/checkout/deploy/blv-firewall.sh
-sudo /opt/blv/checkout/deploy/install-firewall.sh
+/opt/blv/checkout/deploy/install-firewall.sh
 ```
 
-Verify from the workstation that `nc -vz 194.99.21.120 3100` **times out** — a refused
-connection means the DROP is missing.
+Before it ran, `nc -vz 194.99.21.120 3100` **succeeded** from the workstation — the app was
+answering plain HTTP to the whole internet, TLS bypassed. After: `nc` times out (exit 124),
+`blv-firewall.service` is enabled and active, `curl 127.0.0.1:3100/api/health` still returns
+200, and LeadDesk's `:3000` rules plus the MASQUERADE are untouched.
+
+**`/etc/iptables/rules.v4` is inert on this box** — the plan and the installer both used to
+claim it was "what LeadDesk's rules rely on", and that was wrong. There is no
+`netfilter-persistent` and no `iptables-persistent`, package or unit; nothing replays that
+file at boot. Both apps' rules survive reboots **only** because their oneshot units re-apply
+them. The file that was there predated `"iptables": false` in `daemon.json` — restoring it
+today would set `FORWARD` to DROP and recreate `DOCKER` chains bound to bridges that no
+longer exist. It was backed up to `/etc/iptables/rules.v4.bak-2026-08-17` and replaced with a
+current snapshot; the installer now does that backup itself and prints the truth about what
+does and does not restore the file.
+
+Note for anyone reading `ss`: `next start` shows as `*:3100`, i.e. dual-stack, and
+`ip6tables` policy is ACCEPT — but the box has **no global IPv6 address**, so there is no v6
+path to the port. If one is ever added, this step needs an `ip6tables` counterpart.
 
 **B9 — Extract Caddy into `/opt/caddy`.** Build the whole thing before touching the running
 proxy; the only irreversible-feeling moment is step 5, and step 7 undoes it.
