@@ -6,8 +6,8 @@ pipeline the LeadDesk and InFaaS repos use: push an annotated `vX.Y.Z` tag, a sy
 timer on the box notices within two minutes, backs up, builds, health-checks, and rolls
 back on failure.
 
-**Phase A is done** and `v0.1.1` is on `origin`. **Phase B is in progress** — B1–B5 are done,
-B0 has not been run, B6 is next. Every step below is ordered, and each numbered step is one
+**Phase A is done** and `v0.1.1` is on `origin`. **Phase B is in progress** — B1–B7 are done,
+B0 has not been run, B8 is next. Every step below is ordered, and each numbered step is one
 commit (per `CLAUDE.md`).
 
 **Keep output minimal.** Briefly mention what changed and what is blocked, in a few lines. Do not narrate
@@ -361,9 +361,22 @@ sudo -u blv git -C /opt/blv/checkout fetch --tags origin
 sudo -u blv git -C /opt/blv/checkout checkout --detach tags/v0.1.1
 ```
 
-**B7 — Migrate the data.** The new database is empty and on the current schema; the legacy one
+**B7 — Migrate the data — DONE 2026-08-17.** All nine counts match; the catch-up diff was
+exactly the two Passwords tables, their two indexes and three FKs — no `DROP`, no `ALTER … TYPE`;
+`migrate status` says "Database schema is up to date"; 6 vault entries and 6 links to
+`ADMINISTRATION` imported in one transaction with `createdById` NULL throughout; the seed added
+`presidence@baleinev.ch` beside the legacy `compta@baleinev.ch` (ADMIN) and the one DEPARTMENT
+user. `blv.service` was stopped for the schema swap and is back up, health 200. All six
+passwords decrypt under the server's `PASSWORD_VAULT_KEY` — checked with the same AES-256-GCM
+parameters `app/lib/secret-crypto.ts` uses, so the key carried over correctly; the UI
+confirmation below is now a formality and rides along with B11.
+
+The new database is empty and on the current schema; the legacy one
 has the accounting rows and an older schema. Standard Prisma baselining, as `blv`, from
-`/opt/blv/checkout/app` with `DATABASE_URL` loaded from `.env`:
+`/opt/blv/checkout/app` with `DATABASE_URL` loaded from `.env` (`PGUSER`/`PGDATABASE` below are
+`.env`'s `POSTGRES_USER`/`POSTGRES_DB` — `blv` and `baleinev_comptes`). **Stop `blv.service`
+first**: the app holds an idle pool against the schema being dropped, and it has nothing to
+serve until the restore finishes anyway.
 
 ```bash
 # 1. Start from the legacy schema + data, not from the fresh one
@@ -456,9 +469,12 @@ Expect 6 entries and 6 links, all to `ADMINISTRATION`. The `begin`/`commit` plus
 `ON_ERROR_STOP=1` make it atomic: a name that does not resolve aborts before anything is
 inserted, so the fix-and-retry is clean.
 
-Confirm in the UI that a password decrypts — that is the only real proof the
-`PASSWORD_VAULT_KEY` was carried over correctly. If it does not, the key is wrong; fix `.env`
-and restart rather than re-importing.
+Confirm that a password decrypts — that is the only real proof the `PASSWORD_VAULT_KEY` was
+carried over correctly. The UI is the end-to-end version, but it needs B9's certificate; the
+same proof without a browser is to read `name`/`passwordCipher`/`passwordIv`/`passwordTag` out
+of psql and run them through AES-256-GCM with the key from `.env`, exactly as
+`app/lib/secret-crypto.ts` does. Print the plaintext *length*, never the plaintext. If it does
+not decrypt, the key is wrong; fix `.env` and restart rather than re-importing.
 
 Finally, the admin account. `install.sh` wrote the workstation's `ADMIN_EMAIL`
 (`presidence@baleinev.ch`), `ADMIN_NAME` and `ADMIN_PASSWORD` into `app/.env` at B5, and
