@@ -50,3 +50,5 @@ next-env.d.ts
 
 # Vercel
 .vercel/
+# Claude Code personal overrides
+.claude/settings.local.json
