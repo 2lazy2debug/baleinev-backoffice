@@ -6,10 +6,9 @@ pipeline the LeadDesk and InFaaS repos use: push an annotated `vX.Y.Z` tag, a sy
 timer on the box notices within two minutes, backs up, builds, health-checks, and rolls
 back on failure.
 
-**Phase A is done** and `v0.1.1` is on `origin`. **Phase B is in progress** — B1–B9 are done
-and the app is live at `https://blv.cabras.ch`. **B0 has not been run and is now blocking:**
-3.4 GB free, and both B10/B11 and B9.8's LeadDesk tag trigger builds. B10 is next. Every step
-below is ordered, and each numbered step is one commit (per `CLAUDE.md`).
+**Phase A is done** and `v0.1.1` is on `origin`. **Phase B is in progress** — B0–B9 are done
+and the app is live at `https://blv.cabras.ch`, with 4.8 GB free after B0's purge. B10 is next.
+Every step below is ordered, and each numbered step is one commit (per `CLAUDE.md`).
 
 **Keep output minimal.** Briefly mention what changed and what is blocked, in a few lines. Do not narrate
 steps, restate what this file already says, or summarise work back at the reader.
@@ -235,17 +234,17 @@ workstation's database.
 Run as `root@leaddesk.cabras.ch` unless stated. Every step is verifiable before the next.
 
 
-**B0 — Purge logs and caches.** Nothing on this box older than a week is worth keeping, and
-this is the cheapest disk on offer. Please also uninstall pm2 from node : 
+**B0 — Purge logs and caches. DONE 2026-08-17.** Disk went **3.4 GB → 4.8 GB free** (85% → 79%),
+and the journal is now capped. Nothing on this box older than a week is worth keeping, and this
+is the cheapest disk on offer.
 
 ```bash
-journalctl --disk-usage                       # 318 MB before
-journalctl --vacuum-time=7d
-apt-get clean                                 # 377 MB of /var/cache/apt
-apt-get autoremove --purge -y                 # 3 kernels installed (/boot is its own 2 GB fs)
-rm -f /var/log/apache2/*.gz /var/log/apache2/*.[0-9]   # 64 MB, a dead project's rotated logs
-find /var/log -type f \( -name '*.gz' -o -name '*.[0-9]' \) -mtime +7 -delete
-truncate -s 0 /var/log/btmp /var/log/wtmp     # 19 MB, almost all failed SSH logins
+journalctl --disk-usage                       # 336 MB before, 33 MB after
+journalctl --vacuum-time=7d                   # freed 302.6 MB
+apt-get clean                                 # 1.2 GB of /var/cache/apt — not the 377 MB estimated
+apt-get autoremove --purge -y                 # nothing to remove; see below
+truncate -s 0 /var/log/apache2/access.log /var/log/apache2/error.log   # 66 MB; see below
+truncate -s 0 /var/log/btmp /var/log/wtmp     # 20 MB, almost all failed SSH logins
 ```
 
 Then cap it permanently — `/etc/systemd/journald.conf.d/99-cap.conf`:
@@ -256,7 +255,28 @@ SystemMaxUse=200M
 MaxRetentionSec=1week
 ```
 
-`systemctl restart systemd-journald` (safe — it touches no container). Expect ~750 MB back.
+`systemctl restart systemd-journald` (safe — it touches no container; verified afterwards that
+`blv`, `leaddesk` and all four containers were still up).
+
+**Three things this plan had wrong.** *Old kernels:* `autoremove` reported `0 to remove` — there
+are none to reclaim, and `/boot` is its own filesystem anyway, so it was never `/`'s problem.
+*Apache's logs:* `rm -f /var/log/apache2/*.gz /var/log/apache2/*.[0-9]` matched **nothing**, and
+neither did the `find … -mtime +7` sweep of `/var/log` — nothing there is rotated. The 66 MB was
+sitting in the *live* `access.log` (45 MB) and `error.log` (20 MB), untouched since 2026-07-18.
+`apache2` is installed but `inactive` and `disabled`, so these are a dead project's logs that
+rotation will never come back for; truncating in place is right, and it is worth knowing they
+will not grow again. *pm2:* already gone — `npm ls -g` holds only `corepack` and `npm`, and no
+process was running. What remained was `/root/.pm2` (152 KB of state), whose `dump.pm2` named one
+app pointed at `/root/.nvm/versions/node/v24.14.1/bin/npm`: the legacy deployment B12 retires.
+Removed.
+
+**Found while looking, left alone: `/root/.nvm` is 466 MB** across two Node versions (v24.14.1,
+v25.2.1) and **nothing on this box uses it.** Both `leaddesk.service` and `leaddesk-updater.service`
+run `/usr/bin/node` under an explicit `Environment=PATH=/usr/bin:…`; the only `nvm` in either
+file is a comment explaining why the path is absolute. It is the retired pm2 deployment's
+runtime. It is the largest single reclaim left on the box — B12 takes it, once the pipeline has
+proven itself, because deleting a Node install is not something to do on the same day as a
+cutover.
 
 **Deliberately not done: Docker's `log-opts`.** All three container logs together are under
 1 MB, and setting them in `daemon.json` needs a Docker daemon restart, which takes down every
