@@ -669,18 +669,40 @@ likely to be wrong in a way that only shows up under a timer: the **sudoers path
 `systemctl` path fails as a silent password prompt, i.e. a hang) and the fact that the build fits
 in RAM. The **next** tick, two minutes later, correctly did nothing.
 
-**B11 — Verification checklist.**
+**B11 — Verification checklist. DONE 2026-08-17, every line passed.**
 
-- `systemctl status blv` active; `systemctl list-timers blv-updater.timer` scheduled.
-- `https://blv.cabras.ch` shows the login page over a valid certificate; `presidence@baleinev.ch`
-  can sign in, the journal shows 214 entries, and a vault password decrypts and shows its
-  `ADMINISTRATION` scoping.
-- `https://leaddesk.cabras.ch` still 200 — the proxy move touched both.
-- External `:3100` times out; `:5434` is unreachable from outside.
-- Push `v0.1.2` (`non-breaking`) and watch it land within ~2 minutes:
-  `journalctl -u blv-updater.service -f`, then `cat /opt/blv/state/last-deploy.json`.
-- Reboot once, while nobody depends on it: `blv`, `blv-updater.timer`, both databases, the new
-  Caddy project and both firewall units must all come back.
+- ✅ `blv` active; `blv-updater.timer` scheduled and ticking every two minutes.
+- ✅ `https://blv.cabras.ch/login` is 200 over a valid Let's Encrypt certificate (Aug 17 →
+  Nov 15 2026). `presidence@baleinev.ch` signs in **through the public hostname** — CSRF, the
+  credentials callback, and a session that names them back — and `/journal` and `/passwords` are
+  both 200 with that cookie, so the session is honoured by the app and not merely minted.
+  `JournalEntry` holds exactly **214** rows. All **6** vault entries decrypt with the server's
+  `PASSWORD_VAULT_KEY`, all scoped `ADMINISTRATION`.
+- ✅ `https://leaddesk.cabras.ch` unaffected — **but it answers 307, not the 200 this list
+  claimed**, because `/` redirects to `/login`. It did so before the proxy move too, so the check
+  was written wrong, not broken by B9. Read 307 as healthy here.
+- ✅ External `:3100`, `:3000` and `:5434` all time out (exit 124). The list only named two;
+  LeadDesk's `:3000` is closed by the same mechanism and is worth checking in the same breath.
+- ✅ `v0.1.2` (`non-breaking`) pushed at 13:30:44 UTC, `{"status":"deployed","tag":"v0.1.2",
+  "message":"ok"}` at 13:33:53 — detected inside the two-minute window, ~3 min end to end, with
+  `pre-v0.1.2-…zip` written first.
+- ✅ Rebooted at 13:36:44 with LeadDesk taking 3 requests per 6 hours (2 of them ours), which is
+  the "nobody depends on it" this line asks for. Everything returned: all seven units active, all
+  four containers up, **`iptables -S INPUT` byte-for-byte identical** to the pre-reboot capture,
+  the NAT masquerade present, both certificates unchanged, and the first post-boot tick a clean
+  no-op (`fetching tags…`, exit).
+
+**How the vault was checked, since "a vault password decrypts" needs a method.** A throwaway
+script read `PASSWORD_VAULT_KEY` from `app/.env`, pulled the `*Cipher/*Iv/*Tag` columns straight
+from Postgres, and AES-256-GCM-decrypted each row, printing only names, department names and
+plaintext *lengths* — never a secret — then was deleted from the box. GCM is authenticated, so a
+wrong key fails as a tag mismatch rather than as plausible garbage: this check cannot pass by
+accident. That is the evidence for decision #4 (the key was copied, not generated).
+
+**The `OnBootSec` offset earned its comment.** After the reboot the two timers were scheduled a
+full minute apart — `leaddesk-updater` 13:38:44, `blv-updater` 13:39:44 — so the two pipelines
+cannot wake to a backlog and run two `next build`s at once on one vCPU. §6 predicted this; it is
+now observed rather than assumed.
 
 **B12 — Retire the legacy deployment.** Only after B11 passes end to end:
 
