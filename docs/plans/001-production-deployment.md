@@ -8,7 +8,8 @@ back on failure.
 
 **This plan is finished.** Phase A and **all of Phase B, B0 through B12**, are done. The app is
 live at `https://blv.cabras.ch` on `v0.1.3`, the tag-driven pipeline has deployed three real
-releases and survived a reboot, and the legacy deployment is gone. 4.8 GB free.
+releases and survived a reboot, and the legacy deployment is gone. **5.2 GB free.** Nothing here
+is outstanding.
 
 Two things outlive it, both written up under the step that found them: **delete
 `/root/blv-legacy-2026-08-16.sql` on or after 2026-08-24** (B12), and **`/opt/caddy` is versioned
@@ -764,12 +765,17 @@ The first invocation is precisely what a human at a terminal would have typed, a
 change it would have written that unreachable path into the unit without a word. Note it exits
 **before** installing anything, so a refusal leaves a working install untouched.
 
-Removing the directory is then just 466 MB and one less way to be confused — not a correctness
-issue any more. It is the one command in this plan that was not run:
+Removing the directory was then just 466 MB and one less way to be confused, not a correctness
+issue. **Done 2026-08-17** — `/` is at **5.2 GB free (76%)**, and both apps kept serving
+throughout, since neither ever used it:
 
 ```bash
 rm -rf /root/.nvm     # the .bashrc lines are guarded with [ -s … ] and go quiet on their own
 ```
+
+Interactive root now falls back to `/usr/bin/node` v20.20.2 — the same binary the units run,
+which is the better default anyway: testing something by hand as root now matches production
+instead of quietly using a different Node major.
 
 ---
 
