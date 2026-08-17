@@ -6,6 +6,7 @@ import { getCurrentUserAccess, requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { createUserTask } from "@/lib/tasks";
 import { TaskType } from "@prisma/client";
+import { resolveEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
   getRequiredString,
@@ -84,7 +85,7 @@ export async function createEventAction(_prevState: ActionState, formData: FormD
   try {
     await requireAdmin();
 
-    const editionId = await getActiveEditionId();
+    const editionId = await resolveEditionId();
     const eventTypeId = getRequiredString(formData, "eventTypeId");
     const name = getRequiredString(formData, "name");
     const startDate = new Date(getRequiredString(formData, "startDate"));
@@ -362,14 +363,4 @@ export async function adminAssignUserToShiftAction(_prevState: ActionState, form
   } catch (err) {
     return { error: toActionErrorMessage(err) };
   }
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ────────────────────────────────────────────────────────────────────────────
-
-async function getActiveEditionId(): Promise<string> {
-  const edition = await prisma.edition.findFirst({ where: { isActive: true }, select: { id: true } });
-  if (!edition) throw new Error("No active edition.");
-  return edition.id;
 }

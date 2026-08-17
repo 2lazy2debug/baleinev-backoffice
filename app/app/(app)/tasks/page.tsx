@@ -1,6 +1,7 @@
 import { TasksCreateModal } from "@/components/tasks-create-modal";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { getStandaloneTodoTasksForUser, getVisibleTodosForUser } from "@/lib/tasks";
 
@@ -12,8 +13,8 @@ export default async function TasksPage() {
   const locale = await getLocale();
   const copy = getDictionary(locale);
 
-  const [activeEdition, users, ungroupedTasks] = await Promise.all([
-    prisma.edition.findFirst({ where: { isActive: true }, select: { id: true } }),
+  const [editionId, users, ungroupedTasks] = await Promise.all([
+    resolveEditionIdOrNull(),
     access.role === "ADMIN"
       ? prisma.user.findMany({
           orderBy: { name: "asc" },
@@ -23,10 +24,10 @@ export default async function TasksPage() {
     getStandaloneTodoTasksForUser({ userId: access.id, role: access.role }),
   ]);
 
-  const todos = activeEdition
+  const todos = editionId
     ? await getVisibleTodosForUser({
         userId: access.id,
-        editionId: activeEdition.id,
+        editionId,
       })
     : [];
 
@@ -60,7 +61,7 @@ export default async function TasksPage() {
           copy={copy}
           locale={locale}
           users={users}
-          activeEdition={activeEdition}
+          activeEdition={editionId ? { id: editionId } : null}
         />
       </section>
     </div>

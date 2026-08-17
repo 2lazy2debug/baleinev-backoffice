@@ -4,9 +4,9 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { resolveEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
-  getActiveEditionId,
   getRequiredString,
   toActionErrorMessage,
 } from "@/lib/server-action-helpers";
@@ -14,7 +14,7 @@ import {
 export async function createCostCenterAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
-    const editionId = await getActiveEditionId();
+    const editionId = await resolveEditionId();
     const code = getRequiredString(formData, "code");
     const name = getRequiredString(formData, "name");
 

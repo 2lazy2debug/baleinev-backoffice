@@ -130,9 +130,15 @@ named for a meaning it no longer has, which `CLAUDE.md` forbids.
 
 ---
 
-## Step 1 — Each user picks their own edition · `v0.2.0` · `requires-migration`
+## Step 1 — Each user picks their own edition · `v0.2.0` · `requires-migration` — **DONE 2026-08-18**
 
 The load-bearing step. Everything after it assumes an edition is resolved *per user*.
+
+Migration `20260817230613_user_selected_edition` is `ADD COLUMN` ×2 + index + FK + the backfill,
+nothing dropped. All 13 page reads, the 9 action files and the two import scripts now go through
+`lib/edition-context.ts`; `isActive` is written by nothing and read by nothing. Verified against the
+local database and a running build — see *Verify* below. Two corrections were made where reality
+disagreed with this document; both are marked inline.
 
 ### Schema
 
@@ -161,10 +167,15 @@ New file `app/lib/edition-context.ts`, the single place that answers "which edit
 request in":
 
 ```
-resolveEditionId()            → string   (throws if the user has none and none can be seeded)
-resolveEdition()              → { id, name, closedAt, drivingRatePerKm }
-ensureUserEdition(userId)     → string   (seeds selectedEditionId from the default edition)
+resolveEditionIdOrNull()      → string | null   (render paths; null → "pick an edition" state)
+resolveEditionId()            → string          (write paths; throws when the user has none)
+resolveEdition()              → { id, name, closedAt, drivingRatePerKm } | null
+ensureUserEdition(userId)     → string | null   (seeds selectedEditionId from the default edition)
 ```
+
+Two resolvers, not one: the throwing form is what a write action wants (the message lands in the
+form's error state), and the nullable form is what a page wants (the empty state is a render, not a
+500). Shipped as written.
 
 `ensureUserEdition` is the *only* writer of the seed, called from three places so the same rule
 holds however an account comes into being:
@@ -180,11 +191,20 @@ and the app renders a "pick an edition" state rather than throwing. Do not let a
 
 ### Wiring
 
-Point `getActiveEditionId()` at `resolveEditionId()` and keep its name — that leaves the 8 action
-files untouched and the diff honest. Delete the private duplicate at `events/actions.ts:371` and
-import the shared one. Convert all 13 `where: { isActive: true }` reads to
-`resolveEditionId()` + `findUnique({ where: { id } })`, keeping each page's existing `select` /
-`include` exactly as it is.
+~~Point `getActiveEditionId()` at `resolveEditionId()` and keep its name — that leaves the 8 action
+files untouched and the diff honest.~~ **Corrected during step 1: this does not build.**
+`server-action-helpers.ts` is imported by ~20 *client* components for `initialActionState`, so
+anything it imports is pulled into the browser bundle — and `edition-context` reaches `lib/auth`,
+which reaches `bcrypt`, a native module Turbopack cannot bundle (`Can't resolve 'fs'`). A lazy
+`await import()` does not help; Turbopack follows it into the client graph too. So
+`getActiveEditionId()` was **deleted** and the 9 action files import `resolveEditionId` from
+`@/lib/edition-context` directly. Server actions are safe to do this from — `"use server"` files
+compile to references on the client, which is why they already import `lib/access` (also
+bcrypt-reaching) today.
+
+Delete the private duplicate at `events/actions.ts:371` and import the shared one. Convert all 13
+`where: { isActive: true }` reads to `resolveEditionIdOrNull()` + `findUnique({ where: { id } })`,
+keeping each page's existing `select` / `include` exactly as it is.
 
 ### UI
 
@@ -197,14 +217,26 @@ that the edition exists, write `User.selectedEditionId`, then `router.refresh()`
 On the editions page, "Make active" becomes "Set as default", with copy that says what it now
 does — seeds new accounts, moves nobody. `rounded-md`, tokens only, `npm run check:design`.
 
-### Verify
+### Verify — all passed 2026-08-18
 
-- Two browsers, two users, two different editions, at the same time — the budget and journal
-  pages disagree, and neither moves when the other switches.
-- Changing the default edition moves **no** existing user.
-- A brand-new account created by an admin lands on the default edition.
-- Delete a non-selected edition: users survive, `selectedEditionId` goes null where it pointed,
-  and those users re-seed on next load.
+Against the local `blv-db-1` database with `npm start` serving the production build, two users
+signed in with separate cookie jars:
+
+- ✅ Two users, two different editions, at the same time — `/departments` and `/budget` returned
+  disjoint data for each, and neither moved when the other switched.
+- ✅ Changing the default edition moved **no** existing user.
+- ✅ First login seeds `selectedEditionId` from the default; `ensureUserEdition` is a no-op
+  afterwards, which is what makes the admin-create path land a new account on the default.
+- ✅ Delete a selected edition: the user survived, `selectedEditionId` went null, and the next
+  resolve re-seeded them from the default.
+- ✅ No default and no selection: all 11 edition-scoped pages returned **200** with "No edition
+  selected", not a 500. The picker rendered its placeholder option.
+- ✅ `POST /api/preferences/edition` — `{ok:true}` on a real id, 404 on an unknown one, and the
+  middleware redirects it (307) when signed out.
+- ✅ A closed edition stays listed and is marked, in both locales (`2026-2027 — closed` /
+  `— clôturé`).
+- ✅ `npx tsc --noEmit` clean, `npm run check:design` clean, `npm run build` green. `npm run lint`
+  reports only the 5 pre-existing `no-explicit-any` errors in files this step did not touch.
 
 Tag: `git tag -a v0.2.0 -m "requires-migration"`.
 
@@ -308,7 +340,8 @@ Tag: `git tag -a v0.5.0 -m "non-breaking"`.
 The destructive half, deliberately last, per `production.md`. By now nothing reads the column.
 
 1. `grep -rn "isActive" app/` returns nothing outside the schema. If it returns anything, stop —
-   this step is not ready.
+   this step is not ready. **One expected hit:** `components/app-shell.tsx` has a local `isActive`
+   for nav highlighting, which has nothing to do with editions. Ignore that one only.
 2. Remove the field from `schema.prisma`, generate the migration, confirm it is a single
    `ALTER TABLE "Edition" DROP COLUMN "isActive"`.
 3. Verify the pre-deploy snapshot exists in `/opt/blv/backups/` **before** the tag goes out. This
@@ -331,6 +364,10 @@ each is part of the commit that changes it — not a cleanup pass afterwards:
 | [overview.md](../overview.md) | The edition model in the app's mental picture. |
 | [auth.md](../auth.md) | First-login seeding is now part of `authorize()`. |
 | [summary.md](../summary.md) | Whatever it asserts about the active edition. |
+
+Step 1 rewrote the edition model in all five, plus
+[file-structure.md](../file-structure.md) for `lib/edition-context.ts` and the new preferences
+route. Steps 2-4 still have their own passes to make over the same files.
 
 ---
 

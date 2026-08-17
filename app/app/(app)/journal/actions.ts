@@ -5,9 +5,9 @@ import { AccountType, TaskType } from "@prisma/client";
 
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { resolveEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
-  getActiveEditionId,
   getRequiredString,
   toActionErrorMessage,
 } from "@/lib/server-action-helpers";
@@ -27,7 +27,7 @@ function toPositiveAmount(raw: string) {
 export async function createJournalEntryAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const admin = await requireAdmin();
-    const editionId = await getActiveEditionId();
+    const editionId = await resolveEditionId();
 
     const departmentId = getRequiredString(formData, "departmentId");
     const moneyAccountId = getRequiredString(formData, "moneyAccountId");

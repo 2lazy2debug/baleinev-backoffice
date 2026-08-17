@@ -4,9 +4,9 @@ import { revalidatePath } from "next/cache";
 
 import { getCurrentUserAccess, requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { resolveEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
-  getActiveEditionId,
   getRequiredString,
   toActionErrorMessage,
 } from "@/lib/server-action-helpers";
@@ -23,7 +23,7 @@ function parseDateTime(raw: string) {
 export async function createAppointmentAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const access = await requireAdmin();
-    const editionId = await getActiveEditionId();
+    const editionId = await resolveEditionId();
 
     const title = getRequiredString(formData, "title");
     const description = getRequiredString(formData, "description");

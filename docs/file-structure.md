@@ -93,7 +93,8 @@ app/
     │   └── [...nextauth]/route.ts  ← NextAuth catch-all handler
     │
     ├── preferences/
-    │   └── language/route.ts       ← POST: save locale + user refund profile
+    │   ├── language/route.ts       ← POST: save locale + user refund profile
+    │   └── edition/route.ts        ← POST: switch this user's selected edition
     │
     ├── documents/
     │   └── invoice/pdf/route.ts    ← POST: render invoice template → Puppeteer → PDF
@@ -135,7 +136,8 @@ app/
 | `document-templates.ts` | `[[field]]` renderer, `InvoiceDocumentPayload` type, default invoice HTML template, `ensureDefaultInvoiceTemplate()` |
 | `swiss-qr.ts` | `buildSwissQrPayload()` — builds a SPC-format QR string for Swiss ISO 20022 QR invoices |
 | `department-roles.ts` | `syncDepartmentRolesFromDepartments()` — keeps `DepartmentRole` names in sync with active departments |
-| `server-action-helpers.ts` | Shared helpers for server actions: `getRequiredString()`, `getActiveEditionId()`, plus the `ActionState` type (`{ error: string \| null }`), `initialActionState`, and `toActionErrorMessage()` used by every action to report validation failures instead of throwing |
+| `edition-context.ts` | The single answer to "which edition is this request in", read from `User.selectedEditionId`: `resolveEditionIdOrNull()` (pages), `resolveEditionId()` (write paths, throws), `resolveEdition()` (the record), `ensureUserEdition()` (the only writer of the seed) |
+| `server-action-helpers.ts` | Shared helpers for server actions: `getRequiredString()`, plus the `ActionState` type (`{ error: string \| null }`), `initialActionState`, and `toActionErrorMessage()` used by every action to report validation failures instead of throwing. Kept free of server-only imports — client components import `initialActionState` from here |
 | `utils.ts` | `formatCurrency()`, `decimalToNumber()`, `incrementEditionName()` |
 
 ---

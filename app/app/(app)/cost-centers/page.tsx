@@ -1,6 +1,7 @@
 import { AccountType } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
+import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
 
@@ -10,8 +11,9 @@ export default async function CostCentersPage() {
   const locale = await getLocale();
   const copy = getDictionary(locale);
 
-  const activeEdition = await prisma.edition.findFirst({
-    where: { isActive: true },
+  const editionId = await resolveEditionIdOrNull();
+  const activeEdition = editionId ? await prisma.edition.findUnique({
+    where: { id: editionId },
     include: {
       costCenters: {
         orderBy: { code: "asc" },
@@ -21,15 +23,15 @@ export default async function CostCentersPage() {
         },
       },
     },
-  });
+  }) : null;
 
   if (!activeEdition) {
     return (
       <div className="space-y-4">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.costCenters.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.common.noActiveEdition}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">{copy.common.noEditionSelected}</h1>
         <p className="max-w-2xl text-sm leading-7 text-[var(--muted)]">
-          {copy.common.createAndActivateEdition}
+          {copy.common.pickEditionHint}
         </p>
       </div>
     );

@@ -59,18 +59,26 @@ enum TaskStatus {
 }
 
 model User {
-  id              String   @id @default(cuid())
-  email           String   @unique
-  passwordHash    String
-  name            String
-  role            UserRole @default(ADMIN)
-  refundFirstName String?
-  refundLastName  String?
-  refundIban      String?
-  refundZip       String?
-  refundCity      String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                String   @id @default(cuid())
+  email             String   @unique
+  passwordHash      String
+  name              String
+  role              UserRole @default(ADMIN)
+  refundFirstName   String?
+  refundLastName    String?
+  refundIban        String?
+  refundZip         String?
+  refundCity        String?
+  // The edition this user is working in. Seeded once from the default edition
+  // (see lib/edition-context.ts) and never touched again unless the user picks
+  // another one — changing the default moves nobody.
+  selectedEditionId String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // SetNull, not Cascade: deleting an edition must never delete the users who
+  // happened to be looking at it. They re-seed on their next request.
+  selectedEdition Edition? @relation("UserSelectedEdition", fields: [selectedEditionId], references: [id], onDelete: SetNull)
 
   departmentRoles         DepartmentRole[]
   journalEntries          JournalEntry[]
@@ -85,6 +93,8 @@ model User {
   createdTodos            Todo[]                  @relation("TodoCreator")
   assignedTodos           Todo[]                  @relation("TodoAssignee")
   createdPasswordEntries  PasswordEntry[]         @relation("PasswordEntryCreatedBy")
+
+  @@index([selectedEditionId])
 }
 
 model DepartmentRole {
@@ -132,11 +142,17 @@ model Edition {
   startDate        DateTime?
   endDate          DateTime?
   drivingRatePerKm Decimal   @default(0.30) @db.Decimal(10, 2)
+  // Seeds `User.selectedEditionId` for accounts that have none. It is not a
+  // runtime fallback: flipping it moves nobody who is already using the app.
+  isDefault        Boolean   @default(false)
+  // Superseded by isDefault. Nothing reads it any more; the column is dropped
+  // in its own migration (plan 002 step 5) so the rename stays non-destructive.
   isActive         Boolean   @default(false)
   closedAt         DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
+  usersSelecting User[]       @relation("UserSelectedEdition")
   departments    Department[]
   moneyAccounts  MoneyAccount[]
   costCenters    CostCenter[]

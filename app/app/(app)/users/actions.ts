@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { syncDepartmentRolesFromDepartments } from "@/lib/department-roles";
+import { ensureUserEdition } from "@/lib/edition-context";
 import { type ActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
 
 function getRequiredString(formData: FormData, key: string) {
@@ -90,7 +91,7 @@ export async function createUserAction(_prevState: ActionState, formData: FormDa
 
     await ensureDepartmentRolesExist(departmentRoleIds);
 
-    await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         name,
         email,
@@ -100,7 +101,12 @@ export async function createUserAction(_prevState: ActionState, formData: FormDa
           connect: departmentRoleIds.map((id) => ({ id })),
         },
       },
+      select: { id: true },
     });
+
+    // Land the new account on the default edition straight away, so it opens
+    // somewhere real rather than on a "pick an edition" screen.
+    await ensureUserEdition(user.id);
 
     revalidatePath("/users");
     return { error: null };

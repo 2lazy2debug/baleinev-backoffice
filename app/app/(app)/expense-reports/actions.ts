@@ -6,9 +6,9 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUserAccess, requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { validateProofUpload, type ProofMimeType } from "@/lib/proof-upload";
+import { resolveEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
-  getActiveEditionId,
   getRequiredString,
   toActionErrorMessage,
 } from "@/lib/server-action-helpers";
@@ -67,7 +67,7 @@ export async function createExpenseReportAction(
 ): Promise<ActionState> {
   try {
     const access = await getCurrentUserAccess();
-    const editionId = await getActiveEditionId();
+    const editionId = await resolveEditionId();
     const reportType = parseReportType(getRequiredString(formData, "reportType"));
     const submittedPaymentMethod = String(formData.get("paymentMethod") ?? "").trim();
     const date = parseDate(getRequiredString(formData, "date"));

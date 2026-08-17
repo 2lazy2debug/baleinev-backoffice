@@ -25,10 +25,17 @@ import { useState, useRef } from "react";
 import { SignOutButton } from "@/components/sign-out-button";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 
+type EditionOption = {
+  id: string;
+  name: string;
+  isClosed: boolean;
+};
+
 type AppShellProps = {
   children: React.ReactNode;
   userName: string;
-  activeEditionName?: string;
+  editions: EditionOption[];
+  selectedEditionId: string | null;
   locale: Locale;
   role: "ADMIN" | "DEPARTMENT";
   pendingTaskCount: number;
@@ -41,10 +48,11 @@ type AppShellProps = {
   };
 };
 
-export function AppShell({ children, userName, activeEditionName, locale, role, pendingTaskCount, refundProfile }: AppShellProps) {
+export function AppShell({ children, userName, editions, selectedEditionId, locale, role, pendingTaskCount, refundProfile }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [switchingEdition, setSwitchingEdition] = useState(false);
   const [selectedLocale, setSelectedLocale] = useState<Locale>(locale);
   const [refundFirstName, setRefundFirstName] = useState(refundProfile.firstName ?? "");
   const [refundLastName, setRefundLastName] = useState(refundProfile.lastName ?? "");
@@ -129,6 +137,26 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
     }
   }
 
+  async function selectEdition(editionId: string) {
+    if (!editionId || editionId === selectedEditionId) {
+      return;
+    }
+
+    setSwitchingEdition(true);
+    try {
+      const response = await fetch("/api/preferences/edition", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ editionId }),
+      });
+      if (response.ok) {
+        router.refresh();
+      }
+    } finally {
+      setSwitchingEdition(false);
+    }
+  }
+
   const COLLAPSED_WIDTH = 64;
 
   function toggleCollapse() {
@@ -163,9 +191,31 @@ export function AppShell({ children, userName, activeEditionName, locale, role, 
         >
           <div className="shrink-0 border-b border-[var(--line)] px-5 py-5">
             <Image src="/logo_blv.png" alt="Baleinev" width={320} height={128} className="w-full object-contain" priority />
-            <p className="mt-3 text-right text-xs text-[var(--muted)]">
-              {activeEditionName ? `${copy.activeEdition}: ${activeEditionName}` : copy.noActiveEdition}
-            </p>
+            {!isCollapsed ? (
+              <div className="mt-3 space-y-1">
+                <label htmlFor="edition-picker" className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                  {copy.edition}
+                </label>
+                {editions.length > 0 ? (
+                  <select
+                    id="edition-picker"
+                    value={selectedEditionId ?? ""}
+                    disabled={switchingEdition}
+                    onChange={(event) => selectEdition(event.target.value)}
+                    className="w-full rounded-md border border-[var(--line)] bg-[var(--panel-strong)] px-2 py-1.5 text-sm text-[var(--ink)] outline-none transition focus:border-[var(--accent)] disabled:opacity-60"
+                  >
+                    {selectedEditionId ? null : <option value="">{copy.pickEdition}</option>}
+                    {editions.map((edition) => (
+                      <option key={edition.id} value={edition.id}>
+                        {edition.isClosed ? `${edition.name} — ${copy.editionClosed}` : edition.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-xs text-[var(--muted)]">{copy.noEditions}</p>
+                )}
+              </div>
+            ) : null}
           </div>
 
           <nav className="flex-1 space-y-1 overflow-y-auto p-3">

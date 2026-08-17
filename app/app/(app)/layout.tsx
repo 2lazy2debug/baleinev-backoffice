@@ -3,16 +3,18 @@ import { TaskStatus, UserRole } from "@prisma/client";
 import { AppShell } from "@/components/app-shell";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { resolveEdition } from "@/lib/edition-context";
 import { getLocale } from "@/lib/i18n";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   const access = await getCurrentUserAccess();
 
-  const [activeEdition, pendingTaskCount] = await Promise.all([
-    prisma.edition.findFirst({
-      where: { isActive: true },
-      select: { name: true },
+  const [selectedEdition, editions, pendingTaskCount] = await Promise.all([
+    resolveEdition(),
+    prisma.edition.findMany({
+      orderBy: { name: "desc" },
+      select: { id: true, name: true, closedAt: true },
     }),
     prisma.task.count({
       where: {
@@ -28,7 +30,12 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   return (
     <AppShell
       userName={access.userName ?? access.email ?? "Admin"}
-      activeEditionName={activeEdition?.name}
+      editions={editions.map((edition) => ({
+        id: edition.id,
+        name: edition.name,
+        isClosed: edition.closedAt !== null,
+      }))}
+      selectedEditionId={selectedEdition?.id ?? null}
       locale={locale}
       role={access.role}
       pendingTaskCount={pendingTaskCount}

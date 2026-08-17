@@ -14,9 +14,11 @@ that mental model — journal, budget, departments, cost centers — but adds mu
 role separation, an approval workflow for expense claims, Swiss QR invoice generation, and
 scheduling.
 
-Everything is scoped to the single **active edition**. Most write paths call
-`getActiveEditionId()` ([app/lib/server-action-helpers.ts](../app/lib/server-action-helpers.ts#L13))
-and refuse to run when no edition is active.
+Everything is scoped to an **edition each user picks for themselves**. Pages call
+`resolveEditionIdOrNull()` and write paths call `resolveEditionId()`
+([app/lib/edition-context.ts](../app/lib/edition-context.ts)), both of which read
+`User.selectedEditionId`; writes refuse to run when the user has no edition. Two people can work in
+two different editions at once.
 
 ## Who uses it
 
@@ -38,7 +40,7 @@ A `DepartmentRole` links a user to a department *by name*, so the link survives 
 
 | Concept | What it is |
 | --- | --- |
-| `Edition` | One festival year. Owns everything else. Exactly one is `isActive`. Carries the per-km driving reimbursement rate. |
+| `Edition` | One festival year. Owns everything else. Users select one each; the one flagged `isDefault` seeds accounts that have none. Carries the per-km driving reimbursement rate. |
 | `Department` | A team within an edition (unique per edition by name). |
 | `MoneyAccount` | A bank account or cash box, with opening balance and beneficiary/IBAN details. |
 | `CostCenter` | An analytic code used to group spending across departments. |
@@ -55,7 +57,7 @@ A `DepartmentRole` links a user to a department *by name*, so the link survives 
 
 **Expense claim → ledger.** A user submits an `ExpenseReport`
 ([app/app/(app)/expense-reports/actions.ts](../app/app/(app)/expense-reports/actions.ts)) against a
-department that must belong to the active edition and (for non-admins) to one of their own. A
+department that must belong to their selected edition and (for non-admins) to one of their own. A
 standard claim requires a proof file — validated for size and type by magic-byte sniffing
 ([app/lib/proof-upload.ts](../app/lib/proof-upload.ts)) and stored as bytes directly in the
 `ExpenseReport.proofData` column, then served back only to the submitter or an admin as a sandboxed
@@ -79,8 +81,10 @@ edited or deleted until set back to unpaid.
 a capacity. Users sign up for a shift, which creates a `StaffAssignment` and a `STAFF_SHIFT` task;
 withdrawing removes both. Admins can assign users directly.
 
-**Edition lifecycle.** Admins create editions, activate exactly one, set the driving rate, and close
-an edition (`closeEditionAction`), which carries balances forward as locked opening entries.
+**Edition lifecycle.** Admins create editions, mark one as the default that new accounts start in,
+set the driving rate, and close an edition (`closeEditionAction`), which carries balances forward as
+locked opening entries. Each user switches their own edition from the sidebar picker
+(`POST /api/preferences/edition`); changing the default moves nobody.
 
 ## Architecture
 

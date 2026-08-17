@@ -49,7 +49,13 @@ Never rely on the middleware alone. Sensitive actions always call `requireAdmin(
 
 ### 4. Edition-scoped data
 
-Almost everything (departments, money accounts, budget lines, journal entries, invoices, expense reports) is tied to an `Edition` record. There is always at most one active edition (`isActive: true`). Queries for live data always filter by `isActive: true`.
+Almost everything (departments, money accounts, budget lines, journal entries, invoices, expense reports) is tied to an `Edition` record.
+
+**Which edition is a per-user setting, not a global mode.** It is stored on the user
+(`User.selectedEditionId`) and every query resolves it through `lib/edition-context.ts` — so two
+people can work in two different editions at the same time, and each switches independently from
+the sidebar picker. `Edition.isDefault` only seeds accounts that have no edition yet; changing it
+moves nobody who is already using the app.
 
 When an edition is "closed", a new one can be started; opening balances carry forward.
 

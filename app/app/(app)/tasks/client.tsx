@@ -141,7 +141,7 @@ export function TasksPageClient({
   if (!activeEdition) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-[var(--muted)]">{copy.common.noActiveEdition}</p>
+        <p className="text-sm text-[var(--muted)]">{copy.common.noEditionSelected}</p>
       </div>
     );
   }

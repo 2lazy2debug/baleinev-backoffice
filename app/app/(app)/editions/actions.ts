@@ -47,13 +47,13 @@ export async function createEditionAction(_prevState: ActionState, formData: For
     const startDate = String(formData.get("startDate") ?? "").trim();
     const endDate = String(formData.get("endDate") ?? "").trim();
     const drivingRatePerKm = parsePositiveDecimal(String(formData.get("drivingRatePerKm") ?? "0.30"), "Driving rate per km");
-    const makeActive = formData.get("isActive") === "on";
+    const makeDefault = formData.get("isDefault") === "on";
 
     await prisma.$transaction(async (tx) => {
       const firstEdition = (await tx.edition.count()) === 0;
 
-      if (makeActive || firstEdition) {
-        await tx.edition.updateMany({ where: { isActive: true }, data: { isActive: false } });
+      if (makeDefault || firstEdition) {
+        await tx.edition.updateMany({ where: { isDefault: true }, data: { isDefault: false } });
       }
 
       await tx.edition.create({
@@ -62,7 +62,7 @@ export async function createEditionAction(_prevState: ActionState, formData: For
           startDate: startDate ? new Date(startDate) : null,
           endDate: endDate ? new Date(endDate) : null,
           drivingRatePerKm,
-          isActive: makeActive || firstEdition,
+          isDefault: makeDefault || firstEdition,
         },
       });
     });
@@ -76,14 +76,18 @@ export async function createEditionAction(_prevState: ActionState, formData: For
   }
 }
 
-export async function setActiveEditionAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+/**
+ * Sets which edition seeds accounts that have none. It does not move anyone:
+ * every user keeps whatever they already selected.
+ */
+export async function setDefaultEditionAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
     const editionId = getRequiredString(formData, "editionId");
 
     await prisma.$transaction([
-      prisma.edition.updateMany({ where: { isActive: true }, data: { isActive: false } }),
-      prisma.edition.update({ where: { id: editionId }, data: { isActive: true } }),
+      prisma.edition.updateMany({ where: { isDefault: true }, data: { isDefault: false } }),
+      prisma.edition.update({ where: { id: editionId }, data: { isDefault: true } }),
     ]);
 
     revalidatePath("/editions");
@@ -100,12 +104,18 @@ export async function deleteEditionAction(_prevState: ActionState, formData: For
     await requireAdmin();
     const editionId = getRequiredString(formData, "editionId");
 
+    // Users pointing at this edition survive it — the SetNull relation clears
+    // their selection and they re-seed from the default on their next request.
     await prisma.edition.delete({ where: { id: editionId } });
 
-    const latestEdition = await prisma.edition.findFirst({ orderBy: { createdAt: "desc" } });
+    const defaultEdition = await prisma.edition.findFirst({ where: { isDefault: true }, select: { id: true } });
 
-    if (latestEdition) {
-      await prisma.edition.update({ where: { id: latestEdition.id }, data: { isActive: true } });
+    if (!defaultEdition) {
+      const latestEdition = await prisma.edition.findFirst({ orderBy: { createdAt: "desc" } });
+
+      if (latestEdition) {
+        await prisma.edition.update({ where: { id: latestEdition.id }, data: { isDefault: true } });
+      }
     }
 
     revalidatePath("/editions");
@@ -149,12 +159,12 @@ export async function closeEditionAction(_prevState: ActionState, formData: Form
         throw new Error("The next edition already exists.");
       }
 
-      await tx.edition.updateMany({ where: { isActive: true }, data: { isActive: false } });
+      await tx.edition.updateMany({ where: { isDefault: true }, data: { isDefault: false } });
 
       const nextEdition = await tx.edition.create({
         data: {
           name: nextEditionName,
-          isActive: true,
+          isDefault: true,
           startDate: edition.endDate,
           drivingRatePerKm: edition.drivingRatePerKm,
         },
@@ -162,7 +172,7 @@ export async function closeEditionAction(_prevState: ActionState, formData: Form
 
       await tx.edition.update({
         where: { id: edition.id },
-        data: { closedAt: new Date(), isActive: false },
+        data: { closedAt: new Date() },
       });
 
       for (const department of edition.departments) {

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/db";
+import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
 
@@ -15,14 +16,15 @@ export default async function JournalEntryEditPage({ params }: JournalEntryEditP
   const copy = getDictionary(locale);
   const { journalEntryId } = await params;
 
-  const activeEdition = await prisma.edition.findFirst({
-    where: { isActive: true },
+  const editionId = await resolveEditionIdOrNull();
+  const activeEdition = editionId ? await prisma.edition.findUnique({
+    where: { id: editionId },
     include: {
       departments: { orderBy: { name: "asc" } },
       moneyAccounts: { orderBy: { name: "asc" } },
       costCenters: { orderBy: { code: "asc" } },
     },
-  });
+  }) : null;
 
   if (!activeEdition) {
     notFound();

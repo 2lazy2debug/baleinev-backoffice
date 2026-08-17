@@ -5,9 +5,9 @@ import { MoneyAccountType } from "@prisma/client";
 
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { resolveEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
-  getActiveEditionId,
   getRequiredString,
   toActionErrorMessage,
 } from "@/lib/server-action-helpers";
@@ -36,7 +36,7 @@ function parseOptionalCountry(formData: FormData) {
 export async function createMoneyAccountAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
-    const editionId = await getActiveEditionId();
+    const editionId = await resolveEditionId();
     const name = getRequiredString(formData, "name");
     const type = getRequiredString(formData, "type") as MoneyAccountType;
     const openingBalance = parseOpeningBalance(formData);

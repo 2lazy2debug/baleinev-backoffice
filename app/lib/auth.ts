@@ -3,6 +3,7 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 import { prisma } from "@/lib/db";
+import { ensureUserEdition } from "@/lib/edition-context";
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
@@ -41,6 +42,10 @@ export const authOptions: NextAuthOptions = {
         if (!valid) {
           return null;
         }
+
+        // First login is one of the three moments an account can get its
+        // edition. No-op once the user has one.
+        await ensureUserEdition(user.id);
 
         return {
           id: user.id,

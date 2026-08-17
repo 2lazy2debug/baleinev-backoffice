@@ -3,6 +3,7 @@ import { TrendingDown, TrendingUp } from "lucide-react";
 
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { getPendingTasksForUser } from "@/lib/tasks";
 import { decimalToNumber, formatCurrency } from "@/lib/utils";
@@ -18,8 +19,9 @@ export default async function DashboardPage() {
 
   const pendingTasks = await getPendingTasksForUser(access);
 
-  const activeEdition = await prisma.edition.findFirst({
-    where: { isActive: true },
+  const editionId = await resolveEditionIdOrNull();
+  const activeEdition = editionId ? await prisma.edition.findUnique({
+    where: { id: editionId },
     include: {
       departments: {
         orderBy: { name: "asc" },
@@ -31,15 +33,15 @@ export default async function DashboardPage() {
       },
       journalEntries: true,
     },
-  });
+  }) : null;
 
   if (!activeEdition) {
     return (
       <div className="space-y-4">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.dashboard.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.common.noActiveEdition}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">{copy.common.noEditionSelected}</h1>
         <p className="max-w-2xl text-sm leading-7 text-[var(--muted)]">
-          {copy.common.createAndActivateEdition}
+          {copy.common.pickEditionHint}
         </p>
       </div>
     );

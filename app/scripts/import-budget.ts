@@ -163,8 +163,8 @@ async function main() {
     let edition = await tx.edition.findUnique({ where: { name: editionName } });
 
     if (!edition) {
-      await tx.edition.updateMany({ where: { isActive: true }, data: { isActive: false } });
-      edition = await tx.edition.create({ data: { name: editionName, isActive: true } });
+      await tx.edition.updateMany({ where: { isDefault: true }, data: { isDefault: false } });
+      edition = await tx.edition.create({ data: { name: editionName, isDefault: true } });
     }
 
     for (const departmentName of uniqueDepartments) {

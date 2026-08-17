@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { ensureDefaultInvoiceTemplate } from "@/lib/document-templates";
+import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
 
@@ -13,22 +14,23 @@ export default async function InvoicesPage() {
   const copy = getDictionary(locale);
   const defaultTemplate = await ensureDefaultInvoiceTemplate();
 
-  const activeEdition = await prisma.edition.findFirst({
-    where: { isActive: true },
+  const editionId = await resolveEditionIdOrNull();
+  const activeEdition = editionId ? await prisma.edition.findUnique({
+    where: { id: editionId },
     include: {
       moneyAccounts: {
         orderBy: { name: "asc" },
       },
     },
-  });
+  }) : null;
 
   if (!activeEdition) {
     return (
       <div className="space-y-4">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.invoices.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.common.noActiveEdition}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">{copy.common.noEditionSelected}</h1>
         <p className="max-w-2xl text-sm leading-7 text-[var(--muted)]">
-          {copy.common.createAndActivateEdition}
+          {copy.common.pickEditionHint}
         </p>
       </div>
     );

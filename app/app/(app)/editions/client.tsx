@@ -12,7 +12,7 @@ import {
   closeEditionAction,
   createEditionAction,
   deleteEditionAction,
-  setActiveEditionAction,
+  setDefaultEditionAction,
   updateDrivingRateAction,
 } from "./actions";
 
@@ -21,7 +21,7 @@ type Copy = ReturnType<typeof getDictionary>;
 interface EditionItem {
   id: string;
   name: string;
-  isActive: boolean;
+  isDefault: boolean;
   closedAt: Date | null;
   drivingRatePerKm: Prisma.Decimal | number;
   _count: { departments: number; moneyAccounts: number; costCenters: number; journalEntries: number };
@@ -32,8 +32,8 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
     updateDrivingRateAction,
     initialActionState
   );
-  const [setActiveState, setActiveFormAction, isSettingActive] = useActionState(
-    setActiveEditionAction,
+  const [setDefaultState, setDefaultFormAction, isSettingDefault] = useActionState(
+    setDefaultEditionAction,
     initialActionState
   );
   const [closeState, closeFormAction, isClosing] = useActionState(closeEditionAction, initialActionState);
@@ -44,7 +44,7 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
     <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
       <div className="space-y-4">
         <FormError message={updateRateState.error} />
-        <FormError message={setActiveState.error} />
+        <FormError message={setDefaultState.error} />
         <FormError message={closeState.error} />
         <FormError message={deleteState.error} />
         {editions.map((edition) => (
@@ -53,9 +53,9 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
               <div>
                 <div className="flex flex-wrap items-center gap-3">
                   <h2 className="text-xl font-semibold">{edition.name}</h2>
-                  {edition.isActive ? (
+                  {edition.isDefault ? (
                     <span className="rounded-full bg-emerald-900/40 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">
-                      {copy.editions.active}
+                      {copy.editions.default}
                     </span>
                   ) : null}
                   {edition.closedAt ? (
@@ -88,14 +88,15 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {!edition.isActive ? (
-                  <form action={setActiveFormAction}>
+                {!edition.isDefault ? (
+                  <form action={setDefaultFormAction}>
                     <input type="hidden" name="editionId" value={edition.id} />
                     <button
-                      disabled={isSettingActive}
+                      disabled={isSettingDefault}
+                      title={copy.editions.defaultHint}
                       className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-medium hover:bg-[var(--panel)] disabled:opacity-50"
                     >
-                      {copy.editions.makeActive}
+                      {copy.editions.setAsDefault}
                     </button>
                   </form>
                 ) : null}
@@ -179,10 +180,13 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
             />
           </label>
 
-          <label className="flex items-center gap-3 text-sm font-medium">
-            <input type="checkbox" name="isActive" className="size-4 rounded border-[var(--line)]" />
-            {copy.editions.makeImmediatelyActive}
-          </label>
+          <div className="space-y-1">
+            <label className="flex items-center gap-3 text-sm font-medium">
+              <input type="checkbox" name="isDefault" className="size-4 rounded border-[var(--line)]" />
+              {copy.editions.makeDefault}
+            </label>
+            <p className="text-xs text-[var(--muted)]">{copy.editions.defaultHint}</p>
+          </div>
 
           <button
             disabled={isCreating}

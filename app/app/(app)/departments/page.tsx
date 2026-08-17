@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/db";
+import { resolveEditionIdOrNull } from "@/lib/edition-context";
 
 import { DepartmentsPageClient } from "./client";
 
 export default async function DepartmentsPage() {
-  const activeEdition = await prisma.edition.findFirst({
-    where: { isActive: true },
+  const editionId = await resolveEditionIdOrNull();
+  const activeEdition = editionId ? await prisma.edition.findUnique({
+    where: { id: editionId },
     include: {
       departments: {
         orderBy: { name: "asc" },
@@ -15,15 +17,15 @@ export default async function DepartmentsPage() {
         },
       },
     },
-  });
+  }) : null;
 
   if (!activeEdition) {
     return (
       <div className="space-y-4">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Departments</p>
-        <h1 className="text-3xl font-semibold tracking-tight">No active edition</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">No edition selected</h1>
         <p className="max-w-2xl text-sm leading-7 text-[var(--muted)]">
-          Create an edition and make it active before you start organizing departments.
+          Pick an edition in the sidebar before you start organizing departments.
         </p>
       </div>
     );

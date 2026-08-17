@@ -16,8 +16,11 @@ signIn("credentials", { email, password })   ← next-auth client call
 NextAuth CredentialsProvider.authorize()     ← lib/auth.ts
   1. prisma.user.findUnique({ where: { email } })
   2. bcrypt.compare(password, user.passwordHash)
-  3. If valid → return { id, email, name, role, departmentRoleIds, departmentRoleNames }
-  4. If invalid → return null (NextAuth shows error)
+  3. If valid → ensureUserEdition(user.id)   ← lib/edition-context.ts
+       Seeds User.selectedEditionId from the default edition on first login.
+       No-op once the account has an edition; no-op if no default exists.
+  4. If valid → return { id, email, name, role, departmentRoleIds, departmentRoleNames }
+  5. If invalid → return null (NextAuth shows error)
         │
         ▼
 jwt() callback                               ← lib/auth.ts
@@ -124,7 +127,7 @@ const myDeptIds = access.departmentRoles.map(r => r.departmentId)
 const departments = await prisma.department.findMany({
   where: {
     id: { in: myDeptIds },
-    edition: { isActive: true }
+    editionId: await resolveEditionId()
   }
 })
 ```

@@ -5,9 +5,9 @@ import { revalidatePath } from "next/cache";
 
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { resolveEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
-  getActiveEditionId,
   getRequiredString,
   toActionErrorMessage,
 } from "@/lib/server-action-helpers";
@@ -87,7 +87,7 @@ function parseOptionalAssigneeId(formData: FormData, isAdmin: boolean) {
 export async function createTodoAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const access = await getCurrentUserAccess();
-    const editionId = await getActiveEditionId();
+    const editionId = await resolveEditionId();
 
     const title = getRequiredString(formData, "title");
     const description = String(formData.get("description") ?? "").trim() || null;
@@ -163,7 +163,7 @@ export async function deleteTodoAction(_prevState: ActionState, formData: FormDa
 export async function createTodoTaskAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const access = await getCurrentUserAccess();
-    const editionId = await getActiveEditionId();
+    const editionId = await resolveEditionId();
     const todoIdRaw = String(formData.get("todoId") ?? "").trim();
 
     if (todoIdRaw) {

@@ -51,7 +51,15 @@ Represents an authenticated application user.
 | `refundIban` | String? | |
 | `refundZip` | String? | |
 | `refundCity` | String? | |
+| `selectedEditionId` | String? | FK → Edition (`onDelete: SetNull`). The edition this user works in — see below |
 | `departmentRoles` | `DepartmentRole[]` | Which departments this user belongs to |
+
+**`selectedEditionId` is how edition scoping works.** There is no global active edition; every
+request resolves the edition from the signed-in user (`app/lib/edition-context.ts`). The column is
+seeded once from `Edition.isDefault` — at account creation, at first login, or on the next request
+if it is still null — and only the user's own picker changes it afterwards. The relation is
+`SetNull`, not `Cascade` like every other `Edition` relation: deleting an edition must never delete
+its users, so their selection is cleared and re-seeds from the default instead.
 
 **Role enum:** `ADMIN` can access all routes and all admin actions. `DEPARTMENT` is blocked by
 middleware from admin routes (editions, journal, money accounts, cost centers, invoices, templates,
@@ -97,10 +105,16 @@ Top-level scoping unit for a fiscal year / accounting period.
 |---|---|---|
 | `id` | String (cuid) | |
 | `name` | String | Unique — e.g. "2024-2025" |
-| `isActive` | Boolean | At most one edition is active at a time |
+| `isDefault` | Boolean | At most one. Seeds `User.selectedEditionId` for accounts that have none; never a runtime fallback |
+| `isActive` | Boolean | Superseded by `isDefault` and read by nothing. Dropped in its own migration (plan 002 step 5) |
+| `closedAt` | DateTime? | Set when the year is closed |
 | `openingBalance` | Decimal | Carry-forward from previous edition |
+| `usersSelecting` | `User[]` | Users currently working in this edition |
 
 All transactional data (journal entries, invoices, expense reports, budget lines, departments, money accounts, cost centers) is tied to one Edition.
+
+Flipping `isDefault` moves nobody — every existing user keeps the edition already written to their
+`selectedEditionId`. That is deliberate: it is a seed for new accounts, not a switch for everyone.
 
 ---
 
@@ -233,7 +247,18 @@ An expense submitted by a department user for approval and reimbursement.
 ## Key Patterns
 
 ### Edition-scoping
-Every transactional model has an `editionId` FK with `onDelete: Cascade`. When an Edition is deleted, all its data is removed. Only one Edition can be `isActive = true` — this is the edition used for all new data writes. All read queries filter by `edition: { isActive: true }`.
+Every transactional model has an `editionId` FK with `onDelete: Cascade`. When an Edition is deleted, all its data is removed.
+
+Reads and writes alike scope to the **signed-in user's** edition, resolved through
+`app/lib/edition-context.ts`:
+
+- `resolveEditionIdOrNull()` — nullable, for pages, which render a "pick an edition" state rather than throwing.
+- `resolveEditionId()` — throws, for write paths, where "no edition" is an error to report back to the form.
+- `resolveEdition()` — the edition record itself, for headers and the sidebar picker.
+- `ensureUserEdition(userId)` — the only writer of the seed.
+
+`User.selectedEditionId` is the one exception to the Cascade rule: it is `SetNull`, because deleting
+an edition must not delete the users who were looking at it.
 
 ### Cascade vs Restrict
 - Edition delete cascades to all its records.

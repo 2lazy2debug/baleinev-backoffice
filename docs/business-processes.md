@@ -8,31 +8,39 @@ This document describes the main workflows in the application from a functional 
 
 An Edition represents a fiscal year or accounting period. All data is scoped to an edition.
 
+**Each user picks their own edition.** There is no global "active edition": the answer to "which
+edition is this request in" lives on the user, in `User.selectedEditionId`, and is resolved by
+`app/lib/edition-context.ts`. Two people can work in two different editions at the same time.
+
 ### Lifecycle
 
 ```
 Admin creates a new edition
         │
         ▼
-Edition starts in an inactive state
+It is one edition among several — all of them stay selectable
         │
         ▼
-Admin activates the edition (sets isActive = true)
-  → Any previously active edition is deactivated
-  → The new edition becomes the target for all new data
+Each user picks their edition from the sidebar picker
+  → POST /api/preferences/edition writes User.selectedEditionId
+  → Only that user moves
         │
         ▼
-Work proceeds: journal entries, invoices, expense reports are created
+Work proceeds in whichever edition each user selected
         │
         ▼
-At year end, admin creates the next edition
-  → Optionally sets openingBalance = closing balance of the previous edition
-  → Activates the new edition
+At year end, admin creates the next edition and closes the old one
 ```
 
-- Only one edition can be `isActive = true` at any time.
-- Activating a new edition does NOT delete old data — historical editions remain fully readable.
-- Opening balances from the old edition can be imported as locked `isOpeningEntry = true` journal entries in the new one.
+- `Edition.isDefault` marks the edition that **seeds accounts with no edition yet**. It is written
+  into `User.selectedEditionId` once — at account creation, or at that user's first login — and
+  never consulted again. Changing the default therefore affects **new accounts only**; everyone
+  already using the app keeps the edition they are in.
+- Deleting an edition does not delete its users: the relation is `onDelete: SetNull`, so anyone
+  pointing at it has their selection cleared and re-seeds from the default on their next request.
+- Creating a new edition does NOT delete old data — historical editions remain fully readable.
+- Opening balances from the old edition can be imported as locked `isOpeningEntry = true` journal
+  entries in the new one.
 
 ---
 
@@ -43,8 +51,8 @@ At year end, admin creates the next edition
 - **Department user:** views their own department's budget vs. actual spending (read-only).
 
 Create, update, and delete of budget lines (`app/(app)/budget/actions.ts`) are all scoped to the
-active edition: the mutation first confirms the target line's department belongs to the active
-edition, so a stale page from a previous edition cannot mutate another edition's data.
+user's selected edition: the mutation first confirms the target line's department belongs to the
+edition `resolveEditionId()` returns, so a stale page from another edition cannot mutate its data.
 
 ### Setup flow
 ```

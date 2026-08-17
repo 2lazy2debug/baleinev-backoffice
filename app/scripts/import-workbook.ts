@@ -202,8 +202,8 @@ async function main() {
     let edition = await tx.edition.findUnique({ where: { name: editionName } });
 
     if (!edition) {
-      await tx.edition.updateMany({ where: { isActive: true }, data: { isActive: false } });
-      edition = await tx.edition.create({ data: { name: editionName, isActive: true } });
+      await tx.edition.updateMany({ where: { isDefault: true }, data: { isDefault: false } });
+      edition = await tx.edition.create({ data: { name: editionName, isDefault: true } });
     }
 
     const existingEntries = await tx.journalEntry.count({ where: { editionId: edition.id } });
@@ -221,8 +221,8 @@ async function main() {
       await tx.moneyAccount.deleteMany({ where: { editionId: edition.id } });
     }
 
-    await tx.edition.updateMany({ where: { isActive: true, id: { not: edition.id } }, data: { isActive: false } });
-    await tx.edition.update({ where: { id: edition.id }, data: { isActive: true } });
+    await tx.edition.updateMany({ where: { isDefault: true, id: { not: edition.id } }, data: { isDefault: false } });
+    await tx.edition.update({ where: { id: edition.id }, data: { isDefault: true } });
 
     for (const departmentName of uniqueDepartmentNames) {
       await tx.department.upsert({
