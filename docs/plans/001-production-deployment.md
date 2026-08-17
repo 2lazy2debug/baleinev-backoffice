@@ -344,8 +344,10 @@ generated**, because generating them breaks something later:
 depends on them. **Skip the seed at this point** (B7 restores the real users first, and
 seeding before that only creates a row to reconcile). Then read `app/.env` before continuing.
 
-**B6 — Service.** As **root**, `/opt/blv/checkout/deploy/install-service.sh` (starts
-`blv.service` on 3100). Verify: `curl -fsS http://127.0.0.1:3100/api/health`.
+**B6 — Service — DONE 2026-08-17.** `blv.service` is enabled and active, `User=blv`,
+`WorkingDirectory=/opt/blv/checkout/app`, `node=/usr/bin/node`, port 3100;
+`curl http://127.0.0.1:3100/api/health` returns `200 {"status":"ok"}` — so Prisma reaches
+`blv-db-1` too. As **root**, `/opt/blv/checkout/deploy/install-service.sh`.
 
 Both installers used to render the unit for `${SUDO_USER:-$(id -un)}`, i.e. for the caller.
 `blv` is a system account with **no sudo rights**, so on this box the caller can only be root —
