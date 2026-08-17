@@ -6,9 +6,10 @@ pipeline the LeadDesk and InFaaS repos use: push an annotated `vX.Y.Z` tag, a sy
 timer on the box notices within two minutes, backs up, builds, health-checks, and rolls
 back on failure.
 
-**Phase A is done** and `v0.1.1` is on `origin`. **Phase B is in progress** — B1–B7 are done,
-B0 has not been run, B8 is next. Every step below is ordered, and each numbered step is one
-commit (per `CLAUDE.md`).
+**Phase A is done** and `v0.1.1` is on `origin`. **Phase B is in progress** — B1–B9 are done
+and the app is live at `https://blv.cabras.ch`. **B0 has not been run and is now blocking:**
+3.4 GB free, and both B10/B11 and B9.8's LeadDesk tag trigger builds. B10 is next. Every step
+below is ordered, and each numbered step is one commit (per `CLAUDE.md`).
 
 **Keep output minimal.** Briefly mention what changed and what is blocked, in a few lines. Do not narrate
 steps, restate what this file already says, or summarise work back at the reader.
@@ -523,8 +524,31 @@ Note for anyone reading `ss`: `next start` shows as `*:3100`, i.e. dual-stack, a
 `ip6tables` policy is ACCEPT — but the box has **no global IPv6 address**, so there is no v6
 path to the port. If one is ever added, this step needs an `ip6tables` counterpart.
 
-**B9 — Extract Caddy into `/opt/caddy`.** Build the whole thing before touching the running
-proxy; the only irreversible-feeling moment is step 5, and step 7 undoes it.
+**B9 — Extract Caddy into `/opt/caddy`. DONE (2026-08-17), except step 8's tag.**
+`https://blv.cabras.ch` serves the app; `https://leaddesk.cabras.ch` is unchanged. The
+container is `caddy-caddy-1` at `172.23.0.2` — inside `172.16.0.0/12`, so B8's ACCEPT and
+the egress MASQUERADE both cover it.
+
+What the run showed, beyond what the steps below say:
+
+- **The certificates and the ACME account were reused, which was the whole point of the
+  external volumes.** The logs name the existing account
+  (`acme/acct/3545727265`, `manuel@cabras.ch`) rather than registering a new one, and
+  LeadDesk's certificate is byte-identical afterwards (`notBefore Jul 18`, untouched).
+  `blv.cabras.ch` got a fresh one over HTTP-01 in about five seconds (`Aug 17 → Nov 15`).
+- **Steps 5 and 7 were reordered:** stop old → start new → verify → *then* `rm` the old
+  container. A stopped container releases its port bindings, so this is equivalent, and it
+  keeps the rollback one command away for longer. Downtime for LeadDesk was a few seconds.
+- `caddy validate` warned the `Caddyfile` was unformatted; `caddy fmt --overwrite` fixed it,
+  so a future validation's warnings will all be real ones.
+
+**`/opt/caddy` is versioned nowhere.** It is deliberately owned by neither app, which also
+means neither repo backs it up. It is four small files and could be rebuilt from this
+section in ten minutes, but that is a choice, not an accident — revisit it if the box ever
+grows a third site.
+
+Build the whole thing before touching the running proxy; the only irreversible-feeling
+moment is step 5, and step 7 undoes it.
 
 1. Lay it out as root:
 
@@ -566,6 +590,28 @@ proxy; the only irreversible-feeling moment is step 5, and step 7 undoes it.
    `caddy/Caddyfile`, and update `install.sh`, `docs/production.md` and
    `docs/tls-and-certificates.md` to point at `/opt/caddy`. Tag it `non-breaking` — the
    pipeline never runs `docker compose`, so this deploys without touching the proxy.
+
+   **Written and staged in `~/Developer/LeadDesk_3.0`, not committed and not tagged.**
+   Nine files: the `caddy` service and its volumes removed, `caddy/Caddyfile` deleted, a new
+   `deploy/leaddesk.caddy` to copy into `conf.d/`, `ACME_EMAIL`/`APP_UPSTREAM` dropped from
+   the generated `.env` and `.env.example` (they belong to `/opt/caddy` now), and the docs
+   rewritten around the shared proxy. `install.sh` no longer starts a proxy — left as it
+   was, `docker compose up -d` there would have raised a second Caddy to fight the shared
+   one for `:80`/`:443`.
+
+   Two reasons it stops short of a tag:
+
+   - **The disk.** A tag triggers a full `next build` on a box with **3.4 GB free**. Run
+     B0's purge first — this is the same warning B5 and B11 carry, and it now applies to
+     another repo's pipeline too.
+   - Committing in a second repository is outside this session's working directory, so it
+     needs a hand: `cd ~/Developer/LeadDesk_3.0 && git commit` (the message is drafted at
+     `…/scratchpad/leaddesk-commit-msg.txt`), then tag once the disk is clear.
+
+   Nothing on the server depends on this step — it is the repo catching up to a cutover
+   that already happened. But until it lands, LeadDesk's `docker-compose.yml` describes a
+   proxy that no longer exists, which is a trap for the next person who runs
+   `docker compose up -d` in `/opt/leaddesk/app`.
 
 **B10 — The updater.**
 
