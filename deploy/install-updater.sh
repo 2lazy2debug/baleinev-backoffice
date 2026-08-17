@@ -43,6 +43,22 @@ NODE_BIN_DIR="$(dirname "$NODE_BIN")"
 RUN_USER="${BLV_RUN_USER:-$(stat -c '%U' "$CHECKOUT_ROOT")}"
 RUN_GROUP="$(id -gn "$RUN_USER")"
 
+# Same trap as install-service.sh, and worth repeating rather than sharing: the
+# unit runs as RUN_USER, but `command -v node` answered for the caller. An
+# interactive root shell with nvm loaded resolves node under /root (mode 700),
+# and the pipeline would then fail inside a timer, where nobody reads the error.
+if [[ "$(id -un)" == "$RUN_USER" ]]; then
+  NODE_REACHABLE="$(test -x "$NODE_BIN" && echo yes || echo no)"
+else
+  NODE_REACHABLE="$(sudo -u "$RUN_USER" test -x "$NODE_BIN" && echo yes || echo no)"
+fi
+if [[ "$NODE_REACHABLE" != yes ]]; then
+  echo "ERROR: $RUN_USER cannot execute $NODE_BIN, so every deploy would fail." >&2
+  echo "       Re-run with the system node:" >&2
+  echo "         sudo env PATH=/usr/bin:/bin $0" >&2
+  exit 1
+fi
+
 # The pipeline's backup runs `docker compose exec db pg_dump`, which needs the
 # docker socket. Without the group the first deploy fails at the snapshot — the
 # one step designed to fail safe, but still a deploy that never happens.

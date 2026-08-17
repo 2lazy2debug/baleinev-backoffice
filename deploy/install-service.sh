@@ -47,6 +47,28 @@ NODE_BIN_DIR="$(dirname "$NODE_BIN")"
 RUN_USER="${BLV_RUN_USER:-$(stat -c '%U' "$CHECKOUT_ROOT")}"
 RUN_GROUP="$(id -gn "$RUN_USER")"
 
+# `command -v node` answers for the CALLER, but the unit runs as RUN_USER, so
+# the pinned path has to be one RUN_USER can execute. These are not the same
+# answer on a box with a version manager: an interactive root shell that sources
+# nvm resolves node to /root/.nvm/versions/node/vXX/bin/node, and /root is mode
+# 700. The unit would then be written with a path that exists, is executable by
+# root, and is unreachable for the app user — failing at start with a permission
+# error or "no such file" that names a file you can see is right there. Catch it
+# here, where the cause is still obvious.
+if [[ "$(id -un)" == "$RUN_USER" ]]; then
+  NODE_REACHABLE="$(test -x "$NODE_BIN" && echo yes || echo no)"
+else
+  NODE_REACHABLE="$(sudo -u "$RUN_USER" test -x "$NODE_BIN" && echo yes || echo no)"
+fi
+if [[ "$NODE_REACHABLE" != yes ]]; then
+  echo "ERROR: $RUN_USER cannot execute $NODE_BIN, so the unit would fail at" >&2
+  echo "       start. This is what a version manager in the CALLER's shell does" >&2
+  echo "       — nvm under /root resolves to a path only root can reach." >&2
+  echo "       Re-run with the system node:" >&2
+  echo "         sudo env PATH=/usr/bin:/bin $0" >&2
+  exit 1
+fi
+
 if [[ ! -f "$PROJECT_ROOT/.next/BUILD_ID" ]]; then
   echo "ERROR: no production build ($PROJECT_ROOT/.next/BUILD_ID is missing)." >&2
   echo "       Run ./install.sh, or 'npm run build' in app/, first." >&2

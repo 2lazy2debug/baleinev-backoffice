@@ -6,9 +6,13 @@ pipeline the LeadDesk and InFaaS repos use: push an annotated `vX.Y.Z` tag, a sy
 timer on the box notices within two minutes, backs up, builds, health-checks, and rolls
 back on failure.
 
-**Phase A is done** and `v0.1.1` is on `origin`. **Phase B is in progress** — B0–B9 are done
-and the app is live at `https://blv.cabras.ch`, with 4.8 GB free after B0's purge. B10 is next.
-Every step below is ordered, and each numbered step is one commit (per `CLAUDE.md`).
+**This plan is finished.** Phase A and **all of Phase B, B0 through B12**, are done. The app is
+live at `https://blv.cabras.ch` on `v0.1.2`, the tag-driven pipeline has deployed a real release
+and survived a reboot, and the legacy deployment is gone. 4.8 GB free.
+
+Two things outlive it, both written up under the step that found them: **delete
+`/root/blv-legacy-2026-08-16.sql` on or after 2026-08-24** (B12), and **`/opt/caddy` is versioned
+nowhere** (B9). Every step below is ordered, and each was one commit (per `CLAUDE.md`).
 
 **Keep output minimal.** Briefly mention what changed and what is blocked, in a few lines. Do not narrate
 steps, restate what this file already says, or summarise work back at the reader.
@@ -704,7 +708,9 @@ full minute apart — `leaddesk-updater` 13:38:44, `blv-updater` 13:39:44 — so
 cannot wake to a backlog and run two `next build`s at once on one vCPU. §6 predicted this; it is
 now observed rather than assumed.
 
-**B12 — Retire the legacy deployment.** Only after B11 passes end to end:
+**B12 — Retire the legacy deployment. DONE 2026-08-17.** All three ran; `baleicomptes-postgres`,
+`docker_postgres_data` and `/root/baleinev-backoffice` are gone, and both apps stayed up
+throughout.
 
 ```bash
 docker compose -f /root/baleinev-backoffice/docker/docker-compose.yml down
@@ -712,8 +718,39 @@ rm -rf /root/baleinev-backoffice
 docker volume rm docker_postgres_data
 ```
 
+**The volume was destroyed only after proving the dump had not gone stale.** A fresh `pg_dump` of
+the legacy database was taken and diffed against `/root/blv-legacy-2026-08-16.sql`: the only
+difference was pg_dump's random `\restrict`/`\unrestrict` nonce — **8 diff lines, zero data**.
+Nothing had written to the legacy database since B1, so the August 16 snapshot is exactly current
+and remains a complete rollback. The fresh copy was then deleted rather than kept, because two
+plaintext copies of the ledger is one more than the risk is worth. Do this check before deleting
+any database volume; "we took a dump last week" is not the same claim.
+
 Keep `/root/blv-legacy-2026-08-16.sql` until the app has been used in anger for a week, then
-delete it — it contains the whole ledger in plaintext.
+delete it — it contains the whole ledger in plaintext. **That week starts 2026-08-17; delete on
+or after 2026-08-24.**
+
+**Still to reclaim: `/root/.nvm`, 466 MB.** Flagged in B0, and the reason it matters is not the
+disk. Root's `.bashrc` sources nvm, so an **interactive** root shell resolves `node` to
+`/root/.nvm/versions/node/v24.14.1/bin/node` — verified — while a non-interactive
+`ssh root@host '…'` gets `/usr/bin/node`, because Ubuntu's `.bashrc` returns early when not
+interactive. Every command in this deployment took the second path, which is the only reason
+nothing broke.
+
+That difference is a live trap, because `install-service.sh` and `install-updater.sh` both pin
+whatever `command -v node` returns into a unit that runs as `blv`. A human who SSHes in and runs
+either installer by hand would write `/root/.nvm/…` into the unit — a path inside a **mode 700**
+directory that `blv` cannot traverse. The service then fails with "no such file" or a permission
+error, naming a file that visibly exists. §6 anticipates this failure for Node *upgrades*; this
+is the same failure, far easier to hit, and it would land inside a timer where nobody reads it.
+
+**Both installers now refuse to write a node path the run user cannot execute**, and say how to
+retry (`sudo env PATH=/usr/bin:/bin …`). That is the actual fix and it holds whether or not nvm
+is ever removed. Removing the directory is then just 466 MB and one less way to be confused:
+
+```bash
+rm -rf /root/.nvm     # the .bashrc lines are guarded with [ -s … ] and go quiet on their own
+```
 
 ---
 
