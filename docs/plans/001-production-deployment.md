@@ -6,7 +6,7 @@ pipeline the LeadDesk and InFaaS repos use: push an annotated `vX.Y.Z` tag, a sy
 timer on the box notices within two minutes, backs up, builds, health-checks, and rolls
 back on failure.
 
-**Phase A is done** and `v0.1.0` is on `origin`. **Phase B is in progress** — B1–B5 are done,
+**Phase A is done** and `v0.1.1` is on `origin`. **Phase B is in progress** — B1–B5 are done,
 B0 has not been run, B6 is next. Every step below is ordered, and each numbered step is one
 commit (per `CLAUDE.md`).
 
@@ -295,7 +295,8 @@ chmod 700 /opt/blv/state /opt/blv/backups
 ```
 
 **B3 — Clone — DONE 2026-08-16.** `/opt/blv/checkout` is detached at `v0.1.0` (`ab4bb45`),
-clean, `blv`-owned, `soa/qr/blv-logo-noir-render.png` present.
+clean, `blv`-owned, `soa/qr/blv-logo-noir-render.png` present. (B6 moved it on to `v0.1.1`,
+which changes `deploy/` only — no rebuild.)
 The GitHub repo answers anonymous `ls-remote`, so it is public and HTTPS needs
 no key: `sudo -iu blv git clone https://github.com/2lazy2debug/baleinev-backoffice.git
 /opt/blv/checkout`, then `git checkout tags/v0.1.0`. (If it is ever made private, add a deploy
@@ -328,6 +329,8 @@ is `presidence@baleinev.ch`, `DATABASE_URL` points at `blv@127.0.0.1:5434/balein
 was skipped as intended — and `.next/BUILD_ID` exists. **Disk is back to 4.1 GB free**: `npm ci`
 and the build cost ~1.3 GB and puppeteer's Chromium another 628 MB in `/home/blv/.cache`. B0 was
 never run, so its ~750 MB is still on the table and should be reclaimed before B11's test deploy.
+**By 2026-08-17 it had drifted down to 3.4 GB free with nothing deployed** — B0 is no longer
+optional, and `install-updater.sh` warns below 3 GB.
 
 From `/opt/blv/checkout`, three values are **copied from the workstation's `app/.env`, not
 generated**, because generating them breaks something later:
@@ -341,8 +344,20 @@ generated**, because generating them breaks something later:
 depends on them. **Skip the seed at this point** (B7 restores the real users first, and
 seeding before that only creates a row to reconcile). Then read `app/.env` before continuing.
 
-**B6 — Service.** `./deploy/install-service.sh` (starts `blv.service` on 3100).
-Verify: `curl -fsS http://127.0.0.1:3100/api/health`.
+**B6 — Service.** As **root**, `/opt/blv/checkout/deploy/install-service.sh` (starts
+`blv.service` on 3100). Verify: `curl -fsS http://127.0.0.1:3100/api/health`.
+
+Both installers used to render the unit for `${SUDO_USER:-$(id -un)}`, i.e. for the caller.
+`blv` is a system account with **no sudo rights**, so on this box the caller can only be root —
+and the unit would have been written `User=root`, running the app as root over `blv`'s 600-mode
+`.env`. They now take the run user from the **owner of the checkout** (`BLV_RUN_USER` overrides),
+which is right however they are invoked. That fix is `v0.1.1`, and B6 starts by moving the
+checkout to it:
+
+```bash
+sudo -u blv git -C /opt/blv/checkout fetch --tags origin
+sudo -u blv git -C /opt/blv/checkout checkout --detach tags/v0.1.1
+```
 
 **B7 — Migrate the data.** The new database is empty and on the current schema; the legacy one
 has the accounting rows and an older schema. Standard Prisma baselining, as `blv`, from
@@ -384,17 +399,22 @@ Then the 6 vault entries, from the workstation. Two columns cannot travel as-is:
 # workstation, from app/ — the container is blv-db-1, NOT the server's
 # baleicomptes-postgres. COPY … TO STDOUT, *not* \copy: \copy would write the file
 # inside the container (psql is the client there), where scp cannot see it.
+# Write them OUTSIDE the repo ($OUT below): this repo is public and CLAUDE.md's
+# `git add .` would sweep a vault export straight into a public commit.
 docker compose exec -T db psql -U postgres -d baleinev_comptes -c \
  "COPY (select id,name,login,website,\"passwordCipher\",\"passwordIv\",\"passwordTag\",
          \"totpCipher\",\"totpIv\",\"totpTag\",null::text,\"createdAt\",\"updatedAt\"
-    from \"PasswordEntry\") TO STDOUT WITH CSV" > vault-entries.csv
+    from \"PasswordEntry\") TO STDOUT WITH CSV" > "$OUT/vault-entries.csv"
 
 docker compose exec -T db psql -U postgres -d baleinev_comptes -c \
  "COPY (select j.\"B\", r.name from \"_DepartmentRoleToPasswordEntry\" j
-          join \"DepartmentRole\" r on r.id = j.\"A\") TO STDOUT WITH CSV" > vault-roles.csv
+          join \"DepartmentRole\" r on r.id = j.\"A\") TO STDOUT WITH CSV" > "$OUT/vault-roles.csv"
 
-scp -i ~/.ssh/id_ed25519 vault-entries.csv vault-roles.csv root@leaddesk.cabras.ch:/tmp/
+scp -i ~/.ssh/id_ed25519 "$OUT"/vault-{entries,roles}.csv root@leaddesk.cabras.ch:/tmp/
 ```
+
+Both files are 6 lines, and every row of `vault-roles.csv` says `Administration` — that is the
+export verified. Delete them from `/tmp` on both machines once the import is confirmed.
 
 On the server the CSVs must be *inside* the `db` container for `\copy`, and the whole import
 is one psql session — the temp table does not survive a second one:
@@ -509,10 +529,12 @@ proxy; the only irreversible-feeling moment is step 5, and step 7 undoes it.
 
 **B10 — The updater.**
 
+As root, for the same reason B6 is:
+
 ```bash
-sudo -iu blv && cd /opt/blv/checkout
-./deploy/install-updater.sh
-git describe --tags --exact-match > /opt/blv/state/deployed-tag   # NOT optional
+/opt/blv/checkout/deploy/install-updater.sh
+sudo -u blv git -C /opt/blv/checkout describe --tags --exact-match \
+  > /opt/blv/state/deployed-tag                                   # NOT optional
 ```
 
 Without that last line the first tick sees no `deployed-tag`, treats `v0.1.0` as new, and
@@ -526,7 +548,7 @@ redeploys what is already running.
   `ADMINISTRATION` scoping.
 - `https://leaddesk.cabras.ch` still 200 — the proxy move touched both.
 - External `:3100` times out; `:5434` is unreachable from outside.
-- Push `v0.1.1` (`non-breaking`) and watch it land within ~2 minutes:
+- Push `v0.1.2` (`non-breaking`) and watch it land within ~2 minutes:
   `journalctl -u blv-updater.service -f`, then `cat /opt/blv/state/last-deploy.json`.
 - Reboot once, while nobody depends on it: `blv`, `blv-updater.timer`, both databases, the new
   Caddy project and both firewall units must all come back.
