@@ -633,18 +633,41 @@ moment is step 5, and step 7 undoes it.
    proxy that no longer exists, which is a trap for the next person who runs
    `docker compose up -d` in `/opt/leaddesk/app`.
 
-**B10 — The updater.**
+**B10 — The updater. DONE 2026-08-17.** `blv-updater.timer` is enabled and ticking every two
+minutes; `/opt/blv/state/` holds `deployed-tag` (`v0.1.1`) and
+`last-deploy.json` (`{"status":"deployed","tag":"v0.1.1","message":"ok",…}`).
 
 As root, for the same reason B6 is:
 
 ```bash
 /opt/blv/checkout/deploy/install-updater.sh
+```
+
+**The second command this step used to carry was a race, and it lost.** It read:
+
+```bash
 sudo -u blv git -C /opt/blv/checkout describe --tags --exact-match \
   > /opt/blv/state/deployed-tag                                   # NOT optional
 ```
 
-Without that last line the first tick sees no `deployed-tag`, treats `v0.1.0` as new, and
-redeploys what is already running.
+with the warning that skipping it makes the first tick treat the running tag as new. But
+`install-updater.sh` ends in `systemctl enable --now`, and `OnBootSec=3min` is long past on a box
+up 18 hours — so the timer fired **33 ms** after the installer returned, while that "NOT optional"
+line was still only a suggestion printed on the terminal. No operator could have typed it in
+time. The tick logged `new tag v0.1.1 (was: none)` and redeployed what was already live.
+
+`install-updater.sh` now seeds `state/deployed-tag` **itself, before enabling the timer**, and
+says so; if the checkout is not at an exact tag it warns instead of silently arming a deploy.
+This is the fix, not a note to be careful. The plan's own instruction was the bug.
+
+**The accidental redeploy is worth reading, because it was a full pipeline test nobody had to
+stage.** It ran clean end to end in 2 min 34 s: fetch → pre-deploy snapshot
+(`/opt/blv/backups/pre-v0.1.1-2026-08-17T13-20-00.zip`) → `npm ci --omit=dev` → `next build` →
+`sudo systemctl restart blv` through the sudoers rule → health check → state recorded. That
+exercises every part B11 asks about except a genuinely new tag, and it proves the two pieces most
+likely to be wrong in a way that only shows up under a timer: the **sudoers path** (a mismatched
+`systemctl` path fails as a silent password prompt, i.e. a hang) and the fact that the build fits
+in RAM. The **next** tick, two minutes later, correctly did nothing.
 
 **B11 — Verification checklist.**
 

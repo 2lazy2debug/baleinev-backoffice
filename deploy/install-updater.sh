@@ -109,15 +109,35 @@ else
 fi
 rm -f "$SUDOERS"
 
+# --- Seed the deployed tag BEFORE the timer can tick -------------------------
+# `enable --now` starts the timer, and OnBootSec is long past on a box that has
+# been up a while, so the first tick fires within milliseconds — before a human
+# could run any follow-up command. If state/deployed-tag does not exist yet that
+# tick reads "was: none", calls the running tag new, and redeploys what is
+# already live: a pointless `npm ci` + `next build` + restart. This used to be
+# printed as an instruction to run afterwards, which was a race no operator
+# could win. Seeding it here closes it.
+STATE_DIR="$PARENT_DIR/state"
+DEPLOYED_TAG_FILE="$STATE_DIR/deployed-tag"
+if [[ -e "$DEPLOYED_TAG_FILE" ]]; then
+  echo "Leaving $DEPLOYED_TAG_FILE alone (already records: $(cat "$DEPLOYED_TAG_FILE"))."
+else
+  # As RUN_USER: the state dir is 700 and owned by them, and git refuses to
+  # operate on another user's checkout ("dubious ownership") anyway.
+  CURRENT_TAG="$(sudo -u "$RUN_USER" git -C "$CHECKOUT_ROOT" describe --tags --exact-match 2>/dev/null || true)"
+  if [[ -n "$CURRENT_TAG" ]]; then
+    sudo -u "$RUN_USER" mkdir -p "$STATE_DIR"
+    printf '%s\n' "$CURRENT_TAG" | sudo -u "$RUN_USER" tee "$DEPLOYED_TAG_FILE" >/dev/null
+    echo "Recorded the live tag ($CURRENT_TAG) so the first tick is a no-op."
+  else
+    echo "WARNING: $CHECKOUT_ROOT is not at an exact tag, so there is nothing to" >&2
+    echo "         record. The first tick will deploy the newest tag on origin —" >&2
+    echo "         correct if you meant to deploy, wasteful if you did not." >&2
+  fi
+fi
+
 sudo systemctl daemon-reload
 sudo systemctl enable --now "$SERVICE_NAME-updater.timer"
-
-echo
-echo "One thing left, and skipping it redeploys what is already running:"
-echo "record the tag that is live right now, so the first tick sees no change."
-echo
-echo "  mkdir -p $PARENT_DIR/state"
-echo "  git -C $CHECKOUT_ROOT describe --tags --exact-match > $PARENT_DIR/state/deployed-tag"
 echo
 sudo systemctl --no-pager list-timers "$SERVICE_NAME-updater.timer" || true
 echo
