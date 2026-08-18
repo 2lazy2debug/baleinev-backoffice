@@ -89,6 +89,11 @@ way.
 Three users: two `ADMIN`, one `DEPARTMENT`. The active edition holds no data, so the app is
 currently pointing everybody at an empty year.
 
+**Re-surveyed 2026-08-18 (before step 2).** The empty `2026-2027` has since been deleted on
+production: one edition remains, `2025-2026`, `isDefault = true`, not closed, holding the 16
+departments and both money accounts. Still three users. The problem the table described — everyone
+pointed at an empty year — is gone; the row that caused it no longer exists.
+
 ### A bug this survey found
 
 [`closeEditionAction`](../../app/app/(app)/editions/actions.ts#L119) writes one opening journal
