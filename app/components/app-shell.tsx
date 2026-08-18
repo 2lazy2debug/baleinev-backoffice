@@ -286,6 +286,9 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
             <div className="mt-2">
               <SignOutButton label={copy.signOut} />
             </div>
+            <p className="mt-3 truncate text-center text-[10px] text-[var(--muted)]">
+              {isCollapsed ? null : "Baleinev Comptes "}v{process.env.NEXT_PUBLIC_APP_VERSION}
+            </p>
           </div>
         </aside>
 
