@@ -71,6 +71,8 @@ The app supports English (`en`) and French (`fr`). The active locale is stored i
 
 Invoice PDFs are generated from HTML templates stored in the database (`DocumentTemplate` model). Templates use `[[fieldName]]` placeholder syntax. The renderer (`lib/document-templates.ts`) replaces each placeholder with an escaped value from a typed `InvoiceDocumentPayload` object, then passes the full HTML to Puppeteer for PDF export.
 
+Not every PDF goes through a stored template — the event shift-schedule export (`/api/events/[eventId]/pdf`, `lib/shift-schedule-pdf.ts`) builds its HTML grid straight from the event/day/shift data (no `DocumentTemplate` row involved) before handing it to Puppeteer the same way. Any signed-in user can pull it, not just admins — staffing visibility isn't gated like the financial documents.
+
 ### 7. CSS custom properties for theming
 
 All colours are defined as CSS custom properties in `app/globals.css` (e.g. `--accent`, `--panel`, `--ink`, `--muted`, `--line`). Tailwind classes reference these properties: `bg-[var(--panel)]`, `text-[var(--accent)]`, etc. Do not hard-code colour hex values in components.
