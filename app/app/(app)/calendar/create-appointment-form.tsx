@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { FormError } from "@/components/form-error";
+import { Checkbox } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import { createAppointmentAction } from "./actions";
@@ -81,23 +82,26 @@ export function CreateAppointmentForm({
           <details className="rounded-xl border border-[var(--line)] bg-[var(--panel)]">
             <summary className="cursor-pointer px-3 py-2 text-sm text-[var(--muted)]">{copy.audienceHelp}</summary>
             <div className="max-h-56 space-y-2 overflow-y-auto border-t border-[var(--line)] px-3 py-2 text-sm">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" name="audience" value="@everyone" />
-                <span>@everyone</span>
-              </label>
+              <Checkbox id="audience-everyone" name="audience" value="@everyone" label="@everyone" />
               <p className="pt-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">{copy.person}</p>
               {users.map((user) => (
-                <label key={user.id} className="flex items-center gap-2">
-                  <input type="checkbox" name="audience" value={`user:${user.id}`} />
-                  <span>{user.name}</span>
-                </label>
+                <Checkbox
+                  key={user.id}
+                  id={`audience-user-${user.id}`}
+                  name="audience"
+                  value={`user:${user.id}`}
+                  label={user.name}
+                />
               ))}
               <p className="pt-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">{copy.department}</p>
               {departments.map((department) => (
-                <label key={department.id} className="flex items-center gap-2">
-                  <input type="checkbox" name="audience" value={`department:${department.id}`} />
-                  <span>@{department.name.toLowerCase()}</span>
-                </label>
+                <Checkbox
+                  key={department.id}
+                  id={`audience-department-${department.id}`}
+                  name="audience"
+                  value={`department:${department.id}`}
+                  label={`@${department.name.toLowerCase()}`}
+                />
               ))}
             </div>
           </details>

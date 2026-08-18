@@ -5,6 +5,7 @@ import { Pencil, TrendingDown, TrendingUp, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
+import { Button, Card, Field, IconButton, Input } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -48,15 +49,15 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
         <FormError message={updateState.error} className="md:col-span-2" />
         <FormError message={deleteState.error} className="md:col-span-2" />
         {costCenters.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)] md:col-span-2">
+          <Card span="full" dashed className="md:col-span-2">
             {copy.costCenters.noCostCenters}
-          </div>
+          </Card>
         ) : (
           costCenters.map((costCenter) => {
             const result = costCenter.produits - costCenter.charges;
 
             return (
-              <article key={costCenter.id} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+              <Card key={costCenter.id} as="article">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{costCenter.code}</p>
@@ -81,82 +82,57 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
                   <div className="space-y-3">
                     <div className="flex items-center justify-end gap-2">
                       <details className="group">
-                        <summary className="list-none cursor-pointer rounded-md border border-[var(--line)] p-2 text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]">
-                          <Pencil className="h-3.5 w-3.5" />
+                        <summary className="list-none cursor-pointer rounded-md border border-[var(--line)] p-2 text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)] [&_svg]:h-4 [&_svg]:w-4">
+                          <Pencil />
                         </summary>
                         <form action={updateFormAction} className="mt-3 flex items-center gap-2">
                           <input type="hidden" name="costCenterId" value={costCenter.id} />
-                          <input
-                            type="text"
-                            name="name"
-                            defaultValue={costCenter.name}
-                            required
-                            className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]"
-                          />
-                          <button
-                            disabled={isSavingCostCenter}
-                            className="rounded-md border border-[var(--line)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)] disabled:opacity-60"
-                          >
+                          <Input type="text" name="name" defaultValue={costCenter.name} required size="compact" />
+                          <Button type="submit" variant="secondary" size="sm" disabled={isSavingCostCenter}>
                             {copy.shell.save}
-                          </button>
+                          </Button>
                         </form>
                       </details>
 
                       <form action={deleteFormAction}>
                         <input type="hidden" name="costCenterId" value={costCenter.id} />
-                        <button
+                        <IconButton
+                          type="submit"
+                          tone="delete"
+                          label={costCenter.canDelete ? copy.budget.deleteDepartment : copy.costCenters.cannotDelete}
                           disabled={!costCenter.canDelete || isDeletingCostCenter}
-                          title={costCenter.canDelete ? copy.budget.deleteDepartment : copy.costCenters.cannotDelete}
-                          className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                          <Trash2 />
+                        </IconButton>
                       </form>
                     </div>
                   </div>
                   )}
                 </div>
-              </article>
+              </Card>
             );
           })
         )}
       </div>
 
       {isReadOnly ? null : (
-      <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+      <Card as="section">
         <h2 className="text-xl font-semibold">{copy.costCenters.create}</h2>
         <form action={createFormAction} className="mt-6 space-y-4">
           <FormError message={createState.error} />
-          <label className="block space-y-2">
-            <span className="text-sm font-medium">{copy.costCenters.code}</span>
-            <input
-              type="text"
-              name="code"
-              placeholder="AFTER"
-              required
-              className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-            />
-          </label>
+          <Field label={copy.costCenters.code}>
+            <Input type="text" name="code" placeholder="AFTER" required />
+          </Field>
 
-          <label className="block space-y-2">
-            <span className="text-sm font-medium">{copy.costCenters.name}</span>
-            <input
-              type="text"
-              name="name"
-              placeholder="After party"
-              required
-              className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-            />
-          </label>
+          <Field label={copy.costCenters.name}>
+            <Input type="text" name="name" placeholder="After party" required />
+          </Field>
 
-          <button
-            disabled={isCreatingCostCenter}
-            className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-          >
+          <Button type="submit" variant="primary" disabled={isCreatingCostCenter}>
             {copy.costCenters.add}
-          </button>
+          </Button>
         </form>
-      </section>
+      </Card>
       )}
     </section>
   );

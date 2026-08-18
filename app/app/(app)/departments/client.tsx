@@ -5,6 +5,7 @@ import { Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
+import { Button, Card, Field, IconButton, Input } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import { createDepartmentAction, deleteDepartmentAction } from "./actions";
@@ -25,12 +26,12 @@ export function DepartmentsPageClient({ departments }: { departments: Department
       <div className="grid gap-4 md:grid-cols-2">
         <FormError message={deleteState.error} className="md:col-span-2" />
         {departments.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)] md:col-span-2">
+          <Card span="full" dashed className="md:col-span-2">
             No departments yet for this edition.
-          </div>
+          </Card>
         ) : (
           departments.map((department) => (
-            <article key={department.id} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+            <Card key={department.id} as="article">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-semibold">{department.name}</h2>
@@ -42,45 +43,31 @@ export function DepartmentsPageClient({ departments }: { departments: Department
                 {isReadOnly ? null : (
                   <form action={deleteFormAction}>
                     <input type="hidden" name="departmentId" value={department.id} />
-                    <button
-                      disabled={isDeleting}
-                      title="Delete"
-                      className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:opacity-50"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    <IconButton type="submit" tone="delete" label="Delete" disabled={isDeleting}>
+                      <Trash2 />
+                    </IconButton>
                   </form>
                 )}
               </div>
-            </article>
+            </Card>
           ))
         )}
       </div>
 
       {isReadOnly ? null : (
-      <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+      <Card as="section">
         <h2 className="text-xl font-semibold">Create a department</h2>
         <form action={createFormAction} className="mt-6 space-y-4">
           <FormError message={createState.error} />
-          <label className="block space-y-2">
-            <span className="text-sm font-medium">Department name</span>
-            <input
-              type="text"
-              name="name"
-              placeholder="PROGRAMMATION"
-              required
-              className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-            />
-          </label>
+          <Field label="Department name">
+            <Input type="text" name="name" placeholder="PROGRAMMATION" required />
+          </Field>
 
-          <button
-            disabled={isCreating}
-            className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-          >
+          <Button type="submit" variant="primary" disabled={isCreating}>
             Add department
-          </button>
+          </Button>
         </form>
-      </section>
+      </Card>
       )}
     </section>
   );

@@ -1,6 +1,7 @@
 import { AccountType, TaskType } from "@prisma/client";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
+import { Card, CardGrid, THead, TFoot, TR, TH, TD } from "@/components/ui";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
@@ -110,83 +111,81 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <CardGrid>
         {moneyAccountCards.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)] md:col-span-2 xl:col-span-4">
-            {copy.dashboard.noMoneyAccounts}
-          </div>
+          <Card span="full" dashed>{copy.dashboard.noMoneyAccounts}</Card>
         ) : (
           moneyAccountCards.map((account) => (
-            <article key={account.name} className="rounded-3xl bg-[var(--panel-strong)] p-5">
+            <Card key={account.name} span="1/4">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">{account.type}</p>
               <h2 className="mt-2 text-lg font-semibold">{account.name}</h2>
               <p className="mt-4 text-2xl font-semibold tracking-tight">{formatCurrency(account.balance)}</p>
-            </article>
+            </Card>
           ))
         )}
-      </section>
+      </CardGrid>
 
       <section className="overflow-hidden rounded-2xl border border-[var(--line)]">
         <div className="border-b border-[var(--line)] bg-[var(--panel-strong)] px-5 py-4">
           <h2 className="text-lg font-semibold">{copy.dashboard.budgetVsActuals}</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-[var(--panel-strong)] text-[var(--muted)]">
-              <tr>
-                <th className="px-5 py-3 font-medium">{copy.dashboard.department}</th>
-                <th className="px-5 py-3 font-medium">{copy.dashboard.budgetCharges}</th>
-                <th className="px-5 py-3 font-medium">{copy.dashboard.budgetProduits}</th>
-                <th className="px-5 py-3 font-medium">{copy.dashboard.budgetResult}</th>
-                <th className="border-l border-[var(--line)] px-5 py-3 font-medium">{copy.dashboard.actualCharges}</th>
-                <th className="px-5 py-3 font-medium">{copy.dashboard.actualProduits}</th>
-                <th className="px-5 py-3 font-medium">{copy.dashboard.actualResult}</th>
-                <th className="border-l border-[var(--line)] px-5 py-3 font-medium">{copy.common.delta}</th>
-              </tr>
-            </thead>
+          <table className="w-full min-w-full text-left text-sm">
+            <THead>
+              <TR>
+                <TH className="px-5 py-3">{copy.dashboard.department}</TH>
+                <TH className="px-5 py-3">{copy.dashboard.budgetCharges}</TH>
+                <TH className="px-5 py-3">{copy.dashboard.budgetProduits}</TH>
+                <TH className="px-5 py-3">{copy.dashboard.budgetResult}</TH>
+                <TH className="border-l border-[var(--line)] px-5 py-3">{copy.dashboard.actualCharges}</TH>
+                <TH className="px-5 py-3">{copy.dashboard.actualProduits}</TH>
+                <TH className="px-5 py-3">{copy.dashboard.actualResult}</TH>
+                <TH className="border-l border-[var(--line)] px-5 py-3">{copy.common.delta}</TH>
+              </TR>
+            </THead>
             <tbody>
               {departmentRows.map((row) => {
                 const delta = row.actualResult - row.budgetResult;
                 return (
-                  <tr key={row.name} className="border-t border-[var(--line)]">
-                    <td className="px-5 py-4 font-medium">{row.name}</td>
-                    <td className="px-5 py-4">{formatCurrency(row.budgetCharges)}</td>
-                    <td className="px-5 py-4">{formatCurrency(row.budgetProduits)}</td>
-                    <td className="px-5 py-4">{formatCurrency(row.budgetResult)}</td>
-                    <td className="border-l border-[var(--line)] px-5 py-4">{formatCurrency(row.actualCharges)}</td>
-                    <td className="px-5 py-4">{formatCurrency(row.actualProduits)}</td>
-                    <td className="px-5 py-4">{formatCurrency(row.actualResult)}</td>
-                    <td className="border-l border-[var(--line)] px-5 py-4">
+                  <TR key={row.name}>
+                    <TD className="px-5 py-4 font-medium">{row.name}</TD>
+                    <TD className="px-5 py-4">{formatCurrency(row.budgetCharges)}</TD>
+                    <TD className="px-5 py-4">{formatCurrency(row.budgetProduits)}</TD>
+                    <TD className="px-5 py-4">{formatCurrency(row.budgetResult)}</TD>
+                    <TD className="border-l border-[var(--line)] px-5 py-4">{formatCurrency(row.actualCharges)}</TD>
+                    <TD className="px-5 py-4">{formatCurrency(row.actualProduits)}</TD>
+                    <TD className="px-5 py-4">{formatCurrency(row.actualResult)}</TD>
+                    <TD className="border-l border-[var(--line)] px-5 py-4">
                       <div className="flex items-center gap-1.5">
                         <span className={`font-semibold ${delta >= 0 ? "text-emerald-400" : "text-rose-400"}`}>{formatCurrency(delta)}</span>
                         {delta >= 0
                           ? <TrendingUp className="h-4 w-4 text-emerald-400" />
                           : <TrendingDown className="h-4 w-4 text-rose-400" />}
                       </div>
-                    </td>
-                  </tr>
+                    </TD>
+                  </TR>
                 );
               })}
             </tbody>
-            <tfoot>
-              <tr className="border-t-2 border-[var(--line)] bg-[var(--panel-strong)] font-semibold">
-                <td className="px-5 py-4">{copy.common.total}</td>
-                <td className="px-5 py-4">{formatCurrency(totals.budgetCharges)}</td>
-                <td className="px-5 py-4">{formatCurrency(totals.budgetProduits)}</td>
-                <td className="px-5 py-4">{formatCurrency(totals.budgetResult)}</td>
-                <td className="border-l border-[var(--line)] px-5 py-4">{formatCurrency(totals.actualCharges)}</td>
-                <td className="px-5 py-4">{formatCurrency(totals.actualProduits)}</td>
-                <td className="px-5 py-4">{formatCurrency(totals.actualResult)}</td>
-                <td className="border-l border-[var(--line)] px-5 py-4">
+            <TFoot>
+              <TR>
+                <TD className="px-5 py-4">{copy.common.total}</TD>
+                <TD className="px-5 py-4">{formatCurrency(totals.budgetCharges)}</TD>
+                <TD className="px-5 py-4">{formatCurrency(totals.budgetProduits)}</TD>
+                <TD className="px-5 py-4">{formatCurrency(totals.budgetResult)}</TD>
+                <TD className="border-l border-[var(--line)] px-5 py-4">{formatCurrency(totals.actualCharges)}</TD>
+                <TD className="px-5 py-4">{formatCurrency(totals.actualProduits)}</TD>
+                <TD className="px-5 py-4">{formatCurrency(totals.actualResult)}</TD>
+                <TD className="border-l border-[var(--line)] px-5 py-4">
                   <div className="flex items-center gap-1.5">
                     <span className={totalDelta >= 0 ? "text-emerald-400" : "text-rose-400"}>{formatCurrency(totalDelta)}</span>
                     {totalDelta >= 0
                       ? <TrendingUp className="h-4 w-4 text-emerald-400" />
                       : <TrendingDown className="h-4 w-4 text-rose-400" />}
                   </div>
-                </td>
-              </tr>
-            </tfoot>
+                </TD>
+              </TR>
+            </TFoot>
           </table>
         </div>
       </section>
