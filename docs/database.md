@@ -105,11 +105,18 @@ Top-level scoping unit for a fiscal year / accounting period.
 |---|---|---|
 | `id` | String (cuid) | |
 | `name` | String | Unique — e.g. "2024-2025" |
+| `startDate` / `endDate` | DateTime? | Optional bounds of the fiscal year |
+| `drivingRatePerKm` | Decimal | CHF per km for driving expense reports |
 | `isDefault` | Boolean | At most one. Seeds `User.selectedEditionId` for accounts that have none; never a runtime fallback |
-| `isActive` | Boolean | Superseded by `isDefault` and read by nothing. Dropped in its own migration (plan 002 step 5) |
-| `closedAt` | DateTime? | Set when the year is closed. Non-null makes the edition read-only — `requireWritableEdition()` refuses every write against it, while reads, exports and PDFs keep working |
-| `openingBalance` | Decimal | Carry-forward from previous edition |
+| `closedAt` | DateTime? | Set when the year is closed. Non-null makes the edition read-only — `requireWritableEdition()` refuses every write against it, while reads, exports and PDFs keep working. Clearing it (`reopenEditionAction`) makes the edition writable again |
 | `usersSelecting` | `User[]` | Users currently working in this edition |
+
+There is no carry-forward balance on the edition itself: a previous year's closing balance arrives
+as a locked opening `JournalEntry` per money account, written by `carryOverEdition()`.
+
+The global `isActive` flag this model used to carry was replaced by `isDefault` in
+`20260817230613_user_selected_edition` and dropped in `20260818071444_drop_edition_is_active` —
+additive first, destructive second, one release apart, as `production.md` requires.
 
 All transactional data (journal entries, invoices, expense reports, budget lines, departments, money accounts, cost centers) is tied to one Edition.
 

@@ -424,20 +424,42 @@ Tag: `git tag -a v0.5.0 -m "non-breaking"`.
 
 ---
 
-## Step 5 — Drop `isActive` · `v0.6.0` · `requires-migration`
+## Step 5 — Drop `isActive` · `v0.6.0` · `requires-migration` — **DONE 2026-08-18**
 
-The destructive half, deliberately last, per `production.md`. By now nothing reads the column.
+The destructive half, deliberately last.
 
-1. `grep -rn "isActive" app/` returns nothing outside the schema. If it returns anything, stop —
-   this step is not ready. **One expected hit:** `components/app-shell.tsx` has a local `isActive`
-   for nav highlighting, which has nothing to do with editions. Ignore that one only.
-2. Remove the field from `schema.prisma`, generate the migration, confirm it is a single
-   `ALTER TABLE "Edition" DROP COLUMN "isActive"`.
-3. Verify the pre-deploy snapshot exists in `/opt/blv/backups/` **before** the tag goes out. This
-   is the one step in this plan that cannot be undone by a rollback: the pipeline restores the
-   snapshot when a migration ran, but a dropped column is gone from the schema either way.
+1. `grep -rn "isActive" app/` returns only the three expected hits: the local nav-highlighting
+   variable in `components/app-shell.tsx` (nothing to do with editions), and the column's own
+   history in `prisma/migrations/0_init` and `20260817230613_user_selected_edition` — migration SQL
+   is immutable by definition. Nothing in the running code reads or writes the column.
+2. Migration `20260818071444_drop_edition_is_active` is a single
+   `ALTER TABLE "Edition" DROP COLUMN "isActive";`, generated with `prisma migrate diff` against a
+   throwaway shadow database and applied locally with `migrate deploy` —
+   `prisma migrate dev` refuses to run non-interactively once it sees a column drop with data in it.
+3. Production carried a pre-deploy snapshot for **every** release so far
+   (`pre-v0.1.3`, `pre-v0.2.0`, `pre-v0.4.0` in `/opt/blv/backups/`), which is the evidence that
+   the snapshot step works before this tag — the one step in this plan a rollback cannot undo.
+
+`npx tsc --noEmit` clean, `npm run check:design` clean, `npm run build` green.
 
 Tag: `git tag -a v0.6.0 -m "requires-migration"`.
+
+---
+
+## Also shipped in `v0.6.0` — the running version in the sidebar
+
+Not part of the original five steps; added on the owner's request, modelled on the same wiring in
+LeadDesk (`../LeadDesk_3.0/next.config.mjs`).
+
+`resolveVersion()` in [`app/next.config.ts`](../../app/next.config.ts) runs
+`git describe --tags --abbrev=0` at build time and exposes it as `NEXT_PUBLIC_APP_VERSION`. That is
+truthful here specifically because a deploy is `git checkout --detach tags/<tag>` followed by a
+build, so the closest tag *is* what is running. `package.json`'s `version` is the fallback for a
+build with no git, and was bumped to `0.6.0` so the fallback is not a lie.
+
+The sidebar footer renders it under the sign-out button — `Baleinev Comptes v0.6.0` expanded, just
+`v0.6.0` collapsed. Verified rendering in a real browser against a production build; the string is
+substituted at build time, not read at runtime.
 
 ---
 
