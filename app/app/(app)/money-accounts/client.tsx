@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { MoneyAccountType } from "@prisma/client";
 import { Trash2 } from "lucide-react";
 
+import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
@@ -36,6 +37,7 @@ export function MoneyAccountsPageClient({ locale, accounts }: Props) {
   const copy = dictionaries[locale];
   const [updateState, updateFormAction, isSavingAccount] = useActionState(updateMoneyAccountAction, initialActionState);
   const [deleteState, deleteFormAction, isDeletingAccount] = useActionState(deleteMoneyAccountAction, initialActionState);
+  const isReadOnly = useEditionReadOnly();
 
   if (accounts.length === 0) {
     return (
@@ -66,6 +68,7 @@ export function MoneyAccountsPageClient({ locale, accounts }: Props) {
               ) : null}
               <p className="mt-4 text-2xl font-semibold tracking-tight">{formatCurrency(account.balance)}</p>
 
+              {isReadOnly ? null : (
               <form action={updateFormAction} className="mt-4 space-y-2">
                 <input type="hidden" name="moneyAccountId" value={account.id} />
                 <div className="grid gap-2 sm:grid-cols-[1fr_150px]">
@@ -142,18 +145,21 @@ export function MoneyAccountsPageClient({ locale, accounts }: Props) {
                   {copy.shell.save}
                 </button>
               </form>
+              )}
             </div>
 
-            <form action={deleteFormAction}>
-              <input type="hidden" name="moneyAccountId" value={account.id} />
-              <button
-                disabled={!account.canDelete || isDeletingAccount}
-                title={account.canDelete ? copy.moneyAccounts.deleteAccount : copy.moneyAccounts.cannotDelete}
-                className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            </form>
+            {isReadOnly ? null : (
+              <form action={deleteFormAction}>
+                <input type="hidden" name="moneyAccountId" value={account.id} />
+                <button
+                  disabled={!account.canDelete || isDeletingAccount}
+                  title={account.canDelete ? copy.moneyAccounts.deleteAccount : copy.moneyAccounts.cannotDelete}
+                  className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </form>
+            )}
           </div>
         </article>
       ))}

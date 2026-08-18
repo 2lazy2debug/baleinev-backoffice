@@ -242,13 +242,14 @@ Tag: `git tag -a v0.2.0 -m "requires-migration"`.
 
 ---
 
-## Step 2 — A closed edition is read-only, not inaccessible · `v0.3.0` · `non-breaking`
+## Step 2 — A closed edition is read-only, not inaccessible · `v0.3.0` · `non-breaking` — **DONE 2026-08-18**
 
 No schema change. `closedAt` already exists and is already set; nothing enforces it.
 
-Add `requireWritableEdition(editionId)` to `app/lib/edition-context.ts` — throws
-"This edition is closed. Reopen it to make changes." when `closedAt` is not null. Call it in
-every write path that resolves an edition:
+Added `requireWritableEdition(editionId)` to `app/lib/edition-context.ts` — throws
+"This edition is closed. Reopen it to make changes." when `closedAt` is not null — plus
+`resolveWritableEditionId()`, the resolve-and-guard pair that the write actions now call in place
+of `resolveEditionId()`. Called in every write path that resolves an edition:
 
 - the 8 action files listed in §1, plus `events/actions.ts`,
 - `updateDrivingRateAction` in [`editions/actions.ts`](../../app/app/(app)/editions/actions.ts),
@@ -256,18 +257,46 @@ every write path that resolves an edition:
   it can be pointed at a closed edition directly. Guard it on the body value, not on the
   caller's own edition.
 
-Passwords, users and templates are global; they stay writable regardless. Say so in the code
-comment, so the next reader doesn't "fix" it.
+**Correction made during step 2: "every write path that *resolves* an edition" is not enough.**
+Most update/delete actions never resolve one — they act on a row by id (`deleteDepartmentAction`,
+`updateJournalEntryAction`, every event/shift action, …). Guarding only the resolving paths would
+leave a closed edition freely editable, which contradicts the settled decision that *every* write
+is refused. So entity-scoped writes guard on the row's own `editionId`, walking the relation up
+where they must (`shift → eventDay → event → editionId`). `Task.editionId` is nullable; those
+tasks are global and stay writable.
+
+Passwords, users, templates **and event types** are global; they stay writable regardless. Said so
+in the code comments, so the next reader doesn't "fix" it.
 
 In the UI, a closed edition shows a banner and hides create/edit/delete affordances rather than
 letting a click fail. The guard is the enforcement; the UI is the courtesy. Both are required —
 hiding buttons alone is not a control.
 
-### Verify
+### Verify — all passed 2026-08-18
 
-Select a closed edition and confirm: pages render with data, exports and invoice PDFs still
-work, every write is refused with the message above, and `curl`-ing the invoices API with a
-closed `editionId` is refused too.
+Production data could not be copied to this machine, so verification ran against a local fixture
+with production's shape (16 departments, 3 cost centers, `Coffre` 135.07, `CompteCourant` 3922.92
+with its IBAN) in a separate `baleinev_verify` database, with `npm start` serving the production
+build and puppeteer driving the real UI. The **same populated edition** was measured open, then
+closed, so the comparison isolates `closedAt`.
+
+- ✅ Pages render with their data while closed — all 11 edition-scoped pages returned 200, and
+  `/money-accounts` and `/journal` showed the same 2 accounts and 4 entries as when open.
+- ✅ Invoice PDF of a closed edition's invoice still generated (200, valid PDF).
+- ✅ Banner shown on edition-scoped routes, absent on `/passwords`.
+- ✅ Create/edit/delete affordances gone while closed and back when open — departments create form,
+  money-accounts create panel, journal edit/delete, invoice delete/duplicate. The invoice **PDF**
+  button stayed in both.
+- ✅ The guard, not the hidden buttons, is the control: a create form rendered while the edition was
+  open, submitted after switching the user into a closed one, was refused with
+  "This edition is closed. Reopen it to make changes."
+- ✅ Entity-scoped guard: a delete form retargeted at a closed edition's department while the user
+  sat in an open edition was refused, and the row survived.
+- ✅ `POST /api/invoices` refused for a closed `editionId` and returned 201 for an open one —
+  guarded on the body value, not the caller's edition. `PATCH`, `PUT` and `DELETE` against a
+  closed edition's invoice were all refused.
+- ✅ `npx tsc --noEmit` clean, `npm run check:design` clean, `npm run build` green. `npm run lint`
+  reports only the 5 pre-existing `no-explicit-any` errors in files this step did not touch.
 
 Tag: `git tag -a v0.3.0 -m "non-breaking"`.
 

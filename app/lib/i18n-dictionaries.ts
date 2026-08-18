@@ -42,6 +42,8 @@ export const dictionaries = {
     common: {
       noEditionSelected: "No edition selected",
       pickEditionHint: "Pick an edition in the sidebar. If the list is empty, create one first.",
+      editionClosedTitle: "is closed.",
+      editionClosedHint: "You can browse, export and print. Switch to an open edition to make changes.",
       charges: "Charges",
       produits: "Earnings",
       result: "Result",
@@ -557,6 +559,8 @@ export const dictionaries = {
     common: {
       noEditionSelected: "Aucun exercice sélectionné",
       pickEditionHint: "Choisissez un exercice dans le menu latéral. Si la liste est vide, créez-en un d'abord.",
+      editionClosedTitle: "est clôturé.",
+      editionClosedHint: "Vous pouvez consulter, exporter et imprimer. Passez à un exercice ouvert pour modifier.",
       charges: "Charges",
       produits: "Produits",
       result: "Résultat",

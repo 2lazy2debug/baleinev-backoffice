@@ -6,6 +6,7 @@ import { AccountType, Prisma } from "@prisma/client";
 
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { requireWritableEdition } from "@/lib/edition-context";
 import { type ActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
 import { decimalToNumber, incrementEditionName, isValidEditionName } from "@/lib/utils";
 
@@ -234,6 +235,8 @@ export async function updateDrivingRateAction(_prevState: ActionState, formData:
     await requireAdmin();
     const editionId = getRequiredString(formData, "editionId");
     const drivingRatePerKm = parsePositiveDecimal(getRequiredString(formData, "drivingRatePerKm"), "Driving rate per km");
+
+    await requireWritableEdition(editionId);
 
     await prisma.edition.update({
       where: { id: editionId },

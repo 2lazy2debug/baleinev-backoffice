@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { ExpenseReportStatus } from "@prisma/client";
 
+import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { decimalToNumber, formatCurrency } from "@/lib/utils";
@@ -100,6 +101,7 @@ export function ExpenseReportsPageClient({
     initialActionState
   );
   const [rejectState, rejectFormAction, isRejecting] = useActionState(rejectExpenseReportAction, initialActionState);
+  const isReadOnly = useEditionReadOnly();
 
   return (
     <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
@@ -202,7 +204,9 @@ export function ExpenseReportsPageClient({
                     </td>
                     {access.role === "ADMIN" ? (
                       <td className="px-3 py-2">
-                        {report.status === ExpenseReportStatus.PENDING ? (
+                        {isReadOnly ? (
+                          <span className="text-xs text-[var(--muted)]">-</span>
+                        ) : report.status === ExpenseReportStatus.PENDING ? (
                           <div className="space-y-2">
                             <form action={approveFormAction}>
                               <input type="hidden" name="expenseReportId" value={report.id} />

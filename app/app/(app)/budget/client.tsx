@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Eye, Pencil, Plus, TrendingDown, TrendingUp, Trash2, X } from "lucide-react";
 
+import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
@@ -46,7 +47,10 @@ type BudgetPageClientProps = {
   emptyStateMessage: string;
 };
 
-export default function BudgetPageClient({ locale, editionName, departments, canManage, emptyStateMessage }: BudgetPageClientProps) {
+export default function BudgetPageClient({ locale, editionName, departments, canManage: canManageProp, emptyStateMessage }: BudgetPageClientProps) {
+  const isReadOnly = useEditionReadOnly();
+  // A closed edition is read-only, so it takes the same path as "not allowed to manage".
+  const canManage = canManageProp && !isReadOnly;
   const copy = dictionaries[locale];
   const router = useRouter();
 

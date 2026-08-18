@@ -115,7 +115,8 @@ app/
 
 | File | Purpose |
 |---|---|
-| `app-shell.tsx` | Persistent sidebar navigation, settings modal (locale + refund profile), sign-out |
+| `app-shell.tsx` | Persistent sidebar navigation, edition picker, settings modal (locale + refund profile), sign-out. Provides the read-only context and renders the closed-edition banner |
+| `edition-read-only.tsx` | `useEditionReadOnly()` / `WritableEditionOnly` / `EditionClosedBanner` — lets pages hide create/edit/delete affordances while the selected edition is closed |
 | `journal-table.tsx` | Full interactive journal entry table with filter, sort, inline edit |
 | `add-journal-entry-modal.tsx` | Modal for creating/prefilling journal entries; used on journal page and from expense-report approval |
 | `sign-out-button.tsx` | Small sign-out button used inside the app shell |
@@ -136,7 +137,7 @@ app/
 | `document-templates.ts` | `[[field]]` renderer, `InvoiceDocumentPayload` type, default invoice HTML template, `ensureDefaultInvoiceTemplate()` |
 | `swiss-qr.ts` | `buildSwissQrPayload()` — builds a SPC-format QR string for Swiss ISO 20022 QR invoices |
 | `department-roles.ts` | `syncDepartmentRolesFromDepartments()` — keeps `DepartmentRole` names in sync with active departments |
-| `edition-context.ts` | The single answer to "which edition is this request in", read from `User.selectedEditionId`: `resolveEditionIdOrNull()` (pages), `resolveEditionId()` (write paths, throws), `resolveEdition()` (the record), `ensureUserEdition()` (the only writer of the seed) |
+| `edition-context.ts` | The single answer to "which edition is this request in", read from `User.selectedEditionId`: `resolveEditionIdOrNull()` (pages), `resolveEditionId()` (write paths, throws), `resolveWritableEditionId()` (write paths, also refuses a closed edition), `requireWritableEdition(id)` (guards a write against a named edition), `resolveEdition()` (the record), `ensureUserEdition()` (the only writer of the seed) |
 | `server-action-helpers.ts` | Shared helpers for server actions: `getRequiredString()`, plus the `ActionState` type (`{ error: string \| null }`), `initialActionState`, and `toActionErrorMessage()` used by every action to report validation failures instead of throwing. Kept free of server-only imports — client components import `initialActionState` from here |
 | `utils.ts` | `formatCurrency()`, `decimalToNumber()`, `incrementEditionName()` |
 

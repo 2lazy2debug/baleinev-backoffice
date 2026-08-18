@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUserAccess, requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { validateProofUpload, type ProofMimeType } from "@/lib/proof-upload";
-import { resolveEditionId } from "@/lib/edition-context";
+import { requireWritableEdition, resolveWritableEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
   getRequiredString,
@@ -67,7 +67,7 @@ export async function createExpenseReportAction(
 ): Promise<ActionState> {
   try {
     const access = await getCurrentUserAccess();
-    const editionId = await resolveEditionId();
+    const editionId = await resolveWritableEditionId();
     const reportType = parseReportType(getRequiredString(formData, "reportType"));
     const submittedPaymentMethod = String(formData.get("paymentMethod") ?? "").trim();
     const date = parseDate(getRequiredString(formData, "date"));
@@ -167,8 +167,10 @@ export async function approveExpenseReportAction(
     // Find the report to get its description for the follow-up task title
     const report = await prisma.expenseReport.findUniqueOrThrow({
       where: { id: expenseReportId },
-      select: { description: true },
+      select: { description: true, editionId: true },
     });
+
+    await requireWritableEdition(report.editionId);
 
     await prisma.expenseReport.update({
       where: { id: expenseReportId },
@@ -199,6 +201,13 @@ export async function rejectExpenseReportAction(
     const access = await requireAdmin();
     const expenseReportId = getRequiredString(formData, "expenseReportId");
     const rejectionReason = String(formData.get("rejectionReason") ?? "").trim() || null;
+
+    const report = await prisma.expenseReport.findUniqueOrThrow({
+      where: { id: expenseReportId },
+      select: { editionId: true },
+    });
+
+    await requireWritableEdition(report.editionId);
 
     await prisma.expenseReport.update({
       where: { id: expenseReportId },

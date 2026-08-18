@@ -5,6 +5,8 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { getPendingTasksForUser } from "@/lib/tasks";
 
 import { deleteAppointmentAction, updateAppointmentAction } from "./actions";
+import { WritableEditionOnly } from "@/components/edition-read-only";
+
 import CalendarPageClient from "./client";
 import { CreateAppointmentForm } from "./create-appointment-form";
 
@@ -91,7 +93,9 @@ export default async function CalendarPage() {
       />
 
       {access.role === "ADMIN" ? (
-        <CreateAppointmentForm copy={copy.calendar} users={users} departments={activeEdition.departments} />
+        <WritableEditionOnly>
+          <CreateAppointmentForm copy={copy.calendar} users={users} departments={activeEdition.departments} />
+        </WritableEditionOnly>
       ) : null}
     </div>
   );

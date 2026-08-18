@@ -1,3 +1,4 @@
+import { WritableEditionOnly } from "@/components/edition-read-only";
 import { TasksCreateModal } from "@/components/tasks-create-modal";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
@@ -43,13 +44,15 @@ export default async function TasksPage() {
         <p className="max-w-3xl text-sm leading-7 text-[var(--muted)]">
           {copy.tasks.subtitle}
         </p>
-        <TasksCreateModal
-          copy={copy.tasks}
-          users={users}
-          isAdmin={access.role === "ADMIN"}
-          createTodoAction={createTodoAction}
-          createTodoTaskAction={createTodoTaskAction}
-        />
+        <WritableEditionOnly>
+          <TasksCreateModal
+            copy={copy.tasks}
+            users={users}
+            isAdmin={access.role === "ADMIN"}
+            createTodoAction={createTodoAction}
+            createTodoTaskAction={createTodoTaskAction}
+          />
+        </WritableEditionOnly>
       </header>
 
       <section className="space-y-5 rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">

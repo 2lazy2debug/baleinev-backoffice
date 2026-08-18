@@ -6,6 +6,8 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
 
 import { MoneyAccountsPageClient } from "./client";
+import { WritableEditionOnly } from "@/components/edition-read-only";
+
 import CreateMoneyAccountForm from "./create-money-account-form";
 
 export default async function MoneyAccountsPage() {
@@ -76,10 +78,12 @@ export default async function MoneyAccountsPage() {
           <MoneyAccountsPageClient locale={locale} accounts={accounts} />
         </div>
 
-        <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
-          <h2 className="text-xl font-semibold">{copy.moneyAccounts.create}</h2>
-          <CreateMoneyAccountForm locale={locale} />
-        </section>
+        <WritableEditionOnly>
+          <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+            <h2 className="text-xl font-semibold">{copy.moneyAccounts.create}</h2>
+            <CreateMoneyAccountForm locale={locale} />
+          </section>
+        </WritableEditionOnly>
       </section>
     </div>
   );

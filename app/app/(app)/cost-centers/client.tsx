@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Pencil, TrendingDown, TrendingUp, Trash2 } from "lucide-react";
 
+import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
@@ -35,13 +36,14 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
     deleteCostCenterAction,
     initialActionState
   );
+  const isReadOnly = useEditionReadOnly();
   const [createState, createFormAction, isCreatingCostCenter] = useActionState(
     createCostCenterAction,
     initialActionState
   );
 
   return (
-    <section className="grid gap-6 xl:grid-cols-[1fr_360px]">
+    <section className={isReadOnly ? "grid gap-6" : "grid gap-6 xl:grid-cols-[1fr_360px]"}>
       <div className="grid gap-4 md:grid-cols-2">
         <FormError message={updateState.error} className="md:col-span-2" />
         <FormError message={deleteState.error} className="md:col-span-2" />
@@ -75,6 +77,7 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
                     </div>
                   </div>
 
+                  {isReadOnly ? null : (
                   <div className="space-y-3">
                     <div className="flex items-center justify-end gap-2">
                       <details className="group">
@@ -111,6 +114,7 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
                       </form>
                     </div>
                   </div>
+                  )}
                 </div>
               </article>
             );
@@ -118,6 +122,7 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
         )}
       </div>
 
+      {isReadOnly ? null : (
       <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
         <h2 className="text-xl font-semibold">{copy.costCenters.create}</h2>
         <form action={createFormAction} className="mt-6 space-y-4">
@@ -152,6 +157,7 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
           </button>
         </form>
       </section>
+      )}
     </section>
   );
 }

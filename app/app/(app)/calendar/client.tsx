@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { useEditionReadOnly } from "@/components/edition-read-only";
 import { type ActionState } from "@/lib/server-action-helpers";
 
 type CalendarTask = {
@@ -128,6 +129,7 @@ export default function CalendarPageClient({
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const isReadOnly = useEditionReadOnly();
   const [currentMonth, setCurrentMonth] = useState(() => toDayStart(new Date()));
   const [selectedDay, setSelectedDay] = useState(() => toDayKey(new Date()));
   const [selectedAppointment, setSelectedAppointment] = useState<CalendarAppointment | null>(null);
@@ -277,7 +279,7 @@ export default function CalendarPageClient({
   }, [dayAppointments, dayTasks]);
 
   const selectedDate = parseIsoDate(selectedDay);
-  const canManageSelectedAppointment = selectedAppointment?.createdById === currentUserId;
+  const canManageSelectedAppointment = selectedAppointment?.createdById === currentUserId && !isReadOnly;
   const HOUR_ROW_HEIGHT = 56;
   const MINUTE_HEIGHT = HOUR_ROW_HEIGHT / 60;
   const hours = Array.from({ length: 24 }, (_, index) => index);

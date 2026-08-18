@@ -30,6 +30,9 @@ Work proceeds in whichever edition each user selected
         │
         ▼
 At year end, admin creates the next edition and closes the old one
+        │
+        ▼
+A closed edition is read-only: still selectable, browsable, exportable, printable
 ```
 
 - `Edition.isDefault` marks the edition that **seeds accounts with no edition yet**. It is written
@@ -38,6 +41,16 @@ At year end, admin creates the next edition and closes the old one
   already using the app keeps the edition they are in.
 - Deleting an edition does not delete its users: the relation is `onDelete: SetNull`, so anyone
   pointing at it has their selection cleared and re-seeds from the default on their next request.
+- **Closing means read-only, not gone.** A closed edition stays in the picker (marked "closed"),
+  its pages render with their data, and exports and invoice PDFs keep working. Every *write*
+  against it is refused with "This edition is closed. Reopen it to make changes."
+- The enforcement is `requireWritableEdition()` in `app/lib/edition-context.ts`, called by every
+  write path that touches edition-scoped data — the action files, and
+  `app/app/api/invoices/route.ts`, which guards the `editionId` from its request body rather than
+  the caller's own edition. The UI additionally hides create/edit/delete affordances and shows a
+  banner, but that is a courtesy; the server guard is the control.
+- **Passwords, users, templates and event types are global** — they carry no `editionId` and stay
+  writable whatever edition the user is in.
 - Creating a new edition does NOT delete old data — historical editions remain fully readable.
 - Opening balances from the old edition can be imported as locked `isOpeningEntry = true` journal
   entries in the new one.

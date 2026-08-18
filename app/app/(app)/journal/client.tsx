@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { useEditionReadOnly } from "@/components/edition-read-only";
 import { JournalTable } from "@/components/journal-table";
 import { AddJournalEntryModal } from "@/components/add-journal-entry-modal";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
@@ -48,6 +49,7 @@ export default function JournalPageClient({ activeEdition, accountBalances, loca
   const [isModalOpen, setIsModalOpen] = useState(Boolean(expensePrefill));
   const router = useRouter();
   const copy = dictionaries[locale].journal;
+  const isReadOnly = useEditionReadOnly();
 
   const handleModalClose = () => {
     setIsModalOpen(false);
@@ -61,13 +63,15 @@ export default function JournalPageClient({ activeEdition, accountBalances, loca
   return (
     <div className="relative flex-1 flex flex-col gap-4">
       {/* Plus button above table */}
-      <button
-        onClick={() => setIsModalOpen(true)}
-        title={copy.addEntry}
-        className="self-start w-10 h-10 rounded-md bg-[var(--accent)] text-white font-bold text-lg hover:bg-[var(--accent-strong)] flex items-center justify-center"
-      >
-        +
-      </button>
+      {isReadOnly ? null : (
+        <button
+          onClick={() => setIsModalOpen(true)}
+          title={copy.addEntry}
+          className="self-start w-10 h-10 rounded-md bg-[var(--accent)] text-white font-bold text-lg hover:bg-[var(--accent-strong)] flex items-center justify-center"
+        >
+          +
+        </button>
+      )}
 
       {/* Modal for adding entry */}
       <AddJournalEntryModal

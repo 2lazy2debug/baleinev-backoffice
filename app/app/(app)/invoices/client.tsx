@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Check, Copy, Plus, RotateCcw, Trash2 } from "lucide-react";
 
+import { useEditionReadOnly } from "@/components/edition-read-only";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { buildSwissQrPayload } from "@/lib/swiss-qr";
 import { formatCurrency } from "@/lib/utils";
@@ -105,6 +106,7 @@ type GeneratedInvoice = {
 
 export default function InvoicesClient({ locale, editionId, accounts, history, earningEntries, defaultTemplate }: Props) {
   const copy = dictionaries[locale];
+  const isReadOnly = useEditionReadOnly();
   const firstAccountId = accounts[0]?.id ?? "";
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -624,13 +626,15 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
 
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}
 
-      <button
-        onClick={openCreateModal}
-        title={copy.invoices.create}
-        className="self-start h-10 w-10 rounded-md bg-[var(--accent)] text-lg font-bold text-white hover:bg-[var(--accent-strong)] flex items-center justify-center"
-      >
-        +
-      </button>
+      {isReadOnly ? null : (
+        <button
+          onClick={openCreateModal}
+          title={copy.invoices.create}
+          className="self-start h-10 w-10 rounded-md bg-[var(--accent)] text-lg font-bold text-white hover:bg-[var(--accent-strong)] flex items-center justify-center"
+        >
+          +
+        </button>
+      )}
 
       <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
         <h2 className="text-xl font-semibold">{copy.invoices.historyTitle}</h2>
@@ -656,13 +660,17 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                   return (
                     <tr key={item.id} className="border-t border-[var(--line)] bg-[var(--panel-strong)]">
                       <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() => refillFromHistory(item)}
-                          className="font-semibold hover:text-[var(--accent)]"
-                        >
-                          {item.invoiceNumber}
-                        </button>
+                        {isReadOnly ? (
+                          <span className="font-semibold">{item.invoiceNumber}</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => refillFromHistory(item)}
+                            className="font-semibold hover:text-[var(--accent)]"
+                          >
+                            {item.invoiceNumber}
+                          </button>
+                        )}
                       </td>
                       <td className="px-4 py-3">{item.invoiceDate}</td>
                       <td className="px-4 py-3">{receiverFirstLine}</td>
@@ -677,7 +685,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                           >
                             {downloadingHistoryId === item.id ? "..." : copy.invoices.generatePdf}
                           </button>
-                          {item.paidAt ? (
+                          {isReadOnly ? null : item.paidAt ? (
                             <button
                               type="button"
                               onClick={() => handleSetInvoiceUnpaid(item)}
@@ -702,23 +710,27 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                               <Check className="h-3.5 w-3.5" />
                             </button>
                           )}
-                          <button
-                            type="button"
-                            onClick={() => duplicateFromHistory(item)}
-                            title="Duplicate invoice"
-                            className="inline-flex rounded-md border border-[var(--line)] p-2 hover:bg-[var(--panel)]"
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteInvoice(item)}
-                            disabled={Boolean(item.paidAt) || deleteActionInvoiceId === item.id}
-                            title={item.paidAt ? copy.invoices.deleteBlockedPaid : copy.invoices.deleteInvoice}
-                            className="inline-flex rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          {isReadOnly ? null : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => duplicateFromHistory(item)}
+                                title="Duplicate invoice"
+                                className="inline-flex rounded-md border border-[var(--line)] p-2 hover:bg-[var(--panel)]"
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteInvoice(item)}
+                                disabled={Boolean(item.paidAt) || deleteActionInvoiceId === item.id}
+                                title={item.paidAt ? copy.invoices.deleteBlockedPaid : copy.invoices.deleteInvoice}
+                                className="inline-flex rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

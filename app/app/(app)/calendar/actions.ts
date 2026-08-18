@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getCurrentUserAccess, requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
-import { resolveEditionId } from "@/lib/edition-context";
+import { requireWritableEdition, resolveWritableEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
   getRequiredString,
@@ -23,7 +23,7 @@ function parseDateTime(raw: string) {
 export async function createAppointmentAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const access = await requireAdmin();
-    const editionId = await resolveEditionId();
+    const editionId = await resolveWritableEditionId();
 
     const title = getRequiredString(formData, "title");
     const description = getRequiredString(formData, "description");
@@ -95,12 +95,14 @@ export async function updateAppointmentAction(_prevState: ActionState, formData:
 
     const existing = await prisma.appointment.findUnique({
       where: { id: appointmentId },
-      select: { id: true, createdById: true },
+      select: { id: true, createdById: true, editionId: true },
     });
 
     if (!existing) {
       throw new Error("Appointment not found.");
     }
+
+    await requireWritableEdition(existing.editionId);
 
     if (existing.createdById !== access.id) {
       throw new Error("Only the creator can edit this appointment.");
@@ -130,12 +132,14 @@ export async function deleteAppointmentAction(_prevState: ActionState, formData:
 
     const existing = await prisma.appointment.findUnique({
       where: { id: appointmentId },
-      select: { id: true, createdById: true },
+      select: { id: true, createdById: true, editionId: true },
     });
 
     if (!existing) {
       throw new Error("Appointment not found.");
     }
+
+    await requireWritableEdition(existing.editionId);
 
     if (existing.createdById !== access.id) {
       throw new Error("Only the creator can delete this appointment.");

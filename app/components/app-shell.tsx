@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useState, useRef } from "react";
 
+import { EditionClosedBanner, EditionReadOnlyProvider } from "@/components/edition-read-only";
 import { SignOutButton } from "@/components/sign-out-button";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 
@@ -48,6 +49,8 @@ type AppShellProps = {
   };
 };
 
+const GLOBAL_ROUTES = ["/passwords", "/users", "/templates", "/editions"];
+
 export function AppShell({ children, userName, editions, selectedEditionId, locale, role, pendingTaskCount, refundProfile }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -64,6 +67,14 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
   const [isCollapsed, setIsCollapsed] = useState(false);
   const asideRef = useRef<HTMLElement | null>(null);
   const copy = dictionaries[locale].shell;
+
+  const selectedEdition = editions.find((edition) => edition.id === selectedEditionId) ?? null;
+  const isEditionReadOnly = selectedEdition?.isClosed ?? false;
+  // Passwords, users, templates and editions are global — the selected edition
+  // being closed says nothing about whether they can be edited.
+  const isEditionScopedRoute = !GLOBAL_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
 
   type NavigationItem = {
     type: "item";
@@ -279,7 +290,12 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
         </aside>
 
         <main className="min-w-0 flex-1 p-6 lg:p-8">
-          {children}
+          <EditionReadOnlyProvider isReadOnly={isEditionReadOnly}>
+            {isEditionReadOnly && isEditionScopedRoute && selectedEdition ? (
+              <EditionClosedBanner locale={locale} editionName={selectedEdition.name} />
+            ) : null}
+            {children}
+          </EditionReadOnlyProvider>
         </main>
       </div>
 

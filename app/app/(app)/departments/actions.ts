@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
-import { resolveEditionId } from "@/lib/edition-context";
+import { requireWritableEdition, resolveWritableEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
   getRequiredString,
@@ -14,7 +14,7 @@ import {
 export async function createDepartmentAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
-    const editionId = await resolveEditionId();
+    const editionId = await resolveWritableEditionId();
     const name = getRequiredString(formData, "name");
 
     await prisma.department.create({
@@ -43,6 +43,17 @@ export async function deleteDepartmentAction(_prevState: ActionState, formData: 
   try {
     await requireAdmin();
     const departmentId = getRequiredString(formData, "departmentId");
+
+    const department = await prisma.department.findUnique({
+      where: { id: departmentId },
+      select: { editionId: true },
+    });
+
+    if (!department) {
+      throw new Error("Department not found.");
+    }
+
+    await requireWritableEdition(department.editionId);
 
     const [budgetCount, journalCount] = await Promise.all([
       prisma.budgetLine.count({ where: { departmentId } }),

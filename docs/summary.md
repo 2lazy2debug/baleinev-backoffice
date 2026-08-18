@@ -15,10 +15,10 @@ role separation, an approval workflow for expense claims, Swiss QR invoice gener
 scheduling.
 
 Everything is scoped to an **edition each user picks for themselves**. Pages call
-`resolveEditionIdOrNull()` and write paths call `resolveEditionId()`
+`resolveEditionIdOrNull()` and write paths call `resolveWritableEditionId()`
 ([app/lib/edition-context.ts](../app/lib/edition-context.ts)), both of which read
-`User.selectedEditionId`; writes refuse to run when the user has no edition. Two people can work in
-two different editions at once.
+`User.selectedEditionId`; writes refuse to run when the user has no edition, or when that edition is
+closed. Two people can work in two different editions at once.
 
 ## Who uses it
 
@@ -83,7 +83,8 @@ withdrawing removes both. Admins can assign users directly.
 
 **Edition lifecycle.** Admins create editions, mark one as the default that new accounts start in,
 set the driving rate, and close an edition (`closeEditionAction`), which carries balances forward as
-locked opening entries. Each user switches their own edition from the sidebar picker
+locked opening entries. A **closed edition is read-only**: still selectable, browsable, exportable
+and printable, but every write is refused. Each user switches their own edition from the sidebar picker
 (`POST /api/preferences/edition`); changing the default moves nobody.
 
 ## Architecture

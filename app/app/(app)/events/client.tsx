@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 
+import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -141,6 +142,8 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
     withdrawFromShiftAction,
     initialActionState
   );
+  const isReadOnly = useEditionReadOnly();
+  const canManageEvents = isAdmin && !isReadOnly;
   const [adminAssignState, adminAssignFormAction, isAdminAssigning] = useActionState(
     adminAssignUserToShiftAction,
     initialActionState
@@ -152,6 +155,8 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
 
   return (
     <div className="space-y-10">
+      {/* Event types are global, so they stay editable in a closed edition.
+          Everything below them belongs to the edition and does not. */}
       {/* ── Admin: Event types ────────────────────────────────────────────── */}
       {isAdmin ? (
         <section className="space-y-4">
@@ -203,7 +208,7 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
       ) : null}
 
       {/* ── Admin: Create event ───────────────────────────────────────────── */}
-      {isAdmin ? (
+      {canManageEvents ? (
         <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6 space-y-4">
           <h2 className="text-lg font-semibold">{copy.createEvent}</h2>
           {eventTypes.length === 0 ? (
@@ -315,7 +320,7 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
                   {event.costCenter ? <p className="text-xs text-[var(--muted)]">{event.costCenter.code}</p> : null}
                   {event.notes ? <p className="mt-1 text-xs text-[var(--muted)]">{event.notes}</p> : null}
                 </div>
-                {isAdmin ? (
+                {canManageEvents ? (
                   <form action={deleteEventFormAction}>
                     <input type="hidden" name="id" value={event.id} />
                     <button disabled={isDeletingEvent} className="text-xs text-[var(--muted)] hover:text-rose-400 disabled:opacity-50">
@@ -338,7 +343,7 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
                           </span>
                         ) : null}
                       </div>
-                      {isAdmin ? (
+                      {canManageEvents ? (
                         <form action={toggleDayOffFormAction}>
                           <input type="hidden" name="id" value={day.id} />
                           <button disabled={isTogglingDayOff} className="text-xs text-[var(--muted)] hover:text-[var(--ink)] disabled:opacity-50">
@@ -382,7 +387,7 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
                                   </div>
 
                                   <div className="flex flex-wrap items-center gap-2">
-                                    {signed ? (
+                                    {isReadOnly ? null : signed ? (
                                       <form action={withdrawFormAction}>
                                         <input type="hidden" name="shiftId" value={shift.id} />
                                         <button
@@ -405,7 +410,7 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
                                     ) : null}
 
                                     {/* Admin: assign someone else */}
-                                    {isAdmin && !isFull ? (
+                                    {canManageEvents && !isFull ? (
                                       <form action={adminAssignFormAction} className="flex items-center gap-1">
                                         <input type="hidden" name="shiftId" value={shift.id} />
                                         <select
@@ -430,7 +435,7 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
                                     ) : null}
 
                                     {/* Admin: remove staff, add shift, delete shift */}
-                                    {isAdmin ? (
+                                    {canManageEvents ? (
                                       <form action={deleteShiftFormAction}>
                                         <input type="hidden" name="id" value={shift.id} />
                                         <button disabled={isDeletingShift} className="text-xs text-[var(--muted)] hover:text-rose-400 disabled:opacity-50">×</button>
@@ -440,7 +445,7 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
                                 </div>
 
                                 {/* Admin: remove individual staff members */}
-                                {isAdmin && shift.assignments.length > 0 ? (
+                                {canManageEvents && shift.assignments.length > 0 ? (
                                   <div className="flex flex-wrap gap-1.5 border-t border-[var(--line)] px-4 py-2">
                                     {shift.assignments.map((a) => (
                                       <form key={a.id} action={withdrawFormAction} className="inline-flex items-center gap-1">
@@ -458,7 +463,7 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
                         )}
 
                         {/* Admin: add shift to this day */}
-                        {isAdmin ? (
+                        {canManageEvents ? (
                           <AddShiftForm
                             eventDayId={day.id}
                             existingShifts={day.shifts.map((shift) => ({ startTime: shift.startTime, endTime: shift.endTime }))}

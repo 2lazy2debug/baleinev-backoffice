@@ -107,7 +107,7 @@ Top-level scoping unit for a fiscal year / accounting period.
 | `name` | String | Unique — e.g. "2024-2025" |
 | `isDefault` | Boolean | At most one. Seeds `User.selectedEditionId` for accounts that have none; never a runtime fallback |
 | `isActive` | Boolean | Superseded by `isDefault` and read by nothing. Dropped in its own migration (plan 002 step 5) |
-| `closedAt` | DateTime? | Set when the year is closed |
+| `closedAt` | DateTime? | Set when the year is closed. Non-null makes the edition read-only — `requireWritableEdition()` refuses every write against it, while reads, exports and PDFs keep working |
 | `openingBalance` | Decimal | Carry-forward from previous edition |
 | `usersSelecting` | `User[]` | Users currently working in this edition |
 

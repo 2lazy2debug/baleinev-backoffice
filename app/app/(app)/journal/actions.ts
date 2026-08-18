@@ -5,7 +5,7 @@ import { AccountType, TaskType } from "@prisma/client";
 
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
-import { resolveEditionId } from "@/lib/edition-context";
+import { requireWritableEdition, resolveWritableEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
   getRequiredString,
@@ -27,7 +27,7 @@ function toPositiveAmount(raw: string) {
 export async function createJournalEntryAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const admin = await requireAdmin();
-    const editionId = await resolveEditionId();
+    const editionId = await resolveWritableEditionId();
 
     const departmentId = getRequiredString(formData, "departmentId");
     const moneyAccountId = getRequiredString(formData, "moneyAccountId");
@@ -99,12 +99,14 @@ export async function deleteJournalEntryAction(_prevState: ActionState, formData
 
     const entry = await prisma.journalEntry.findUnique({
       where: { id: journalEntryId },
-      select: { isOpeningEntry: true, linkedInvoice: { select: { id: true } } },
+      select: { editionId: true, isOpeningEntry: true, linkedInvoice: { select: { id: true } } },
     });
 
     if (!entry) {
       throw new Error("Journal entry not found.");
     }
+
+    await requireWritableEdition(entry.editionId);
 
     if (entry.isOpeningEntry) {
       throw new Error("Opening entries are locked and cannot be deleted.");
@@ -139,12 +141,14 @@ export async function updateJournalEntryAction(_prevState: ActionState, formData
 
     const entry = await prisma.journalEntry.findUnique({
       where: { id: journalEntryId },
-      select: { isOpeningEntry: true },
+      select: { editionId: true, isOpeningEntry: true },
     });
 
     if (!entry) {
       throw new Error("Journal entry not found.");
     }
+
+    await requireWritableEdition(entry.editionId);
 
     if (entry.isOpeningEntry) {
       throw new Error("Opening entries are locked and cannot be edited.");

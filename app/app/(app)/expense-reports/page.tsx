@@ -4,6 +4,8 @@ import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
 
+import { WritableEditionOnly } from "@/components/edition-read-only";
+
 import { ExpenseReportsPageClient } from "./client";
 import CreateExpenseReportForm from "./create-expense-report-form";
 
@@ -57,6 +59,7 @@ export default async function ExpenseReportsPage() {
       </header>
 
       <section className="grid gap-6 xl:grid-cols-[420px_1fr]">
+        <WritableEditionOnly>
         <CreateExpenseReportForm
           departments={activeEdition.departments
             .filter((department) => access.role === "ADMIN" || access.departmentRoleNames.includes(department.name))
@@ -87,6 +90,7 @@ export default async function ExpenseReportsPage() {
             selectDepartment: copy.journal.selectDepartment,
           }}
         />
+        </WritableEditionOnly>
 
         <ExpenseReportsPageClient
           expenseReports={activeEdition.expenseReports}

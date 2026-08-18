@@ -5,12 +5,19 @@ import { revalidatePath } from "next/cache";
 
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
-import { resolveEditionId } from "@/lib/edition-context";
+import { requireWritableEdition, resolveWritableEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
   getRequiredString,
   toActionErrorMessage,
 } from "@/lib/server-action-helpers";
+
+/** Some tasks are global (`Task.editionId` is null); those stay writable. */
+async function requireWritableTaskEdition(editionId: string | null) {
+  if (editionId) {
+    await requireWritableEdition(editionId);
+  }
+}
 
 export async function resolveTaskAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
@@ -18,6 +25,8 @@ export async function resolveTaskAction(_prevState: ActionState, formData: FormD
     const taskId = getRequiredString(formData, "taskId");
 
     const task = await prisma.task.findUniqueOrThrow({ where: { id: taskId } });
+
+    await requireWritableTaskEdition(task.editionId);
 
     // Users can only resolve tasks assigned to them; admins can also resolve role-scoped tasks
     const canResolve =
@@ -47,12 +56,15 @@ async function getManagedTodoForUser(todoId: string, userId: string) {
     select: {
       id: true,
       createdById: true,
+      editionId: true,
     },
   });
 
   if (!todo) {
     throw new Error("Todo not found.");
   }
+
+  await requireWritableEdition(todo.editionId);
 
   if (todo.createdById !== userId) {
     throw new Error("You can only manage your own todos.");
@@ -87,7 +99,7 @@ function parseOptionalAssigneeId(formData: FormData, isAdmin: boolean) {
 export async function createTodoAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const access = await getCurrentUserAccess();
-    const editionId = await resolveEditionId();
+    const editionId = await resolveWritableEditionId();
 
     const title = getRequiredString(formData, "title");
     const description = String(formData.get("description") ?? "").trim() || null;
@@ -163,7 +175,7 @@ export async function deleteTodoAction(_prevState: ActionState, formData: FormDa
 export async function createTodoTaskAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const access = await getCurrentUserAccess();
-    const editionId = await resolveEditionId();
+    const editionId = await resolveWritableEditionId();
     const todoIdRaw = String(formData.get("todoId") ?? "").trim();
 
     if (todoIdRaw) {
@@ -209,6 +221,7 @@ export async function updateTodoTaskAction(_prevState: ActionState, formData: Fo
         id: true,
         type: true,
         todoId: true,
+        editionId: true,
         todo: {
           select: {
             createdById: true,
@@ -221,6 +234,8 @@ export async function updateTodoTaskAction(_prevState: ActionState, formData: Fo
     if (!existingTask) {
       throw new Error("Todo task not found.");
     }
+
+    await requireWritableTaskEdition(existingTask.editionId);
 
     if (existingTask.type !== TaskType.GENERAL) {
       throw new Error("Only manually created tasks can be edited here.");
@@ -267,6 +282,7 @@ export async function deleteTodoTaskAction(_prevState: ActionState, formData: Fo
       select: {
         id: true,
         type: true,
+        editionId: true,
         todo: {
           select: {
             createdById: true,
@@ -279,6 +295,8 @@ export async function deleteTodoTaskAction(_prevState: ActionState, formData: Fo
     if (!existingTask) {
       throw new Error("Todo task not found.");
     }
+
+    await requireWritableTaskEdition(existingTask.editionId);
 
     if (existingTask.type !== TaskType.GENERAL) {
       throw new Error("Only manually created tasks can be deleted here.");
@@ -318,6 +336,7 @@ export async function setTodoTaskStatusAction(_prevState: ActionState, formData:
         id: true,
         type: true,
         assignedToUserId: true,
+        editionId: true,
         todo: {
           select: {
             createdById: true,
@@ -330,6 +349,8 @@ export async function setTodoTaskStatusAction(_prevState: ActionState, formData:
     if (!existingTask) {
       throw new Error("Todo task not found.");
     }
+
+    await requireWritableTaskEdition(existingTask.editionId);
 
     if (existingTask.type !== TaskType.GENERAL) {
       throw new Error("Only manually created tasks can be updated here.");

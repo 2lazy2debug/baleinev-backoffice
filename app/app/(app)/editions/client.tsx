@@ -67,6 +67,7 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
                 <p className="mt-3 text-sm text-[var(--muted)]">
                   {edition._count.departments} {copy.editions.departments}, {edition._count.moneyAccounts} {copy.editions.moneyAccounts}, {edition._count.costCenters} {copy.editions.costCenters}, {edition._count.journalEntries} {copy.editions.journalEntries}.
                 </p>
+                {edition.closedAt ? null : (
                 <form action={updateRateFormAction} className="mt-3 flex items-center gap-2">
                   <input type="hidden" name="editionId" value={edition.id} />
                   <label className="text-xs font-medium text-[var(--muted)]">{copy.editions.drivingRatePerKm}</label>
@@ -85,6 +86,7 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
                     {copy.shell.save}
                   </button>
                 </form>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-2">

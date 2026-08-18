@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Trash2 } from "lucide-react";
 
+import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -17,9 +18,10 @@ type DepartmentItem = {
 export function DepartmentsPageClient({ departments }: { departments: DepartmentItem[] }) {
   const [deleteState, deleteFormAction, isDeleting] = useActionState(deleteDepartmentAction, initialActionState);
   const [createState, createFormAction, isCreating] = useActionState(createDepartmentAction, initialActionState);
+  const isReadOnly = useEditionReadOnly();
 
   return (
-    <section className="grid gap-6 xl:grid-cols-[1fr_360px]">
+    <section className={isReadOnly ? "grid gap-6" : "grid gap-6 xl:grid-cols-[1fr_360px]"}>
       <div className="grid gap-4 md:grid-cols-2">
         <FormError message={deleteState.error} className="md:col-span-2" />
         {departments.length === 0 ? (
@@ -37,22 +39,25 @@ export function DepartmentsPageClient({ departments }: { departments: Department
                   </p>
                 </div>
 
-                <form action={deleteFormAction}>
-                  <input type="hidden" name="departmentId" value={department.id} />
-                  <button
-                    disabled={isDeleting}
-                    title="Delete"
-                    className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:opacity-50"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </form>
+                {isReadOnly ? null : (
+                  <form action={deleteFormAction}>
+                    <input type="hidden" name="departmentId" value={department.id} />
+                    <button
+                      disabled={isDeleting}
+                      title="Delete"
+                      className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:opacity-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </form>
+                )}
               </div>
             </article>
           ))
         )}
       </div>
 
+      {isReadOnly ? null : (
       <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
         <h2 className="text-xl font-semibold">Create a department</h2>
         <form action={createFormAction} className="mt-6 space-y-4">
@@ -76,6 +81,7 @@ export function DepartmentsPageClient({ departments }: { departments: Department
           </button>
         </form>
       </section>
+      )}
     </section>
   );
 }

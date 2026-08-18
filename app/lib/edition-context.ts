@@ -108,3 +108,33 @@ export async function resolveEdition(): Promise<EditionContext | null> {
 
   return { ...edition, drivingRatePerKm: Number(edition.drivingRatePerKm) };
 }
+
+/**
+ * Refuses a write against a closed edition. Closing means read-only, not gone:
+ * pages, exports and PDFs keep working, every write is turned away here.
+ *
+ * Passwords, users, templates and event types carry no `editionId` — they are
+ * global on purpose and stay writable whatever edition the user is in. Do not
+ * add this guard to them.
+ */
+export async function requireWritableEdition(editionId: string): Promise<string> {
+  const edition = await prisma.edition.findUnique({
+    where: { id: editionId },
+    select: { closedAt: true },
+  });
+
+  if (!edition) {
+    throw new Error("Edition not found.");
+  }
+
+  if (edition.closedAt) {
+    throw new Error("This edition is closed. Reopen it to make changes.");
+  }
+
+  return editionId;
+}
+
+/** Resolve and guard in one call, for writes against the user's own edition. */
+export async function resolveWritableEditionId(): Promise<string> {
+  return requireWritableEdition(await resolveEditionId());
+}

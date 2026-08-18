@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { deleteJournalEntryAction, updateJournalEntryAction } from "@/app/(app)/journal/actions";
+import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
@@ -256,6 +257,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   }
   const [saveState, saveFormAction, isSaving] = useActionState(handleSaveEntry, initialActionState);
   const [deleteState, deleteFormAction, isDeleting] = useActionState(deleteJournalEntryAction, initialActionState);
+  const isReadOnly = useEditionReadOnly();
 
   const uniqueDepartments = [...new Set(entries.map((e) => e.department?.name).filter(Boolean))];
   const uniqueAccounts = [...new Set(entries.map((e) => e.moneyAccount.name))];
@@ -482,7 +484,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                     {formatCurrency(runningBalanceByEntryId[entry.id] ?? accountBalances[entry.moneyAccount.name] ?? 0)}
                   </td>
                   <td className="px-4 py-2">
-                    {entry.isOpeningEntry ? (
+                    {entry.isOpeningEntry || isReadOnly ? (
                       <span className="text-xs text-[var(--muted)]">{copy.locked}</span>
                     ) : isEditing ? (
                       <div className="flex items-center gap-2">

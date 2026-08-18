@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { requireWritableEdition } from "@/lib/edition-context";
 
 function getRequiredString(body: Record<string, unknown>, key: string) {
   const value = String(body[key] ?? "").trim();
@@ -82,6 +83,10 @@ export async function POST(request: Request) {
     const editionId = getRequiredString(body, "editionId");
     const lineItems = getLineItems(body);
 
+    // This route names its own edition rather than the caller's, so the
+    // read-only guard has to run against the body value.
+    await requireWritableEdition(editionId);
+
     const created = await prisma.invoice.create({
       data: {
         editionId,
@@ -146,6 +151,8 @@ export async function PATCH(request: Request) {
     if (!invoice) {
       return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
     }
+
+    await requireWritableEdition(invoice.editionId);
 
     if (status === "PAID") {
       const journalEntryId = getRequiredString(body, "journalEntryId");
@@ -228,6 +235,7 @@ export async function PUT(request: Request) {
       where: { id: invoiceId },
       select: {
         id: true,
+        editionId: true,
         invoiceNumber: true,
         paidAt: true,
         linkedJournalEntryId: true,
@@ -237,6 +245,8 @@ export async function PUT(request: Request) {
     if (!existing) {
       return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
     }
+
+    await requireWritableEdition(existing.editionId);
 
     if (existing.invoiceNumber !== invoiceNumber) {
       return NextResponse.json({ error: "Invoice number cannot be changed for an existing invoice." }, { status: 400 });
@@ -302,6 +312,7 @@ export async function DELETE(request: Request) {
       where: { id: invoiceId },
       select: {
         id: true,
+        editionId: true,
         linkedJournalEntryId: true,
       },
     });
@@ -309,6 +320,8 @@ export async function DELETE(request: Request) {
     if (!invoice) {
       return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
     }
+
+    await requireWritableEdition(invoice.editionId);
 
     if (invoice.linkedJournalEntryId) {
       return NextResponse.json({ error: "Paid invoices cannot be deleted. Set as unpaid first." }, { status: 409 });

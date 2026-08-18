@@ -6,6 +6,7 @@ import { Check, Circle, Pencil, Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import { buttonClasses } from "@/lib/button-classes";
+import { useEditionReadOnly } from "@/components/edition-read-only";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { decimalToNumber, formatCurrency } from "@/lib/utils";
 
@@ -124,6 +125,7 @@ export function TasksPageClient({
   users,
   activeEdition,
 }: TasksPageClientProps) {
+  const isReadOnly = useEditionReadOnly();
   const [resolveState, resolveFormAction, isResolving] = useActionState(resolveTaskAction, initialActionState);
   const [updateTaskState, updateTaskFormAction, isUpdatingTask] = useActionState(
     updateTodoTaskAction,
@@ -181,7 +183,7 @@ export function TasksPageClient({
             const eventDay = shift?.eventDay;
             const event = eventDay?.event;
             const isGeneral = task.type === "GENERAL";
-            const canManageTask = task.createdById === access.id;
+            const canManageTask = task.createdById === access.id && !isReadOnly;
 
             return (
               <div key={task.id} className="rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] p-3">
@@ -256,6 +258,7 @@ export function TasksPageClient({
                     </div>
 
                     <div className="mt-2 flex flex-wrap gap-2">
+                      {isReadOnly ? null : (
                       <form action={statusFormAction}>
                         <input type="hidden" name="todoTaskId" value={task.id} />
                         <input
@@ -267,6 +270,7 @@ export function TasksPageClient({
                           {task.status === "DONE" ? copy.tasks.markPending : copy.tasks.markDone}
                         </button>
                       </form>
+                      )}
                       {canManageTask ? (
                         <form action={deleteTaskFormAction}>
                           <input type="hidden" name="todoTaskId" value={task.id} />
@@ -313,12 +317,14 @@ export function TasksPageClient({
                       </p>
                     ) : null}
 
-                    <form action={resolveFormAction} className="mt-2">
-                      <input type="hidden" name="taskId" value={task.id} />
-                      <button disabled={isResolving} className={buttonClasses.text.primary}>
-                        {copy.tasks.markDone}
-                      </button>
-                    </form>
+                    {isReadOnly ? null : (
+                      <form action={resolveFormAction} className="mt-2">
+                        <input type="hidden" name="taskId" value={task.id} />
+                        <button disabled={isResolving} className={buttonClasses.text.primary}>
+                          {copy.tasks.markDone}
+                        </button>
+                      </form>
+                    )}
                   </>
                 )}
               </div>
@@ -340,9 +346,10 @@ interface TodoCardProps {
 }
 
 function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps) {
+  const isReadOnly = useEditionReadOnly();
   const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
   const [deletingTodoId, setDeletingTodoId] = useState<string | null>(null);
-  const canManageTodoTasks = todo.createdById === access.id;
+  const canManageTodoTasks = todo.createdById === access.id && !isReadOnly;
 
   const isEditing = editingTodoId === todo.id;
   const isDeleting = deletingTodoId === todo.id;
@@ -435,7 +442,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
             </p>
           </div>
           <div className="flex shrink-0 gap-1">
-            {isAdmin && todo.createdById === access.id ? (
+            {isAdmin && todo.createdById === access.id && !isReadOnly ? (
               <>
                 <button
                   type="button"
@@ -580,6 +587,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-1">
+                  {isReadOnly ? null : (
                   <form action={statusFormAction} className="inline">
                     <input type="hidden" name="todoTaskId" value={task.id} />
                     <input
@@ -601,6 +609,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
                       )}
                     </button>
                   </form>
+                  )}
                   {canManageTodoTasks ? (
                     <>
                       <form action={updateTaskFormAction} className="inline">

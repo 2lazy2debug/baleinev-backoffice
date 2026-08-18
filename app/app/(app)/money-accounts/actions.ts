@@ -5,7 +5,7 @@ import { MoneyAccountType } from "@prisma/client";
 
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
-import { resolveEditionId } from "@/lib/edition-context";
+import { requireWritableEdition, resolveWritableEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
   getRequiredString,
@@ -33,10 +33,23 @@ function parseOptionalCountry(formData: FormData) {
   return value || "CH";
 }
 
+async function requireWritableMoneyAccount(moneyAccountId: string) {
+  const account = await prisma.moneyAccount.findUnique({
+    where: { id: moneyAccountId },
+    select: { editionId: true },
+  });
+
+  if (!account) {
+    throw new Error("Money account not found.");
+  }
+
+  await requireWritableEdition(account.editionId);
+}
+
 export async function createMoneyAccountAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
-    const editionId = await resolveEditionId();
+    const editionId = await resolveWritableEditionId();
     const name = getRequiredString(formData, "name");
     const type = getRequiredString(formData, "type") as MoneyAccountType;
     const openingBalance = parseOpeningBalance(formData);
@@ -73,6 +86,8 @@ export async function updateMoneyAccountAction(_prevState: ActionState, formData
     const name = getRequiredString(formData, "name");
     const openingBalance = parseOpeningBalance(formData);
 
+    await requireWritableMoneyAccount(moneyAccountId);
+
     await prisma.moneyAccount.update({
       where: { id: moneyAccountId },
       data: {
@@ -101,6 +116,9 @@ export async function deleteMoneyAccountAction(_prevState: ActionState, formData
   try {
     await requireAdmin();
     const moneyAccountId = getRequiredString(formData, "moneyAccountId");
+
+    await requireWritableMoneyAccount(moneyAccountId);
+
     const journalCount = await prisma.journalEntry.count({ where: { moneyAccountId } });
 
     if (journalCount > 0) {

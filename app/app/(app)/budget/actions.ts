@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
-import { resolveEditionId } from "@/lib/edition-context";
+import { resolveWritableEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
   getRequiredString,
@@ -26,7 +26,7 @@ function toPositiveAmount(raw: string) {
 export async function createBudgetLineAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
-    const editionId = await resolveEditionId();
+    const editionId = await resolveWritableEditionId();
 
     const departmentId = getRequiredString(formData, "departmentId");
     const accountTypeRaw = getRequiredString(formData, "accountType");
@@ -83,7 +83,7 @@ async function requireEditionBudgetLine(budgetLineId: string, editionId: string)
 export async function updateBudgetLineAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
-    const editionId = await resolveEditionId();
+    const editionId = await resolveWritableEditionId();
     const budgetLineId = getRequiredString(formData, "budgetLineId");
     const label = getRequiredString(formData, "label");
     const amountRaw = getRequiredString(formData, "amount");
@@ -109,7 +109,7 @@ export async function updateBudgetLineAction(_prevState: ActionState, formData: 
 export async function deleteBudgetLineAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
-    const editionId = await resolveEditionId();
+    const editionId = await resolveWritableEditionId();
     const budgetLineId = getRequiredString(formData, "budgetLineId");
 
     await requireEditionBudgetLine(budgetLineId, editionId);

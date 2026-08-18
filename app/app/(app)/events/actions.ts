@@ -6,15 +6,58 @@ import { getCurrentUserAccess, requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { createUserTask } from "@/lib/tasks";
 import { TaskType } from "@prisma/client";
-import { resolveEditionId } from "@/lib/edition-context";
+import { requireWritableEdition, resolveWritableEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
   getRequiredString,
   toActionErrorMessage,
 } from "@/lib/server-action-helpers";
 
+// Everything below an event belongs to the event's edition, so the read-only
+// guard has to walk back up to it. Event types are the exception: they are
+// global, carry no `editionId`, and stay writable in a closed edition.
+
+async function requireWritableEvent(eventId: string) {
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { editionId: true },
+  });
+
+  if (!event) {
+    throw new Error("Event not found.");
+  }
+
+  await requireWritableEdition(event.editionId);
+}
+
+async function requireWritableEventDay(eventDayId: string) {
+  const eventDay = await prisma.eventDay.findUnique({
+    where: { id: eventDayId },
+    select: { event: { select: { editionId: true } } },
+  });
+
+  if (!eventDay) {
+    throw new Error("Event day not found.");
+  }
+
+  await requireWritableEdition(eventDay.event.editionId);
+}
+
+async function requireWritableShift(shiftId: string) {
+  const shift = await prisma.eventShift.findUnique({
+    where: { id: shiftId },
+    select: { eventDay: { select: { event: { select: { editionId: true } } } } },
+  });
+
+  if (!shift) {
+    throw new Error("Shift not found.");
+  }
+
+  await requireWritableEdition(shift.eventDay.event.editionId);
+}
+
 // ────────────────────────────────────────────────────────────────────────────
-// Event type CRUD (admin only)
+// Event type CRUD (admin only, global — not edition-scoped)
 // ────────────────────────────────────────────────────────────────────────────
 
 export async function createEventTypeAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -85,7 +128,7 @@ export async function createEventAction(_prevState: ActionState, formData: FormD
   try {
     await requireAdmin();
 
-    const editionId = await resolveEditionId();
+    const editionId = await resolveWritableEditionId();
     const eventTypeId = getRequiredString(formData, "eventTypeId");
     const name = getRequiredString(formData, "name");
     const startDate = new Date(getRequiredString(formData, "startDate"));
@@ -130,6 +173,8 @@ export async function updateEventAction(_prevState: ActionState, formData: FormD
     }
     if (endDate < startDate) throw new Error("End date must be after start date.");
 
+    await requireWritableEvent(id);
+
     await prisma.event.update({ where: { id }, data: { name, startDate, endDate, costCenterId, notes } });
 
     // Reconcile event days: add new, remove gone, keep existing (preserve isOff)
@@ -164,6 +209,7 @@ export async function deleteEventAction(_prevState: ActionState, formData: FormD
   try {
     await requireAdmin();
     const id = getRequiredString(formData, "id");
+    await requireWritableEvent(id);
     await prisma.event.delete({ where: { id } });
     revalidatePath("/events");
     return { error: null };
@@ -180,6 +226,7 @@ export async function toggleEventDayOffAction(_prevState: ActionState, formData:
   try {
     await requireAdmin();
     const id = getRequiredString(formData, "id");
+    await requireWritableEventDay(id);
     const current = await prisma.eventDay.findUniqueOrThrow({ where: { id }, select: { isOff: true } });
     await prisma.eventDay.update({ where: { id }, data: { isOff: !current.isOff } });
     revalidatePath("/events");
@@ -202,6 +249,8 @@ export async function addShiftAction(_prevState: ActionState, formData: FormData
     const role = getRequiredString(formData, "role");
     const capacity = Math.max(1, parseInt(String(formData.get("capacity") ?? "1"), 10));
 
+    await requireWritableEventDay(eventDayId);
+
     await prisma.eventShift.create({ data: { eventDayId, startTime, endTime, role, capacity } });
     revalidatePath("/events");
     return { error: null };
@@ -219,6 +268,8 @@ export async function updateShiftAction(_prevState: ActionState, formData: FormD
     const role = getRequiredString(formData, "role");
     const capacity = Math.max(1, parseInt(String(formData.get("capacity") ?? "1"), 10));
 
+    await requireWritableShift(id);
+
     await prisma.eventShift.update({ where: { id }, data: { startTime, endTime, role, capacity } });
     revalidatePath("/events");
     return { error: null };
@@ -231,6 +282,7 @@ export async function deleteShiftAction(_prevState: ActionState, formData: FormD
   try {
     await requireAdmin();
     const id = getRequiredString(formData, "id");
+    await requireWritableShift(id);
     await prisma.eventShift.delete({ where: { id } });
     revalidatePath("/events");
     return { error: null };
@@ -247,6 +299,8 @@ export async function signUpForShiftAction(_prevState: ActionState, formData: Fo
   try {
     const access = await getCurrentUserAccess();
     const shiftId = getRequiredString(formData, "shiftId");
+
+    await requireWritableShift(shiftId);
 
     const shift = await prisma.eventShift.findUniqueOrThrow({
       where: { id: shiftId },
@@ -298,6 +352,8 @@ export async function withdrawFromShiftAction(_prevState: ActionState, formData:
       throw new Error("Only admins can remove other users from shifts.");
     }
 
+    await requireWritableShift(shiftId);
+
     const assignment = await prisma.staffAssignment.findFirst({
       where: { shiftId, userId: targetUserId },
     });
@@ -327,6 +383,8 @@ export async function adminAssignUserToShiftAction(_prevState: ActionState, form
     await requireAdmin();
     const shiftId = getRequiredString(formData, "shiftId");
     const userId = getRequiredString(formData, "userId");
+
+    await requireWritableShift(shiftId);
 
     const shift = await prisma.eventShift.findUniqueOrThrow({
       where: { id: shiftId },

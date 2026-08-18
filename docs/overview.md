@@ -57,7 +57,9 @@ people can work in two different editions at the same time, and each switches in
 the sidebar picker. `Edition.isDefault` only seeds accounts that have no edition yet; changing it
 moves nobody who is already using the app.
 
-When an edition is "closed", a new one can be started; opening balances carry forward.
+Closing an edition makes it **read-only, not inaccessible**: it stays selectable and browsable,
+exports and invoice PDFs still work, and every write is refused by `requireWritableEdition()`.
+Global data — passwords, users, templates, event types — carries no edition and stays writable.
 
 ### 5. Locale / i18n
 
