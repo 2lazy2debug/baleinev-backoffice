@@ -1,15 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, Field, Input, Select } from "@/components/ui";
+import { Badge, Button, Input, Select } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import {
   adminAssignUserToShiftAction,
-  createEventAction,
   createEventTypeAction,
   deleteEventAction,
   deleteEventTypeAction,
@@ -19,6 +18,7 @@ import {
   withdrawFromShiftAction,
 } from "./actions";
 import AddShiftForm from "./add-shift-form";
+import CreateEventForm from "./create-event-form";
 
 function formatTime(t: string) {
   return t.slice(0, 5);
@@ -105,6 +105,10 @@ type EventsCopy = {
   role: string;
   addShift: string;
   shiftOverlapWarning: string;
+  dateOrderError: string;
+  dateOutOfEditionRange: string;
+  exportPdf: string;
+  downloadingPdf: string;
 };
 
 type Props = {
@@ -114,20 +118,28 @@ type Props = {
   costCenters: CostCenterItem[];
   events: EventItem[];
   allUsers: UserItem[];
+  editionStartDate: string | null;
+  editionEndDate: string | null;
   copy: EventsCopy;
 };
 
-export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCenters, events, allUsers, copy }: Props) {
+export default function EventsPageClient({
+  isAdmin,
+  accessId,
+  eventTypes,
+  costCenters,
+  events,
+  allUsers,
+  editionStartDate,
+  editionEndDate,
+  copy,
+}: Props) {
   const [deleteEventTypeState, deleteEventTypeFormAction, isDeletingEventType] = useActionState(
     deleteEventTypeAction,
     initialActionState
   );
   const [createEventTypeState, createEventTypeFormAction, isCreatingEventType] = useActionState(
     createEventTypeAction,
-    initialActionState
-  );
-  const [createEventState, createEventFormAction, isCreatingEvent] = useActionState(
-    createEventAction,
     initialActionState
   );
   const [deleteEventState, deleteEventFormAction, isDeletingEvent] = useActionState(
@@ -153,6 +165,37 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
     deleteShiftAction,
     initialActionState
   );
+
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [downloadingEventId, setDownloadingEventId] = useState<string | null>(null);
+
+  async function handleDownloadPdf(event: EventItem) {
+    setDownloadingEventId(event.id);
+    setPdfError(null);
+
+    try {
+      const response = await fetch(`/api/events/${event.id}/pdf`);
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(data?.error || "Could not generate PDF.");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${event.name || "event"}-schedule.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setPdfError(err instanceof Error ? err.message : "Could not generate PDF.");
+    } finally {
+      setDownloadingEventId(null);
+    }
+  }
 
   return (
     <div className="space-y-10">
@@ -200,49 +243,24 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
 
       {/* ── Admin: Create event ───────────────────────────────────────────── */}
       {canManageEvents ? (
-        <Card as="section" className="space-y-4">
-          <h2 className="text-lg font-semibold">{copy.createEvent}</h2>
-          {eventTypes.length === 0 ? (
-            <p className="text-sm text-[var(--muted)]">{copy.noEventTypes}</p>
-          ) : (
-            <form action={createEventFormAction} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <FormError message={createEventState.error} className="sm:col-span-2 lg:col-span-3" />
-              <Field label={`${copy.eventName} *`}>
-                <Input type="text" name="name" required />
-              </Field>
-              <Field label={`${copy.eventType} *`}>
-                <Select name="eventTypeId" required defaultValue="">
-                  <option value="" disabled>{copy.eventType}</option>
-                  {eventTypes.map((et) => (
-                    <option key={et.id} value={et.id}>{et.name}</option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label={copy.costCenter}>
-                <Select name="costCenterId" defaultValue="">
-                  <option value="">—</option>
-                  {costCenters.map((cc) => (
-                    <option key={cc.id} value={cc.id}>{cc.code} {cc.name}</option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label={`${copy.startDate} *`}>
-                <Input type="date" name="startDate" required />
-              </Field>
-              <Field label={`${copy.endDate} *`}>
-                <Input type="date" name="endDate" required />
-              </Field>
-              <Field label={copy.notes}>
-                <Input type="text" name="notes" />
-              </Field>
-              <div className="sm:col-span-2 lg:col-span-3">
-                <Button type="submit" variant="primary" disabled={isCreatingEvent}>
-                  {copy.createEvent}
-                </Button>
-              </div>
-            </form>
-          )}
-        </Card>
+        <CreateEventForm
+          eventTypes={eventTypes}
+          costCenters={costCenters}
+          editionStartDate={editionStartDate}
+          editionEndDate={editionEndDate}
+          copy={{
+            createEvent: copy.createEvent,
+            noEventTypes: copy.noEventTypes,
+            eventName: copy.eventName,
+            eventType: copy.eventType,
+            costCenter: copy.costCenter,
+            startDate: copy.startDate,
+            endDate: copy.endDate,
+            notes: copy.notes,
+            dateOrderError: copy.dateOrderError,
+            dateOutOfEditionRange: copy.dateOutOfEditionRange,
+          }}
+        />
       ) : null}
 
       {/* ── Events list ──────────────────────────────────────────────────── */}
@@ -256,6 +274,7 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
           <FormError message={withdrawState.error} />
           <FormError message={adminAssignState.error} />
           <FormError message={deleteShiftState.error} />
+          <FormError message={pdfError} />
 
           {events.map((event) => (
             <section key={event.id} className="overflow-hidden rounded-2xl border border-[var(--line)]">
@@ -274,14 +293,25 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
                   {event.costCenter ? <p className="text-xs text-[var(--muted)]">{event.costCenter.code}</p> : null}
                   {event.notes ? <p className="mt-1 text-xs text-[var(--muted)]">{event.notes}</p> : null}
                 </div>
-                {canManageEvents ? (
-                  <form action={deleteEventFormAction}>
-                    <input type="hidden" name="id" value={event.id} />
-                    <Button type="submit" variant="destructive" size="sm" disabled={isDeletingEvent}>
-                      {copy.deleteEvent}
-                    </Button>
-                  </form>
-                ) : null}
+                <div className="flex shrink-0 items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={downloadingEventId === event.id}
+                    onClick={() => handleDownloadPdf(event)}
+                  >
+                    {downloadingEventId === event.id ? copy.downloadingPdf : copy.exportPdf}
+                  </Button>
+                  {canManageEvents ? (
+                    <form action={deleteEventFormAction}>
+                      <input type="hidden" name="id" value={event.id} />
+                      <Button type="submit" variant="destructive" size="sm" disabled={isDeletingEvent}>
+                        {copy.deleteEvent}
+                      </Button>
+                    </form>
+                  ) : null}
+                </div>
               </div>
 
               {/* Days */}

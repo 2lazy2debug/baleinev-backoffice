@@ -69,6 +69,8 @@ export default async function EventsPage() {
         costCenters={activeEdition.costCenters}
         events={activeEdition.events}
         allUsers={allUsers}
+        editionStartDate={activeEdition.startDate ? activeEdition.startDate.toISOString().slice(0, 10) : null}
+        editionEndDate={activeEdition.endDate ? activeEdition.endDate.toISOString().slice(0, 10) : null}
         copy={copy.events}
       />
     </div>

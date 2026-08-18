@@ -17,7 +17,7 @@ import {
 // guard has to walk back up to it. Event types are the exception: they are
 // global, carry no `editionId`, and stay writable in a closed edition.
 
-async function requireWritableEvent(eventId: string) {
+async function requireWritableEvent(eventId: string): Promise<string> {
   const event = await prisma.event.findUnique({
     where: { id: eventId },
     select: { editionId: true },
@@ -28,6 +28,26 @@ async function requireWritableEvent(eventId: string) {
   }
 
   await requireWritableEdition(event.editionId);
+  return event.editionId;
+}
+
+/**
+ * Defense in depth against the client-side bounds check: an event's dates
+ * must fall inside its edition's dates, whenever the edition has them set.
+ * An edition without dates imposes no bound.
+ */
+async function assertEventDatesWithinEdition(editionId: string, startDate: Date, endDate: Date) {
+  const edition = await prisma.edition.findUniqueOrThrow({
+    where: { id: editionId },
+    select: { startDate: true, endDate: true },
+  });
+
+  if (edition.startDate && startDate < edition.startDate) {
+    throw new Error("Event start date is before the edition's start date.");
+  }
+  if (edition.endDate && endDate > edition.endDate) {
+    throw new Error("Event end date is after the edition's end date.");
+  }
 }
 
 async function requireWritableEventDay(eventDayId: string) {
@@ -140,6 +160,7 @@ export async function createEventAction(_prevState: ActionState, formData: FormD
       throw new Error("Invalid dates.");
     }
     if (endDate < startDate) throw new Error("End date must be after start date.");
+    await assertEventDatesWithinEdition(editionId, startDate, endDate);
 
     const event = await prisma.event.create({
       data: { editionId, eventTypeId, costCenterId, name, startDate, endDate, notes },
@@ -173,7 +194,8 @@ export async function updateEventAction(_prevState: ActionState, formData: FormD
     }
     if (endDate < startDate) throw new Error("End date must be after start date.");
 
-    await requireWritableEvent(id);
+    const editionId = await requireWritableEvent(id);
+    await assertEventDatesWithinEdition(editionId, startDate, endDate);
 
     await prisma.event.update({ where: { id }, data: { name, startDate, endDate, costCenterId, notes } });
 
