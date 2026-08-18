@@ -1,5 +1,6 @@
 import { AccountType } from "@prisma/client";
 
+import { requireMoneyAccountManager } from "@/lib/access";
 import { Card, CardGrid } from "@/components/ui";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
@@ -12,6 +13,8 @@ import { WritableEditionOnly } from "@/components/edition-read-only";
 import CreateMoneyAccountForm from "./create-money-account-form";
 
 export default async function MoneyAccountsPage() {
+  await requireMoneyAccountManager();
+
   const locale = await getLocale();
   const copy = getDictionary(locale);
 
@@ -23,6 +26,7 @@ export default async function MoneyAccountsPage() {
         orderBy: { name: "asc" },
         include: {
           journalEntries: true,
+          invoices: true,
         },
       },
     },
@@ -54,7 +58,7 @@ export default async function MoneyAccountsPage() {
       journalEntriesCount: account.journalEntries.length,
       openingBalance,
       balance,
-      canDelete: account.journalEntries.length === 0,
+      canDelete: account.journalEntries.length === 0 && account.invoices.length === 0,
       iban: account.iban,
       beneficiaryName: account.beneficiaryName,
       beneficiaryAddress: account.beneficiaryAddress,

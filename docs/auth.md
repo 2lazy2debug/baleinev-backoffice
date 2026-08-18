@@ -59,8 +59,11 @@ The middleware protects the entire `(app)` route group. It checks two things:
 
 1. **Is the user authenticated?** If not, redirect to `/login`.
 2. **Is the user a `DEPARTMENT` role trying to access an admin route?**
-   - Blocked routes for `DEPARTMENT`: `/`, `/editions`, `/journal`, `/money-accounts`, `/cost-centers`,
+   - Blocked routes for `DEPARTMENT`: `/`, `/editions`, `/journal`, `/cost-centers`,
      `/invoices`, `/templates`, `/departments`, `/users` — these redirect to `/budget`.
+   - `/money-accounts` is a special case: blocked for `DEPARTMENT` users **unless** their
+     `departmentRoleNames` includes `"Comptabilité"` (the accounting department name is read
+     straight off the JWT, no DB round-trip — see `lib/money-account-roles.ts`).
    - Everything else (`/budget`, `/tasks`, `/calendar`, `/events`, `/expense-reports`, etc.) is allowed.
 
 The middleware reads the role from the **JWT token** (no database round-trip).
@@ -69,8 +72,12 @@ The middleware reads the role from the **JWT token** (no database round-trip).
 // proxy.ts — simplified logic
 const token = await getToken({ req })
 if (!token) return redirect("/login")
-if (token.role === "DEPARTMENT" && BLOCKED_DEPARTMENT_PATHS.some((p) => pathname.startsWith(p))) {
-  return redirect("/budget")
+if (token.role === "DEPARTMENT") {
+  if (pathname.startsWith("/money-accounts")) {
+    if (!token.departmentRoleNames?.includes(MONEY_ACCOUNT_MANAGER_DEPARTMENT)) return redirect("/budget")
+  } else if (BLOCKED_DEPARTMENT_PATHS.some((p) => pathname.startsWith(p))) {
+    return redirect("/budget")
+  }
 }
 ```
 
@@ -103,6 +110,16 @@ Calls `getCurrentUserAccess()` and throws (or redirects) if the user is not `ADM
 ```ts
 // pattern used in admin pages / actions:
 const access = await requireAdmin()  // throws if not ADMIN
+```
+
+### `requireMoneyAccountManager()` / `canManageMoneyAccounts()`
+A narrower alternative to `requireAdmin()`, used only by the money-accounts page and its
+server actions (`app/(app)/money-accounts/`). Grants access to `ADMIN` **and** to `DEPARTMENT`
+users who belong to the `"Comptabilité"` department — everyone else gets the same
+`Unauthorized.` throw as `requireAdmin()`.
+
+```ts
+const access = await requireMoneyAccountManager()  // throws unless ADMIN or Comptabilité
 ```
 
 ### Why two layers?

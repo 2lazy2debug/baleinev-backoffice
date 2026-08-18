@@ -257,7 +257,11 @@ Each user can fill in their own bank details (first name, last name, IBAN, ZIP, 
 ## 8. Money Accounts & Cost Centers
 
 ### Money Accounts
-Represent real bank or cash accounts. Each journal entry must be linked to a money account. Money accounts also serve as the sender bank account for invoice generation (providing IBAN and address for the QR payload). The dashboard shows the running balance of each money account (sum of debits minus sum of credits).
+Represent real bank, cash, or other accounts. Each journal entry must be linked to a money account. Bank accounts also serve as the sender account for invoice generation (providing IBAN and address for the QR payload); cash and other accounts don't carry IBAN/beneficiary details. The dashboard shows the running balance of each money account (sum of debits minus sum of credits).
+
+Managed from `/money-accounts` (menu entry under "Editions") by admins and by members of the
+"Comptabilité" department, who can create, edit, and delete accounts. Deleting an account is only
+allowed once it has no journal entries or invoices attached.
 
 ### Cost Centers
 Optional labels that can be attached to journal entries for finer-grained reporting (e.g. a project name or event). They have no budget — they are purely for reporting and filtering.

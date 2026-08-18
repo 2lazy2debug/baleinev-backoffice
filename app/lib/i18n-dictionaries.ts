@@ -133,6 +133,7 @@ export const dictionaries = {
       type: "Type",
       bank: "Bank",
       cash: "Cash",
+      other: "Other",
       openingBalanceLong: "Opening balance (carried forward)",
       iban: "IBAN",
       beneficiaryName: "Beneficiary name",
@@ -140,7 +141,7 @@ export const dictionaries = {
       beneficiaryPostalCode: "NPA",
       beneficiaryCity: "City",
       country: "Country",
-      cannotDelete: "Cannot delete account with journal entries",
+      cannotDelete: "Cannot delete account with existing records",
       deleteAccount: "Delete this account",
     },
     expenseReports: {
@@ -662,6 +663,7 @@ export const dictionaries = {
       type: "Type",
       bank: "Banque",
       cash: "Caisse",
+      other: "Autre",
       openingBalanceLong: "Solde d'ouverture",
       iban: "IBAN",
       beneficiaryName: "Nom du bénéficiaire",
@@ -669,7 +671,7 @@ export const dictionaries = {
       beneficiaryPostalCode: "NPA",
       beneficiaryCity: "Ville",
       country: "Pays",
-      cannotDelete: "Suppression impossible : le compte contient des écritures",
+      cannotDelete: "Suppression impossible : le compte contient des écritures ou factures",
       deleteAccount: "Supprimer ce compte",
     },
     expenseReports: {

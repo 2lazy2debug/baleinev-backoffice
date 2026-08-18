@@ -30,7 +30,8 @@ Two roles, stored on `User.role`:
 - **DEPARTMENT** — a department lead (bar, technical, programming, …). Sees only the budget of the
   departments they are attached to, submits expense claims, signs up for event shifts, and manages
   their own todos and calendar. Their navigation is restricted to tasks, calendar, budget,
-  expense reports, and events.
+  expense reports, and events — except members of the "Comptabilité" department, who also get
+  money accounts.
 
 A `DepartmentRole` links a user to a department *by name*, so the link survives across editions
 (departments themselves are per-edition rows). `syncDepartmentRolesFromDepartments()` in
@@ -42,7 +43,7 @@ A `DepartmentRole` links a user to a department *by name*, so the link survives 
 | --- | --- |
 | `Edition` | One festival year. Owns everything else. Users select one each; the one flagged `isDefault` seeds accounts that have none. Carries the per-km driving reimbursement rate. |
 | `Department` | A team within an edition (unique per edition by name). |
-| `MoneyAccount` | A bank account or cash box, with opening balance and beneficiary/IBAN details. |
+| `MoneyAccount` | A bank, cash, or other account, with opening balance and (bank only) beneficiary/IBAN details. Managed by admins and the "Comptabilité" department. |
 | `CostCenter` | An analytic code used to group spending across departments. |
 | `BudgetLine` | A planned income or expense line attached to a department, typed `CHARGES` or `PRODUITS`. |
 | `JournalEntry` | An actual accounting movement: date, amount, label, counterparty, money account, department, cost center, and a per-edition sequence number. Opening entries are locked. |

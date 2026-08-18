@@ -15,7 +15,7 @@ type Props = {
 
 export default function CreateMoneyAccountForm({ locale }: Props) {
   const copy = dictionaries[locale];
-  const [type, setType] = useState<"BANK" | "CASH">("BANK");
+  const [type, setType] = useState<"BANK" | "CASH" | "OTHER">("BANK");
   const [createState, createFormAction, isCreating] = useActionState(createMoneyAccountAction, initialActionState);
 
   return (
@@ -26,9 +26,10 @@ export default function CreateMoneyAccountForm({ locale }: Props) {
       </Field>
 
       <Field label={copy.moneyAccounts.type}>
-        <Select name="type" value={type} onChange={(e) => setType(e.target.value as "BANK" | "CASH")}>
+        <Select name="type" value={type} onChange={(e) => setType(e.target.value as "BANK" | "CASH" | "OTHER")}>
           <option value="BANK">{copy.moneyAccounts.bank}</option>
           <option value="CASH">{copy.moneyAccounts.cash}</option>
+          <option value="OTHER">{copy.moneyAccounts.other}</option>
         </Select>
       </Field>
 

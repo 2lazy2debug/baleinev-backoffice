@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { MONEY_ACCOUNT_MANAGER_DEPARTMENT } from "@/lib/money-account-roles";
 
 export type AccessContext = {
   id: string;
@@ -64,6 +65,23 @@ export async function requireAdmin() {
   const access = await getCurrentUserAccess();
 
   if (access.role !== "ADMIN") {
+    throw new Error("Unauthorized.");
+  }
+
+  return access;
+}
+
+// Money accounts (bank/cash/other) are financial configuration: admins manage
+// them everywhere, and members of the accounting department additionally
+// manage them for editions they're part of.
+export function canManageMoneyAccounts(access: AccessContext): boolean {
+  return access.role === "ADMIN" || access.departmentRoleNames.includes(MONEY_ACCOUNT_MANAGER_DEPARTMENT);
+}
+
+export async function requireMoneyAccountManager() {
+  const access = await getCurrentUserAccess();
+
+  if (!canManageMoneyAccounts(access)) {
     throw new Error("Unauthorized.");
   }
 

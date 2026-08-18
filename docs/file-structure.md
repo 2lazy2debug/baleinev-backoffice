@@ -41,9 +41,10 @@ app/
 │   │   └── actions.ts            ← Server actions: create/update/delete journal entries
 │   │
 │   ├── money-accounts/
-│   │   ├── page.tsx              ← Money account CRUD, opening balance management (data-fetching only)
-│   │   ├── client.tsx            ← Client-side interactive update/delete forms
-│   │   └── actions.ts            ← Server actions: create/update/delete money accounts
+│   │   ├── page.tsx                       ← Money account CRUD, opening balance management (data-fetching only)
+│   │   ├── client.tsx                     ← Client-side interactive update/delete forms
+│   │   ├── create-money-account-form.tsx  ← Create form (bank/cash/other, IBAN fields shown for bank only)
+│   │   └── actions.ts                     ← Server actions: create/update/delete money accounts (admin + Comptabilité)
 │   │
 │   ├── cost-centers/
 │   │   ├── page.tsx              ← Cost center CRUD (data-fetching only)
@@ -128,7 +129,8 @@ app/
 | File | Purpose |
 |---|---|
 | `auth.ts` | NextAuth config: credentials provider, bcrypt verify, JWT/session callbacks |
-| `access.ts` | `getCurrentUserAccess()`, `requireAdmin()`, plus department helpers (`isAdmin`, `accessibleDepartmentRoleIds`, `canAccessDepartments`) used by every protected page/action |
+| `access.ts` | `getCurrentUserAccess()`, `requireAdmin()`, plus department helpers (`isAdmin`, `accessibleDepartmentRoleIds`, `canAccessDepartments`, `canManageMoneyAccounts`/`requireMoneyAccountManager`) used by every protected page/action |
+| `money-account-roles.ts` | Just the `"Comptabilité"` department-name constant, kept import-free so `proxy.ts` (edge) and `access.ts` (server) can both use it without pulling Prisma/bcrypt into the edge bundle |
 | `secret-crypto.ts` | AES-256-GCM seal/open for the Passwords vault (`encryptSecret`/`decryptSecret`/`isVaultConfigured`), keyed by `PASSWORD_VAULT_KEY`. See docs/passwords.md |
 | `totp.ts` | Generates live TOTP codes from a stored 2FA seed (`otpauth`); `generateTotpCode`/`assertValidTotpSeed` |
 | `db.ts` | Singleton Prisma client (re-used across hot reloads in dev) |

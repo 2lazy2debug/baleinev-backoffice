@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { MoneyAccountType } from "@prisma/client";
 
-import { requireAdmin } from "@/lib/access";
+import { requireMoneyAccountManager } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { requireWritableEdition, resolveWritableEditionId } from "@/lib/edition-context";
 import {
@@ -48,7 +48,7 @@ async function requireWritableMoneyAccount(moneyAccountId: string) {
 
 export async function createMoneyAccountAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    await requireAdmin();
+    await requireMoneyAccountManager();
     const editionId = await resolveWritableEditionId();
     const name = getRequiredString(formData, "name");
     const type = getRequiredString(formData, "type") as MoneyAccountType;
@@ -81,9 +81,10 @@ export async function createMoneyAccountAction(_prevState: ActionState, formData
 
 export async function updateMoneyAccountAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    await requireAdmin();
+    await requireMoneyAccountManager();
     const moneyAccountId = getRequiredString(formData, "moneyAccountId");
     const name = getRequiredString(formData, "name");
+    const type = getRequiredString(formData, "type") as MoneyAccountType;
     const openingBalance = parseOpeningBalance(formData);
 
     await requireWritableMoneyAccount(moneyAccountId);
@@ -92,6 +93,7 @@ export async function updateMoneyAccountAction(_prevState: ActionState, formData
       where: { id: moneyAccountId },
       data: {
         name,
+        type,
         openingBalance,
         iban: getOptionalString(formData, "iban"),
         beneficiaryName: getOptionalString(formData, "beneficiaryName"),
@@ -114,15 +116,18 @@ export async function updateMoneyAccountAction(_prevState: ActionState, formData
 
 export async function deleteMoneyAccountAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    await requireAdmin();
+    await requireMoneyAccountManager();
     const moneyAccountId = getRequiredString(formData, "moneyAccountId");
 
     await requireWritableMoneyAccount(moneyAccountId);
 
-    const journalCount = await prisma.journalEntry.count({ where: { moneyAccountId } });
+    const [journalCount, invoiceCount] = await Promise.all([
+      prisma.journalEntry.count({ where: { moneyAccountId } }),
+      prisma.invoice.count({ where: { moneyAccountId } }),
+    ]);
 
-    if (journalCount > 0) {
-      throw new Error("This money account cannot be deleted because it already contains journal entries.");
+    if (journalCount > 0 || invoiceCount > 0) {
+      throw new Error("This money account cannot be deleted because it already has records.");
     }
 
     await prisma.moneyAccount.delete({ where: { id: moneyAccountId } });

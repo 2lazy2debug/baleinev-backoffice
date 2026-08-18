@@ -1,7 +1,7 @@
 import { TaskStatus, UserRole } from "@prisma/client";
 
 import { AppShell } from "@/components/app-shell";
-import { getCurrentUserAccess } from "@/lib/access";
+import { canManageMoneyAccounts, getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEdition } from "@/lib/edition-context";
 import { getLocale } from "@/lib/i18n";
@@ -38,6 +38,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
       selectedEditionId={selectedEdition?.id ?? null}
       locale={locale}
       role={access.role}
+      canManageMoneyAccounts={canManageMoneyAccounts(access)}
       pendingTaskCount={pendingTaskCount}
       refundProfile={{
         firstName: access.refundFirstName,

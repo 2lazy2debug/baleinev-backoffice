@@ -62,9 +62,10 @@ if it is still null — and only the user's own picker changes it afterwards. Th
 its users, so their selection is cleared and re-seeds from the default instead.
 
 **Role enum:** `ADMIN` can access all routes and all admin actions. `DEPARTMENT` is blocked by
-middleware from admin routes (editions, journal, money accounts, cost centers, invoices, templates,
-departments, users) and redirected to `/budget`; budget, tasks, calendar, events, and expense reports
-remain accessible.
+middleware from admin routes (editions, journal, cost centers, invoices, templates, departments,
+users) and redirected to `/budget`; budget, tasks, calendar, events, and expense reports remain
+accessible. Money accounts are a special case: `DEPARTMENT` users in the `"Comptabilité"`
+department can access and manage them like an `ADMIN` would — see [`auth.md`](./auth.md).
 
 ---
 
@@ -141,15 +142,25 @@ Represents an organisational unit (committee, section, team).
 ---
 
 ### `MoneyAccount`
-A bank or cash account used as the debit/credit side of journal entries and also as the sender account for invoices.
+A bank, cash or other account used as the debit/credit side of journal entries and also as the
+sender account for invoices. Created, edited and deleted from `/money-accounts` (menu entry under
+"Editions") by `ADMIN` users and by `DEPARTMENT` users in the `"Comptabilité"` department — see
+[`auth.md`](./auth.md). Deletion is blocked while the account still has journal entries or
+invoices attached.
 
 | Field | Type | Notes |
 |---|---|---|
 | `id` | String (cuid) | |
-| `name` | String | |
-| `iban` | String? | Needed for Swiss QR invoices |
-| `address` | String? | Sender address for invoice header |
 | `editionId` | String | FK → Edition (onDelete: Cascade) |
+| `name` | String | Unique per edition |
+| `type` | `MoneyAccountType` | `BANK` \| `CASH` \| `OTHER` — only `BANK` shows/needs IBAN and beneficiary fields |
+| `openingBalance` | Decimal | Carried forward from the prior edition's closing balance |
+| `iban` | String? | Needed for Swiss QR invoices (BANK only) |
+| `beneficiaryName` | String? | Sender name for invoice header (BANK only) |
+| `beneficiaryAddress` | String? | Sender address for invoice header (BANK only) |
+| `beneficiaryPostalCode` | String? | (BANK only) |
+| `beneficiaryCity` | String? | (BANK only) |
+| `beneficiaryCountry` | String | Defaults to `"CH"` |
 
 ---
 

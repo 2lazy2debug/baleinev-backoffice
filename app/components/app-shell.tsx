@@ -10,6 +10,7 @@ import {
   FileStack,
   Home,
   KeyRound,
+  Landmark,
   ListTodo,
   ReceiptText,
   Settings,
@@ -39,6 +40,7 @@ type AppShellProps = {
   selectedEditionId: string | null;
   locale: Locale;
   role: "ADMIN" | "DEPARTMENT";
+  canManageMoneyAccounts: boolean;
   pendingTaskCount: number;
   refundProfile: {
     firstName: string | null;
@@ -51,7 +53,7 @@ type AppShellProps = {
 
 const GLOBAL_ROUTES = ["/passwords", "/users", "/templates", "/editions"];
 
-export function AppShell({ children, userName, editions, selectedEditionId, locale, role, pendingTaskCount, refundProfile }: AppShellProps) {
+export function AppShell({ children, userName, editions, selectedEditionId, locale, role, canManageMoneyAccounts, pendingTaskCount, refundProfile }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -86,6 +88,8 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
     key: string;
   };
 
+  const moneyAccountsItem: NavigationItem = { type: "item", href: "/money-accounts", label: copy.moneyAccounts, icon: Landmark };
+
   const adminNavigation: NavigationItem[] = [
     { type: "item", href: "/", label: copy.dashboard, icon: Home },
     { type: "item", href: "/tasks", label: copy.tasks, icon: ListTodo },
@@ -102,6 +106,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
     { type: "item", href: "/passwords", label: copy.passwords, icon: KeyRound },
     { type: "divider", key: "d3" },
     { type: "item", href: "/editions", label: copy.editions, icon: FileStack },
+    moneyAccountsItem,
     { type: "item", href: "/users", label: copy.users, icon: Users },
   ];
   const departmentNavigation: NavigationItem[] = [
@@ -111,6 +116,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
     { type: "item", href: "/budget", label: copy.budget, icon: Wallet },
     { type: "item", href: "/expense-reports", label: copy.expenseReports, icon: ReceiptText },
     { type: "item", href: "/events", label: copy.events, icon: Target },
+    ...(canManageMoneyAccounts ? [moneyAccountsItem] : []),
     { type: "divider", key: "dept-d2" },
     { type: "item", href: "/passwords", label: copy.passwords, icon: KeyRound },
   ];

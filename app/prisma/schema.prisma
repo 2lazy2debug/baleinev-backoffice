@@ -15,6 +15,7 @@ enum AccountType {
 enum MoneyAccountType {
   BANK
   CASH
+  OTHER
 }
 
 enum UserRole {

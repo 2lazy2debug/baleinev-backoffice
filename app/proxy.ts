@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+import { MONEY_ACCOUNT_MANAGER_DEPARTMENT } from "@/lib/money-account-roles";
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -30,11 +32,16 @@ export async function proxy(request: NextRequest) {
   }
 
   if (token.role === "DEPARTMENT") {
-    if (
+    const isMoneyAccountManager = (token.departmentRoleNames ?? []).includes(MONEY_ACCOUNT_MANAGER_DEPARTMENT);
+
+    if (pathname.startsWith("/money-accounts")) {
+      if (!isMoneyAccountManager) {
+        return NextResponse.redirect(new URL("/budget", request.url));
+      }
+    } else if (
       pathname === "/" ||
       pathname.startsWith("/editions") ||
       pathname.startsWith("/journal") ||
-      pathname.startsWith("/money-accounts") ||
       pathname.startsWith("/cost-centers") ||
       pathname.startsWith("/invoices") ||
       pathname.startsWith("/templates") ||
