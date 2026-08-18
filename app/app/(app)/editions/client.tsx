@@ -182,6 +182,23 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
             />
           </label>
 
+          <label className="block space-y-2">
+            <span className="text-sm font-medium">{copy.editions.carryOverFrom}</span>
+            <select
+              name="carryOverFromId"
+              defaultValue=""
+              className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
+            >
+              <option value="">{copy.editions.carryOverNone}</option>
+              {editions.map((edition) => (
+                <option key={edition.id} value={edition.id}>
+                  {edition.closedAt ? `${edition.name} — ${copy.editions.closed.toLowerCase()}` : edition.name}
+                </option>
+              ))}
+            </select>
+            <span className="block text-xs text-[var(--muted)]">{copy.editions.carryOverHint}</span>
+          </label>
+
           <div className="space-y-1">
             <label className="flex items-center gap-3 text-sm font-medium">
               <input type="checkbox" name="isDefault" className="size-4 rounded border-[var(--line)]" />

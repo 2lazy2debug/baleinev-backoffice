@@ -1,0 +1,106 @@
+import { AccountType, Prisma } from "@prisma/client";
+
+import { decimalToNumber } from "@/lib/utils";
+
+/** The *solde à nouveau* label, carried over from the closing edition. */
+export const CARRY_OVER_LABEL = "Report édition précédente";
+
+/**
+ * Brings an edition's structure and closing balances into another edition:
+ * departments, cost centers and money accounts, plus one locked opening entry
+ * per account that does not close at zero.
+ *
+ * Budget lines are deliberately **not** copied — they belong to the year they
+ * were planned for.
+ *
+ * Runs inside the caller's transaction so a failed copy leaves no
+ * half-populated edition behind.
+ */
+export async function carryOverEdition(
+  tx: Prisma.TransactionClient,
+  sourceEditionId: string,
+  targetEditionId: string,
+): Promise<void> {
+  if (sourceEditionId === targetEditionId) {
+    throw new Error("An edition cannot be carried over into itself.");
+  }
+
+  const source = await tx.edition.findUnique({
+    where: { id: sourceEditionId },
+    include: {
+      departments: true,
+      costCenters: true,
+      moneyAccounts: { include: { journalEntries: true } },
+    },
+  });
+
+  if (!source) {
+    throw new Error("The edition to bring data over from was not found.");
+  }
+
+  for (const department of source.departments) {
+    await tx.department.create({
+      data: { editionId: targetEditionId, name: department.name },
+    });
+  }
+
+  for (const costCenter of source.costCenters) {
+    await tx.costCenter.create({
+      data: { editionId: targetEditionId, code: costCenter.code, name: costCenter.name },
+    });
+  }
+
+  // Opening entries share the edition's sequence space — JournalEntry carries
+  // @@unique([editionId, sequenceNumber]) — so each one takes its own number.
+  // Regular entries continue from the highest of these, because
+  // createJournalEntryAction maxes over sequenceNumber > 0.
+  let sequenceNumber = 0;
+
+  for (const account of source.moneyAccounts) {
+    const carried = await tx.moneyAccount.create({
+      data: {
+        editionId: targetEditionId,
+        name: account.name,
+        type: account.type,
+        // The carried amount is expressed as the opening entry below. Writing it
+        // here as well would count it twice, since a balance is
+        // openingBalance + entries.
+        openingBalance: 0,
+        // Without the bank identity a carried-over account cannot produce a
+        // Swiss QR invoice.
+        iban: account.iban,
+        beneficiaryName: account.beneficiaryName,
+        beneficiaryAddress: account.beneficiaryAddress,
+        beneficiaryPostalCode: account.beneficiaryPostalCode,
+        beneficiaryCity: account.beneficiaryCity,
+        beneficiaryCountry: account.beneficiaryCountry,
+      },
+    });
+
+    // Same definition of a balance the rest of the app uses: the account's own
+    // opening balance plus every movement on it.
+    const closingBalance = account.journalEntries.reduce((total, entry) => {
+      const amount = decimalToNumber(entry.amount);
+      return entry.accountType === AccountType.PRODUITS ? total + amount : total - amount;
+    }, decimalToNumber(account.openingBalance));
+
+    if (closingBalance === 0) {
+      continue;
+    }
+
+    await tx.journalEntry.create({
+      data: {
+        editionId: targetEditionId,
+        moneyAccountId: carried.id,
+        accountType: closingBalance >= 0 ? AccountType.PRODUITS : AccountType.CHARGES,
+        sequenceNumber,
+        date: new Date(),
+        amount: new Prisma.Decimal(Math.abs(closingBalance).toFixed(2)),
+        label: CARRY_OVER_LABEL,
+        isOpeningEntry: true,
+      },
+    });
+
+    sequenceNumber += 1;
+  }
+}

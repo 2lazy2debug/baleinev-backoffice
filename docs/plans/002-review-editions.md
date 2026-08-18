@@ -101,6 +101,11 @@ This is reachable on production right now: 2025-2026 has two accounts, both with
 balance (`Coffre` 135.07, `CompteCourant` 3922.92). **Closing 2025-2026 today would fail.**
 Step 3 fixes it while extracting the carry-over; do not fix it earlier, or the fix lands twice.
 
+**Fixed in step 3, 2026-08-18.** Reproduced against a fixture first — two opening entries at
+`sequenceNumber = 0` in one edition raise
+`duplicate key value violates unique constraint "JournalEntry_editionId_sequenceNumber_key"` — and
+then confirmed that closing a two-account edition now succeeds.
+
 ---
 
 ## 2. Decisions taken
@@ -302,9 +307,9 @@ Tag: `git tag -a v0.3.0 -m "non-breaking"`.
 
 ---
 
-## Step 3 — Manual "bring over from …" · `v0.4.0` · `non-breaking`
+## Step 3 — Manual "bring over from …" · `v0.4.0` · `non-breaking` — **DONE 2026-08-18**
 
-Extract the copy logic out of `closeEditionAction` into `app/lib/edition-carry-over.ts`:
+Extracted the copy logic out of `closeEditionAction` into `app/lib/edition-carry-over.ts`:
 
 ```
 carryOverEdition(tx, sourceEditionId, targetEditionId)
@@ -314,7 +319,7 @@ It copies **departments**, **cost centers** and **money accounts**, then writes 
 `isOpeningEntry: true` journal entry per account whose closing balance is non-zero — the *solde à
 nouveau*, labelled `Report édition précédente`, exactly as today.
 
-Three corrections to make while extracting, not after:
+Four corrections made while extracting, not after — the fourth was found during the work:
 
 1. **Allocate sequence numbers per entry** (0, 1, 2, …), not `0` for every account. This is the
    §1 bug; with it unfixed the helper fails on the second account.
@@ -323,6 +328,12 @@ Three corrections to make while extracting, not after:
    `name` and `type`, so a carried-over account cannot produce a Swiss QR invoice.
 3. **Leave `openingBalance` at 0.** The carried balance is expressed as a journal entry, which is
    what the owner asked for; writing it into both places would double-count it.
+4. **Added during step 3: include the source account's own `openingBalance` in the closing
+   balance.** Every balance the app displays is `openingBalance + entries`
+   ([money-accounts/page.tsx](../../app/app/(app)/money-accounts/page.tsx)), but the old copy
+   seeded its reduce with `0`, so a source account with a non-zero opening balance would carry
+   over short by exactly that amount. Both production accounts are at `0.00` today, so this
+   changes no live number — it was wrong all the same.
 
 Budget lines are **not** copied. They belong to the year they were planned for.
 
@@ -331,12 +342,27 @@ an optional "Bring over from" select listing existing editions — leaving it em
 edition, exactly as today. `createEditionAction` runs the whole thing in one transaction: create,
 then carry over, so a failed copy leaves no half-populated edition behind.
 
-### Verify
+### Verify — all passed 2026-08-18
 
-Create an edition bringing over from 2025-2026 on a **copy** of production data, then confirm: 16
-departments, the cost centers, 2 money accounts with their IBANs intact, and two opening entries
-totalling 135.07 and 3922.92 with distinct sequence numbers. Then create one *without* carry-over
-and confirm it is empty.
+**Correction to this plan: the production dump was blocked**, so verification ran against the same
+local fixture step 2 used — production's shape (16 departments, 3 cost centers, `Coffre` 135.07,
+`CompteCourant` 3922.92 with its IBAN), built from a seed script rather than copied data. Every
+number the plan asks for is reproduced; no production data was moved to this machine.
+
+- ✅ Created an edition bringing over from 2025-2026 through the real dialog: **16 departments**,
+  **3 cost centers**, **2 money accounts with their IBAN and beneficiary fields intact**, and
+  **two opening entries of 135.07 and 3922.92** at **distinct** sequence numbers (0 and 1), both
+  `isOpeningEntry = true`, labelled `Report édition précédente`.
+- ✅ Carried accounts have `openingBalance = 0.00` — the amount is in the entry only, not counted twice.
+- ✅ Created an edition *without* carry-over: completely empty (0 departments, 0 cost centers,
+  0 accounts, 0 entries).
+- ✅ Budget lines not copied — source held 1, target held 0.
+- ✅ The §1 bug is fixed: `closeEditionAction` now closes a two-account edition successfully and its
+  successor lands populated. The old shape was shown to violate
+  `JournalEntry_editionId_sequenceNumber_key` on the second account.
+- ✅ Opening entries at 0 and 1 do not collide with regular numbering: `createJournalEntryAction`
+  maxes over `sequenceNumber > 0`, which returns 1 here, so the next regular entry takes 2.
+- ✅ `npx tsc --noEmit` clean, `npm run check:design` clean, `npm run build` green.
 
 Tag: `git tag -a v0.4.0 -m "non-breaking"`.
 

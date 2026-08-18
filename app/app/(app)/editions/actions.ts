@@ -2,13 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 
-import { AccountType, Prisma } from "@prisma/client";
-
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { carryOverEdition } from "@/lib/edition-carry-over";
 import { requireWritableEdition } from "@/lib/edition-context";
 import { type ActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
-import { decimalToNumber, incrementEditionName, isValidEditionName } from "@/lib/utils";
+import { incrementEditionName, isValidEditionName } from "@/lib/utils";
 
 function getRequiredString(formData: FormData, key: string) {
   const value = String(formData.get(key) ?? "").trim();
@@ -49,6 +48,8 @@ export async function createEditionAction(_prevState: ActionState, formData: For
     const endDate = String(formData.get("endDate") ?? "").trim();
     const drivingRatePerKm = parsePositiveDecimal(String(formData.get("drivingRatePerKm") ?? "0.30"), "Driving rate per km");
     const makeDefault = formData.get("isDefault") === "on";
+    // Empty means "start blank" — bringing data over is an explicit choice.
+    const carryOverFromId = String(formData.get("carryOverFromId") ?? "").trim() || null;
 
     await prisma.$transaction(async (tx) => {
       const firstEdition = (await tx.edition.count()) === 0;
@@ -57,7 +58,7 @@ export async function createEditionAction(_prevState: ActionState, formData: For
         await tx.edition.updateMany({ where: { isDefault: true }, data: { isDefault: false } });
       }
 
-      await tx.edition.create({
+      const edition = await tx.edition.create({
         data: {
           name,
           startDate: startDate ? new Date(startDate) : null,
@@ -66,6 +67,12 @@ export async function createEditionAction(_prevState: ActionState, formData: For
           isDefault: makeDefault || firstEdition,
         },
       });
+
+      // Same transaction as the create, so a failed copy leaves no
+      // half-populated edition behind.
+      if (carryOverFromId) {
+        await carryOverEdition(tx, carryOverFromId, edition.id);
+      }
     });
 
     revalidatePath("/editions");
@@ -136,13 +143,7 @@ export async function closeEditionAction(_prevState: ActionState, formData: Form
     await prisma.$transaction(async (tx) => {
       const edition = await tx.edition.findUnique({
         where: { id: editionId },
-        include: {
-          departments: true,
-          costCenters: true,
-          moneyAccounts: {
-            include: { journalEntries: true },
-          },
-        },
+        select: { id: true, name: true, closedAt: true, endDate: true, drivingRatePerKm: true },
       });
 
       if (!edition) {
@@ -176,49 +177,7 @@ export async function closeEditionAction(_prevState: ActionState, formData: Form
         data: { closedAt: new Date() },
       });
 
-      for (const department of edition.departments) {
-        await tx.department.create({
-          data: { editionId: nextEdition.id, name: department.name },
-        });
-      }
-
-      for (const costCenter of edition.costCenters) {
-        await tx.costCenter.create({
-          data: { editionId: nextEdition.id, code: costCenter.code, name: costCenter.name },
-        });
-      }
-
-      for (const account of edition.moneyAccounts) {
-        const nextAccount = await tx.moneyAccount.create({
-          data: {
-            editionId: nextEdition.id,
-            name: account.name,
-            type: account.type,
-          },
-        });
-
-        const closingBalance = account.journalEntries.reduce((total, entry) => {
-          const amount = decimalToNumber(entry.amount);
-          return entry.accountType === AccountType.PRODUITS ? total + amount : total - amount;
-        }, 0);
-
-        if (closingBalance === 0) {
-          continue;
-        }
-
-        await tx.journalEntry.create({
-          data: {
-            editionId: nextEdition.id,
-            moneyAccountId: nextAccount.id,
-            accountType: closingBalance >= 0 ? AccountType.PRODUITS : AccountType.CHARGES,
-            sequenceNumber: 0,
-            date: new Date(),
-            amount: new Prisma.Decimal(Math.abs(closingBalance).toFixed(2)),
-            label: "Report édition précédente",
-            isOpeningEntry: true,
-          },
-        });
-      }
+      await carryOverEdition(tx, edition.id, nextEdition.id);
     });
 
     revalidatePath("/editions");

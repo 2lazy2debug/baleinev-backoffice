@@ -52,8 +52,17 @@ A closed edition is read-only: still selectable, browsable, exportable, printabl
 - **Passwords, users, templates and event types are global** — they carry no `editionId` and stay
   writable whatever edition the user is in.
 - Creating a new edition does NOT delete old data — historical editions remain fully readable.
-- Opening balances from the old edition can be imported as locked `isOpeningEntry = true` journal
-  entries in the new one.
+- **Bringing data into a new edition is an explicit choice.** The new-edition dialog has an
+  optional "Bring over from" select; leaving it empty creates a blank edition.
+  `carryOverEdition()` in `app/lib/edition-carry-over.ts` copies **departments**, **cost centers**
+  and **money accounts** (bank identity included, so a carried account can still produce a Swiss QR
+  invoice), then writes one locked `isOpeningEntry = true` journal entry per account that does not
+  close at zero, labelled `Report édition précédente`. Each opening entry takes its own sequence
+  number, because `JournalEntry` is unique on `(editionId, sequenceNumber)`.
+- The carried amount lives in the opening entry, **not** in `MoneyAccount.openingBalance`, which
+  stays 0 — a balance is `openingBalance + entries`, so writing it in both places would double it.
+- **Budget lines are not copied.** They belong to the year they were planned for.
+- The whole thing runs in the create transaction, so a failed copy leaves no half-populated edition.
 
 ---
 
