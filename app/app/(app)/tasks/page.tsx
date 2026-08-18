@@ -1,5 +1,6 @@
 import { WritableEditionOnly } from "@/components/edition-read-only";
 import { TasksCreateModal } from "@/components/tasks-create-modal";
+import { Card } from "@/components/ui";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
@@ -55,7 +56,7 @@ export default async function TasksPage() {
         </WritableEditionOnly>
       </header>
 
-      <section className="space-y-5 rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+      <Card as="section" className="space-y-5">
         <h2 className="text-xl font-semibold">{copy.tasks.allTasks}</h2>
         <TasksPageClient
           todos={todos}
@@ -66,7 +67,7 @@ export default async function TasksPage() {
           users={users}
           activeEdition={editionId ? { id: editionId } : null}
         />
-      </section>
+      </Card>
     </div>
   );
 }

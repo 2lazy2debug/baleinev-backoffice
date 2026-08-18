@@ -5,6 +5,7 @@ import { ExpenseReportStatus } from "@prisma/client";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
+import { Badge, Button, Card, Input, TD, TH, THead, TR } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { decimalToNumber, formatCurrency } from "@/lib/utils";
 
@@ -104,152 +105,145 @@ export function ExpenseReportsPageClient({
   const isReadOnly = useEditionReadOnly();
 
   return (
-    <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
-      <h2 className="text-xl font-semibold">{copy.expenseReports.history}</h2>
+    <div>
+      <Card as="section">
+        <h2 className="text-xl font-semibold">{copy.expenseReports.history}</h2>
 
-      {access.role === "ADMIN" ? (
-        <div className="mt-4 space-y-2">
-          <FormError message={approveState.error} />
-          <FormError message={rejectState.error} />
-        </div>
-      ) : null}
+        {access.role === "ADMIN" ? (
+          <div className="mt-4 space-y-2">
+            <FormError message={approveState.error} />
+            <FormError message={rejectState.error} />
+          </div>
+        ) : null}
 
-      {expenseReports.length === 0 ? (
-        <p className="mt-4 text-sm text-[var(--muted)]">{copy.expenseReports.noHistory}</p>
-      ) : (
-        <div className="mt-4 overflow-hidden rounded-xl border border-[var(--line)]">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-[var(--panel)] text-[var(--muted)]">
-              <tr>
-                <th className="px-3 py-2 font-medium">{copy.expenseReports.date}</th>
-                <th className="px-3 py-2 font-medium">{copy.expenseReports.reportType}</th>
-                <th className="px-3 py-2 font-medium">{copy.expenseReports.description}</th>
-                <th className="px-3 py-2 font-medium">{copy.expenseReports.department}</th>
-                <th className="px-3 py-2 font-medium">{copy.expenseReports.amount}</th>
-                <th className="px-3 py-2 font-medium">{copy.expenseReports.paymentMethod}</th>
-                <th className="px-3 py-2 font-medium">{copy.expenseReports.status}</th>
-                <th className="px-3 py-2 font-medium">{copy.expenseReports.proof}</th>
-                {access.role === "ADMIN" ? <th className="px-3 py-2 font-medium">{copy.journal.actions}</th> : null}
-              </tr>
-            </thead>
-            <tbody>
-              {expenseReports.map((report) => {
-                const statusLabel =
-                  report.status === ExpenseReportStatus.PENDING
-                    ? copy.expenseReports.pending
-                    : report.status === ExpenseReportStatus.APPROVED
-                      ? copy.expenseReports.approved
-                      : copy.expenseReports.rejected;
+        {expenseReports.length === 0 ? (
+          <p className="mt-4 text-sm text-[var(--muted)]">{copy.expenseReports.noHistory}</p>
+        ) : (
+          <div className="mt-4 overflow-hidden rounded-xl border border-[var(--line)]">
+            <table className="w-full text-left text-sm">
+              <THead>
+                <TR>
+                  <TH className="px-3 py-2">{copy.expenseReports.date}</TH>
+                  <TH className="px-3 py-2">{copy.expenseReports.reportType}</TH>
+                  <TH className="px-3 py-2">{copy.expenseReports.description}</TH>
+                  <TH className="px-3 py-2">{copy.expenseReports.department}</TH>
+                  <TH className="px-3 py-2">{copy.expenseReports.amount}</TH>
+                  <TH className="px-3 py-2">{copy.expenseReports.paymentMethod}</TH>
+                  <TH className="px-3 py-2">{copy.expenseReports.status}</TH>
+                  <TH className="px-3 py-2">{copy.expenseReports.proof}</TH>
+                  {access.role === "ADMIN" ? <TH className="px-3 py-2">{copy.journal.actions}</TH> : null}
+                </TR>
+              </THead>
+              <tbody>
+                {expenseReports.map((report) => {
+                  const statusLabel =
+                    report.status === ExpenseReportStatus.PENDING
+                      ? copy.expenseReports.pending
+                      : report.status === ExpenseReportStatus.APPROVED
+                        ? copy.expenseReports.approved
+                        : copy.expenseReports.rejected;
 
-                const bankInfoLines = [
-                  `${copy.expenseReports.bankFirstName}: ${report.submittedBy.refundFirstName || copy.expenseReports.missingBankInfo}`,
-                  `${copy.expenseReports.bankLastName}: ${report.submittedBy.refundLastName || copy.expenseReports.missingBankInfo}`,
-                  `${copy.expenseReports.bankIban}: ${report.submittedBy.refundIban || copy.expenseReports.missingBankInfo}`,
-                  `${copy.expenseReports.bankZip}: ${report.submittedBy.refundZip || copy.expenseReports.missingBankInfo}`,
-                  `${copy.expenseReports.bankCity}: ${report.submittedBy.refundCity || copy.expenseReports.missingBankInfo}`,
-                ].join("\n");
+                  const bankInfoLines = [
+                    `${copy.expenseReports.bankFirstName}: ${report.submittedBy.refundFirstName || copy.expenseReports.missingBankInfo}`,
+                    `${copy.expenseReports.bankLastName}: ${report.submittedBy.refundLastName || copy.expenseReports.missingBankInfo}`,
+                    `${copy.expenseReports.bankIban}: ${report.submittedBy.refundIban || copy.expenseReports.missingBankInfo}`,
+                    `${copy.expenseReports.bankZip}: ${report.submittedBy.refundZip || copy.expenseReports.missingBankInfo}`,
+                    `${copy.expenseReports.bankCity}: ${report.submittedBy.refundCity || copy.expenseReports.missingBankInfo}`,
+                  ].join("\n");
 
-                return (
-                  <tr key={report.id} className="border-t border-[var(--line)] align-top">
-                    <td className="px-3 py-2 text-xs">{formatDate(report.date)}</td>
-                    <td className="px-3 py-2 text-xs">
-                      {report.reportType === "DRIVING" ? copy.expenseReports.drivingExpense : copy.expenseReports.standardExpense}
-                    </td>
-                    <td className="px-3 py-2">
-                      <p className="font-medium">{report.description}</p>
-                      {report.reportType === "DRIVING" ? (
-                        <p className="text-xs text-[var(--muted)]">
-                          {`${report.departure} -> ${report.arrival} | ${decimalToNumber(report.kilometers ?? 0)} km @ CHF ${decimalToNumber(report.ratePerKm ?? 0).toFixed(2)}`}
+                  return (
+                    <TR key={report.id} className="align-top">
+                      <TD className="px-3 py-2 text-xs">{formatDate(report.date)}</TD>
+                      <TD className="px-3 py-2 text-xs">
+                        {report.reportType === "DRIVING" ? copy.expenseReports.drivingExpense : copy.expenseReports.standardExpense}
+                      </TD>
+                      <TD className="px-3 py-2">
+                        <p className="font-medium">{report.description}</p>
+                        {report.reportType === "DRIVING" ? (
+                          <p className="text-xs text-[var(--muted)]">
+                            {`${report.departure} -> ${report.arrival} | ${decimalToNumber(report.kilometers ?? 0)} km @ CHF ${decimalToNumber(report.ratePerKm ?? 0).toFixed(2)}`}
+                          </p>
+                        ) : null}
+                        <p className="flex items-center gap-2 text-xs text-[var(--muted)]">
+                          <span>{copy.expenseReports.submittedBy}: {report.submittedBy.name}</span>
+                          {access.role === "ADMIN" ? (
+                            <Badge tone="neutral" title={`${copy.expenseReports.userBankInfo}\n${bankInfoLines}`}>
+                              i
+                            </Badge>
+                          ) : null}
                         </p>
-                      ) : null}
-                      <p className="flex items-center gap-2 text-xs text-[var(--muted)]">
-                        <span>{copy.expenseReports.submittedBy}: {report.submittedBy.name}</span>
-                        {access.role === "ADMIN" ? (
-                          <span
-                            title={`${copy.expenseReports.userBankInfo}\n${bankInfoLines}`}
-                            className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[var(--line)] text-[10px] font-semibold text-[var(--muted)]"
-                          >
-                            i
-                          </span>
+                      </TD>
+                      <TD className="px-3 py-2">{report.department.name}</TD>
+                      <TD className="px-3 py-2">{formatCurrency(decimalToNumber(report.amount))}</TD>
+                      <TD className="px-3 py-2 text-xs">
+                        {report.paymentMethod === "MY_MONEY" ? copy.expenseReports.myMoney : copy.expenseReports.festivalAccount}
+                      </TD>
+                      <TD className="px-3 py-2 text-xs">
+                        <p>{statusLabel}</p>
+                        {report.status !== ExpenseReportStatus.PENDING && report.reviewedBy ? (
+                          <p className="text-[var(--muted)]">{copy.expenseReports.reviewedBy}: {report.reviewedBy.name}</p>
                         ) : null}
-                      </p>
-                    </td>
-                    <td className="px-3 py-2">{report.department.name}</td>
-                    <td className="px-3 py-2">{formatCurrency(decimalToNumber(report.amount))}</td>
-                    <td className="px-3 py-2 text-xs">
-                      {report.paymentMethod === "MY_MONEY" ? copy.expenseReports.myMoney : copy.expenseReports.festivalAccount}
-                    </td>
-                    <td className="px-3 py-2 text-xs">
-                      <p>{statusLabel}</p>
-                      {report.status !== ExpenseReportStatus.PENDING && report.reviewedBy ? (
-                        <p className="text-[var(--muted)]">{copy.expenseReports.reviewedBy}: {report.reviewedBy.name}</p>
-                      ) : null}
-                      {report.rejectionReason ? (
-                        <p className="mt-1 text-rose-300">{report.rejectionReason}</p>
-                      ) : null}
-                    </td>
-                    <td className="px-3 py-2">
-                      {report.proofFilename ? (
-                        <a
-                          href={`/api/expense-reports/${report.id}/proof`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs font-semibold text-[var(--accent)] hover:underline"
-                        >
-                          {copy.expenseReports.openProof}
-                        </a>
-                      ) : (
-                        <span className="text-xs text-[var(--muted)]">-</span>
-                      )}
-                    </td>
-                    {access.role === "ADMIN" ? (
-                      <td className="px-3 py-2">
-                        {isReadOnly ? (
-                          <span className="text-xs text-[var(--muted)]">-</span>
-                        ) : report.status === ExpenseReportStatus.PENDING ? (
-                          <div className="space-y-2">
-                            <form action={approveFormAction}>
-                              <input type="hidden" name="expenseReportId" value={report.id} />
-                              <button
-                                disabled={isApproving}
-                                className="w-full rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-                              >
-                                {copy.expenseReports.approve}
-                              </button>
-                            </form>
-                            <form action={rejectFormAction} className="space-y-2">
-                              <input type="hidden" name="expenseReportId" value={report.id} />
-                              <input
-                                type="text"
-                                name="rejectionReason"
-                                placeholder={copy.expenseReports.rejectionReasonOptional}
-                                className="w-full rounded-lg border border-[var(--line)] bg-[var(--panel)] px-2 py-1 text-xs outline-none"
-                              />
-                              <button
-                                disabled={isRejecting}
-                                className="w-full rounded-lg border border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-950/40 disabled:opacity-60"
-                              >
-                                {copy.expenseReports.reject}
-                              </button>
-                            </form>
-                          </div>
-                        ) : report.status === ExpenseReportStatus.APPROVED ? (
+                        {report.rejectionReason ? (
+                          <p className="mt-1 text-rose-300">{report.rejectionReason}</p>
+                        ) : null}
+                      </TD>
+                      <TD className="px-3 py-2">
+                        {report.proofFilename ? (
                           <a
-                            href={`/journal?fromExpenseReport=${report.id}`}
-                            className="block w-full rounded-lg border border-[var(--accent)] px-3 py-1.5 text-center text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10"
+                            href={`/api/expense-reports/${report.id}/proof`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs font-semibold text-[var(--accent)] hover:underline"
                           >
-                            {copy.expenseReports.recordInJournal}
+                            {copy.expenseReports.openProof}
                           </a>
-                        ) : null}
-                      </td>
-                    ) : null}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </section>
+                        ) : (
+                          <span className="text-xs text-[var(--muted)]">-</span>
+                        )}
+                      </TD>
+                      {access.role === "ADMIN" ? (
+                        <TD className="px-3 py-2">
+                          {isReadOnly ? (
+                            <span className="text-xs text-[var(--muted)]">-</span>
+                          ) : report.status === ExpenseReportStatus.PENDING ? (
+                            <div className="space-y-2">
+                              <form action={approveFormAction}>
+                                <input type="hidden" name="expenseReportId" value={report.id} />
+                                <Button type="submit" variant="primary" size="sm" disabled={isApproving} className="w-full">
+                                  {copy.expenseReports.approve}
+                                </Button>
+                              </form>
+                              <form action={rejectFormAction} className="space-y-2">
+                                <input type="hidden" name="expenseReportId" value={report.id} />
+                                <Input
+                                  type="text"
+                                  name="rejectionReason"
+                                  placeholder={copy.expenseReports.rejectionReasonOptional}
+                                  size="compact"
+                                />
+                                <Button type="submit" variant="destructive" size="sm" disabled={isRejecting} className="w-full">
+                                  {copy.expenseReports.reject}
+                                </Button>
+                              </form>
+                            </div>
+                          ) : report.status === ExpenseReportStatus.APPROVED ? (
+                            <a
+                              href={`/journal?fromExpenseReport=${report.id}`}
+                              className="block w-full rounded-lg border border-[var(--accent)] px-3 py-1.5 text-center text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10"
+                            >
+                              {copy.expenseReports.recordInJournal}
+                            </a>
+                          ) : null}
+                        </TD>
+                      ) : null}
+                    </TR>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }

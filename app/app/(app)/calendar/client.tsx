@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
+import { Badge, Button, Card, Field, Input, Modal, Textarea } from "@/components/ui";
 import { type ActionState } from "@/lib/server-action-helpers";
 
 type CalendarTask = {
@@ -368,43 +369,44 @@ export default function CalendarPageClient({
       </header>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-4 rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+        <div>
+        <Card as="section" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-semibold">{copy.monthView}: {monthStart.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</p>
             <div className="flex gap-2">
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => {
                   const d = new Date(currentMonth);
                   d.setMonth(d.getMonth() - 1);
                   setCurrentMonth(toDayStart(d));
                 }}
-                className="rounded-md border border-[var(--line)] px-3 py-1 text-xs font-semibold hover:bg-[var(--panel)]"
               >
                 {copy.previousMonth}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => {
                   const d = new Date(currentMonth);
                   d.setMonth(d.getMonth() + 1);
                   setCurrentMonth(toDayStart(d));
                 }}
-                className="rounded-md border border-[var(--line)] px-3 py-1 text-xs font-semibold hover:bg-[var(--panel)]"
               >
                 {copy.nextMonth}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={() => {
                   const now = toDayStart(new Date());
                   setCurrentMonth(now);
                   setSelectedDay(toDayKey(now));
                 }}
-                className="rounded-md bg-[var(--accent)] px-3 py-1 text-xs font-semibold text-white hover:bg-[var(--accent-strong)]"
               >
                 {copy.today}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -435,23 +437,25 @@ export default function CalendarPageClient({
                   <p className={`text-xs font-semibold ${isToday ? "text-[var(--accent)]" : "text-[var(--ink)]"}`}>{cell.day}</p>
                   <div className="mt-1 flex flex-wrap gap-1">
                     {taskCount > 0 ? (
-                      <span className="inline-flex rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
+                      <Badge tone="success">
                         {taskCount} {copy.taskPills}
-                      </span>
+                      </Badge>
                     ) : null}
                     {appointmentCount > 0 ? (
-                      <span className="inline-flex rounded-full bg-rose-500/20 px-2 py-0.5 text-[10px] font-semibold text-rose-300">
+                      <Badge tone="error">
                         {appointmentCount} {copy.appointments}
-                      </span>
+                      </Badge>
                     ) : null}
                   </div>
                 </button>
               );
             })}
           </div>
+        </Card>
         </div>
 
-        <div className="space-y-4 rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+        <div>
+        <Card as="section" className="space-y-4">
           <p className="text-sm font-semibold">
             {copy.dayView}: {selectedDate.toLocaleDateString(undefined, { weekday: "long", day: "2-digit", month: "long" })}
           </p>
@@ -552,65 +556,70 @@ export default function CalendarPageClient({
               </div>
             </div>
           </div>
+        </Card>
         </div>
       </section>
 
       {selectedAppointment ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-xl rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="text-lg font-semibold">{copy.detailsTitle}</h3>
-              <button
-                type="button"
-                onClick={closeAppointmentDetails}
-                className="rounded-md border border-[var(--line)] px-3 py-1 text-xs font-semibold hover:bg-[var(--panel)]"
-              >
-                {copy.closeDetails}
-              </button>
-            </div>
+        <Modal
+          open
+          onClose={closeAppointmentDetails}
+          title={copy.detailsTitle}
+          size="md"
+          footer={
+            canManageSelectedAppointment ? (
+              <>
+                {isEditingAppointment ? (
+                  <Button variant="primary" onClick={submitAppointmentUpdate} disabled={isPending}>
+                    {copy.saveAppointment}
+                  </Button>
+                ) : (
+                  <Button variant="secondary" onClick={() => setIsEditingAppointment(true)} disabled={isPending}>
+                    {copy.editAppointment}
+                  </Button>
+                )}
 
+                <Button variant="destructive" onClick={submitAppointmentDelete} disabled={isPending}>
+                  {copy.deleteAppointment}
+                </Button>
+              </>
+            ) : undefined
+          }
+        >
             {isEditingAppointment ? (
               <div className="mt-4 space-y-3">
-                <label className="block space-y-1">
-                  <span className="text-sm font-medium">{copy.appointmentTitle}</span>
-                  <input
+                <Field label={copy.appointmentTitle}>
+                  <Input
                     type="text"
                     value={appointmentTitle}
                     onChange={(event) => setAppointmentTitle(event.target.value)}
-                    className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
                   />
-                </label>
+                </Field>
 
-                <label className="block space-y-1">
-                  <span className="text-sm font-medium">{copy.appointmentDescription}</span>
-                  <textarea
+                <Field label={copy.appointmentDescription}>
+                  <Textarea
                     rows={4}
                     value={appointmentDescription}
                     onChange={(event) => setAppointmentDescription(event.target.value)}
-                    className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
                   />
-                </label>
+                </Field>
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="block space-y-1">
-                    <span className="text-sm font-medium">{copy.startsAt}</span>
-                    <input
+                  <Field label={copy.startsAt}>
+                    <Input
                       type="datetime-local"
                       value={appointmentStartAt}
                       onChange={(event) => setAppointmentStartAt(event.target.value)}
-                      className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
                     />
-                  </label>
+                  </Field>
 
-                  <label className="block space-y-1">
-                    <span className="text-sm font-medium">{copy.endsAtOptional}</span>
-                    <input
+                  <Field label={copy.endsAtOptional}>
+                    <Input
                       type="datetime-local"
                       value={appointmentEndAt}
                       onChange={(event) => setAppointmentEndAt(event.target.value)}
-                      className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
                     />
-                  </label>
+                  </Field>
                 </div>
               </div>
             ) : (
@@ -635,41 +644,7 @@ export default function CalendarPageClient({
             )}
 
             {appointmentActionError ? <p className="mt-3 text-sm text-rose-300">{appointmentActionError}</p> : null}
-
-            {canManageSelectedAppointment ? (
-              <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
-                {isEditingAppointment ? (
-                  <button
-                    type="button"
-                    onClick={submitAppointmentUpdate}
-                    disabled={isPending}
-                    className="rounded-md bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-                  >
-                    {copy.saveAppointment}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingAppointment(true)}
-                    disabled={isPending}
-                    className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel)] disabled:opacity-60"
-                  >
-                    {copy.editAppointment}
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={submitAppointmentDelete}
-                  disabled={isPending}
-                  className="rounded-md border border-rose-300 px-4 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-950/40 disabled:opacity-60"
-                >
-                  {copy.deleteAppointment}
-                </button>
-              </div>
-            ) : null}
-          </div>
-        </div>
+        </Modal>
       ) : null}
 
     </div>

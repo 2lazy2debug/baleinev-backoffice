@@ -3,6 +3,7 @@
 import { useActionState, useMemo, useState } from "react";
 
 import { FormError } from "@/components/form-error";
+import { Button, Input } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import { addShiftAction } from "./actions";
@@ -58,42 +59,35 @@ export default function AddShiftForm({ eventDayId, existingShifts, copy }: Props
     >
       <FormError message={state.error} className="w-full" />
       <input type="hidden" name="eventDayId" value={eventDayId} />
-      <input
-        type="time"
-        name="startTime"
-        required
-        value={startTime}
-        onChange={(event) => setStartTime(event.target.value)}
-        className="rounded-lg border border-[var(--line)] bg-[var(--panel)] px-2 py-1.5 text-xs outline-none focus:border-[var(--accent)]"
-      />
-      <input
-        type="time"
-        name="endTime"
-        required
-        value={endTime}
-        onChange={(event) => setEndTime(event.target.value)}
-        className="rounded-lg border border-[var(--line)] bg-[var(--panel)] px-2 py-1.5 text-xs outline-none focus:border-[var(--accent)]"
-      />
-      <input
-        type="text"
-        name="role"
-        required
-        placeholder={copy.role}
-        className="rounded-lg border border-[var(--line)] bg-[var(--panel)] px-2 py-1.5 text-xs outline-none focus:border-[var(--accent)]"
-      />
-      <input
-        type="number"
-        name="capacity"
-        min="1"
-        defaultValue="1"
-        className="w-16 rounded-lg border border-[var(--line)] bg-[var(--panel)] px-2 py-1.5 text-xs outline-none focus:border-[var(--accent)]"
-      />
-      <button
-        disabled={isPending}
-        className="rounded-md border border-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10 disabled:opacity-50"
-      >
+      <div className="w-28">
+        <Input
+          type="time"
+          name="startTime"
+          required
+          value={startTime}
+          onChange={(event) => setStartTime(event.target.value)}
+          size="compact"
+        />
+      </div>
+      <div className="w-28">
+        <Input
+          type="time"
+          name="endTime"
+          required
+          value={endTime}
+          onChange={(event) => setEndTime(event.target.value)}
+          size="compact"
+        />
+      </div>
+      <div className="w-40">
+        <Input type="text" name="role" required placeholder={copy.role} size="compact" />
+      </div>
+      <div className="w-16">
+        <Input type="number" name="capacity" min="1" defaultValue="1" size="compact" />
+      </div>
+      <Button type="submit" variant="primary" size="sm" disabled={isPending}>
         {copy.addShift}
-      </button>
+      </Button>
     </form>
   );
 }

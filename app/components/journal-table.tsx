@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/utils";
 import { deleteJournalEntryAction, updateJournalEntryAction } from "@/app/(app)/journal/actions";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
+import { IconButton, Input, Select, TD, TH, THead, TR } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
@@ -289,40 +290,40 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
             <col className="w-44" />
             <col className="w-24" />
           </colgroup>
-          <thead className="sticky top-0 bg-[var(--panel-strong)] text-[var(--muted)]">
-            <tr>
-              <th className="px-4 py-2 font-medium cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("date")}>
+          <THead className="sticky top-0">
+            <TR>
+              <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("date")}>
                 {copy.date}
-              </th>
-              <th className="px-4 py-2 font-medium cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("department")}>
+              </TH>
+              <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("department")}>
                 {copy.department}
-              </th>
-              <th className="px-4 py-2 font-medium">{copy.type}</th>
-              <th className="px-4 py-2 font-medium cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("amount")}>
+              </TH>
+              <TH>{copy.type}</TH>
+              <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("amount")}>
                 {copy.amount}
-              </th>
-              <th className="px-4 py-2 font-medium">{copy.label}</th>
-              <th className="px-4 py-2 font-medium">{copy.beneficiary}</th>
-              <th className="px-4 py-2 font-medium">{copy.account}</th>
-              <th className="px-4 py-2 font-medium">CC</th>
-              <th className="px-4 py-2 font-medium">{copy.balance}</th>
-              <th className="px-4 py-2 font-medium">{copy.actions}</th>
-            </tr>
-            <tr className="bg-[var(--panel)]">
-              <th className="px-4 py-2">
-                <input
+              </TH>
+              <TH>{copy.label}</TH>
+              <TH>{copy.beneficiary}</TH>
+              <TH>{copy.account}</TH>
+              <TH>CC</TH>
+              <TH>{copy.balance}</TH>
+              <TH>{copy.actions}</TH>
+            </TR>
+            <TR className="bg-[var(--panel)] normal-case">
+              <TH>
+                <Input
                   type="text"
                   placeholder={copy.filter}
                   value={filters.date}
                   onChange={(e) => handleFilterChange("date", e.target.value)}
-                  className="w-full text-xs rounded border border-[var(--line)] bg-[var(--panel-strong)] px-2 py-1"
+                  size="compact"
                 />
-              </th>
-              <th className="px-4 py-2">
-                <select
+              </TH>
+              <TH>
+                <Select
                   value={filters.department}
                   onChange={(e) => handleFilterChange("department", e.target.value)}
-                  className="w-full text-xs rounded border border-[var(--line)] bg-[var(--panel-strong)] px-2 py-1"
+                  size="compact"
                 >
                   <option value="">{copy.all}</option>
                   {uniqueDepartments.map((dept) => (
@@ -330,51 +331,51 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                       {dept}
                     </option>
                   ))}
-                </select>
-              </th>
-              <th className="px-4 py-2">
-                <select
+                </Select>
+              </TH>
+              <TH>
+                <Select
                   value={filters.type}
                   onChange={(e) => handleFilterChange("type", e.target.value)}
-                  className="w-full text-xs rounded border border-[var(--line)] bg-[var(--panel-strong)] px-2 py-1"
+                  size="compact"
                 >
                   <option value="">{copy.all}</option>
                   <option value="CHARGES">{dictionaries[locale].common.charges}</option>
                   <option value="PRODUITS">{dictionaries[locale].common.produits}</option>
-                </select>
-              </th>
-              <th className="px-4 py-2">
-                <input
+                </Select>
+              </TH>
+              <TH>
+                <Input
                   type="text"
                   placeholder={copy.filter}
                   value={filters.amount}
                   onChange={(e) => handleFilterChange("amount", e.target.value)}
-                  className="w-full text-xs rounded border border-[var(--line)] bg-[var(--panel-strong)] px-2 py-1"
+                  size="compact"
                 />
-              </th>
-              <th className="px-4 py-2">
-                <input
+              </TH>
+              <TH>
+                <Input
                   type="text"
                   placeholder={copy.filter}
                   value={filters.label}
                   onChange={(e) => handleFilterChange("label", e.target.value)}
-                  className="w-full text-xs rounded border border-[var(--line)] bg-[var(--panel-strong)] px-2 py-1"
+                  size="compact"
                 />
-              </th>
-              <th className="px-4 py-2">
-                <input
+              </TH>
+              <TH>
+                <Input
                   type="text"
                   placeholder={copy.filter}
                   value={filters.beneficiary}
                   onChange={(e) => handleFilterChange("beneficiary", e.target.value)}
-                  className="w-full text-xs rounded border border-[var(--line)] bg-[var(--panel-strong)] px-2 py-1"
+                  size="compact"
                 />
-              </th>
-              <th className="px-4 py-2">
-                <select
+              </TH>
+              <TH>
+                <Select
                   value={filters.account}
                   onChange={(e) => handleFilterChange("account", e.target.value)}
-                  className="w-full text-xs rounded border border-[var(--line)] bg-[var(--panel-strong)] px-2 py-1"
+                  size="compact"
                 >
                   <option value="">{copy.all}</option>
                   {uniqueAccounts.map((account) => (
@@ -382,13 +383,13 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                       {account}
                     </option>
                   ))}
-                </select>
-              </th>
-              <th className="px-4 py-2">
-                <select
+                </Select>
+              </TH>
+              <TH>
+                <Select
                   value={filters.costCenter}
                   onChange={(e) => handleFilterChange("costCenter", e.target.value)}
-                  className="w-full text-xs rounded border border-[var(--line)] bg-[var(--panel-strong)] px-2 py-1"
+                  size="compact"
                 >
                   <option value="">{copy.all}</option>
                   {uniqueCostCenters.map((cc) => (
@@ -396,56 +397,80 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                       {cc}
                     </option>
                   ))}
-                </select>
-              </th>
-              <th className="px-4 py-2"></th>
-              <th className="px-4 py-2"></th>
-            </tr>
-          </thead>
+                </Select>
+              </TH>
+              <TH></TH>
+              <TH></TH>
+            </TR>
+          </THead>
           <tbody>
             {sortedEntries.map((entry) => {
               const isEditing = editingId === entry.id;
-              const cellCls = "px-4 py-2";
-              const inputCls = "w-full text-xs rounded border border-[var(--line)] bg-[var(--panel)] px-2 py-1 outline-none focus:border-[var(--accent)]";
               return (
-                <tr key={entry.id} className={`border-t border-[var(--line)] ${isEditing ? "bg-[var(--panel-strong)]" : ""}`}>
-                  <td className={cellCls}>
+                <TR key={entry.id} className={isEditing ? "bg-[var(--panel-strong)]" : undefined}>
+                  <TD>
                     {isEditing ? (
-                      <input type="date" value={editDraft!.date} onChange={(e) => setEditDraft({ ...editDraft!, date: e.target.value })} className={inputCls} />
+                      <Input
+                        type="date"
+                        value={editDraft!.date}
+                        onChange={(e) => setEditDraft({ ...editDraft!, date: e.target.value })}
+                        size="compact"
+                      />
                     ) : (
                       entry.date.toISOString().slice(0, 10)
                     )}
-                  </td>
-                  <td className={cellCls}>
+                  </TD>
+                  <TD>
                     {isEditing ? (
-                      <select value={editDraft!.departmentId} onChange={(e) => setEditDraft({ ...editDraft!, departmentId: e.target.value })} className={inputCls}>
+                      <Select
+                        value={editDraft!.departmentId}
+                        onChange={(e) => setEditDraft({ ...editDraft!, departmentId: e.target.value })}
+                        size="compact"
+                      >
                         <option value="">-</option>
                         {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                      </select>
+                      </Select>
                     ) : (
                       entry.department?.name ?? "-"
                     )}
-                  </td>
-                  <td className={cellCls}>
+                  </TD>
+                  <TD>
                     {isEditing ? (
-                      <select value={editDraft!.accountType} onChange={(e) => setEditDraft({ ...editDraft!, accountType: e.target.value })} className={inputCls}>
+                      <Select
+                        value={editDraft!.accountType}
+                        onChange={(e) => setEditDraft({ ...editDraft!, accountType: e.target.value })}
+                        size="compact"
+                      >
                         <option value="CHARGES">{dictionaries[locale].common.charges}</option>
                         <option value="PRODUITS">{dictionaries[locale].common.produits}</option>
-                      </select>
+                      </Select>
                     ) : (
                       typeLabel(entry.accountType, locale)
                     )}
-                  </td>
-                  <td className={cellCls}>
+                  </TD>
+                  <TD>
                     {isEditing ? (
-                      <input type="number" step="0.01" min="0.01" value={editDraft!.amount} onChange={(e) => setEditDraft({ ...editDraft!, amount: e.target.value })} className={`${inputCls} text-right`} />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        value={editDraft!.amount}
+                        onChange={(e) => setEditDraft({ ...editDraft!, amount: e.target.value })}
+                        size="compact"
+                        className="text-right"
+                      />
                     ) : (
                       formatCurrency(Number(entry.amount.toString()))
                     )}
-                  </td>
-                  <td className={cellCls}>
+                  </TD>
+                  <TD>
                     {isEditing ? (
-                      <input type="text" value={editDraft!.label} onChange={(e) => setEditDraft({ ...editDraft!, label: e.target.value })} className={inputCls} />
+                      <Input
+                        type="text"
+                        value={editDraft!.label}
+                        onChange={(e) => setEditDraft({ ...editDraft!, label: e.target.value })}
+                        size="compact"
+                      />
                     ) : entry.linkedInvoice ? (
                       <a
                         href={`/api/invoices/${entry.linkedInvoice.id}/pdf`}
@@ -459,61 +484,79 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                     ) : (
                       <span className="truncate">{entry.label}</span>
                     )}
-                  </td>
-                    <td className={cellCls}>{entry.counterparty ?? "-"}</td>
-                  <td className={cellCls}>
+                  </TD>
+                  <TD>{entry.counterparty ?? "-"}</TD>
+                  <TD>
                     {isEditing ? (
-                      <select value={editDraft!.moneyAccountId} onChange={(e) => setEditDraft({ ...editDraft!, moneyAccountId: e.target.value })} className={inputCls}>
+                      <Select
+                        value={editDraft!.moneyAccountId}
+                        onChange={(e) => setEditDraft({ ...editDraft!, moneyAccountId: e.target.value })}
+                        size="compact"
+                      >
                         {moneyAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                      </select>
+                      </Select>
                     ) : (
                       entry.moneyAccount.name
                     )}
-                  </td>
-                  <td className={cellCls}>
+                  </TD>
+                  <TD>
                     {isEditing ? (
-                      <select value={editDraft!.costCenterId} onChange={(e) => setEditDraft({ ...editDraft!, costCenterId: e.target.value })} className={inputCls}>
+                      <Select
+                        value={editDraft!.costCenterId}
+                        onChange={(e) => setEditDraft({ ...editDraft!, costCenterId: e.target.value })}
+                        size="compact"
+                      >
                         <option value="">-</option>
                         {costCenters.map((cc) => <option key={cc.id} value={cc.id}>{cc.code}</option>)}
-                      </select>
+                      </Select>
                     ) : (
                       entry.costCenter?.code ?? "-"
                     )}
-                  </td>
-                  <td className="px-4 py-2 font-semibold">
+                  </TD>
+                  <TD className="font-semibold">
                     {formatCurrency(runningBalanceByEntryId[entry.id] ?? accountBalances[entry.moneyAccount.name] ?? 0)}
-                  </td>
-                  <td className="px-4 py-2">
+                  </TD>
+                  <TD>
                     {entry.isOpeningEntry || isReadOnly ? (
                       <span className="text-xs text-[var(--muted)]">{copy.locked}</span>
                     ) : isEditing ? (
                       <div className="flex items-center gap-2">
-                        <button onClick={() => saveFormAction()} disabled={isSaving} title={dictionaries[locale].shell.save} className="rounded-md border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
-                          <Check className="h-3.5 w-3.5" />
-                        </button>
-                        <button onClick={() => { setEditingId(null); setEditDraft(null); }} title={dictionaries[locale].shell.cancel} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
-                          <X className="h-3.5 w-3.5" />
-                        </button>
+                        <IconButton
+                          onClick={() => saveFormAction()}
+                          disabled={isSaving}
+                          tone="save"
+                          label={dictionaries[locale].shell.save}
+                        >
+                          <Check />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => { setEditingId(null); setEditDraft(null); }}
+                          tone="neutral"
+                          label={dictionaries[locale].shell.cancel}
+                        >
+                          <X />
+                        </IconButton>
                       </div>
                     ) : (
                       <div className="flex items-center gap-3">
-                        <button onClick={() => handleEditStart(entry)} title={copy.edit} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--accent)] hover:bg-[var(--panel-strong)]">
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
+                        <IconButton onClick={() => handleEditStart(entry)} tone="accent" label={copy.edit}>
+                          <Pencil />
+                        </IconButton>
                         <form action={deleteFormAction}>
                           <input type="hidden" name="journalEntryId" value={entry.id} />
-                          <button
-                            title={entry.linkedInvoice ? copy.locked : copy.actions}
+                          <IconButton
+                            type="submit"
+                            tone="delete"
+                            label={entry.linkedInvoice ? copy.locked : copy.actions}
                             disabled={Boolean(entry.linkedInvoice) || isDeleting}
-                            className="text-rose-700 hover:text-rose-400 disabled:cursor-not-allowed disabled:text-[var(--muted)]"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                            <Trash2 />
+                          </IconButton>
                         </form>
                       </div>
                     )}
-                  </td>
-                </tr>
+                  </TD>
+                </TR>
               );
             })}
           </tbody>

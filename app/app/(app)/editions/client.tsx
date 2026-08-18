@@ -122,6 +122,7 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
         ))}
       </div>
 
+      <div>
       <Card as="section">
         <h2 className="text-xl font-semibold">{copy.editions.create}</h2>
         <form action={createFormAction} className="mt-6 space-y-4">
@@ -174,6 +175,7 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
           </Button>
         </form>
       </Card>
+      </div>
     </section>
   );
 }

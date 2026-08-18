@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { Card } from "@/components/ui";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
@@ -49,7 +50,7 @@ export default async function JournalEntryEditPage({ params }: JournalEntryEditP
         <p className="text-sm text-[var(--muted)]">{copy.journal.subtitle}</p>
       </header>
 
-      <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6">
+      <Card as="section">
         <JournalEntryEditForm
           copy={copy.journal}
           commonCopy={copy.common}
@@ -70,7 +71,7 @@ export default async function JournalEntryEditPage({ params }: JournalEntryEditP
           moneyAccounts={activeEdition.moneyAccounts}
           costCenters={activeEdition.costCenters}
         />
-      </section>
+      </Card>
     </div>
   );
 }

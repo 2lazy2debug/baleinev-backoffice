@@ -6,6 +6,7 @@ import { Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
+import { Button, Card, IconButton, Input } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -40,19 +41,15 @@ export function MoneyAccountsPageClient({ locale, accounts }: Props) {
   const isReadOnly = useEditionReadOnly();
 
   if (accounts.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)] md:col-span-2">
-        {copy.moneyAccounts.noMoneyAccounts}
-      </div>
-    );
+    return <Card span="full" dashed>{copy.moneyAccounts.noMoneyAccounts}</Card>;
   }
 
   return (
     <>
-      <FormError message={updateState.error} className="md:col-span-2" />
-      <FormError message={deleteState.error} className="md:col-span-2" />
+      <FormError message={updateState.error} className="col-span-12" />
+      <FormError message={deleteState.error} className="col-span-12" />
       {accounts.map((account) => (
-        <article key={account.id} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+        <Card key={account.id} as="article" span="1/2">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{account.type}</p>
@@ -72,78 +69,71 @@ export function MoneyAccountsPageClient({ locale, accounts }: Props) {
               <form action={updateFormAction} className="mt-4 space-y-2">
                 <input type="hidden" name="moneyAccountId" value={account.id} />
                 <div className="grid gap-2 sm:grid-cols-[1fr_150px]">
-                  <input
-                    type="text"
-                    name="name"
-                    defaultValue={account.name}
-                    required
-                    className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]"
-                  />
-                  <input
+                  <Input type="text" name="name" defaultValue={account.name} required size="compact" />
+                  <Input
                     type="number"
                     step="0.01"
                     name="openingBalance"
                     defaultValue={account.openingBalance.toFixed(2)}
-                    className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]"
+                    size="compact"
                   />
                 </div>
                 {account.type === MoneyAccountType.BANK ? (
                   <>
-                    <input
+                    <Input
                       type="text"
                       name="iban"
                       defaultValue={account.iban ?? ""}
                       placeholder="CH00 0000 0000 0000 0000 0"
-                      className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm uppercase outline-none transition focus:border-[var(--accent)]"
+                      className="uppercase"
+                      size="compact"
                     />
                     <div className="grid gap-2 sm:grid-cols-2">
-                      <input
+                      <Input
                         type="text"
                         name="beneficiaryName"
                         defaultValue={account.beneficiaryName ?? ""}
                         placeholder={copy.moneyAccounts.beneficiaryName}
-                        className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]"
+                        size="compact"
                       />
-                      <input
+                      <Input
                         type="text"
                         name="beneficiaryAddress"
                         defaultValue={account.beneficiaryAddress ?? ""}
                         placeholder={copy.moneyAccounts.beneficiaryAddress}
-                        className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]"
+                        size="compact"
                       />
                     </div>
                     <div className="grid gap-2 sm:grid-cols-[110px_1fr_90px]">
-                      <input
+                      <Input
                         type="text"
                         name="beneficiaryPostalCode"
                         defaultValue={account.beneficiaryPostalCode ?? ""}
                         placeholder={copy.moneyAccounts.beneficiaryPostalCode}
-                        className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]"
+                        size="compact"
                       />
-                      <input
+                      <Input
                         type="text"
                         name="beneficiaryCity"
                         defaultValue={account.beneficiaryCity ?? ""}
                         placeholder={copy.moneyAccounts.beneficiaryCity}
-                        className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]"
+                        size="compact"
                       />
-                      <input
+                      <Input
                         type="text"
                         name="beneficiaryCountry"
                         maxLength={2}
                         defaultValue={account.beneficiaryCountry}
                         placeholder="CH"
-                        className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm uppercase outline-none transition focus:border-[var(--accent)]"
+                        className="uppercase"
+                        size="compact"
                       />
                     </div>
                   </>
                 ) : null}
-                <button
-                  disabled={isSavingAccount}
-                  className="rounded-xl border border-[var(--line)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] hover:bg-[var(--panel)] disabled:opacity-60"
-                >
+                <Button type="submit" variant="secondary" size="sm" disabled={isSavingAccount}>
                   {copy.shell.save}
-                </button>
+                </Button>
               </form>
               )}
             </div>
@@ -151,17 +141,18 @@ export function MoneyAccountsPageClient({ locale, accounts }: Props) {
             {isReadOnly ? null : (
               <form action={deleteFormAction}>
                 <input type="hidden" name="moneyAccountId" value={account.id} />
-                <button
+                <IconButton
+                  type="submit"
+                  tone="delete"
+                  label={account.canDelete ? copy.moneyAccounts.deleteAccount : copy.moneyAccounts.cannotDelete}
                   disabled={!account.canDelete || isDeletingAccount}
-                  title={account.canDelete ? copy.moneyAccounts.deleteAccount : copy.moneyAccounts.cannotDelete}
-                  className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                  <Trash2 />
+                </IconButton>
               </form>
             )}
           </div>
-        </article>
+        </Card>
       ))}
     </>
   );

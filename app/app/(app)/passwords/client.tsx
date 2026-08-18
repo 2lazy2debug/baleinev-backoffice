@@ -1,10 +1,10 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
-import { Check, Copy, Eye, EyeOff, KeyRound, Pencil, Plus, Search, ShieldCheck, Trash2, X } from "lucide-react";
+import { Check, Copy, Eye, EyeOff, KeyRound, Pencil, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
-import { buttonClasses } from "@/lib/button-classes";
+import { Badge, Button, Card, Checkbox, Field, IconButton, Input, inputClasses, Modal } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -34,9 +34,6 @@ type Props = {
   isAdmin: boolean;
 };
 
-const inputClass =
-  "w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]";
-
 function CopyButton({ getValue, label }: { getValue: () => Promise<string | null>; label: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -55,9 +52,9 @@ function CopyButton({ getValue, label }: { getValue: () => Promise<string | null
   }
 
   return (
-    <button type="button" onClick={handleCopy} title={label} aria-label={label} className={buttonClasses.icon.action}>
-      {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-    </button>
+    <IconButton tone="neutral" label={label} onClick={handleCopy}>
+      {copied ? <Check className="text-emerald-400" /> : <Copy />}
+    </IconButton>
   );
 }
 
@@ -87,39 +84,38 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="relative min-w-0 flex-1 sm:max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
-          <input
+          <Input
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={copy.search}
             aria-label={copy.search}
-            className={`${inputClass} pl-9`}
+            className="pl-9"
           />
         </div>
         <div className="flex items-center gap-3">
           <p className="text-sm text-[var(--muted)]">
             {filtered.length} {filtered.length === 1 ? copy.entrySingular : copy.entryPlural}
           </p>
-          <button type="button" onClick={() => setIsCreateOpen(true)} className={buttonClasses.primary}>
-            <span className="inline-flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              {copy.add}
-            </span>
-          </button>
+          <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
+            <Plus className="h-4 w-4" />
+            {copy.add}
+          </Button>
         </div>
       </div>
 
       <FormError message={deleteState.error} />
 
       {entries.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)]">
+        <Card span="full" dashed>
           {copy.empty}
-        </div>
+        </Card>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)]">
+        <Card span="full" dashed>
           {copy.noResults}
-        </div>
+        </Card>
       ) : (
+        // check-design-ignore: list container with divide-y rows, not a padded Card — rows carry their own padding
         <ul className="divide-y divide-[var(--line)] overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)]">
           {filtered.map((entry) => (
             <EntryRow
@@ -243,12 +239,12 @@ function EntryRow({
           <p className="break-words text-sm font-semibold">{entry.name}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <button type="button" onClick={onEdit} title={copy.edit} aria-label={copy.edit} className={buttonClasses.icon.edit}>
-            <Pencil className="h-3.5 w-3.5" />
-          </button>
-          <button type="button" onClick={onDelete} title={copy.delete} aria-label={copy.delete} className={buttonClasses.icon.delete}>
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          <IconButton tone="accent" label={copy.edit} onClick={onEdit}>
+            <Pencil />
+          </IconButton>
+          <IconButton tone="delete" label={copy.delete} onClick={onDelete}>
+            <Trash2 />
+          </IconButton>
         </div>
       </div>
 
@@ -266,16 +262,14 @@ function EntryRow({
             <code className="min-w-0 flex-1 truncate rounded-md bg-[var(--panel)] px-2 py-1 font-mono text-xs">
               {revealed ?? "••••••••••"}
             </code>
-            <button
-              type="button"
+            <IconButton
+              tone="neutral"
+              label={revealed ? copy.hide : copy.reveal}
               onClick={toggleReveal}
               disabled={isRevealing}
-              title={revealed ? copy.hide : copy.reveal}
-              aria-label={revealed ? copy.hide : copy.reveal}
-              className={buttonClasses.icon.action}
             >
-              {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-            </button>
+              {revealed ? <EyeOff /> : <Eye />}
+            </IconButton>
             <CopyButton getValue={fetchPasswordValue} label={copy.copyPassword} />
             {entry.has2fa ? (
               totp ? (
@@ -285,17 +279,10 @@ function EntryRow({
                   <CopyButton getValue={async () => totp.code} label={copy.copyCode} />
                 </span>
               ) : (
-                <button
-                  type="button"
-                  onClick={loadTotp}
-                  disabled={isLoadingTotp}
-                  title={copy.show2faCode}
-                  aria-label={copy.show2faCode}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-[var(--line)] px-2 py-1 text-xs font-semibold text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)] disabled:opacity-60"
-                >
-                  <ShieldCheck className="h-3.5 w-3.5" />
+                <Button variant="secondary" size="sm" onClick={loadTotp} disabled={isLoadingTotp}>
+                  <ShieldCheck className="h-4 w-4" />
                   {isLoadingTotp ? copy.loading : copy.field2fa}
-                </button>
+                </Button>
               )
             ) : null}
           </div>
@@ -316,12 +303,9 @@ function EntryRow({
             </a>
           ) : null}
           {entry.departmentRoles.map((role) => (
-            <span
-              key={role.id}
-              className="rounded-full border border-[var(--line)] bg-[var(--panel)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]"
-            >
+            <Badge key={role.id} tone="neutral">
               {role.name}
-            </span>
+            </Badge>
           ))}
         </div>
       </div>
@@ -362,101 +346,94 @@ function EntryDialog({
   }, [submitted, pending, closeOnSuccessKey, onClose]);
 
   return (
-    <>
-      <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          <button type="button" onClick={onClose} className="text-[var(--muted)] hover:text-[var(--ink)]" aria-label={copy.cancel}>
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <Modal
+      open
+      onClose={onClose}
+      title={title}
+      size="md"
+      footer={
+        <>
+          <Button variant="secondary" size="sm" onClick={onClose}>
+            {copy.cancel}
+          </Button>
+          <Button type="submit" form="password-entry-form" variant="primary" size="sm" disabled={pending}>
+            {pending ? copy.saving : copy.save}
+          </Button>
+        </>
+      }
+    >
+      <form id="password-entry-form" action={formAction} onSubmit={() => setSubmitted(true)} className="space-y-4">
+        {entry ? <input type="hidden" name="entryId" value={entry.id} /> : null}
+        <FormError message={error} />
 
-        <form action={formAction} onSubmit={() => setSubmitted(true)} className="space-y-4">
-          {entry ? <input type="hidden" name="entryId" value={entry.id} /> : null}
-          <FormError message={error} />
+        <Field label={copy.fieldName}>
+          <Input type="text" name="name" required defaultValue={entry?.name ?? ""} placeholder="Canva" />
+        </Field>
 
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium">{copy.fieldName}</span>
-            <input type="text" name="name" required defaultValue={entry?.name ?? ""} placeholder="Canva" className={inputClass} />
-          </label>
+        <Field label={copy.fieldLogin}>
+          <Input
+            type="text"
+            name="login"
+            required
+            defaultValue={entry?.login ?? ""}
+            placeholder="team@baleinev.ch"
+            autoComplete="off"
+          />
+        </Field>
 
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium">{copy.fieldLogin}</span>
-            <input type="text" name="login" required defaultValue={entry?.login ?? ""} placeholder="team@baleinev.ch" className={inputClass} autoComplete="off" />
-          </label>
+        <Field label={entry ? copy.fieldPasswordEdit : copy.fieldPassword}>
+          <Input
+            type="password"
+            name="password"
+            required={!entry}
+            placeholder={entry ? copy.passwordUnchanged : "••••••••"}
+            autoComplete="new-password"
+          />
+        </Field>
 
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium">{entry ? copy.fieldPasswordEdit : copy.fieldPassword}</span>
-            <input
-              type="password"
-              name="password"
-              required={!entry}
-              placeholder={entry ? copy.passwordUnchanged : "••••••••"}
-              className={inputClass}
-              autoComplete="new-password"
-            />
-          </label>
+        <Field label={copy.field2fa}>
+          <Input
+            type="text"
+            name="totp"
+            placeholder={copy.field2faHint}
+            defaultValue=""
+            className="font-mono"
+            autoComplete="off"
+          />
+          <span className="block text-xs text-[var(--muted)]">{copy.field2faHelp}</span>
+        </Field>
+        {entry?.has2fa ? <Checkbox id="clearTotp" name="clearTotp" label={copy.clear2fa} /> : null}
 
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium">{copy.field2fa}</span>
-            <input
-              type="text"
-              name="totp"
-              placeholder={copy.field2faHint}
-              defaultValue=""
-              className={`${inputClass} font-mono`}
-              autoComplete="off"
-            />
-            <span className="block text-xs text-[var(--muted)]">{copy.field2faHelp}</span>
-          </label>
-          {entry?.has2fa ? (
-            <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
-              <input type="checkbox" name="clearTotp" />
-              {copy.clear2fa}
-            </label>
+        <Field label={copy.fieldWebsite}>
+          <Input type="url" name="website" defaultValue={entry?.website ?? ""} placeholder="https://…" />
+        </Field>
+
+        <Field label={copy.fieldDepartments}>
+          <select
+            name="departmentRoleIds"
+            multiple
+            required
+            defaultValue={(entry?.departmentRoles ?? [])
+              .filter((role) => assignableDepartments.some((d) => d.id === role.id))
+              .map((role) => role.id)}
+            size={Math.min(Math.max(assignableDepartments.length, 3), 8)}
+            className={inputClasses()}
+          >
+            {assignableDepartments.map((department) => (
+              <option key={department.id} value={department.id}>
+                {department.name}
+              </option>
+            ))}
+          </select>
+          <span className="block text-xs text-[var(--muted)]">
+            {isAdmin ? copy.departmentsHelpAdmin : copy.departmentsHelp}
+          </span>
+          {entry && !isAdmin && (entry.departmentRoles ?? []).some((role) => !assignableDepartments.some((d) => d.id === role.id)) ? (
+            <span className="block text-xs text-[var(--muted)]">{copy.departmentsForeignNote}</span>
           ) : null}
-
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium">{copy.fieldWebsite}</span>
-            <input type="url" name="website" defaultValue={entry?.website ?? ""} placeholder="https://…" className={inputClass} />
-          </label>
-
-          <div className="block space-y-1.5">
-            <span className="text-sm font-medium">{copy.fieldDepartments}</span>
-            <select
-              name="departmentRoleIds"
-              multiple
-              required
-              defaultValue={(entry?.departmentRoles ?? []).filter((role) => assignableDepartments.some((d) => d.id === role.id)).map((role) => role.id)}
-              size={Math.min(Math.max(assignableDepartments.length, 3), 8)}
-              className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]"
-            >
-              {assignableDepartments.map((department) => (
-                <option key={department.id} value={department.id}>
-                  {department.name}
-                </option>
-              ))}
-            </select>
-            <span className="block text-xs text-[var(--muted)]">
-              {isAdmin ? copy.departmentsHelpAdmin : copy.departmentsHelp}
-            </span>
-            {entry && !isAdmin && (entry.departmentRoles ?? []).some((role) => !assignableDepartments.some((d) => d.id === role.id)) ? (
-              <span className="block text-xs text-[var(--muted)]">{copy.departmentsForeignNote}</span>
-            ) : null}
-          </div>
-
-          <div className="mt-2 flex items-center justify-end gap-2">
-            <button type="button" onClick={onClose} className={buttonClasses.text.cancel}>
-              {copy.cancel}
-            </button>
-            <button type="submit" disabled={pending} className={buttonClasses.text.primary}>
-              {pending ? copy.saving : copy.save}
-            </button>
-          </div>
-        </form>
-      </div>
-    </>
+        </Field>
+      </form>
+    </Modal>
   );
 }
 
@@ -486,24 +463,29 @@ function DeleteDialog({
   }, [submitted, pending, closeOnSuccessKey, onClose]);
 
   return (
-    <>
-      <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
-        <h2 className="text-xl font-semibold">{copy.deleteTitle}</h2>
-        <p className="mt-3 text-sm text-[var(--muted)]">
-          {copy.deleteConfirm} <span className="font-semibold text-[var(--ink)]">{entry.name}</span>?
-        </p>
-        <FormError message={error} className="mt-4" />
-        <form action={formAction} onSubmit={() => setSubmitted(true)} className="mt-6 flex items-center justify-end gap-2">
-          <input type="hidden" name="entryId" value={entry.id} />
-          <button type="button" onClick={onClose} className={buttonClasses.text.cancel}>
+    <Modal
+      open
+      onClose={onClose}
+      title={copy.deleteTitle}
+      size="sm"
+      footer={
+        <>
+          <Button variant="secondary" size="sm" onClick={onClose}>
             {copy.cancel}
-          </button>
-          <button type="submit" disabled={pending} className={buttonClasses.text.delete}>
+          </Button>
+          <Button type="submit" form="password-delete-form" variant="destructive" size="sm" disabled={pending}>
             {pending ? copy.deleting : copy.delete}
-          </button>
-        </form>
-      </div>
-    </>
+          </Button>
+        </>
+      }
+    >
+      <p className="text-sm text-[var(--muted)]">
+        {copy.deleteConfirm} <span className="font-semibold text-[var(--ink)]">{entry.name}</span>?
+      </p>
+      <FormError message={error} className="mt-4" />
+      <form id="password-delete-form" action={formAction} onSubmit={() => setSubmitted(true)}>
+        <input type="hidden" name="entryId" value={entry.id} />
+      </form>
+    </Modal>
   );
 }

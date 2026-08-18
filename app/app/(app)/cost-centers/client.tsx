@@ -5,7 +5,7 @@ import { Pencil, TrendingDown, TrendingUp, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, Field, IconButton, Input } from "@/components/ui";
+import { Button, Card, CardGrid, Field, IconButton, Input } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -45,19 +45,20 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
 
   return (
     <section className={isReadOnly ? "grid gap-6" : "grid gap-6 xl:grid-cols-[1fr_360px]"}>
-      <div className="grid gap-4 md:grid-cols-2">
-        <FormError message={updateState.error} className="md:col-span-2" />
-        <FormError message={deleteState.error} className="md:col-span-2" />
+      <div>
+        <FormError message={updateState.error} />
+        <FormError message={deleteState.error} />
         {costCenters.length === 0 ? (
-          <Card span="full" dashed className="md:col-span-2">
+          <Card span="full" dashed>
             {copy.costCenters.noCostCenters}
           </Card>
         ) : (
-          costCenters.map((costCenter) => {
+          <CardGrid>
+          {costCenters.map((costCenter) => {
             const result = costCenter.produits - costCenter.charges;
 
             return (
-              <Card key={costCenter.id} as="article">
+              <Card key={costCenter.id} as="article" span="1/2">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{costCenter.code}</p>
@@ -111,28 +112,31 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
                 </div>
               </Card>
             );
-          })
+          })}
+          </CardGrid>
         )}
       </div>
 
       {isReadOnly ? null : (
-      <Card as="section">
-        <h2 className="text-xl font-semibold">{copy.costCenters.create}</h2>
-        <form action={createFormAction} className="mt-6 space-y-4">
-          <FormError message={createState.error} />
-          <Field label={copy.costCenters.code}>
-            <Input type="text" name="code" placeholder="AFTER" required />
-          </Field>
+      <div>
+        <Card as="section">
+          <h2 className="text-xl font-semibold">{copy.costCenters.create}</h2>
+          <form action={createFormAction} className="mt-6 space-y-4">
+            <FormError message={createState.error} />
+            <Field label={copy.costCenters.code}>
+              <Input type="text" name="code" placeholder="AFTER" required />
+            </Field>
 
-          <Field label={copy.costCenters.name}>
-            <Input type="text" name="name" placeholder="After party" required />
-          </Field>
+            <Field label={copy.costCenters.name}>
+              <Input type="text" name="name" placeholder="After party" required />
+            </Field>
 
-          <Button type="submit" variant="primary" disabled={isCreatingCostCenter}>
-            {copy.costCenters.add}
-          </Button>
-        </form>
-      </Card>
+            <Button type="submit" variant="primary" disabled={isCreatingCostCenter}>
+              {copy.costCenters.add}
+            </Button>
+          </form>
+        </Card>
+      </div>
       )}
     </section>
   );

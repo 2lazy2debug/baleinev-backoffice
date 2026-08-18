@@ -16,7 +16,6 @@ import {
   Target,
   Users,
   Wallet,
-  X,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -24,6 +23,7 @@ import { useState, useRef } from "react";
 
 import { EditionClosedBanner, EditionReadOnlyProvider } from "@/components/edition-read-only";
 import { SignOutButton } from "@/components/sign-out-button";
+import { Button, IconButton, Input, Modal, Select } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 
 type EditionOption = {
@@ -208,12 +208,12 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
                   {copy.edition}
                 </label>
                 {editions.length > 0 ? (
-                  <select
+                  <Select
                     id="edition-picker"
+                    size="compact"
                     value={selectedEditionId ?? ""}
                     disabled={switchingEdition}
                     onChange={(event) => selectEdition(event.target.value)}
-                    className="w-full rounded-md border border-[var(--line)] bg-[var(--panel-strong)] px-2 py-1.5 text-sm text-[var(--ink)] outline-none transition focus:border-[var(--accent)] disabled:opacity-60"
                   >
                     {selectedEditionId ? null : <option value="">{copy.pickEdition}</option>}
                     {editions.map((edition) => (
@@ -221,7 +221,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
                         {edition.isClosed ? `${edition.name} — ${copy.editionClosed}` : edition.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 ) : (
                   <p className="text-xs text-[var(--muted)]">{copy.noEditions}</p>
                 )}
@@ -265,23 +265,24 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
           <div className="shrink-0 border-t border-[var(--line)] p-3">
             <p className="truncate text-sm font-medium">{!isCollapsed ? userName : userName?.split(" ")[0]}</p>
             <div className="mt-2 flex gap-2">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => { setSaveError(false); setIsSettingsOpen(true); }}
-                className="flex-1 inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[var(--line)] px-4 whitespace-nowrap text-sm font-semibold text-[var(--muted)] transition hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
+                className="flex-1 whitespace-nowrap"
               >
                 <Settings className="h-4 w-4" />
                 {!isCollapsed ? <span>{copy.settings}</span> : null}
-              </button>
+              </Button>
 
-              <button
+              <IconButton
                 type="button"
+                tone="neutral"
+                label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                 onClick={toggleCollapse}
-                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[var(--line)] px-3 text-[var(--muted)] hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
               >
-                {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-              </button>
+                {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
+              </IconButton>
             </div>
             <div className="mt-2">
               <SignOutButton label={copy.signOut} />
@@ -302,115 +303,91 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
         </main>
       </div>
 
-      {isSettingsOpen ? (
-        <>
-          <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setIsSettingsOpen(false)} />
-          <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">{copy.settings}</h2>
-              <button
-                type="button"
-                onClick={() => setIsSettingsOpen(false)}
-                className="text-[var(--muted)] hover:text-[var(--ink)]"
-                aria-label={copy.cancel}
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+      <Modal
+        open={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        title={copy.settings}
+        size="sm"
+        footer={
+          <>
+            <Button type="button" variant="secondary" onClick={() => setIsSettingsOpen(false)}>
+              {copy.cancel}
+            </Button>
+            <Button type="button" variant="primary" onClick={saveSettings} disabled={saving}>
+              {saving ? "..." : copy.save}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <p className="text-sm font-medium">{copy.language}</p>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="language"
+              value="en"
+              checked={selectedLocale === "en"}
+              onChange={() => setSelectedLocale("en")}
+            />
+            {copy.english}
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="language"
+              value="fr"
+              checked={selectedLocale === "fr"}
+              onChange={() => setSelectedLocale("fr")}
+            />
+            {copy.french}
+          </label>
 
-            <div className="space-y-3">
-              <p className="text-sm font-medium">{copy.language}</p>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="language"
-                  value="en"
-                  checked={selectedLocale === "en"}
-                  onChange={() => setSelectedLocale("en")}
+          <div className="pt-3">
+            <p className="text-sm font-medium">{copy.refundDetails}</p>
+            <div className="mt-2 grid gap-2">
+              <Input
+                type="text"
+                value={refundFirstName}
+                onChange={(event) => setRefundFirstName(event.target.value)}
+                placeholder={copy.refundFirstName}
+              />
+              <Input
+                type="text"
+                value={refundLastName}
+                onChange={(event) => setRefundLastName(event.target.value)}
+                placeholder={copy.refundLastName}
+              />
+              <Input
+                type="text"
+                value={refundIban}
+                onChange={(event) => setRefundIban(event.target.value)}
+                placeholder={copy.refundIban}
+                className="uppercase"
+              />
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Input
+                  type="text"
+                  value={refundZip}
+                  onChange={(event) => setRefundZip(event.target.value)}
+                  placeholder={copy.refundZip}
                 />
-                {copy.english}
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="language"
-                  value="fr"
-                  checked={selectedLocale === "fr"}
-                  onChange={() => setSelectedLocale("fr")}
+                <Input
+                  type="text"
+                  value={refundCity}
+                  onChange={(event) => setRefundCity(event.target.value)}
+                  placeholder={copy.refundCity}
                 />
-                {copy.french}
-              </label>
-
-              <div className="pt-3">
-                <p className="text-sm font-medium">{copy.refundDetails}</p>
-                <div className="mt-2 grid gap-2">
-                  <input
-                    type="text"
-                    value={refundFirstName}
-                    onChange={(event) => setRefundFirstName(event.target.value)}
-                    placeholder={copy.refundFirstName}
-                    className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]"
-                  />
-                  <input
-                    type="text"
-                    value={refundLastName}
-                    onChange={(event) => setRefundLastName(event.target.value)}
-                    placeholder={copy.refundLastName}
-                    className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]"
-                  />
-                  <input
-                    type="text"
-                    value={refundIban}
-                    onChange={(event) => setRefundIban(event.target.value)}
-                    placeholder={copy.refundIban}
-                    className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2 text-sm uppercase outline-none transition focus:border-[var(--accent)]"
-                  />
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <input
-                      type="text"
-                      value={refundZip}
-                      onChange={(event) => setRefundZip(event.target.value)}
-                      placeholder={copy.refundZip}
-                      className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]"
-                    />
-                    <input
-                      type="text"
-                      value={refundCity}
-                      onChange={(event) => setRefundCity(event.target.value)}
-                      placeholder={copy.refundCity}
-                      className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]"
-                    />
-                  </div>
-                </div>
               </div>
             </div>
-
-            {saveError ? (
-              <p className="mt-4 rounded-xl border border-rose-400/20 bg-rose-950/35 px-3 py-2 text-sm text-rose-200">
-                {copy.saveFailed}
-              </p>
-            ) : null}
-
-            <div className="mt-6 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setIsSettingsOpen(false)}
-                className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold hover:bg-[var(--panel-strong)]"
-              >
-                {copy.cancel}
-              </button>
-              <button
-                type="button"
-                onClick={saveSettings}
-                disabled={saving}
-                className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-              >
-                {saving ? "..." : copy.save}
-              </button>
-            </div>
           </div>
-        </>
-      ) : null}
+        </div>
+
+        {saveError ? (
+          <p className="mt-4 rounded-xl border border-rose-400/20 bg-rose-950/35 px-3 py-2 text-sm text-rose-200">
+            {copy.saveFailed}
+          </p>
+        ) : null}
+      </Modal>
     </div>
   );
 }

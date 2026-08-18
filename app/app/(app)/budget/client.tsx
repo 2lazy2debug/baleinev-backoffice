@@ -6,6 +6,7 @@ import { Check, Eye, Pencil, Plus, TrendingDown, TrendingUp, Trash2, X } from "l
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
+import { Button, Card, CardGrid, Field, IconButton, Input, Modal, Select, TFoot, THead, TR, TH, TD, Table, Textarea } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -122,8 +123,6 @@ export default function BudgetPageClient({ locale, editionName, departments, can
     initialActionState
   );
 
-  const inp = "w-full text-xs rounded border border-[var(--line)] bg-[var(--panel)] px-2 py-1 outline-none focus:border-[var(--accent)]";
-
   return (
     <div className="space-y-8">
       <header className="space-y-3">
@@ -131,253 +130,250 @@ export default function BudgetPageClient({ locale, editionName, departments, can
         <h1 className="text-3xl font-semibold tracking-tight">{copy.budget.entriesFor} {editionName}</h1>
         <p className="max-w-3xl text-sm leading-7 text-[var(--muted)]">{copy.budget.subtitle}</p>
         {canManage ? (
-          <button
-            type="button"
-            onClick={() => setIsDepartmentModalOpen(true)}
-            className="inline-flex items-center gap-2 border border-[var(--line)] px-4 py-2 text-sm font-semibold hover:bg-[var(--panel)]"
-          >
+          <Button variant="secondary" onClick={() => setIsDepartmentModalOpen(true)}>
             <Plus className="h-4 w-4" />
             {copy.budget.addDepartment}
-          </button>
+          </Button>
         ) : null}
       </header>
 
-      <section className="grid gap-4 md:grid-cols-2">
-        <FormError message={deleteDeptState.error} className="md:col-span-2" />
-        <FormError message={deleteLineState.error} className="md:col-span-2" />
-        <FormError message={saveLineState.error} className="md:col-span-2" />
+      <div className="space-y-4">
+        <FormError message={deleteDeptState.error} />
+        <FormError message={deleteLineState.error} />
+        <FormError message={saveLineState.error} />
         {departments.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)] md:col-span-2">
-            {emptyStateMessage}
-          </div>
+          <CardGrid>
+            <Card span="full" dashed>{emptyStateMessage}</Card>
+          </CardGrid>
         ) : (
-          departments.map((department) => {
-            const chargesLines = department.budgetLines.filter((line) => line.accountType === "CHARGES");
-            const produitsLines = department.budgetLines.filter((line) => line.accountType === "PRODUITS");
+          <CardGrid>
+            {departments.map((department) => {
+              const chargesLines = department.budgetLines.filter((line) => line.accountType === "CHARGES");
+              const produitsLines = department.budgetLines.filter((line) => line.accountType === "PRODUITS");
 
-            const chargesTotal = chargesLines.reduce((total, line) => total + line.amount, 0);
-            const produitsTotal = produitsLines.reduce((total, line) => total + line.amount, 0);
-            const result = produitsTotal - chargesTotal;
+              const chargesTotal = chargesLines.reduce((total, line) => total + line.amount, 0);
+              const produitsTotal = produitsLines.reduce((total, line) => total + line.amount, 0);
+              const result = produitsTotal - chargesTotal;
 
-            const canDeleteDept = department.budgetLines.length === 0 && department.journalEntriesCount === 0;
+              const canDeleteDept = department.budgetLines.length === 0 && department.journalEntriesCount === 0;
 
-            return (
-              <article key={department.id} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h2 className="text-lg font-semibold">{department.name}</h2>
-                    <p className="mt-2 text-sm text-[var(--muted)]">
-                      {department.budgetLines.length} {copy.budget.budgetEntries}
-                    </p>
-                    {department.budgetLines.length > 0 && (
-                      <div className="mt-2 flex items-center gap-1.5 text-sm font-semibold">
-                        <span className={result >= 0 ? "text-emerald-400" : "text-rose-400"}>{formatCurrency(result)}</span>
-                        {result >= 0
-                          ? <TrendingUp className="h-4 w-4 text-emerald-400" />
-                          : <TrendingDown className="h-4 w-4 text-rose-400" />}
-                      </div>
-                    )}
-                  </div>
+              return (
+                <Card key={department.id} as="article" span="1/2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 className="text-lg font-semibold">{department.name}</h2>
+                      <p className="mt-2 text-sm text-[var(--muted)]">
+                        {department.budgetLines.length} {copy.budget.budgetEntries}
+                      </p>
+                      {department.budgetLines.length > 0 && (
+                        <div className="mt-2 flex items-center gap-1.5 text-sm font-semibold">
+                          <span className={result >= 0 ? "text-emerald-400" : "text-rose-400"}>{formatCurrency(result)}</span>
+                          {result >= 0
+                            ? <TrendingUp className="h-4 w-4 text-emerald-400" />
+                            : <TrendingDown className="h-4 w-4 text-rose-400" />}
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setDetailsDepartment(department)}
-                        title={copy.budget.viewDetails}
-                        className="rounded-md border border-[var(--line)] p-2 text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                      </button>
+                      <IconButton tone="neutral" label={copy.budget.viewDetails} onClick={() => setDetailsDepartment(department)}>
+                        <Eye />
+                      </IconButton>
                       {canManage ? (
                         <>
-                      <button
-                        type="button"
-                        onClick={() => setEntryModalDepartment({ id: department.id, name: department.name })}
-                        title={copy.budget.addBudgetEntry}
-                        className="rounded-md border border-[var(--line)] p-2 text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </button>
-                      <form action={deleteDeptFormAction}>
-                        <input type="hidden" name="departmentId" value={department.id} />
-                        <button
-                          disabled={!canDeleteDept || isDeletingDept}
-                          title={canDeleteDept ? copy.budget.deleteDepartment : copy.budget.cannotDeleteDepartment}
-                          className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </form>
-                      </>
-                    ) : null}
+                          <IconButton
+                            tone="neutral"
+                            label={copy.budget.addBudgetEntry}
+                            onClick={() => setEntryModalDepartment({ id: department.id, name: department.name })}
+                          >
+                            <Plus />
+                          </IconButton>
+                          <form action={deleteDeptFormAction}>
+                            <input type="hidden" name="departmentId" value={department.id} />
+                            <IconButton
+                              type="submit"
+                              tone="delete"
+                              label={canDeleteDept ? copy.budget.deleteDepartment : copy.budget.cannotDeleteDepartment}
+                              disabled={!canDeleteDept || isDeletingDept}
+                            >
+                              <Trash2 />
+                            </IconButton>
+                          </form>
+                        </>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
 
-                <div className="mt-4 space-y-4">
-                  {/* CHARGES TABLE */}
-                  <section>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{copy.common.charges}</p>
-                    <div className="overflow-hidden rounded-xl border border-[var(--line)]">
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-[var(--panel-strong)] text-[var(--muted)]">
-                          <tr>
-                            <th className="px-3 py-2 font-medium">{copy.budget.label}</th>
-                            <th className="px-3 py-2 font-medium">{copy.budget.notes}</th>
-                            <th className="px-3 py-2 font-medium text-right">{copy.budget.amount}</th>
-                            <th className="px-3 py-2"></th>
-                          </tr>
-                        </thead>
+                  <div className="mt-4 space-y-4">
+                    {/* CHARGES TABLE */}
+                    <section>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{copy.common.charges}</p>
+                      <Table>
+                        <THead>
+                          <TR>
+                            <TH>{copy.budget.label}</TH>
+                            <TH>{copy.budget.notes}</TH>
+                            <TH className="text-right">{copy.budget.amount}</TH>
+                            <TH></TH>
+                          </TR>
+                        </THead>
                         <tbody>
                           {chargesLines.length === 0 ? (
-                            <tr>
-                              <td colSpan={4} className="px-3 py-3 text-xs text-[var(--muted)]">{copy.budget.noSpendingEntries}</td>
-                            </tr>
+                            <TR>
+                              <TD colSpan={4} className="text-xs text-[var(--muted)]">{copy.budget.noSpendingEntries}</TD>
+                            </TR>
                           ) : (
                             chargesLines.map((line) => {
                               const isEditingLine = editingBudgetLineId === line.id;
                               return (
-                                <tr key={line.id} className={`border-t border-[var(--line)] ${isEditingLine ? "bg-[var(--panel)]" : ""}`}>
-                                  <td className="px-3 py-2">
+                                <TR key={line.id} className={isEditingLine ? "bg-[var(--panel)]" : ""}>
+                                  <TD>
                                     {isEditingLine
-                                      ? <input type="text" value={editBudgetDraft!.label} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, label: e.target.value })} className={inp} />
+                                      ? <Input type="text" size="compact" value={editBudgetDraft!.label} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, label: e.target.value })} />
                                       : <span className="font-medium">{line.label}</span>}
-                                  </td>
-                                  <td className="px-3 py-2">
+                                  </TD>
+                                  <TD>
                                     {isEditingLine
-                                      ? <input type="text" value={editBudgetDraft!.notes} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, notes: e.target.value })} className={inp} />
+                                      ? <Input type="text" size="compact" value={editBudgetDraft!.notes} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, notes: e.target.value })} />
                                       : <span className="text-xs text-[var(--muted)]">{line.notes ?? "-"}</span>}
-                                  </td>
-                                  <td className="px-3 py-2 text-right">
+                                  </TD>
+                                  <TD className="text-right">
                                     {isEditingLine
-                                      ? <input type="number" step="0.01" min="0.01" value={editBudgetDraft!.amount} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, amount: e.target.value })} className={`${inp} text-right`} />
+                                      ? <Input type="number" step="0.01" min="0.01" size="compact" className="text-right" value={editBudgetDraft!.amount} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, amount: e.target.value })} />
                                       : <span className="font-semibold">{formatCurrency(line.amount)}</span>}
-                                  </td>
-                                  <td className="px-3 py-2">
+                                  </TD>
+                                  <TD>
                                     {canManage && isEditingLine ? (
                                       <div className="flex items-center justify-end gap-2">
-                                        <button onClick={() => saveLineFormAction()} disabled={isSavingBudgetEdit} className="rounded-md border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
-                                          <Check className="h-3 w-3" />
-                                        </button>
-                                        <button onClick={() => { setEditingBudgetLineId(null); setEditBudgetDraft(null); }} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
-                                          <X className="h-3 w-3" />
-                                        </button>
+                                        <IconButton tone="save" label={copy.shell.save} onClick={() => saveLineFormAction()} disabled={isSavingBudgetEdit}>
+                                          <Check />
+                                        </IconButton>
+                                        <IconButton tone="neutral" label={copy.shell.cancel} onClick={() => { setEditingBudgetLineId(null); setEditBudgetDraft(null); }}>
+                                          <X />
+                                        </IconButton>
                                       </div>
                                     ) : canManage ? (
                                       <div className="flex items-center justify-end gap-2">
-                                        <button onClick={() => { setEditingBudgetLineId(line.id); setEditBudgetDraft({ label: line.label, amount: line.amount.toString(), notes: line.notes ?? "" }); }} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
-                                          <Pencil className="h-3 w-3" />
-                                        </button>
+                                        <IconButton
+                                          tone="neutral"
+                                          label={copy.journal.edit}
+                                          onClick={() => { setEditingBudgetLineId(line.id); setEditBudgetDraft({ label: line.label, amount: line.amount.toString(), notes: line.notes ?? "" }); }}
+                                        >
+                                          <Pencil />
+                                        </IconButton>
                                         <form action={deleteLineFormAction}>
                                           <input type="hidden" name="budgetLineId" value={line.id} />
-                                          <button disabled={isDeletingLine} title={copy.budget.deleteDepartment} className="rounded-md border border-rose-300 p-1.5 text-rose-300 hover:bg-rose-950/40 disabled:opacity-50">
-                                            <Trash2 className="h-3 w-3" />
-                                          </button>
+                                          <IconButton type="submit" tone="delete" label={copy.budget.deleteDepartment} disabled={isDeletingLine}>
+                                            <Trash2 />
+                                          </IconButton>
                                         </form>
                                       </div>
                                     ) : null}
-                                  </td>
-                                </tr>
+                                  </TD>
+                                </TR>
                               );
                             })
                           )}
                         </tbody>
                         {chargesLines.length > 0 && (
-                          <tfoot className="border-t-2 border-[var(--line)] bg-[var(--panel-strong)]">
-                            <tr>
-                              <td colSpan={2} className="px-3 py-2 text-xs font-semibold text-[var(--muted)]">{copy.common.total}</td>
-                              <td className="px-3 py-2 text-right font-semibold">{formatCurrency(chargesTotal)}</td>
-                              <td></td>
-                            </tr>
-                          </tfoot>
+                          <TFoot>
+                            <TR>
+                              <TD colSpan={2} className="text-xs font-semibold text-[var(--muted)]">{copy.common.total}</TD>
+                              <TD className="text-right font-semibold">{formatCurrency(chargesTotal)}</TD>
+                              <TD></TD>
+                            </TR>
+                          </TFoot>
                         )}
-                      </table>
-                    </div>
-                  </section>
+                      </Table>
+                    </section>
 
-                  {/* PRODUITS TABLE */}
-                  <section>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{copy.common.produits}</p>
-                    <div className="overflow-hidden rounded-xl border border-[var(--line)]">
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-[var(--panel-strong)] text-[var(--muted)]">
-                          <tr>
-                            <th className="px-3 py-2 font-medium">{copy.budget.label}</th>
-                            <th className="px-3 py-2 font-medium">{copy.budget.notes}</th>
-                            <th className="px-3 py-2 font-medium text-right">{copy.budget.amount}</th>
-                            <th className="px-3 py-2"></th>
-                          </tr>
-                        </thead>
+                    {/* PRODUITS TABLE */}
+                    <section>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{copy.common.produits}</p>
+                      <Table>
+                        <THead>
+                          <TR>
+                            <TH>{copy.budget.label}</TH>
+                            <TH>{copy.budget.notes}</TH>
+                            <TH className="text-right">{copy.budget.amount}</TH>
+                            <TH></TH>
+                          </TR>
+                        </THead>
                         <tbody>
                           {produitsLines.length === 0 ? (
-                            <tr>
-                              <td colSpan={4} className="px-3 py-3 text-xs text-[var(--muted)]">{copy.budget.noEarningsEntries}</td>
-                            </tr>
+                            <TR>
+                              <TD colSpan={4} className="text-xs text-[var(--muted)]">{copy.budget.noEarningsEntries}</TD>
+                            </TR>
                           ) : (
                             produitsLines.map((line) => {
                               const isEditingLine = editingBudgetLineId === line.id;
                               return (
-                                <tr key={line.id} className={`border-t border-[var(--line)] ${isEditingLine ? "bg-[var(--panel)]" : ""}`}>
-                                  <td className="px-3 py-2">
+                                <TR key={line.id} className={isEditingLine ? "bg-[var(--panel)]" : ""}>
+                                  <TD>
                                     {isEditingLine
-                                      ? <input type="text" value={editBudgetDraft!.label} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, label: e.target.value })} className={inp} />
+                                      ? <Input type="text" size="compact" value={editBudgetDraft!.label} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, label: e.target.value })} />
                                       : <span className="font-medium">{line.label}</span>}
-                                  </td>
-                                  <td className="px-3 py-2">
+                                  </TD>
+                                  <TD>
                                     {isEditingLine
-                                      ? <input type="text" value={editBudgetDraft!.notes} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, notes: e.target.value })} className={inp} />
+                                      ? <Input type="text" size="compact" value={editBudgetDraft!.notes} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, notes: e.target.value })} />
                                       : <span className="text-xs text-[var(--muted)]">{line.notes ?? "-"}</span>}
-                                  </td>
-                                  <td className="px-3 py-2 text-right">
+                                  </TD>
+                                  <TD className="text-right">
                                     {isEditingLine
-                                      ? <input type="number" step="0.01" min="0.01" value={editBudgetDraft!.amount} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, amount: e.target.value })} className={`${inp} text-right`} />
+                                      ? <Input type="number" step="0.01" min="0.01" size="compact" className="text-right" value={editBudgetDraft!.amount} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, amount: e.target.value })} />
                                       : <span className="font-semibold">{formatCurrency(line.amount)}</span>}
-                                  </td>
-                                  <td className="px-3 py-2">
+                                  </TD>
+                                  <TD>
                                     {canManage && isEditingLine ? (
                                       <div className="flex items-center justify-end gap-2">
-                                        <button onClick={() => saveLineFormAction()} disabled={isSavingBudgetEdit} className="rounded-md border border-emerald-400 p-1.5 text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-50">
-                                          <Check className="h-3 w-3" />
-                                        </button>
-                                        <button onClick={() => { setEditingBudgetLineId(null); setEditBudgetDraft(null); }} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
-                                          <X className="h-3 w-3" />
-                                        </button>
+                                        <IconButton tone="save" label={copy.shell.save} onClick={() => saveLineFormAction()} disabled={isSavingBudgetEdit}>
+                                          <Check />
+                                        </IconButton>
+                                        <IconButton tone="neutral" label={copy.shell.cancel} onClick={() => { setEditingBudgetLineId(null); setEditBudgetDraft(null); }}>
+                                          <X />
+                                        </IconButton>
                                       </div>
                                     ) : canManage ? (
                                       <div className="flex items-center justify-end gap-2">
-                                        <button onClick={() => { setEditingBudgetLineId(line.id); setEditBudgetDraft({ label: line.label, amount: line.amount.toString(), notes: line.notes ?? "" }); }} className="rounded-md border border-[var(--line)] p-1.5 text-[var(--muted)] hover:bg-[var(--panel-strong)]">
-                                          <Pencil className="h-3 w-3" />
-                                        </button>
+                                        <IconButton
+                                          tone="neutral"
+                                          label={copy.journal.edit}
+                                          onClick={() => { setEditingBudgetLineId(line.id); setEditBudgetDraft({ label: line.label, amount: line.amount.toString(), notes: line.notes ?? "" }); }}
+                                        >
+                                          <Pencil />
+                                        </IconButton>
                                         <form action={deleteLineFormAction}>
                                           <input type="hidden" name="budgetLineId" value={line.id} />
-                                          <button disabled={isDeletingLine} title={copy.budget.deleteDepartment} className="rounded-md border border-rose-300 p-1.5 text-rose-300 hover:bg-rose-950/40 disabled:opacity-50">
-                                            <Trash2 className="h-3 w-3" />
-                                          </button>
+                                          <IconButton type="submit" tone="delete" label={copy.budget.deleteDepartment} disabled={isDeletingLine}>
+                                            <Trash2 />
+                                          </IconButton>
                                         </form>
                                       </div>
                                     ) : null}
-                                  </td>
-                                </tr>
+                                  </TD>
+                                </TR>
                               );
                             })
                           )}
                         </tbody>
                         {produitsLines.length > 0 && (
-                          <tfoot className="border-t-2 border-[var(--line)] bg-[var(--panel-strong)]">
-                            <tr>
-                              <td colSpan={2} className="px-3 py-2 text-xs font-semibold text-[var(--muted)]">{copy.common.total}</td>
-                              <td className="px-3 py-2 text-right font-semibold">{formatCurrency(produitsTotal)}</td>
-                              <td></td>
-                            </tr>
-                          </tfoot>
+                          <TFoot>
+                            <TR>
+                              <TD colSpan={2} className="text-xs font-semibold text-[var(--muted)]">{copy.common.total}</TD>
+                              <TD className="text-right font-semibold">{formatCurrency(produitsTotal)}</TD>
+                              <TD></TD>
+                            </TR>
+                          </TFoot>
                         )}
-                      </table>
-                    </div>
-                  </section>
-                </div>
-              </article>
-            );
-          })
+                      </Table>
+                    </section>
+                  </div>
+                </Card>
+              );
+            })}
+          </CardGrid>
         )}
-      </section>
+      </div>
 
       {detailsDepartment ? (
         (() => {
@@ -396,272 +392,196 @@ export default function BudgetPageClient({ locale, editionName, departments, can
           const actualResult = produitsActualTotal - chargesActualTotal;
 
           return (
-            <>
-              <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setDetailsDepartment(null)} />
-              <div className="fixed left-1/2 top-1/2 z-50 h-[90vh] w-[95vw] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
-                <div className="mb-5 flex items-center justify-between">
-                  <h2 className="text-xl font-semibold">{copy.budget.detailsTitle} - {detailsDepartment.name}</h2>
-                  <button
-                    type="button"
-                    onClick={() => setDetailsDepartment(null)}
-                    className="text-[var(--muted)] hover:text-[var(--ink)]"
-                    aria-label={copy.shell.cancel}
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
+            <Modal
+              open
+              onClose={() => setDetailsDepartment(null)}
+              title={`${copy.budget.detailsTitle} - ${detailsDepartment.name}`}
+              size="full"
+            >
+              <Card as="div" className="mb-5 grid gap-3 sm:grid-cols-3">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{copy.budget.chargesAvailability}</p>
+                  <p className={`text-sm font-semibold ${chargesAvailability >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                    {chargesAvailability >= 0 ? copy.budget.available : copy.budget.overexpense} {formatCurrency(Math.abs(chargesAvailability))}
+                  </p>
                 </div>
-
-                <div className="mb-5 grid gap-3 rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-4 sm:grid-cols-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{copy.budget.chargesAvailability}</p>
-                    <p className={`text-sm font-semibold ${chargesAvailability >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                      {chargesAvailability >= 0 ? copy.budget.available : copy.budget.overexpense} {formatCurrency(Math.abs(chargesAvailability))}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{copy.budget.budgetResult}</p>
-                    <p className="text-sm font-semibold">{formatCurrency(budgetResult)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{copy.budget.actualResult}</p>
-                    <p className="text-sm font-semibold">{formatCurrency(actualResult)}</p>
-                  </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{copy.budget.budgetResult}</p>
+                  <p className="text-sm font-semibold">{formatCurrency(budgetResult)}</p>
                 </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{copy.budget.actualResult}</p>
+                  <p className="text-sm font-semibold">{formatCurrency(actualResult)}</p>
+                </div>
+              </Card>
 
-                <div className="grid gap-5 lg:grid-cols-2">
-                  <div className="space-y-5 lg:max-h-[62vh] lg:overflow-y-auto lg:pr-1">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{copy.budget.budgetEntries}</p>
-                    {([
-                      ["CHARGES", budgetChargesLines, chargesBudgetTotal],
-                      ["PRODUITS", budgetProduitsLines, produitsBudgetTotal],
-                    ] as const).map(([accountType, lines, total]) => (
-                      <section key={accountType} className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                          {accountType === "CHARGES" ? copy.common.charges : copy.common.produits}
-                        </p>
-                        <div className="overflow-hidden rounded-xl border border-[var(--line)]">
-                          <table className="w-full text-left text-sm">
-                            <thead className="bg-[var(--panel-strong)] text-[var(--muted)]">
-                              <tr>
-                                <th className="px-3 py-2 font-medium">{copy.budget.label}</th>
-                                <th className="px-3 py-2 font-medium">{copy.budget.notes}</th>
-                                <th className="px-3 py-2 font-medium text-right">{copy.budget.amount}</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {lines.length === 0 ? (
-                                <tr>
-                                  <td colSpan={3} className="px-3 py-3 text-xs text-[var(--muted)]">
-                                    {accountType === "CHARGES" ? copy.budget.noSpendingEntries : copy.budget.noEarningsEntries}
-                                  </td>
-                                </tr>
-                              ) : (
-                                lines.map((line) => (
-                                  <tr key={`${accountType}-${line.id}`} className="border-t border-[var(--line)]">
-                                    <td className="px-3 py-2 font-medium">{line.label}</td>
-                                    <td className="px-3 py-2 text-xs text-[var(--muted)]">{line.notes ?? "-"}</td>
-                                    <td className="px-3 py-2 text-right font-semibold">{formatCurrency(line.amount)}</td>
-                                  </tr>
-                                ))
-                              )}
-                            </tbody>
-                            {lines.length > 0 ? (
-                              <tfoot className="border-t-2 border-[var(--line)] bg-[var(--panel-strong)]">
-                                <tr>
-                                  <td colSpan={2} className="px-3 py-2 text-xs font-semibold text-[var(--muted)]">{copy.common.total}</td>
-                                  <td className="px-3 py-2 text-right font-semibold">{formatCurrency(total)}</td>
-                                </tr>
-                              </tfoot>
-                            ) : null}
-                          </table>
-                        </div>
-                      </section>
-                    ))}
-                  </div>
-
-                  <div className="space-y-2 lg:max-h-[62vh] lg:overflow-y-auto lg:pl-1">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{copy.budget.journalEntries}</p>
-                    <div className="grid gap-3 rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-3 sm:grid-cols-2">
-                      <div>
-                        <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">{copy.common.charges}</p>
-                        <p className="text-sm font-semibold text-rose-300">{formatCurrency(chargesActualTotal)}</p>
-                      </div>
-                      <div>
-                        <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">{copy.common.produits}</p>
-                        <p className="text-sm font-semibold text-emerald-300">{formatCurrency(produitsActualTotal)}</p>
-                      </div>
-                    </div>
-                    <div className="overflow-hidden rounded-xl border border-[var(--line)]">
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-[var(--panel-strong)] text-[var(--muted)]">
-                          <tr>
-                            <th className="px-3 py-2 font-medium">{copy.journal.date}</th>
-                            <th className="px-3 py-2 font-medium">{copy.journal.type}</th>
-                            <th className="px-3 py-2 font-medium">{copy.budget.label}</th>
-                            <th className="px-3 py-2 font-medium">{copy.journal.counterparty}</th>
-                            <th className="px-3 py-2 font-medium">{copy.journal.reference}</th>
-                            <th className="px-3 py-2 font-medium text-right">{copy.budget.amount}</th>
-                          </tr>
-                        </thead>
+              <div className="grid gap-5 lg:grid-cols-2">
+                <div className="space-y-5 lg:max-h-[62vh] lg:overflow-y-auto lg:pr-1">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{copy.budget.budgetEntries}</p>
+                  {([
+                    ["CHARGES", budgetChargesLines, chargesBudgetTotal],
+                    ["PRODUITS", budgetProduitsLines, produitsBudgetTotal],
+                  ] as const).map(([accountType, lines, total]) => (
+                    <section key={accountType} className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                        {accountType === "CHARGES" ? copy.common.charges : copy.common.produits}
+                      </p>
+                      <Table>
+                        <THead>
+                          <TR>
+                            <TH>{copy.budget.label}</TH>
+                            <TH>{copy.budget.notes}</TH>
+                            <TH className="text-right">{copy.budget.amount}</TH>
+                          </TR>
+                        </THead>
                         <tbody>
-                          {detailsDepartment.journalEntries.length === 0 ? (
-                            <tr>
-                              <td colSpan={6} className="px-3 py-3 text-xs text-[var(--muted)]">{copy.budget.noJournalEntries}</td>
-                            </tr>
+                          {lines.length === 0 ? (
+                            <TR>
+                              <TD colSpan={3} className="text-xs text-[var(--muted)]">
+                                {accountType === "CHARGES" ? copy.budget.noSpendingEntries : copy.budget.noEarningsEntries}
+                              </TD>
+                            </TR>
                           ) : (
-                            detailsDepartment.journalEntries.map((entry) => (
-                              <tr key={entry.id} className="border-t border-[var(--line)]">
-                                <td className="px-3 py-2">{new Date(entry.date).toLocaleDateString(locale)}</td>
-                                <td className="px-3 py-2 text-xs text-[var(--muted)]">{entry.accountType === "CHARGES" ? copy.common.charges : copy.common.produits}</td>
-                                <td className="px-3 py-2">{entry.label}</td>
-                                <td className="px-3 py-2 text-xs text-[var(--muted)]">{entry.counterparty ?? "-"}</td>
-                                <td className="px-3 py-2 text-xs text-[var(--muted)]">{entry.referenceNumber ?? "-"}</td>
-                                <td className={`px-3 py-2 text-right font-semibold ${entry.accountType === "CHARGES" ? "text-rose-300" : "text-emerald-300"}`}>
-                                  {formatCurrency(entry.amount)}
-                                </td>
-                              </tr>
+                            lines.map((line) => (
+                              <TR key={`${accountType}-${line.id}`}>
+                                <TD className="font-medium">{line.label}</TD>
+                                <TD className="text-xs text-[var(--muted)]">{line.notes ?? "-"}</TD>
+                                <TD className="text-right font-semibold">{formatCurrency(line.amount)}</TD>
+                              </TR>
                             ))
                           )}
                         </tbody>
-                      </table>
+                        {lines.length > 0 ? (
+                          <TFoot>
+                            <TR>
+                              <TD colSpan={2} className="text-xs font-semibold text-[var(--muted)]">{copy.common.total}</TD>
+                              <TD className="text-right font-semibold">{formatCurrency(total)}</TD>
+                            </TR>
+                          </TFoot>
+                        ) : null}
+                      </Table>
+                    </section>
+                  ))}
+                </div>
+
+                <div className="space-y-2 lg:max-h-[62vh] lg:overflow-y-auto lg:pl-1">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{copy.budget.journalEntries}</p>
+                  <Card as="div" className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">{copy.common.charges}</p>
+                      <p className="text-sm font-semibold text-rose-300">{formatCurrency(chargesActualTotal)}</p>
                     </div>
-                  </div>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">{copy.common.produits}</p>
+                      <p className="text-sm font-semibold text-emerald-300">{formatCurrency(produitsActualTotal)}</p>
+                    </div>
+                  </Card>
+                  <Table>
+                    <THead>
+                      <TR>
+                        <TH>{copy.journal.date}</TH>
+                        <TH>{copy.journal.type}</TH>
+                        <TH>{copy.budget.label}</TH>
+                        <TH>{copy.journal.counterparty}</TH>
+                        <TH>{copy.journal.reference}</TH>
+                        <TH className="text-right">{copy.budget.amount}</TH>
+                      </TR>
+                    </THead>
+                    <tbody>
+                      {detailsDepartment.journalEntries.length === 0 ? (
+                        <TR>
+                          <TD colSpan={6} className="text-xs text-[var(--muted)]">{copy.budget.noJournalEntries}</TD>
+                        </TR>
+                      ) : (
+                        detailsDepartment.journalEntries.map((entry) => (
+                          <TR key={entry.id}>
+                            <TD>{new Date(entry.date).toLocaleDateString(locale)}</TD>
+                            <TD className="text-xs text-[var(--muted)]">{entry.accountType === "CHARGES" ? copy.common.charges : copy.common.produits}</TD>
+                            <TD>{entry.label}</TD>
+                            <TD className="text-xs text-[var(--muted)]">{entry.counterparty ?? "-"}</TD>
+                            <TD className="text-xs text-[var(--muted)]">{entry.referenceNumber ?? "-"}</TD>
+                            <TD className={`text-right font-semibold ${entry.accountType === "CHARGES" ? "text-rose-300" : "text-emerald-300"}`}>
+                              {formatCurrency(entry.amount)}
+                            </TD>
+                          </TR>
+                        ))
+                      )}
+                    </tbody>
+                  </Table>
                 </div>
               </div>
-            </>
+            </Modal>
           );
         })()
       ) : null}
 
-      {canManage && isDepartmentModalOpen ? (
-        <>
-          <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setIsDepartmentModalOpen(false)} />
-          <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">{copy.budget.addDepartment}</h2>
-              <button
-                type="button"
-                onClick={() => setIsDepartmentModalOpen(false)}
-                className="text-[var(--muted)] hover:text-[var(--ink)]"
-                aria-label={copy.shell.cancel}
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <form action={createDeptFormAction} className="space-y-4">
-              <FormError message={createDeptState.error} />
-              <label className="block space-y-2">
-                <span className="text-sm font-medium">{copy.budget.departmentName}</span>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                />
-              </label>
-              <div className="flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsDepartmentModalOpen(false)}
-                  className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold hover:bg-[var(--panel-strong)]"
-                >
-                  {copy.shell.cancel}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSavingDepartment}
-                  className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-                >
-                  {isSavingDepartment ? copy.journal.saving : copy.budget.addDepartment}
-                </button>
-              </div>
-            </form>
-          </div>
-        </>
+      {canManage ? (
+        <Modal
+          open={isDepartmentModalOpen}
+          onClose={() => setIsDepartmentModalOpen(false)}
+          title={copy.budget.addDepartment}
+          size="sm"
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setIsDepartmentModalOpen(false)}>
+                {copy.shell.cancel}
+              </Button>
+              <Button type="submit" form="create-department-form" variant="primary" disabled={isSavingDepartment}>
+                {isSavingDepartment ? copy.journal.saving : copy.budget.addDepartment}
+              </Button>
+            </>
+          }
+        >
+          <form id="create-department-form" action={createDeptFormAction} className="space-y-4">
+            <FormError message={createDeptState.error} />
+            <Field label={copy.budget.departmentName}>
+              <Input type="text" name="name" required />
+            </Field>
+          </form>
+        </Modal>
       ) : null}
 
-      {canManage && entryModalDepartment ? (
-        <>
-          <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setEntryModalDepartment(null)} />
-          <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg">
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">{copy.budget.addBudgetEntry} - {entryModalDepartment.name}</h2>
-              <button
-                type="button"
-                onClick={() => setEntryModalDepartment(null)}
-                className="text-[var(--muted)] hover:text-[var(--ink)]"
-                aria-label={copy.shell.cancel}
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <form action={createLineFormAction} className="space-y-4">
-              <FormError message={createLineState.error} />
-              <input type="hidden" name="departmentId" value={entryModalDepartment.id} />
+      {canManage ? (
+        <Modal
+          open={entryModalDepartment !== null}
+          onClose={() => setEntryModalDepartment(null)}
+          title={entryModalDepartment ? `${copy.budget.addBudgetEntry} - ${entryModalDepartment.name}` : copy.budget.addBudgetEntry}
+          size="md"
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setEntryModalDepartment(null)}>
+                {copy.shell.cancel}
+              </Button>
+              <Button type="submit" form="create-budget-line-form" variant="primary" disabled={isSavingBudgetLine}>
+                {isSavingBudgetLine ? copy.journal.saving : copy.budget.addBudgetEntry}
+              </Button>
+            </>
+          }
+        >
+          <form id="create-budget-line-form" action={createLineFormAction} className="space-y-4">
+            <FormError message={createLineState.error} />
+            <input type="hidden" name="departmentId" value={entryModalDepartment?.id ?? ""} />
 
-              <label className="block space-y-2">
-                <span className="text-sm font-medium">{copy.budget.type}</span>
-                <select
-                  name="accountType"
-                  defaultValue="CHARGES"
-                  required
-                  className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                >
-                  <option value="CHARGES">{copy.common.charges}</option>
-                  <option value="PRODUITS">{copy.common.produits}</option>
-                </select>
-              </label>
+            <Field label={copy.budget.type}>
+              <Select name="accountType" defaultValue="CHARGES" required>
+                <option value="CHARGES">{copy.common.charges}</option>
+                <option value="PRODUITS">{copy.common.produits}</option>
+              </Select>
+            </Field>
 
-              <label className="block space-y-2">
-                <span className="text-sm font-medium">{copy.budget.label}</span>
-                <input
-                  type="text"
-                  name="label"
-                  required
-                  className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                />
-              </label>
+            <Field label={copy.budget.label}>
+              <Input type="text" name="label" required />
+            </Field>
 
-              <label className="block space-y-2">
-                <span className="text-sm font-medium">{copy.budget.amount}</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  name="amount"
-                  required
-                  className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                />
-              </label>
+            <Field label={copy.budget.amount}>
+              <Input type="number" step="0.01" min="0.01" name="amount" required />
+            </Field>
 
-              <label className="block space-y-2">
-                <span className="text-sm font-medium">{copy.budget.notesOptional}</span>
-                <textarea
-                  name="notes"
-                  rows={3}
-                  className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                />
-              </label>
-
-              <div className="flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEntryModalDepartment(null)}
-                  className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-semibold hover:bg-[var(--panel-strong)]"
-                >
-                  {copy.shell.cancel}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSavingBudgetLine}
-                  className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-                >
-                  {isSavingBudgetLine ? copy.journal.saving : copy.budget.addBudgetEntry}
-                </button>
-              </div>
-            </form>
-          </div>
-        </>
+            <Field label={copy.budget.notesOptional}>
+              <Textarea name="notes" rows={3} />
+            </Field>
+          </form>
+        </Modal>
       ) : null}
     </div>
   );

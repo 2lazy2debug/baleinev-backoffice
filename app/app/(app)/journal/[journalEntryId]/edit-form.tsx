@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { AccountType } from "@prisma/client";
 
 import { FormError } from "@/components/form-error";
+import { Button, Field, Input, Select } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import { updateJournalEntryAction } from "../actions";
@@ -62,14 +63,8 @@ export function JournalEntryEditForm({
       <FormError message={state.error} />
       <input type="hidden" name="journalEntryId" value={entry.id} />
 
-      <label className="block space-y-1">
-        <span className="text-xs font-medium text-[var(--muted)]">{copy.department}</span>
-        <select
-          name="departmentId"
-          required
-          className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2"
-          defaultValue={entry.departmentId ?? ""}
-        >
+      <Field label={copy.department}>
+        <Select name="departmentId" required defaultValue={entry.departmentId ?? ""}>
           <option value="" disabled>
             {copy.selectDepartment}
           </option>
@@ -78,121 +73,69 @@ export function JournalEntryEditForm({
               {department.name}
             </option>
           ))}
-        </select>
-      </label>
+        </Select>
+      </Field>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block space-y-1">
-          <span className="text-xs font-medium text-[var(--muted)]">{copy.type}</span>
-          <select
-            name="accountType"
-            required
-            defaultValue={entry.accountType}
-            className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2"
-          >
+        <Field label={copy.type}>
+          <Select name="accountType" required defaultValue={entry.accountType}>
             <option value={AccountType.CHARGES}>{commonCopy.charges}</option>
             <option value={AccountType.PRODUITS}>{commonCopy.produits}</option>
-          </select>
-        </label>
+          </Select>
+        </Field>
 
-        <label className="block space-y-1">
-          <span className="text-xs font-medium text-[var(--muted)]">{copy.date}</span>
-          <input
-            type="date"
-            name="date"
-            required
-            defaultValue={entry.date}
-            className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2"
-          />
-        </label>
+        <Field label={copy.date}>
+          <Input type="date" name="date" required defaultValue={entry.date} />
+        </Field>
       </div>
 
-      <label className="block space-y-1">
-        <span className="text-xs font-medium text-[var(--muted)]">{copy.amount}</span>
-        <input
-          type="number"
-          step="0.01"
-          min="0.01"
-          name="amount"
-          required
-          defaultValue={entry.amount}
-          className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2"
-        />
-      </label>
+      <Field label={copy.amount}>
+        <Input type="number" step="0.01" min="0.01" name="amount" required defaultValue={entry.amount} />
+      </Field>
 
-      <label className="block space-y-1">
-        <span className="text-xs font-medium text-[var(--muted)]">{copy.moneyAccount}</span>
-        <select
-          name="moneyAccountId"
-          required
-          defaultValue={entry.moneyAccountId}
-          className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2"
-        >
+      <Field label={copy.moneyAccount}>
+        <Select name="moneyAccountId" required defaultValue={entry.moneyAccountId}>
           {moneyAccounts.map((account) => (
             <option key={account.id} value={account.id}>
               {account.name}
             </option>
           ))}
-        </select>
-      </label>
+        </Select>
+      </Field>
 
-      <label className="block space-y-1">
-        <span className="text-xs font-medium text-[var(--muted)]">{copy.label}</span>
-        <input
-          type="text"
-          name="label"
-          required
-          defaultValue={entry.label}
-          className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2"
-        />
-      </label>
+      <Field label={copy.label}>
+        <Input type="text" name="label" required defaultValue={entry.label} />
+      </Field>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block space-y-1">
-          <span className="text-xs font-medium text-[var(--muted)]">{copy.counterparty}</span>
-          <input
-            type="text"
-            name="counterparty"
-            defaultValue={entry.counterparty ?? ""}
-            className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2"
-          />
-        </label>
+        <Field label={copy.counterparty}>
+          <Input type="text" name="counterparty" defaultValue={entry.counterparty ?? ""} />
+        </Field>
 
-        <label className="block space-y-1">
-          <span className="text-xs font-medium text-[var(--muted)]">{copy.reference}</span>
-          <input
-            type="text"
-            name="referenceNumber"
-            defaultValue={entry.referenceNumber ?? ""}
-            className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2"
-          />
-        </label>
+        <Field label={copy.reference}>
+          <Input type="text" name="referenceNumber" defaultValue={entry.referenceNumber ?? ""} />
+        </Field>
       </div>
 
-      <label className="block space-y-1">
-        <span className="text-xs font-medium text-[var(--muted)]">{copy.costCenter}</span>
-        <select
-          name="costCenterId"
-          defaultValue={entry.costCenterId ?? ""}
-          className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2"
-        >
+      <Field label={copy.costCenter}>
+        <Select name="costCenterId" defaultValue={entry.costCenterId ?? ""}>
           <option value="">{copy.none}</option>
           {costCenters.map((costCenter) => (
             <option key={costCenter.id} value={costCenter.id}>
               {costCenter.code}
             </option>
           ))}
-        </select>
-      </label>
+        </Select>
+      </Field>
 
       <div className="flex items-center gap-3">
-        <button
-          disabled={isPending}
-          className="rounded-md bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-        >
+        <Button type="submit" variant="primary" disabled={isPending}>
           {shellCopy.save}
-        </button>
-        <Link href="/journal" className="rounded-md border border-[var(--line)] px-5 py-2 text-sm font-semibold hover:bg-[var(--panel-strong)]">
+        </Button>
+        <Link
+          href="/journal"
+          className="inline-flex h-10 items-center justify-center rounded-md border border-[var(--line)] px-4 text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--panel-strong)]"
+        >
           {shellCopy.cancel}
         </Link>
       </div>

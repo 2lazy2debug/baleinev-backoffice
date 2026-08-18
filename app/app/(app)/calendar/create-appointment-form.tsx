@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 
 import { FormError } from "@/components/form-error";
-import { Checkbox } from "@/components/ui";
+import { Button, Card, Checkbox, Field, Input, Textarea } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import { createAppointmentAction } from "./actions";
@@ -34,48 +34,29 @@ export function CreateAppointmentForm({
   const [state, formAction, isPending] = useActionState(createAppointmentAction, initialActionState);
 
   return (
-    <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
+    <Card as="section">
       <h2 className="text-lg font-semibold">{copy.createAppointment}</h2>
       <form action={formAction} className="mt-4 grid gap-3 md:grid-cols-2">
         <FormError message={state.error} className="md:col-span-2" />
-        <label className="block space-y-1 md:col-span-2">
-          <span className="text-sm font-medium">{copy.appointmentTitle}</span>
-          <input
-            type="text"
-            name="title"
-            required
-            className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-          />
-        </label>
+        <div className="md:col-span-2">
+          <Field label={copy.appointmentTitle}>
+            <Input type="text" name="title" required />
+          </Field>
+        </div>
 
-        <label className="block space-y-1 md:col-span-2">
-          <span className="text-sm font-medium">{copy.appointmentDescription}</span>
-          <textarea
-            name="description"
-            rows={3}
-            required
-            className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-          />
-        </label>
+        <div className="md:col-span-2">
+          <Field label={copy.appointmentDescription}>
+            <Textarea name="description" rows={3} required />
+          </Field>
+        </div>
 
-        <label className="block space-y-1">
-          <span className="text-sm font-medium">{copy.startsAt}</span>
-          <input
-            type="datetime-local"
-            name="startAt"
-            required
-            className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-          />
-        </label>
+        <Field label={copy.startsAt}>
+          <Input type="datetime-local" name="startAt" required />
+        </Field>
 
-        <label className="block space-y-1">
-          <span className="text-sm font-medium">{copy.endsAtOptional}</span>
-          <input
-            type="datetime-local"
-            name="endAt"
-            className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-          />
-        </label>
+        <Field label={copy.endsAtOptional}>
+          <Input type="datetime-local" name="endAt" />
+        </Field>
 
         <div className="md:col-span-2 space-y-1">
           <span className="text-sm font-medium">{copy.audience}</span>
@@ -109,14 +90,11 @@ export function CreateAppointmentForm({
         </div>
 
         <div className="md:col-span-2">
-          <button
-            disabled={isPending}
-            className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-          >
+          <Button type="submit" variant="primary" disabled={isPending}>
             {copy.submitAppointment}
-          </button>
+          </Button>
         </div>
       </form>
-    </section>
+    </Card>
   );
 }

@@ -3,6 +3,7 @@
 import { useActionState, useMemo, useState } from "react";
 
 import { FormError } from "@/components/form-error";
+import { Button, Card, Field, Input, Select } from "@/components/ui";
 import { allowedProofMimeTypes } from "@/lib/proof-upload";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -71,181 +72,123 @@ export default function CreateExpenseReportForm({ departments, drivingRatePerKm,
   }, [kilometers, drivingRatePerKm]);
 
   return (
-    <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
-      <h2 className="text-xl font-semibold">{copy.create}</h2>
+    <div>
+      <Card as="section">
+        <h2 className="text-xl font-semibold">{copy.create}</h2>
 
-      <form action={createFormAction} className="mt-6 space-y-4">
-        <FormError message={createState.error} />
-        <label className="block space-y-2">
-          <span className="text-sm font-medium">{copy.reportType}</span>
-          <select
-            name="reportType"
-            value={reportType}
-            onChange={(event) => setReportType(event.target.value as ExpenseReportTypeValue)}
-            className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-          >
-            <option value={EXPENSE_REPORT_TYPE.STANDARD}>{copy.standardExpense}</option>
-            <option value={EXPENSE_REPORT_TYPE.DRIVING}>{copy.drivingExpense}</option>
-          </select>
-        </label>
-
-        {reportType === EXPENSE_REPORT_TYPE.STANDARD ? (
-          <>
-            <label className="block space-y-2">
-              <span className="text-sm font-medium">{copy.description}</span>
-              <input
-                type="text"
-                name="description"
-                required
-                className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-              />
-            </label>
-
-            <label className="block space-y-2">
-              <span className="text-sm font-medium">{copy.amount}</span>
-              <input
-                type="number"
-                step="0.01"
-                min="0.01"
-                name="amount"
-                required
-                className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-              />
-            </label>
-          </>
-        ) : (
-          <>
-            <label className="block space-y-2">
-              <span className="text-sm font-medium">{copy.drivingReason}</span>
-              <input
-                type="text"
-                name="drivingReason"
-                required
-                className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-              />
-            </label>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="block space-y-2">
-                <span className="text-sm font-medium">{copy.departure}</span>
-                <input
-                  type="text"
-                  name="departure"
-                  required
-                  className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                />
-              </label>
-
-              <label className="block space-y-2">
-                <span className="text-sm font-medium">{copy.arrival}</span>
-                <input
-                  type="text"
-                  name="arrival"
-                  required
-                  className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                />
-              </label>
-            </div>
-
-            <label className="block space-y-2">
-              <span className="text-sm font-medium">{copy.kilometers}</span>
-              <input
-                type="number"
-                step="0.1"
-                min="0.1"
-                name="kilometers"
-                required
-                value={kilometers}
-                onChange={(event) => setKilometers(event.target.value)}
-                className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-              />
-            </label>
-
-            <p className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--muted)]">
-              {copy.ratePerKm}: CHF {drivingRatePerKm.toFixed(2)} / km
-              <br />
-              <span className="font-semibold text-[var(--ink)]">{copy.calculatedAmount}: CHF {computedAmount.toFixed(2)}</span>
-            </p>
-          </>
-        )}
-
-        {reportType === EXPENSE_REPORT_TYPE.DRIVING ? (
-          <>
-            <input type="hidden" name="paymentMethod" value={EXPENSE_PAYMENT_METHOD.MY_MONEY} />
-            <label className="block space-y-2">
-              <span className="text-sm font-medium">{copy.paymentMethod}</span>
-              <p className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--muted)]">
-                {copy.drivingRefundFixed}: <span className="font-semibold text-[var(--ink)]">{copy.myMoney}</span>
-              </p>
-            </label>
-          </>
-        ) : (
-          <label className="block space-y-2">
-            <span className="text-sm font-medium">{copy.paymentMethod}</span>
-            <select
-              name="paymentMethod"
-              defaultValue={EXPENSE_PAYMENT_METHOD.MY_MONEY}
-              className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
+        <form action={createFormAction} className="mt-6 space-y-4">
+          <FormError message={createState.error} />
+          <Field label={copy.reportType}>
+            <Select
+              name="reportType"
+              value={reportType}
+              onChange={(event) => setReportType(event.target.value as ExpenseReportTypeValue)}
             >
-              <option value={EXPENSE_PAYMENT_METHOD.MY_MONEY}>{copy.myMoney}</option>
-              <option value={EXPENSE_PAYMENT_METHOD.FESTIVAL_ACCOUNT}>{copy.festivalAccount}</option>
-            </select>
-          </label>
-        )}
+              <option value={EXPENSE_REPORT_TYPE.STANDARD}>{copy.standardExpense}</option>
+              <option value={EXPENSE_REPORT_TYPE.DRIVING}>{copy.drivingExpense}</option>
+            </Select>
+          </Field>
 
-        <label className="block space-y-2">
-          <span className="text-sm font-medium">{copy.date}</span>
-          <input
-            type="date"
-            name="date"
-            defaultValue={new Date().toISOString().slice(0, 10)}
-            required
-            className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-          />
-        </label>
+          {reportType === EXPENSE_REPORT_TYPE.STANDARD ? (
+            <>
+              <Field label={copy.description}>
+                <Input type="text" name="description" required />
+              </Field>
 
-        {reportType === EXPENSE_REPORT_TYPE.DRIVING ? (
-          <label className="block space-y-2">
-            <span className="text-sm font-medium">{copy.uploadProof}</span>
-            <p className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--muted)]">
-              {copy.noProofRequired}
-            </p>
-          </label>
-        ) : (
-          <label className="block space-y-2">
-            <span className="text-sm font-medium">{copy.uploadProof}</span>
-            <input
-              type="file"
-              name="proof"
-              required
-              accept={allowedProofMimeTypes.join(",")}
-              className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-md file:border-0 file:bg-[var(--panel-strong)] file:px-3 file:py-1.5 file:text-xs file:font-semibold"
-            />
-          </label>
-        )}
+              <Field label={copy.amount}>
+                <Input type="number" step="0.01" min="0.01" name="amount" required />
+              </Field>
+            </>
+          ) : (
+            <>
+              <Field label={copy.drivingReason}>
+                <Input type="text" name="drivingReason" required />
+              </Field>
 
-        <label className="block space-y-2">
-          <span className="text-sm font-medium">{copy.department}</span>
-          <select
-            name="departmentId"
-            required
-            defaultValue=""
-            className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-          >
-            <option value="" disabled>{copy.selectDepartment}</option>
-            {departments.map((department) => (
-              <option key={department.id} value={department.id}>{department.name}</option>
-            ))}
-          </select>
-        </label>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label={copy.departure}>
+                  <Input type="text" name="departure" required />
+                </Field>
 
-        <button
-          disabled={isCreating}
-          className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-        >
-          {copy.submit}
-        </button>
-      </form>
-    </section>
+                <Field label={copy.arrival}>
+                  <Input type="text" name="arrival" required />
+                </Field>
+              </div>
+
+              <Field label={copy.kilometers}>
+                <Input
+                  type="number"
+                  step="0.1"
+                  min="0.1"
+                  name="kilometers"
+                  required
+                  value={kilometers}
+                  onChange={(event) => setKilometers(event.target.value)}
+                />
+              </Field>
+
+              <p className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--muted)]">
+                {copy.ratePerKm}: CHF {drivingRatePerKm.toFixed(2)} / km
+                <br />
+                <span className="font-semibold text-[var(--ink)]">{copy.calculatedAmount}: CHF {computedAmount.toFixed(2)}</span>
+              </p>
+            </>
+          )}
+
+          {reportType === EXPENSE_REPORT_TYPE.DRIVING ? (
+            <>
+              <input type="hidden" name="paymentMethod" value={EXPENSE_PAYMENT_METHOD.MY_MONEY} />
+              <Field label={copy.paymentMethod}>
+                <p className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--muted)]">
+                  {copy.drivingRefundFixed}: <span className="font-semibold text-[var(--ink)]">{copy.myMoney}</span>
+                </p>
+              </Field>
+            </>
+          ) : (
+            <Field label={copy.paymentMethod}>
+              <Select name="paymentMethod" defaultValue={EXPENSE_PAYMENT_METHOD.MY_MONEY}>
+                <option value={EXPENSE_PAYMENT_METHOD.MY_MONEY}>{copy.myMoney}</option>
+                <option value={EXPENSE_PAYMENT_METHOD.FESTIVAL_ACCOUNT}>{copy.festivalAccount}</option>
+              </Select>
+            </Field>
+          )}
+
+          <Field label={copy.date}>
+            <Input type="date" name="date" defaultValue={new Date().toISOString().slice(0, 10)} required />
+          </Field>
+
+          {reportType === EXPENSE_REPORT_TYPE.DRIVING ? (
+            <Field label={copy.uploadProof}>
+              <p className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--muted)]">
+                {copy.noProofRequired}
+              </p>
+            </Field>
+          ) : (
+            <Field label={copy.uploadProof}>
+              <Input
+                type="file"
+                name="proof"
+                required
+                accept={allowedProofMimeTypes.join(",")}
+                className="file:mr-4 file:rounded-md file:border-0 file:bg-[var(--panel-strong)] file:px-3 file:py-1.5 file:text-xs file:font-semibold"
+              />
+            </Field>
+          )}
+
+          <Field label={copy.department}>
+            <Select name="departmentId" required defaultValue="">
+              <option value="" disabled>{copy.selectDepartment}</option>
+              {departments.map((department) => (
+                <option key={department.id} value={department.id}>{department.name}</option>
+              ))}
+            </Select>
+          </Field>
+
+          <Button type="submit" variant="primary" disabled={isCreating}>
+            {copy.submit}
+          </Button>
+        </form>
+      </Card>
+    </div>
   );
 }

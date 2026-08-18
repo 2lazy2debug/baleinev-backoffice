@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Check, Copy, Plus, RotateCcw, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
+import { Button, Card, Field, IconButton, Input, Modal, Select, TD, TFoot, TH, THead, TR, Textarea } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { buildSwissQrPayload } from "@/lib/swiss-qr";
 import { formatCurrency } from "@/lib/utils";
@@ -627,16 +628,13 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}
 
       {isReadOnly ? null : (
-        <button
-          onClick={openCreateModal}
-          title={copy.invoices.create}
-          className="self-start h-10 w-10 rounded-md bg-[var(--accent)] text-lg font-bold text-white hover:bg-[var(--accent-strong)] flex items-center justify-center"
-        >
-          +
-        </button>
+        <Button variant="primary" onClick={openCreateModal} className="self-start">
+          <Plus className="h-4 w-4" />
+          {copy.invoices.create}
+        </Button>
       )}
 
-      <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+      <Card as="section">
         <h2 className="text-xl font-semibold">{copy.invoices.historyTitle}</h2>
 
         {invoiceHistory.length === 0 ? (
@@ -644,22 +642,22 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
         ) : (
           <div className="mt-3 overflow-hidden rounded-xl border border-[var(--line)]">
             <table className="w-full text-left text-sm">
-              <thead className="bg-[var(--panel)] text-xs uppercase tracking-[0.08em] text-[var(--muted)]">
-                <tr>
-                  <th className="px-4 py-3 font-medium">{copy.invoices.invoiceNumber}</th>
-                  <th className="px-4 py-3 font-medium">{copy.invoices.invoiceDate}</th>
-                  <th className="px-4 py-3 font-medium">{copy.invoices.supplierName}</th>
-                  <th className="px-4 py-3 font-medium text-right">{copy.invoices.total}</th>
-                  <th className="px-4 py-3 font-medium text-right">Actions</th>
-                </tr>
-              </thead>
+              <THead>
+                <TR>
+                  <TH>{copy.invoices.invoiceNumber}</TH>
+                  <TH>{copy.invoices.invoiceDate}</TH>
+                  <TH>{copy.invoices.supplierName}</TH>
+                  <TH className="text-right">{copy.invoices.total}</TH>
+                  <TH className="text-right">Actions</TH>
+                </TR>
+              </THead>
               <tbody>
                 {invoiceHistory.map((item) => {
                   const receiverFirstLine = item.supplierName.split(/\r?\n/)[0]?.trim() || item.supplierName;
 
                   return (
-                    <tr key={item.id} className="border-t border-[var(--line)] bg-[var(--panel-strong)]">
-                      <td className="px-4 py-3">
+                    <TR key={item.id} className="bg-[var(--panel-strong)]">
+                      <TD>
                         {isReadOnly ? (
                           <span className="font-semibold">{item.invoiceNumber}</span>
                         ) : (
@@ -671,365 +669,356 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                             {item.invoiceNumber}
                           </button>
                         )}
-                      </td>
-                      <td className="px-4 py-3">{item.invoiceDate}</td>
-                      <td className="px-4 py-3">{receiverFirstLine}</td>
-                      <td className="px-4 py-3 text-right font-semibold">{formatCurrency(item.totalAmount)}</td>
-                      <td className="px-4 py-3">
+                      </TD>
+                      <TD>{item.invoiceDate}</TD>
+                      <TD>{receiverFirstLine}</TD>
+                      <TD className="text-right font-semibold">{formatCurrency(item.totalAmount)}</TD>
+                      <TD>
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            type="button"
+                          <Button
+                            variant="secondary"
+                            size="sm"
                             onClick={() => handleDownloadHistoryPdf(item)}
                             disabled={downloadingHistoryId === item.id}
-                            className="inline-flex rounded-md border border-[var(--line)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--panel)] disabled:opacity-60"
                           >
                             {downloadingHistoryId === item.id ? "..." : copy.invoices.generatePdf}
-                          </button>
+                          </Button>
                           {isReadOnly ? null : item.paidAt ? (
-                            <button
-                              type="button"
+                            <IconButton
+                              tone="warning"
+                              label={copy.invoices.setUnpaid}
                               onClick={() => handleSetInvoiceUnpaid(item)}
                               disabled={statusActionInvoiceId === item.id}
-                              title={copy.invoices.setUnpaid}
-                              className="inline-flex rounded-md border border-amber-300 p-2 text-amber-300 hover:bg-amber-950/40 disabled:opacity-60"
                             >
-                              <RotateCcw className="h-3.5 w-3.5" />
-                            </button>
+                              <RotateCcw />
+                            </IconButton>
                           ) : (
-                            <button
-                              type="button"
+                            <IconButton
+                              tone="save"
+                              label={copy.invoices.setPaid}
                               onClick={() => {
                                 setPaidModalInvoice(item);
                                 setSelectedJournalEntryId("");
                                 setError(null);
                               }}
                               disabled={statusActionInvoiceId === item.id}
-                              title={copy.invoices.setPaid}
-                              className="inline-flex rounded-md border border-emerald-300 p-2 text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-60"
                             >
-                              <Check className="h-3.5 w-3.5" />
-                            </button>
+                              <Check />
+                            </IconButton>
                           )}
                           {isReadOnly ? null : (
                             <>
-                              <button
-                                type="button"
+                              <IconButton
+                                tone="neutral"
+                                label="Duplicate invoice"
                                 onClick={() => duplicateFromHistory(item)}
-                                title="Duplicate invoice"
-                                className="inline-flex rounded-md border border-[var(--line)] p-2 hover:bg-[var(--panel)]"
                               >
-                                <Copy className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
+                                <Copy />
+                              </IconButton>
+                              <IconButton
+                                tone="delete"
+                                label={copy.invoices.deleteInvoice}
                                 onClick={() => handleDeleteInvoice(item)}
                                 disabled={Boolean(item.paidAt) || deleteActionInvoiceId === item.id}
                                 title={item.paidAt ? copy.invoices.deleteBlockedPaid : copy.invoices.deleteInvoice}
-                                className="inline-flex rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
+                                <Trash2 />
+                              </IconButton>
                             </>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </TD>
+                    </TR>
                   );
                 })}
               </tbody>
             </table>
           </div>
         )}
-      </section>
+      </Card>
 
-      {isModalOpen ? (
-        <>
-          <div className="fixed inset-0 z-40 bg-black/50" onClick={closeFormModal} />
-          <section className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-full max-w-3xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h3 className="text-xl font-semibold">
-                {editingInvoiceId ? copy.invoices.saveModifications : copy.invoices.create}
-              </h3>
-              <button
-                type="button"
-                onClick={closeFormModal}
-                className="rounded-md border border-[var(--line)] px-4 py-1.5 text-xs font-semibold hover:bg-[var(--panel)]"
-              >
+      <Modal
+        open={isModalOpen}
+        onClose={closeFormModal}
+        title={editingInvoiceId ? copy.invoices.saveModifications : copy.invoices.create}
+        size="xl"
+        footer={
+          accounts.length === 0 ? undefined : (
+            <>
+              <Button variant="secondary" onClick={closeFormModal}>
                 {copy.shell.cancel}
-              </button>
+              </Button>
+              <Button
+                type="submit"
+                form="invoice-form"
+                variant="primary"
+                disabled={savingInvoice || isEditingPaidInvoice}
+              >
+                {savingInvoice
+                  ? "..."
+                  : editingInvoiceId
+                    ? copy.invoices.saveModifications
+                    : copy.invoices.saveInvoice}
+              </Button>
+            </>
+          )
+        }
+      >
+        {accounts.length === 0 ? (
+          <p className="text-sm text-[var(--muted)]">{copy.invoices.noIban}</p>
+        ) : (
+          <form id="invoice-form" onSubmit={handleGenerate} className="space-y-4">
+            <Field label={copy.invoices.bankAccount}>
+              <Select
+                value={selectedAccountId}
+                onChange={(e) => setSelectedAccountId(e.target.value)}
+                disabled={isEditingPaidInvoice}
+              >
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name} ({account.iban ?? "no IBAN"})
+                  </option>
+                ))}
+              </Select>
+            </Field>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label={copy.invoices.invoiceNumber}>
+                <Input
+                  type="text"
+                  value={invoiceNumber}
+                  onChange={(e) => setInvoiceNumber(e.target.value)}
+                  disabled={Boolean(editingInvoiceId)}
+                />
+              </Field>
+              <Field label={copy.invoices.invoiceDate}>
+                <Input
+                  type="date"
+                  required
+                  value={invoiceDate}
+                  onChange={(e) => setInvoiceDate(e.target.value)}
+                  disabled={isEditingPaidInvoice}
+                />
+              </Field>
+              <Field label={copy.invoices.dueDate}>
+                <Input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  disabled={isEditingPaidInvoice}
+                />
+              </Field>
             </div>
 
-            {accounts.length === 0 ? (
-              <p className="mt-4 text-sm text-[var(--muted)]">{copy.invoices.noIban}</p>
-            ) : (
-              <form onSubmit={handleGenerate} className="mt-4 space-y-4">
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">{copy.invoices.bankAccount}</span>
-                  <select
-                    value={selectedAccountId}
-                    onChange={(e) => setSelectedAccountId(e.target.value)}
-                    disabled={isEditingPaidInvoice}
-                    className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                  >
-                    {accounts.map((account) => (
-                      <option key={account.id} value={account.id}>
-                        {account.name} ({account.iban ?? "no IBAN"})
-                      </option>
-                    ))}
-                  </select>
-                </label>
+            <Field label={copy.invoices.header}>
+              <Input
+                type="text"
+                value={header}
+                onChange={(e) => setHeader(e.target.value)}
+                disabled={isEditingPaidInvoice}
+                placeholder={copy.invoices.headerPlaceholder}
+              />
+            </Field>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="block space-y-2">
-                    <span className="text-sm font-medium">{copy.invoices.invoiceNumber}</span>
-                    <input
-                      type="text"
-                      value={invoiceNumber}
-                      onChange={(e) => setInvoiceNumber(e.target.value)}
-                      disabled={Boolean(editingInvoiceId)}
-                      className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                    />
-                  </label>
-                  <label className="block space-y-2">
-                    <span className="text-sm font-medium">{copy.invoices.invoiceDate}</span>
-                    <input
-                      type="date"
-                      required
-                      value={invoiceDate}
-                      onChange={(e) => setInvoiceDate(e.target.value)}
-                      disabled={isEditingPaidInvoice}
-                      className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                    />
-                  </label>
-                  <label className="block space-y-2">
-                    <span className="text-sm font-medium">{copy.invoices.dueDate}</span>
-                    <input
-                      type="date"
-                      value={dueDate}
-                      onChange={(e) => setDueDate(e.target.value)}
-                      disabled={isEditingPaidInvoice}
-                      className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                    />
-                  </label>
+            <Field label={copy.invoices.supplierName}>
+              <Textarea
+                required
+                value={supplierName}
+                onChange={(e) => setSupplierName(e.target.value)}
+                disabled={isEditingPaidInvoice}
+                rows={2}
+                placeholder={"Agence X Y Z\nChristian Duprax"}
+              />
+            </Field>
+
+            <Field label={copy.invoices.supplierAddress}>
+              <Input
+                type="text"
+                required
+                value={supplierAddress}
+                onChange={(e) => setSupplierAddress(e.target.value)}
+                disabled={isEditingPaidInvoice}
+              />
+            </Field>
+
+            <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
+              <Field label={copy.invoices.supplierPostalCode}>
+                <Input
+                  type="text"
+                  required
+                  value={supplierPostalCode}
+                  onChange={(e) => setSupplierPostalCode(e.target.value)}
+                  disabled={isEditingPaidInvoice}
+                />
+              </Field>
+              <Field label={copy.invoices.supplierCity}>
+                <Input
+                  type="text"
+                  required
+                  value={supplierCity}
+                  onChange={(e) => setSupplierCity(e.target.value)}
+                  disabled={isEditingPaidInvoice}
+                />
+              </Field>
+            </div>
+
+            <div className="pt-2">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold">{copy.invoices.lineItems}</p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={addLineItem}
+                  disabled={isEditingPaidInvoice}
+                >
+                  <Plus className="h-4 w-4" />
+                  {copy.invoices.addLineItem}
+                </Button>
+              </div>
+
+              {lineItems.length > 0 ? (
+                <div className="mt-3 overflow-hidden rounded-xl border border-[var(--line)]">
+                  <table className="w-full text-left text-xs">
+                    <THead>
+                      <TR>
+                        <TH className="px-3 py-2">{copy.invoices.description}</TH>
+                        <TH className="px-3 py-2 text-right">{copy.invoices.quantity}</TH>
+                        <TH className="px-3 py-2 text-right">{copy.invoices.unitPrice}</TH>
+                        <TH className="px-3 py-2" />
+                      </TR>
+                    </THead>
+                    <tbody>
+                      {lineItems.map((item) => (
+                        <TR key={item.id}>
+                          <TD className="px-3 py-2">
+                            <input
+                              type="text"
+                              value={item.description}
+                              onChange={(e) =>
+                                updateLineItem(item.id, "description", e.target.value)
+                              }
+                              disabled={isEditingPaidInvoice}
+                              className="w-full rounded-lg border-0 bg-transparent outline-none"
+                              placeholder="Description"
+                            />
+                          </TD>
+                          <TD className="px-3 py-2 text-right">
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={item.quantity}
+                              onChange={(e) =>
+                                updateLineItem(item.id, "quantity", Number(e.target.value))
+                              }
+                              disabled={isEditingPaidInvoice}
+                              className="w-full rounded-lg border-0 bg-transparent text-right outline-none"
+                            />
+                          </TD>
+                          <TD className="px-3 py-2 text-right">
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={item.unitPrice}
+                              onChange={(e) =>
+                                updateLineItem(item.id, "unitPrice", Number(e.target.value))
+                              }
+                              disabled={isEditingPaidInvoice}
+                              className="w-full rounded-lg border-0 bg-transparent text-right outline-none"
+                            />
+                          </TD>
+                          <TD className="px-3 py-2 text-right">
+                            <IconButton
+                              tone="delete"
+                              label="Remove line item"
+                              onClick={() => removeLineItem(item.id)}
+                              disabled={isEditingPaidInvoice}
+                            >
+                              <Trash2 />
+                            </IconButton>
+                          </TD>
+                        </TR>
+                      ))}
+                    </tbody>
+                    <TFoot>
+                      <TR>
+                        <TD className="px-3 py-2">{copy.invoices.total}</TD>
+                        <TD />
+                        <TD className="px-3 py-2 text-right">{formatCurrency(lineItemsTotal)}</TD>
+                        <TD />
+                      </TR>
+                    </TFoot>
+                  </table>
                 </div>
+              ) : (
+                <p className="mt-2 text-xs text-[var(--muted)]">{copy.invoices.noLineItems}</p>
+              )}
+            </div>
 
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">{copy.invoices.header}</span>
-                  <input
-                    type="text"
-                    value={header}
-                    onChange={(e) => setHeader(e.target.value)}
-                    disabled={isEditingPaidInvoice}
-                    placeholder={copy.invoices.headerPlaceholder}
-                    className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                  />
-                </label>
+            <Field label={copy.invoices.reference}>
+              <Input
+                type="text"
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+                disabled={isEditingPaidInvoice}
+              />
+            </Field>
 
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">{copy.invoices.supplierName}</span>
-                  <textarea
-                    required
-                    value={supplierName}
-                    onChange={(e) => setSupplierName(e.target.value)}
-                    disabled={isEditingPaidInvoice}
-                    rows={2}
-                    placeholder={"Agence X Y Z\nChristian Duprax"}
-                    className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                  />
-                </label>
+            <Field label={copy.invoices.message}>
+              <Input
+                type="text"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                disabled={isEditingPaidInvoice}
+              />
+            </Field>
 
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">{copy.invoices.supplierAddress}</span>
-                  <input
-                    type="text"
-                    required
-                    value={supplierAddress}
-                    onChange={(e) => setSupplierAddress(e.target.value)}
-                    disabled={isEditingPaidInvoice}
-                    className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                  />
-                </label>
+            {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+          </form>
+        )}
+      </Modal>
 
-                <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
-                  <label className="block space-y-2">
-                    <span className="text-sm font-medium">{copy.invoices.supplierPostalCode}</span>
-                    <input
-                      type="text"
-                      required
-                      value={supplierPostalCode}
-                      onChange={(e) => setSupplierPostalCode(e.target.value)}
-                      disabled={isEditingPaidInvoice}
-                      className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                    />
-                  </label>
-                  <label className="block space-y-2">
-                    <span className="text-sm font-medium">{copy.invoices.supplierCity}</span>
-                    <input
-                      type="text"
-                      required
-                      value={supplierCity}
-                      onChange={(e) => setSupplierCity(e.target.value)}
-                      disabled={isEditingPaidInvoice}
-                      className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                    />
-                  </label>
-                </div>
-
-                <div className="pt-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold">{copy.invoices.lineItems}</p>
-                    <button
-                      type="button"
-                      onClick={addLineItem}
-                      disabled={isEditingPaidInvoice}
-                      className="inline-flex items-center gap-1.5 rounded-md border border-[var(--line)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--panel)]"
-                    >
-                      <Plus className="h-3 w-3" />
-                      {copy.invoices.addLineItem}
-                    </button>
-                  </div>
-
-                  {lineItems.length > 0 ? (
-                    <div className="mt-3 overflow-hidden rounded-xl border border-[var(--line)]">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-[var(--panel-strong)] text-[var(--muted)]">
-                          <tr>
-                            <th className="px-3 py-2 font-medium">{copy.invoices.description}</th>
-                            <th className="px-3 py-2 font-medium text-right">{copy.invoices.quantity}</th>
-                            <th className="px-3 py-2 font-medium text-right">{copy.invoices.unitPrice}</th>
-                            <th className="px-3 py-2"></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {lineItems.map((item) => (
-                            <tr key={item.id} className="border-t border-[var(--line)]">
-                              <td className="px-3 py-2">
-                                <input
-                                  type="text"
-                                  value={item.description}
-                                  onChange={(e) =>
-                                    updateLineItem(item.id, "description", e.target.value)
-                                  }
-                                  disabled={isEditingPaidInvoice}
-                                  className="w-full rounded-lg border-0 bg-transparent outline-none"
-                                  placeholder="Description"
-                                />
-                              </td>
-                              <td className="px-3 py-2 text-right">
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  value={item.quantity}
-                                  onChange={(e) =>
-                                    updateLineItem(item.id, "quantity", Number(e.target.value))
-                                  }
-                                  disabled={isEditingPaidInvoice}
-                                  className="w-full rounded-lg border-0 bg-transparent text-right outline-none"
-                                />
-                              </td>
-                              <td className="px-3 py-2 text-right">
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  value={item.unitPrice}
-                                  onChange={(e) =>
-                                    updateLineItem(item.id, "unitPrice", Number(e.target.value))
-                                  }
-                                  disabled={isEditingPaidInvoice}
-                                  className="w-full rounded-lg border-0 bg-transparent text-right outline-none"
-                                />
-                              </td>
-                              <td className="px-3 py-2 text-right">
-                                <button
-                                  type="button"
-                                  onClick={() => removeLineItem(item.id)}
-                                  disabled={isEditingPaidInvoice}
-                                  className="rounded-md border border-rose-300 p-1.5 text-rose-300 hover:bg-rose-950/40"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                          <tr className="border-t-2 border-[var(--line)] bg-[var(--panel-strong)] font-semibold">
-                            <td className="px-3 py-2">{copy.invoices.total}</td>
-                            <td></td>
-                            <td className="px-3 py-2 text-right">{formatCurrency(lineItemsTotal)}</td>
-                            <td></td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="mt-2 text-xs text-[var(--muted)]">{copy.invoices.noLineItems}</p>
-                  )}
-                </div>
-
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">{copy.invoices.reference}</span>
-                  <input
-                    type="text"
-                    value={reference}
-                    onChange={(e) => setReference(e.target.value)}
-                    disabled={isEditingPaidInvoice}
-                    className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                  />
-                </label>
-
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">{copy.invoices.message}</span>
-                  <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    disabled={isEditingPaidInvoice}
-                    className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-                  />
-                </label>
-
-                {error ? <p className="text-sm text-rose-300">{error}</p> : null}
-
-                <div className="flex items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={closeFormModal}
-                    className="rounded-md border border-[var(--line)] px-5 py-3 text-sm font-semibold hover:bg-[var(--panel)]"
-                  >
-                    {copy.shell.cancel}
-                  </button>
-                  <button
-                    disabled={savingInvoice || isEditingPaidInvoice}
-                    className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-                  >
-                    {savingInvoice
-                      ? "..."
-                      : editingInvoiceId
-                        ? copy.invoices.saveModifications
-                        : copy.invoices.saveInvoice}
-                  </button>
-                </div>
-              </form>
-            )}
-          </section>
-        </>
-      ) : null}
-
-      {paidModalInvoice ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
-            <h3 className="text-lg font-semibold">{copy.invoices.setPaid}</h3>
-            <p className="mt-2 text-sm text-[var(--muted)]">
+      <Modal
+        open={Boolean(paidModalInvoice)}
+        onClose={() => {
+          setPaidModalInvoice(null);
+          setSelectedJournalEntryId("");
+        }}
+        title={copy.invoices.setPaid}
+        size="md"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setPaidModalInvoice(null);
+                setSelectedJournalEntryId("");
+              }}
+            >
+              {copy.shell.cancel}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSetInvoicePaid}
+              disabled={!paidModalInvoice || statusActionInvoiceId === paidModalInvoice.id}
+            >
+              {paidModalInvoice && statusActionInvoiceId === paidModalInvoice.id ? "..." : copy.invoices.confirmSetPaid}
+            </Button>
+          </>
+        }
+      >
+        {paidModalInvoice ? (
+          <>
+            <p className="text-sm text-[var(--muted)]">
               {copy.invoices.pickJournalEntry} {paidModalInvoice.invoiceNumber}
             </p>
 
-            <label className="mt-4 block space-y-2">
-              <span className="text-sm font-medium">{copy.invoices.earningEntry}</span>
-              <select
+            <Field label={copy.invoices.earningEntry} className="mt-4">
+              <Select
                 value={selectedJournalEntryId}
                 onChange={(e) => setSelectedJournalEntryId(e.target.value)}
-                className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
               >
                 <option value="">{copy.invoices.selectEntryPlaceholder}</option>
                 {paidModalOptions.map((entry) => (
@@ -1037,32 +1026,11 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                     #{entry.sequenceNumber} • {entry.date} • {formatCurrency(entry.amount)} • {entry.label}
                   </option>
                 ))}
-              </select>
-            </label>
-
-            <div className="mt-6 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setPaidModalInvoice(null);
-                  setSelectedJournalEntryId("");
-                }}
-                className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel)]"
-              >
-                {copy.shell.cancel}
-              </button>
-              <button
-                type="button"
-                onClick={handleSetInvoicePaid}
-                disabled={statusActionInvoiceId === paidModalInvoice.id}
-                className="rounded-md bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-              >
-                {statusActionInvoiceId === paidModalInvoice.id ? "..." : copy.invoices.confirmSetPaid}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+              </Select>
+            </Field>
+          </>
+        ) : null}
+      </Modal>
     </div>
   );
 }

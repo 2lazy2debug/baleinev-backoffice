@@ -4,6 +4,7 @@ import { useActionState } from "react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
+import { Badge, Button, Card, Field, Input, Select } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import {
@@ -184,111 +185,64 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
           </div>
           <FormError message={createEventTypeState.error} />
           <form action={createEventTypeFormAction} className="flex flex-wrap items-end gap-2">
-            <input
-              type="text"
-              name="name"
-              required
-              placeholder={copy.eventTypeName}
-              className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-            />
-            <input
-              type="text"
-              name="description"
-              placeholder={copy.eventTypeDescription}
-              className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-            />
-            <button
-              disabled={isCreatingEventType}
-              className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-            >
+            <div className="w-48">
+              <Input type="text" name="name" required placeholder={copy.eventTypeName} size="compact" />
+            </div>
+            <div className="w-56">
+              <Input type="text" name="description" placeholder={copy.eventTypeDescription} size="compact" />
+            </div>
+            <Button type="submit" variant="primary" size="sm" disabled={isCreatingEventType}>
               {copy.createEventType}
-            </button>
+            </Button>
           </form>
         </section>
       ) : null}
 
       {/* ── Admin: Create event ───────────────────────────────────────────── */}
       {canManageEvents ? (
-        <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6 space-y-4">
+        <Card as="section" className="space-y-4">
           <h2 className="text-lg font-semibold">{copy.createEvent}</h2>
           {eventTypes.length === 0 ? (
             <p className="text-sm text-[var(--muted)]">{copy.noEventTypes}</p>
           ) : (
             <form action={createEventFormAction} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <FormError message={createEventState.error} className="sm:col-span-2 lg:col-span-3" />
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--muted)]">{copy.eventName} *</span>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-                />
-              </label>
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--muted)]">{copy.eventType} *</span>
-                <select
-                  name="eventTypeId"
-                  required
-                  defaultValue=""
-                  className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-                >
+              <Field label={`${copy.eventName} *`}>
+                <Input type="text" name="name" required />
+              </Field>
+              <Field label={`${copy.eventType} *`}>
+                <Select name="eventTypeId" required defaultValue="">
                   <option value="" disabled>{copy.eventType}</option>
                   {eventTypes.map((et) => (
                     <option key={et.id} value={et.id}>{et.name}</option>
                   ))}
-                </select>
-              </label>
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--muted)]">{copy.costCenter}</span>
-                <select
-                  name="costCenterId"
-                  defaultValue=""
-                  className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-                >
+                </Select>
+              </Field>
+              <Field label={copy.costCenter}>
+                <Select name="costCenterId" defaultValue="">
                   <option value="">—</option>
                   {costCenters.map((cc) => (
                     <option key={cc.id} value={cc.id}>{cc.code} {cc.name}</option>
                   ))}
-                </select>
-              </label>
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--muted)]">{copy.startDate} *</span>
-                <input
-                  type="date"
-                  name="startDate"
-                  required
-                  className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-                />
-              </label>
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--muted)]">{copy.endDate} *</span>
-                <input
-                  type="date"
-                  name="endDate"
-                  required
-                  className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-                />
-              </label>
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--muted)]">{copy.notes}</span>
-                <input
-                  type="text"
-                  name="notes"
-                  className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-                />
-              </label>
+                </Select>
+              </Field>
+              <Field label={`${copy.startDate} *`}>
+                <Input type="date" name="startDate" required />
+              </Field>
+              <Field label={`${copy.endDate} *`}>
+                <Input type="date" name="endDate" required />
+              </Field>
+              <Field label={copy.notes}>
+                <Input type="text" name="notes" />
+              </Field>
               <div className="sm:col-span-2 lg:col-span-3">
-                <button
-                  disabled={isCreatingEvent}
-                  className="rounded-md bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-                >
+                <Button type="submit" variant="primary" disabled={isCreatingEvent}>
                   {copy.createEvent}
-                </button>
+                </Button>
               </div>
             </form>
           )}
-        </section>
+        </Card>
       ) : null}
 
       {/* ── Events list ──────────────────────────────────────────────────── */}
@@ -323,9 +277,9 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
                 {canManageEvents ? (
                   <form action={deleteEventFormAction}>
                     <input type="hidden" name="id" value={event.id} />
-                    <button disabled={isDeletingEvent} className="text-xs text-[var(--muted)] hover:text-rose-400 disabled:opacity-50">
+                    <Button type="submit" variant="destructive" size="sm" disabled={isDeletingEvent}>
                       {copy.deleteEvent}
-                    </button>
+                    </Button>
                   </form>
                 ) : null}
               </div>
@@ -337,18 +291,14 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold">{formatDate(day.date)}</span>
-                        {day.isOff ? (
-                          <span className="rounded-full border border-[var(--line)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-                            {copy.isOff}
-                          </span>
-                        ) : null}
+                        {day.isOff ? <Badge tone="neutral">{copy.isOff}</Badge> : null}
                       </div>
                       {canManageEvents ? (
                         <form action={toggleDayOffFormAction}>
                           <input type="hidden" name="id" value={day.id} />
-                          <button disabled={isTogglingDayOff} className="text-xs text-[var(--muted)] hover:text-[var(--ink)] disabled:opacity-50">
+                          <Button type="submit" variant="ghost" size="sm" disabled={isTogglingDayOff}>
                             {day.isOff ? copy.toggleOn : copy.toggleOff}
-                          </button>
+                          </Button>
                         </form>
                       ) : null}
                     </div>
@@ -390,22 +340,16 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
                                     {isReadOnly ? null : signed ? (
                                       <form action={withdrawFormAction}>
                                         <input type="hidden" name="shiftId" value={shift.id} />
-                                        <button
-                                          disabled={isWithdrawing}
-                                          className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-950/40 disabled:opacity-50"
-                                        >
+                                        <Button type="submit" variant="destructive" size="sm" disabled={isWithdrawing}>
                                           {copy.withdraw}
-                                        </button>
+                                        </Button>
                                       </form>
                                     ) : !isFull ? (
                                       <form action={signUpFormAction}>
                                         <input type="hidden" name="shiftId" value={shift.id} />
-                                        <button
-                                          disabled={isSigningUp}
-                                          className="rounded-md bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-                                        >
+                                        <Button type="submit" variant="primary" size="sm" disabled={isSigningUp}>
                                           {copy.signUp}
-                                        </button>
+                                        </Button>
                                       </form>
                                     ) : null}
 
@@ -413,24 +357,19 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
                                     {canManageEvents && !isFull ? (
                                       <form action={adminAssignFormAction} className="flex items-center gap-1">
                                         <input type="hidden" name="shiftId" value={shift.id} />
-                                        <select
-                                          name="userId"
-                                          defaultValue=""
-                                          className="rounded-lg border border-[var(--line)] bg-[var(--panel-strong)] px-2 py-1.5 text-xs outline-none focus:border-[var(--accent)]"
-                                        >
-                                          <option value="" disabled>{copy.assignStaff}</option>
-                                          {allUsers
-                                            .filter((u) => !shift.assignments.some((a) => a.userId === u.id))
-                                            .map((u) => (
-                                              <option key={u.id} value={u.id}>{u.name}</option>
-                                            ))}
-                                        </select>
-                                        <button
-                                          disabled={isAdminAssigning}
-                                          className="rounded-md border border-[var(--line)] px-2 py-1.5 text-xs font-semibold hover:bg-[var(--panel-strong)] disabled:opacity-50"
-                                        >
+                                        <div className="w-40">
+                                          <Select name="userId" defaultValue="" size="compact">
+                                            <option value="" disabled>{copy.assignStaff}</option>
+                                            {allUsers
+                                              .filter((u) => !shift.assignments.some((a) => a.userId === u.id))
+                                              .map((u) => (
+                                                <option key={u.id} value={u.id}>{u.name}</option>
+                                              ))}
+                                          </Select>
+                                        </div>
+                                        <Button type="submit" variant="secondary" size="sm" disabled={isAdminAssigning}>
                                           +
-                                        </button>
+                                        </Button>
                                       </form>
                                     ) : null}
 
@@ -438,7 +377,7 @@ export default function EventsPageClient({ isAdmin, accessId, eventTypes, costCe
                                     {canManageEvents ? (
                                       <form action={deleteShiftFormAction}>
                                         <input type="hidden" name="id" value={shift.id} />
-                                        <button disabled={isDeletingShift} className="text-xs text-[var(--muted)] hover:text-rose-400 disabled:opacity-50">×</button>
+                                        <Button type="submit" variant="destructive" size="sm" disabled={isDeletingShift}>×</Button>
                                       </form>
                                     ) : null}
                                   </div>

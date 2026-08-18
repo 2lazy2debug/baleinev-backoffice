@@ -4,9 +4,9 @@ import { useActionState, useState } from "react";
 import { TaskType } from "@prisma/client";
 import { Check, Circle, Pencil, Trash2 } from "lucide-react";
 
-import { FormError } from "@/components/form-error";
-import { buttonClasses } from "@/lib/button-classes";
 import { useEditionReadOnly } from "@/components/edition-read-only";
+import { FormError } from "@/components/form-error";
+import { Button, Field, IconButton, Input, Select, Textarea } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { decimalToNumber, formatCurrency } from "@/lib/utils";
 
@@ -194,43 +194,34 @@ export function TasksPageClient({
                     {canManageTask ? (
                       <form action={updateTaskFormAction} className="mt-2 grid gap-2 md:grid-cols-2">
                         <input type="hidden" name="todoTaskId" value={task.id} />
-                        <input
-                          type="text"
-                          name="title"
-                          required
-                          defaultValue={task.title}
-                          className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-                        />
-                        <input
+                        <Input type="text" name="title" required defaultValue={task.title} />
+                        <Input
                           type="datetime-local"
                           name="dueDate"
                           defaultValue={task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : ""}
-                          className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
                         />
-                        <textarea
+                        <Textarea
                           name="description"
                           rows={2}
                           defaultValue={task.description ?? ""}
-                          className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)] md:col-span-2"
+                          className="md:col-span-2"
                         />
                         {access.role === "ADMIN" ? (
-                          <select
-                            name="assignedToUserId"
-                            defaultValue={task.assignedToUserId ?? ""}
-                            className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)] md:col-span-2"
-                          >
-                            <option value="">{copy.tasks.unassigned}</option>
-                            {users.map((user) => (
-                              <option key={user.id} value={user.id}>
-                                {user.name}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="md:col-span-2">
+                            <Select name="assignedToUserId" defaultValue={task.assignedToUserId ?? ""}>
+                              <option value="">{copy.tasks.unassigned}</option>
+                              {users.map((user) => (
+                                <option key={user.id} value={user.id}>
+                                  {user.name}
+                                </option>
+                              ))}
+                            </Select>
+                          </div>
                         ) : null}
                         <div className="md:col-span-2">
-                          <button disabled={isUpdatingTask} className={buttonClasses.text.primary}>
+                          <Button type="submit" variant="primary" size="sm" disabled={isUpdatingTask}>
                             {copy.tasks.saveTask}
-                          </button>
+                          </Button>
                         </div>
                       </form>
                     ) : (
@@ -266,17 +257,17 @@ export function TasksPageClient({
                           name="status"
                           value={task.status === "DONE" ? "PENDING" : "DONE"}
                         />
-                        <button disabled={isTogglingStatus} className={buttonClasses.text.primary}>
+                        <Button type="submit" variant="primary" size="sm" disabled={isTogglingStatus}>
                           {task.status === "DONE" ? copy.tasks.markPending : copy.tasks.markDone}
-                        </button>
+                        </Button>
                       </form>
                       )}
                       {canManageTask ? (
                         <form action={deleteTaskFormAction}>
                           <input type="hidden" name="todoTaskId" value={task.id} />
-                          <button disabled={isDeletingTask} className={buttonClasses.text.delete}>
+                          <Button type="submit" variant="destructive" size="sm" disabled={isDeletingTask}>
                             {copy.tasks.deleteTask}
-                          </button>
+                          </Button>
                         </form>
                       ) : null}
                     </div>
@@ -320,9 +311,9 @@ export function TasksPageClient({
                     {isReadOnly ? null : (
                       <form action={resolveFormAction} className="mt-2">
                         <input type="hidden" name="taskId" value={task.id} />
-                        <button disabled={isResolving} className={buttonClasses.text.primary}>
+                        <Button type="submit" variant="primary" size="sm" disabled={isResolving}>
                           {copy.tasks.markDone}
-                        </button>
+                        </Button>
                       </form>
                     )}
                   </>
@@ -379,53 +370,31 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
         <form action={updateTodoFormAction} className="grid gap-3 md:grid-cols-2">
           <FormError message={updateTodoState.error} className="md:col-span-2" />
           <input type="hidden" name="todoId" value={todo.id} />
-          <label className="block space-y-1 md:col-span-2">
-            <span className="text-sm font-medium">{copy.tasks.todoTitle}</span>
-            <input
-              type="text"
-              name="title"
-              required
-              defaultValue={todo.title}
-              className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-            />
-          </label>
-          <label className="block space-y-1 md:col-span-2">
-            <span className="text-sm font-medium">{copy.tasks.todoDescription}</span>
-            <textarea
-              name="description"
-              rows={2}
-              defaultValue={todo.description ?? ""}
-              className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-            />
-          </label>
+          <Field label={copy.tasks.todoTitle} className="md:col-span-2">
+            <Input type="text" name="title" required defaultValue={todo.title} />
+          </Field>
+          <Field label={copy.tasks.todoDescription} className="md:col-span-2">
+            <Textarea name="description" rows={2} defaultValue={todo.description ?? ""} />
+          </Field>
           {isAdmin ? (
-            <label className="block space-y-1 md:col-span-2">
-              <span className="text-sm font-medium">{copy.tasks.assignTodoTo}</span>
-              <select
-                name="assignedToUserId"
-                defaultValue={todo.assignedToUserId ?? ""}
-                className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-              >
+            <Field label={copy.tasks.assignTodoTo} className="md:col-span-2">
+              <Select name="assignedToUserId" defaultValue={todo.assignedToUserId ?? ""}>
                 <option value="">{copy.tasks.unassigned}</option>
                 {users.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.name}
                   </option>
                 ))}
-              </select>
-            </label>
+              </Select>
+            </Field>
           ) : null}
           <div className="md:col-span-2 flex gap-2">
-            <button disabled={isSavingTodo} className={buttonClasses.text.primary}>
+            <Button type="submit" variant="primary" size="sm" disabled={isSavingTodo}>
               {copy.tasks.saveTodo}
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditingTodoId(null)}
-              className={buttonClasses.text.cancel}
-            >
+            </Button>
+            <Button type="button" variant="secondary" size="sm" onClick={() => setEditingTodoId(null)}>
               {copy.common.cancel ?? "Cancel"}
-            </button>
+            </Button>
           </div>
         </form>
       ) : (
@@ -444,22 +413,12 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
           <div className="flex shrink-0 gap-1">
             {isAdmin && todo.createdById === access.id && !isReadOnly ? (
               <>
-                <button
-                  type="button"
-                  onClick={() => setEditingTodoId(todo.id)}
-                  className={buttonClasses.icon.edit}
-                  title="Edit"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDeletingTodoId(todo.id)}
-                  className={buttonClasses.icon.delete}
-                  title="Delete"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                <IconButton type="button" tone="accent" label="Edit" onClick={() => setEditingTodoId(todo.id)}>
+                  <Pencil />
+                </IconButton>
+                <IconButton type="button" tone="delete" label="Delete" onClick={() => setDeletingTodoId(todo.id)}>
+                  <Trash2 />
+                </IconButton>
               </>
             ) : null}
           </div>
@@ -487,16 +446,12 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
             />
           </label>
           <div className="flex items-end gap-2">
-            <button disabled={isDeletingTodo} className={buttonClasses.text.delete}>
+            <Button type="submit" variant="destructive" size="sm" disabled={isDeletingTodo}>
               {copy.tasks.delete}
-            </button>
-            <button
-              type="button"
-              onClick={() => setDeletingTodoId(null)}
-              className={buttonClasses.text.cancel}
-            >
+            </Button>
+            <Button type="button" variant="secondary" size="sm" onClick={() => setDeletingTodoId(null)}>
               {copy.common.cancel ?? "Cancel"}
-            </button>
+            </Button>
           </div>
         </form>
       ) : null}
@@ -508,42 +463,30 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
           <form action={createTaskFormAction} className="grid gap-2 md:grid-cols-2">
             <FormError message={createTaskState.error} className="md:col-span-2" />
             <input type="hidden" name="todoId" value={todo.id} />
-            <input
-              type="text"
-              name="title"
-              required
-              placeholder={copy.tasks.taskTitle}
-              className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-            />
-            <input
-              type="datetime-local"
-              name="dueDate"
-              className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-            />
-            <textarea
+            <Input type="text" name="title" required placeholder={copy.tasks.taskTitle} />
+            <Input type="datetime-local" name="dueDate" />
+            <Textarea
               name="description"
               rows={2}
               placeholder={copy.tasks.taskDescription}
-              className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)] md:col-span-2"
+              className="md:col-span-2"
             />
             {isAdmin ? (
-              <select
-                name="assignedToUserId"
-                defaultValue=""
-                className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)] md:col-span-2"
-              >
-                <option value="">{copy.tasks.unassigned}</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
-                  </option>
-                ))}
-              </select>
+              <div className="md:col-span-2">
+                <Select name="assignedToUserId" defaultValue="">
+                  <option value="">{copy.tasks.unassigned}</option>
+                  {users.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
             ) : null}
             <div className="md:col-span-2">
-              <button disabled={isCreatingTask} className={buttonClasses.text.primary}>
+              <Button type="submit" variant="primary" size="sm" disabled={isCreatingTask}>
                 {copy.tasks.createTask}
-              </button>
+              </Button>
             </div>
           </form>
         ) : null}
@@ -595,42 +538,29 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
                       name="status"
                       value={task.status === "DONE" ? "PENDING" : "DONE"}
                     />
-                    <button
+                    <IconButton
+                      type="submit"
+                      tone="neutral"
+                      label={task.status === "DONE" ? "Mark pending" : "Mark done"}
                       disabled={isTogglingStatus}
-                      className={buttonClasses.icon.action}
-                      title={
-                        task.status === "DONE" ? "Mark pending" : "Mark done"
-                      }
                     >
-                      {task.status === "DONE" ? (
-                        <Check className="h-3.5 w-3.5" />
-                      ) : (
-                        <Circle className="h-3.5 w-3.5" />
-                      )}
-                    </button>
+                      {task.status === "DONE" ? <Check /> : <Circle />}
+                    </IconButton>
                   </form>
                   )}
                   {canManageTodoTasks ? (
                     <>
                       <form action={updateTaskFormAction} className="inline">
                         <input type="hidden" name="todoTaskId" value={task.id} />
-                        <button
-                          disabled={isUpdatingTask}
-                          className={buttonClasses.icon.edit}
-                          title="Edit"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
+                        <IconButton type="submit" tone="accent" label="Edit" disabled={isUpdatingTask}>
+                          <Pencil />
+                        </IconButton>
                       </form>
                       <form action={deleteTaskFormAction} className="inline">
                         <input type="hidden" name="todoTaskId" value={task.id} />
-                        <button
-                          disabled={isDeletingTask}
-                          className={buttonClasses.icon.delete}
-                          title="Delete"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                        <IconButton type="submit" tone="delete" label="Delete" disabled={isDeletingTask}>
+                          <Trash2 />
+                        </IconButton>
                       </form>
                     </>
                   ) : null}

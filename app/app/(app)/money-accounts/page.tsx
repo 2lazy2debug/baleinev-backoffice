@@ -1,5 +1,6 @@
 import { AccountType } from "@prisma/client";
 
+import { Card, CardGrid } from "@/components/ui";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
@@ -74,15 +75,19 @@ export default async function MoneyAccountsPage() {
       </header>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_360px]">
-        <div className="grid gap-4 md:grid-cols-2">
-          <MoneyAccountsPageClient locale={locale} accounts={accounts} />
+        <div>
+          <CardGrid>
+            <MoneyAccountsPageClient locale={locale} accounts={accounts} />
+          </CardGrid>
         </div>
 
         <WritableEditionOnly>
-          <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
-            <h2 className="text-xl font-semibold">{copy.moneyAccounts.create}</h2>
-            <CreateMoneyAccountForm locale={locale} />
-          </section>
+          <div>
+            <Card as="section">
+              <h2 className="text-xl font-semibold">{copy.moneyAccounts.create}</h2>
+              <CreateMoneyAccountForm locale={locale} />
+            </Card>
+          </div>
         </WritableEditionOnly>
       </section>
     </div>

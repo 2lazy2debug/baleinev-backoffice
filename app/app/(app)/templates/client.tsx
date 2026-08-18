@@ -5,6 +5,7 @@ import { DocumentType } from "@prisma/client";
 import { Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
+import { Badge, Button, Card, CardGrid, Field, IconButton, Input, Select } from "@/components/ui";
 import type { getDictionary } from "@/lib/i18n";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -49,151 +50,116 @@ export function TemplatesPageClient({
         <FormError message={makeDefaultState.error} />
         <FormError message={deleteState.error} />
         {templates.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--panel-strong)] p-6 text-sm text-[var(--muted)]">
+          <Card span="full" dashed>
             {copy.templates.noTemplates}
-          </div>
+          </Card>
         ) : (
-          templates.map((template) => (
-            <article key={template.id} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 space-y-3">
-                  <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
-                    <span>{template.documentType === DocumentType.INVOICE ? copy.templates.invoiceType : template.documentType}</span>
-                    <span>•</span>
-                    <span>{copy.templates.pdfFormat}</span>
-                    {template.isDefault ? (
-                      <span className="rounded-full bg-[var(--panel)] px-2 py-1 text-[10px] font-semibold text-[var(--ink)]">
-                        {copy.templates.defaultLabel}
-                      </span>
-                    ) : null}
+          <CardGrid>
+            {templates.map((template) => (
+              <Card key={template.id}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 space-y-3">
+                    <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
+                      <span>{template.documentType === DocumentType.INVOICE ? copy.templates.invoiceType : template.documentType}</span>
+                      <span>•</span>
+                      <span>{copy.templates.pdfFormat}</span>
+                      {template.isDefault ? <Badge tone="success">{copy.templates.defaultLabel}</Badge> : null}
+                    </div>
+
+                    <form action={updateFormAction} className="space-y-3">
+                      <input type="hidden" name="templateId" value={template.id} />
+                      <Field label={copy.templates.name}>
+                        <Input type="text" name="name" defaultValue={template.name} required />
+                      </Field>
+                      <Field label={copy.templates.html}>
+                        <textarea
+                          name="html"
+                          defaultValue={template.html}
+                          required
+                          rows={26}
+                          className="min-h-[420px] w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 font-mono text-xs outline-none transition focus:border-[var(--accent)]"
+                        />
+                      </Field>
+                      <div className="flex flex-wrap gap-2">
+                        <Button type="submit" variant="secondary" size="sm" disabled={isUpdating}>
+                          {copy.templates.save}
+                        </Button>
+                      </div>
+                    </form>
                   </div>
 
-                  <form action={updateFormAction} className="space-y-3">
-                    <input type="hidden" name="templateId" value={template.id} />
-                    <label className="block space-y-1">
-                      <span className="text-xs font-medium text-[var(--muted)]">{copy.templates.name}</span>
-                      <input
-                        type="text"
-                        name="name"
-                        defaultValue={template.name}
-                        required
-                        className="w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 text-sm outline-none transition focus:border-[var(--accent)]"
-                      />
-                    </label>
-                    <label className="block space-y-1">
-                      <span className="text-xs font-medium text-[var(--muted)]">{copy.templates.html}</span>
-                      <textarea
-                        name="html"
-                        defaultValue={template.html}
-                        required
-                        rows={26}
-                        className="min-h-[420px] w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 font-mono text-xs outline-none transition focus:border-[var(--accent)]"
-                      />
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        disabled={isUpdating}
-                        className="rounded-xl border border-[var(--line)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] hover:bg-[var(--panel)] disabled:opacity-60"
-                      >
-                        {copy.templates.save}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  {!template.isDefault ? (
-                    <form action={makeDefaultFormAction}>
+                  <div className="flex flex-col gap-2">
+                    {!template.isDefault ? (
+                      <form action={makeDefaultFormAction}>
+                        <input type="hidden" name="templateId" value={template.id} />
+                        <Button type="submit" variant="secondary" size="sm" disabled={isMakingDefault}>
+                          {copy.templates.makeDefault}
+                        </Button>
+                      </form>
+                    ) : null}
+                    <form action={deleteFormAction}>
                       <input type="hidden" name="templateId" value={template.id} />
-                      <button
-                        disabled={isMakingDefault}
-                        className="rounded-xl border border-[var(--line)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] hover:bg-[var(--panel)] disabled:opacity-60"
+                      <IconButton
+                        type="submit"
+                        tone="delete"
+                        label={template.isDefault ? copy.templates.cannotDeleteDefault : copy.templates.deleteButton}
+                        disabled={template.isDefault || isDeleting}
                       >
-                        {copy.templates.makeDefault}
-                      </button>
+                        <Trash2 />
+                      </IconButton>
                     </form>
-                  ) : null}
-                  <form action={deleteFormAction}>
-                    <input type="hidden" name="templateId" value={template.id} />
-                    <button
-                      disabled={template.isDefault || isDeleting}
-                      title={template.isDefault ? copy.templates.cannotDeleteDefault : copy.templates.deleteButton}
-                      className="rounded-md border border-rose-300 p-2 text-rose-300 hover:bg-rose-950/40 disabled:cursor-not-allowed disabled:border-[var(--line)] disabled:text-[var(--muted)] disabled:hover:bg-transparent"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </form>
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))
+              </Card>
+            ))}
+          </CardGrid>
         )}
       </div>
 
       <section className="space-y-6">
-        <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+        <Card as="section">
           <h2 className="text-xl font-semibold">{copy.templates.create}</h2>
           <form action={createFormAction} className="mt-6 space-y-4">
             <FormError message={createState.error} />
-            <label className="block space-y-2">
-              <span className="text-sm font-medium">{copy.templates.name}</span>
-              <input
-                type="text"
-                name="name"
-                required
-                className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-              />
-            </label>
+            <Field label={copy.templates.name}>
+              <Input type="text" name="name" required />
+            </Field>
 
-            <label className="block space-y-2">
-              <span className="text-sm font-medium">{copy.templates.documentType}</span>
-              <select
-                name="documentType"
-                defaultValue={DocumentType.INVOICE}
-                className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
-              >
+            <Field label={copy.templates.documentType}>
+              <Select name="documentType" defaultValue={DocumentType.INVOICE}>
                 <option value={DocumentType.INVOICE}>{copy.templates.invoiceType}</option>
-              </select>
-            </label>
+              </Select>
+            </Field>
 
-            <label className="block space-y-2">
-              <span className="text-sm font-medium">{copy.templates.outputFormat}</span>
-              <input
-                type="text"
-                value={copy.templates.pdfFormat}
-                disabled
-                className="w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-[var(--muted)] outline-none"
-              />
-            </label>
+            <Field label={copy.templates.outputFormat}>
+              <Input type="text" value={copy.templates.pdfFormat} disabled className="text-[var(--muted)]" />
+            </Field>
 
-            <label className="block space-y-2">
-              <span className="text-sm font-medium">{copy.templates.html}</span>
+            <Field label={copy.templates.html}>
               <textarea
                 name="html"
                 defaultValue={templates.find((template) => template.isDefault && template.documentType === DocumentType.INVOICE)?.html ?? ""}
                 required
                 rows={18}
+                // check-design-ignore: code editor needs font-mono text-xs, Textarea is fixed to text-sm
                 className="min-h-[320px] w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 font-mono text-xs outline-none transition focus:border-[var(--accent)]"
               />
-            </label>
+            </Field>
 
-            <button
-              disabled={isCreating}
-              className="rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-60"
-            >
+            <Button type="submit" variant="primary" disabled={isCreating}>
               {copy.templates.createButton}
-            </button>
+            </Button>
           </form>
-        </section>
+        </Card>
 
-        <section className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-6">
+        <Card as="section">
           <h2 className="text-xl font-semibold">{copy.templates.placeholders}</h2>
           <ul className="mt-4 space-y-2 font-mono text-xs text-[var(--muted)]">
             {placeholders.map((placeholder) => (
               <li key={placeholder}>{placeholder}</li>
             ))}
           </ul>
-        </section>
+        </Card>
       </section>
     </section>
   );
