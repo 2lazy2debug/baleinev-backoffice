@@ -12,6 +12,7 @@ import {
   closeEditionAction,
   createEditionAction,
   deleteEditionAction,
+  reopenEditionAction,
   setDefaultEditionAction,
   updateDrivingRateAction,
 } from "./actions";
@@ -37,6 +38,7 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
     initialActionState
   );
   const [closeState, closeFormAction, isClosing] = useActionState(closeEditionAction, initialActionState);
+  const [reopenState, reopenFormAction, isReopening] = useActionState(reopenEditionAction, initialActionState);
   const [deleteState, deleteFormAction, isDeleting] = useActionState(deleteEditionAction, initialActionState);
   const [createState, createFormAction, isCreating] = useActionState(createEditionAction, initialActionState);
 
@@ -46,6 +48,7 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
         <FormError message={updateRateState.error} />
         <FormError message={setDefaultState.error} />
         <FormError message={closeState.error} />
+        <FormError message={reopenState.error} />
         <FormError message={deleteState.error} />
         {editions.map((edition) => (
           <article key={edition.id} className="rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)] p-5">
@@ -103,17 +106,29 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
                   </form>
                 ) : null}
 
-                {!edition.closedAt ? (
+                {edition.closedAt ? (
+                  <form action={reopenFormAction}>
+                    <input type="hidden" name="editionId" value={edition.id} />
+                    <button
+                      disabled={isReopening}
+                      title={copy.editions.reopenHint}
+                      className="rounded-md border border-[var(--line)] px-4 py-2 text-sm font-medium hover:bg-[var(--panel)] disabled:opacity-50"
+                    >
+                      {copy.editions.reopenYear}
+                    </button>
+                  </form>
+                ) : (
                   <form action={closeFormAction}>
                     <input type="hidden" name="editionId" value={edition.id} />
                     <button
                       disabled={isClosing}
+                      title={copy.editions.closeHint}
                       className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--accent-strong)] disabled:opacity-50"
                     >
                       {copy.editions.closeYear}
                     </button>
                   </form>
-                ) : null}
+                )}
 
                 <form action={deleteFormAction}>
                   <input type="hidden" name="editionId" value={edition.id} />

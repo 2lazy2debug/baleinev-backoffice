@@ -82,8 +82,11 @@ a capacity. Users sign up for a shift, which creates a `StaffAssignment` and a `
 withdrawing removes both. Admins can assign users directly.
 
 **Edition lifecycle.** Admins create editions, mark one as the default that new accounts start in,
-set the driving rate, and close an edition (`closeEditionAction`). A **closed edition is
-read-only**: still selectable, browsable, exportable and printable, but every write is refused.
+set the driving rate, and close or reopen an edition (`closeEditionAction` / `reopenEditionAction`).
+A **closed edition is read-only**: still selectable, browsable, exportable and printable, but every
+write is refused. Closing only stamps `closedAt` — it creates no successor — and it moves the
+default off the closed edition, onto the newest open one, so new accounts never start in a frozen
+year.
 Creating an edition can optionally **bring data over** from an existing one
 ([app/lib/edition-carry-over.ts](../app/lib/edition-carry-over.ts)): departments, cost centers and
 money accounts, plus each account's closing balance as a locked opening entry. Budget lines are not

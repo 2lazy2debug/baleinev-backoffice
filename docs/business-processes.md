@@ -29,10 +29,14 @@ Each user picks their edition from the sidebar picker
 Work proceeds in whichever edition each user selected
         │
         ▼
-At year end, admin creates the next edition and closes the old one
+At year end, admin creates the next edition (optionally bringing data over)
+and closes the old one — two separate, explicit actions
         │
         ▼
 A closed edition is read-only: still selectable, browsable, exportable, printable
+        │
+        ▼
+Reopening it clears closedAt and writes work again
 ```
 
 - `Edition.isDefault` marks the edition that **seeds accounts with no edition yet**. It is written
@@ -44,6 +48,16 @@ A closed edition is read-only: still selectable, browsable, exportable, printabl
 - **Closing means read-only, not gone.** A closed edition stays in the picker (marked "closed"),
   its pages render with their data, and exports and invoice PDFs keep working. Every *write*
   against it is refused with "This edition is closed. Reopen it to make changes."
+- **Closing stamps `closedAt` and nothing else.** It creates no successor and copies nothing —
+  creating the next edition and bringing data into it is the separate, explicit action below, so
+  several editions can be open at once.
+- **Closing the default hands the default to the newest open edition** (names are `YYYY-YYYY`, so
+  newest is by name). Otherwise new accounts would be seeded straight into a frozen year. When no
+  open edition is left, the app simply has no default and a new account lands in the "pick an
+  edition" state.
+- **Closing is reversible.** "Reopen year" (`reopenEditionAction`, admin only) clears `closedAt`
+  and writes work again, so a mis-click needs no database access. Reopening does not restore the
+  default — that is set explicitly.
 - The enforcement is `requireWritableEdition()` in `app/lib/edition-context.ts`, called by every
   write path that touches edition-scoped data — the action files, and
   `app/app/api/invoices/route.ts`, which guards the `editionId` from its request body rather than

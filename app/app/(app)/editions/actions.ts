@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db";
 import { carryOverEdition } from "@/lib/edition-carry-over";
 import { requireWritableEdition } from "@/lib/edition-context";
 import { type ActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
-import { incrementEditionName, isValidEditionName } from "@/lib/utils";
+import { isValidEditionName } from "@/lib/utils";
 
 function getRequiredString(formData: FormData, key: string) {
   const value = String(formData.get(key) ?? "").trim();
@@ -135,6 +135,12 @@ export async function deleteEditionAction(_prevState: ActionState, formData: For
   }
 }
 
+/**
+ * Closing stamps `closedAt`, and nothing else. It does not create the next
+ * edition and it copies nothing: creating an edition and bringing data over is
+ * one explicit choice made in the new-edition dialog, so several editions can
+ * be open at once.
+ */
 export async function closeEditionAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
@@ -143,7 +149,7 @@ export async function closeEditionAction(_prevState: ActionState, formData: Form
     await prisma.$transaction(async (tx) => {
       const edition = await tx.edition.findUnique({
         where: { id: editionId },
-        select: { id: true, name: true, closedAt: true, endDate: true, drivingRatePerKm: true },
+        select: { id: true, closedAt: true, isDefault: true },
       });
 
       if (!edition) {
@@ -154,35 +160,54 @@ export async function closeEditionAction(_prevState: ActionState, formData: Form
         return;
       }
 
-      const nextEditionName = incrementEditionName(edition.name);
-      const existingNextEdition = await tx.edition.findUnique({ where: { name: nextEditionName } });
-
-      if (existingNextEdition) {
-        throw new Error("The next edition already exists.");
-      }
-
-      await tx.edition.updateMany({ where: { isDefault: true }, data: { isDefault: false } });
-
-      const nextEdition = await tx.edition.create({
-        data: {
-          name: nextEditionName,
-          isDefault: true,
-          startDate: edition.endDate,
-          drivingRatePerKm: edition.drivingRatePerKm,
-        },
-      });
+      // The default seeds accounts that have none, so it cannot be a frozen
+      // year. Names are YYYY-YYYY, so ordering by name descending is
+      // chronological.
+      const successor = edition.isDefault
+        ? await tx.edition.findFirst({
+            where: { closedAt: null, id: { not: edition.id } },
+            orderBy: { name: "desc" },
+            select: { id: true },
+          })
+        : null;
 
       await tx.edition.update({
         where: { id: edition.id },
-        data: { closedAt: new Date() },
+        data: { closedAt: new Date(), isDefault: edition.isDefault ? false : undefined },
       });
 
-      await carryOverEdition(tx, edition.id, nextEdition.id);
+      if (successor) {
+        await tx.edition.update({ where: { id: successor.id }, data: { isDefault: true } });
+      }
+
+      // No open edition left to hand the default to: the app has none, and a new
+      // account lands in the "pick an edition" state rather than in a closed year.
     });
 
-    revalidatePath("/editions");
-    revalidatePath("/");
-    revalidatePath("/departments");
+    // Closing flips the whole app into read-only for whoever is in this edition.
+    revalidatePath("/", "layout");
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+/**
+ * The inverse of closing. Without it a mis-click would be unrecoverable without
+ * database access. Reopening does not restore the default — that is set
+ * explicitly.
+ */
+export async function reopenEditionAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    const editionId = getRequiredString(formData, "editionId");
+
+    await prisma.edition.update({
+      where: { id: editionId },
+      data: { closedAt: null },
+    });
+
+    revalidatePath("/", "layout");
     return { error: null };
   } catch (err) {
     return { error: toActionErrorMessage(err) };

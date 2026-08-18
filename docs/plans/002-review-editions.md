@@ -373,23 +373,52 @@ Tag: `git tag -a v0.4.0 -m "non-breaking"`.
 
 ---
 
-## Step 4 — Closing stops creating the successor · `v0.5.0` · `non-breaking`
+## Step 4 — Closing stops creating the successor · `v0.5.0` · `non-breaking` — **DONE 2026-08-18**
 
-Only now, with the manual path shipped, reduce `closeEditionAction` to what its name says: stamp
-`closedAt`. Remove the successor creation, the carry-over call, and the `isActive` juggling.
+`closeEditionAction` is now what its name says: it stamps `closedAt`. The successor creation, the
+`carryOverEdition` call and the default juggling that came with them are gone — step 3's dialog is
+the only way an edition is created and the only way data moves between editions.
 
-Add `reopenEditionAction` — clears `closedAt`, admin only. Closing is no longer terminal, so it
-needs an inverse; without one, a mis-click is unrecoverable without database access.
+`reopenEditionAction` (admin only) clears `closedAt`. Closing is no longer terminal, so it needs an
+inverse; without one a mis-click costs database access. Reopening deliberately does **not** restore
+the default — that stays an explicit choice.
 
-One consequence to handle: if the edition being closed is the **default**, move the default to
-the newest edition that isn't closed. Otherwise new accounts would be seeded straight into a
-frozen year.
+Closing the **default** hands the default to the newest edition that is not closed, so new accounts
+are never seeded into a frozen year. Edition names are `YYYY-YYYY`, so "newest" is `name` descending.
+When no open edition is left the app simply has no default, and a new account lands in the
+"pick an edition" state step 1 already renders — a closed year is never the seed.
 
-### Verify
+Two smaller things went with it:
 
-Close an edition: no new edition appears, it stays selectable and read-only, and other open
-editions are untouched. Reopen it: writes work again. Close the default edition: the default
-moves, and a newly created account lands somewhere writable.
+- `incrementEditionName()` in `lib/utils.ts` was deleted. `closeEditionAction` was its only caller;
+  nothing derives the next edition's name any more, because the admin types it.
+- Closing and reopening flip the read-only state of every edition-scoped page at once, so both
+  revalidate with `revalidatePath("/", "layout")` rather than the three-path list the other edition
+  actions use.
+
+### Verify — all passed 2026-08-18
+
+Same approach as steps 2 and 3: a local fixture with production's shape (16 departments, 3 cost
+centers, `Coffre` and `CompteCourant` with its IBAN, 3 journal entries) in a separate
+`baleinev_verify` database, plus a **second open edition** so "other editions are untouched" is
+measurable. `npm start` served the production build and puppeteer drove the real UI; 22/22 checks
+passed.
+
+- ✅ Close a non-default edition: **no successor appeared** (still exactly 2 editions), and the other
+  open edition was untouched — still open, still the default, all 16 departments intact.
+- ✅ The closed edition stayed selectable in the picker, its `/departments` rendered with its data
+  behind the read-only banner, and the create affordance was gone.
+- ✅ Reopen: the affordance came back and a department created through the real form was written.
+- ✅ Close the **default** edition: no successor, the closed edition lost `isDefault`, and the default
+  moved to the newest open edition.
+- ✅ A new account created from `/users` right after that landed in that open edition —
+  `selectedEdition = 2026-2027`, `closedAt = null`.
+- ✅ Close the last open edition: no default remains anywhere, and all 8 routes checked still
+  returned **200** rather than 500. Reopening from that all-closed state works.
+- ✅ Both locales render the new copy — `Reopen year` / `Rouvrir l'année`, and the reworded subtitle
+  no longer promises an automatic next edition.
+- ✅ `npx tsc --noEmit` clean, `npm run check:design` clean, `npm run build` green. `npm run lint`
+  reports only the 5 pre-existing `no-explicit-any` errors in files this step did not touch.
 
 Tag: `git tag -a v0.5.0 -m "non-breaking"`.
 
@@ -427,7 +456,7 @@ each is part of the commit that changes it — not a cleanup pass afterwards:
 
 Step 1 rewrote the edition model in all five, plus
 [file-structure.md](../file-structure.md) for `lib/edition-context.ts` and the new preferences
-route. Steps 2-4 still have their own passes to make over the same files.
+route. Steps 2, 3 and 4 each made their own pass over the same files as part of their commit.
 
 ---
 

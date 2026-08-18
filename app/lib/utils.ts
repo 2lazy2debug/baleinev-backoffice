@@ -22,13 +22,3 @@ export const EDITION_NAME_PATTERN = /^(\d{4})-(\d{4})$/;
 export function isValidEditionName(name: string) {
   return EDITION_NAME_PATTERN.test(name);
 }
-
-export function incrementEditionName(name: string) {
-  const match = name.match(EDITION_NAME_PATTERN);
-
-  if (!match) {
-    throw new Error("Edition names must follow the YYYY-YYYY format.");
-  }
-
-  return `${Number(match[1]) + 1}-${Number(match[2]) + 1}`;
-}
