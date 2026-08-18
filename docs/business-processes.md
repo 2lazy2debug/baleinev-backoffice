@@ -68,14 +68,16 @@ Reopening it clears closedAt and writes work again
 - Creating a new edition does NOT delete old data — historical editions remain fully readable.
 - **Bringing data into a new edition is an explicit choice.** The new-edition dialog has an
   optional "Bring over from" select; leaving it empty creates a blank edition.
-  `carryOverEdition()` in `app/lib/edition-carry-over.ts` copies **departments**, **cost centers**
-  and **money accounts** (bank identity included, so a carried account can still produce a Swiss QR
-  invoice), then writes one locked `isOpeningEntry = true` journal entry per account that does not
-  close at zero, labelled `Report édition précédente`. Each opening entry takes its own sequence
-  number, because `JournalEntry` is unique on `(editionId, sequenceNumber)`.
+  `carryOverEdition()` in `app/lib/edition-carry-over.ts` copies **departments with their budget
+  lines**, **cost centers** and **money accounts** (bank identity included, so a carried account can
+  still produce a Swiss QR invoice), then writes one locked `isOpeningEntry = true` journal entry per
+  account that does not close at zero, labelled `Report édition précédente`. Each opening entry takes
+  its own sequence number, because `JournalEntry` is unique on `(editionId, sequenceNumber)`.
 - The carried amount lives in the opening entry, **not** in `MoneyAccount.openingBalance`, which
   stays 0 — a balance is `openingBalance + entries`, so writing it in both places would double it.
-- **Budget lines are not copied.** They belong to the year they were planned for.
+- **Budget lines come over verbatim**, amounts included — a year's budget is mostly last year's with
+  different numbers, so the admin edits them instead of retyping every line. Each copied line keeps
+  its source `createdAt`, which is what preserves the order the budget was planned in.
 - The whole thing runs in the create transaction, so a failed copy leaves no half-populated edition.
 
 ---

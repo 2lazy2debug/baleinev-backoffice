@@ -88,9 +88,9 @@ write is refused. Closing only stamps `closedAt` — it creates no successor —
 default off the closed edition, onto the newest open one, so new accounts never start in a frozen
 year.
 Creating an edition can optionally **bring data over** from an existing one
-([app/lib/edition-carry-over.ts](../app/lib/edition-carry-over.ts)): departments, cost centers and
-money accounts, plus each account's closing balance as a locked opening entry. Budget lines are not
-copied. Each user switches their own edition from the sidebar picker
+([app/lib/edition-carry-over.ts](../app/lib/edition-carry-over.ts)): departments with their budget
+lines, cost centers and money accounts, plus each account's closing balance as a locked opening
+entry. Each user switches their own edition from the sidebar picker
 (`POST /api/preferences/edition`); changing the default moves nobody.
 
 ## Architecture

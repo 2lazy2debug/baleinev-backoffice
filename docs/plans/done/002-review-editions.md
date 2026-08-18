@@ -7,7 +7,7 @@ themselves, makes closing mean *frozen* rather than *gone*, and makes carrying d
 edition an explicit choice instead of a side effect of closing.
 
 Five steps, each one a feature, each ending in an annotated minor tag that the box picks up on
-its own (see [production.md](../production.md)). Steps are ordered by dependency — 4 removes the
+its own (see [production.md](../../production.md)). Steps are ordered by dependency — 4 removes the
 auto-carry-over that 3 replaces, and 5 drops the column 1 stops reading. **Do not reorder.**
 
 **Keep output minimal.** Briefly say what changed and what is blocked. Do not narrate steps or
@@ -56,8 +56,8 @@ the live database.
 ### The global flag
 
 `Edition.isActive` is read in **13 server components** and — via
-`getActiveEditionId()` in [`lib/server-action-helpers.ts:21`](../../app/lib/server-action-helpers.ts#L21)
-— in **8 action files**. A ninth, [`events/actions.ts:371`](../../app/app/(app)/events/actions.ts#L371),
+`getActiveEditionId()` in [`lib/server-action-helpers.ts:21`](../../../app/lib/server-action-helpers.ts#L21)
+— in **8 action files**. A ninth, [`events/actions.ts:371`](../../../app/app/(app)/events/actions.ts#L371),
 carries a private duplicate of the same function.
 
 | Reading it directly (`where: { isActive: true }`) |
@@ -71,7 +71,7 @@ carries a private duplicate of the same function.
 | --- |
 | `budget` · `calendar` · `cost-centers` · `departments` · `expense-reports` · `journal` · `money-accounts` · `tasks` |
 
-Plus [`app/app/api/invoices/route.ts:82`](../../app/app/api/invoices/route.ts#L82), which takes
+Plus [`app/app/api/invoices/route.ts:82`](../../../app/app/api/invoices/route.ts#L82), which takes
 `editionId` **from the request body** rather than from the active edition — the one write path
 that already lets a caller name its own edition.
 
@@ -96,10 +96,10 @@ pointed at an empty year — is gone; the row that caused it no longer exists.
 
 ### A bug this survey found
 
-[`closeEditionAction`](../../app/app/(app)/editions/actions.ts#L119) writes one opening journal
+[`closeEditionAction`](../../../app/app/(app)/editions/actions.ts#L119) writes one opening journal
 entry per money account, **all with `sequenceNumber: 0`**, into the edition it creates. But
 `JournalEntry` carries `@@unique([editionId, sequenceNumber])`
-([schema.prisma:246](../../app/prisma/schema.prisma#L246)). The second account's insert violates
+([schema.prisma:246](../../../app/prisma/schema.prisma#L246)). The second account's insert violates
 it, the transaction rolls back, and closing fails outright.
 
 This is reachable on production right now: 2025-2026 has two accounts, both with a non-zero
@@ -190,8 +190,8 @@ form's error state), and the nullable form is what a page wants (the empty state
 `ensureUserEdition` is the *only* writer of the seed, called from three places so the same rule
 holds however an account comes into being:
 
-- `authorize()` in [`lib/auth.ts`](../../app/lib/auth.ts) — first login,
-- `createUserAction` in [`users/actions.ts`](../../app/app/(app)/users/actions.ts) — admin creates the account,
+- `authorize()` in [`lib/auth.ts`](../../../app/lib/auth.ts) — first login,
+- `createUserAction` in [`users/actions.ts`](../../../app/app/(app)/users/actions.ts) — admin creates the account,
 - `resolveEditionId()` itself, when `selectedEditionId` is null — covers the three accounts that
   predate this feature, and any created by `npm run db:seed`.
 
@@ -218,10 +218,10 @@ keeping each page's existing `select` / `include` exactly as it is.
 
 ### UI
 
-Replace the static label at [`components/app-shell.tsx:167`](../../app/components/app-shell.tsx#L167)
+Replace the static label at [`components/app-shell.tsx:167`](../../../app/components/app-shell.tsx#L167)
 with a picker listing every edition, closed ones included and marked. It posts to a new
 `POST /api/preferences/edition`, modelled on the existing
-[`api/preferences/language/route.ts`](../../app/app/api/preferences/language/route.ts): validate
+[`api/preferences/language/route.ts`](../../../app/app/api/preferences/language/route.ts): validate
 that the edition exists, write `User.selectedEditionId`, then `router.refresh()`.
 
 On the editions page, "Make active" becomes "Set as default", with copy that says what it now
@@ -262,7 +262,7 @@ Added `requireWritableEdition(editionId)` to `app/lib/edition-context.ts` — th
 of `resolveEditionId()`. Called in every write path that resolves an edition:
 
 - the 8 action files listed in §1, plus `events/actions.ts`,
-- `updateDrivingRateAction` in [`editions/actions.ts`](../../app/app/(app)/editions/actions.ts),
+- `updateDrivingRateAction` in [`editions/actions.ts`](../../../app/app/(app)/editions/actions.ts),
 - **`app/app/api/invoices/route.ts`** — the one that takes `editionId` from the request body, so
   it can be pointed at a closed edition directly. Guard it on the body value, not on the
   caller's own edition.
@@ -335,14 +335,15 @@ Four corrections made while extracting, not after — the fourth was found durin
    what the owner asked for; writing it into both places would double-count it.
 4. **Added during step 3: include the source account's own `openingBalance` in the closing
    balance.** Every balance the app displays is `openingBalance + entries`
-   ([money-accounts/page.tsx](../../app/app/(app)/money-accounts/page.tsx)), but the old copy
+   ([money-accounts/page.tsx](../../../app/app/(app)/money-accounts/page.tsx)), but the old copy
    seeded its reduce with `0`, so a source account with a non-zero opening balance would carry
    over short by exactly that amount. Both production accounts are at `0.00` today, so this
    changes no live number — it was wrong all the same.
 
-Budget lines are **not** copied. They belong to the year they were planned for.
+~~Budget lines are **not** copied. They belong to the year they were planned for.~~ **Superseded on
+2026-08-18 — see the amendment below.**
 
-In the new-edition dialog ([`editions/client.tsx`](../../app/app/(app)/editions/client.tsx)), add
+In the new-edition dialog ([`editions/client.tsx`](../../../app/app/(app)/editions/client.tsx)), add
 an optional "Bring over from" select listing existing editions — leaving it empty creates a blank
 edition, exactly as today. `createEditionAction` runs the whole thing in one transaction: create,
 then carry over, so a failed copy leaves no half-populated edition behind.
@@ -361,7 +362,8 @@ number the plan asks for is reproduced; no production data was moved to this mac
 - ✅ Carried accounts have `openingBalance = 0.00` — the amount is in the entry only, not counted twice.
 - ✅ Created an edition *without* carry-over: completely empty (0 departments, 0 cost centers,
   0 accounts, 0 entries).
-- ✅ Budget lines not copied — source held 1, target held 0.
+- ✅ Budget lines not copied — source held 1, target held 0. *(No longer the behaviour; the amendment
+  below reverses it and re-verifies.)*
 - ✅ The §1 bug is fixed: `closeEditionAction` now closes a two-account edition successfully and its
   successor lands populated. The old shape was shown to violate
   `JournalEntry_editionId_sequenceNumber_key` on the second account.
@@ -370,6 +372,42 @@ number the plan asks for is reproduced; no production data was moved to this mac
 - ✅ `npx tsc --noEmit` clean, `npm run check:design` clean, `npm run build` green.
 
 Tag: `git tag -a v0.4.0 -m "non-breaking"`.
+
+### Amendment 2026-08-18 — the budget comes over too · `v0.7.0` · `non-breaking`
+
+The owner asked for it after using the step as shipped: a year's budget is mostly the previous
+year's budget with different amounts, so retyping every line is the wrong default. `carryOverEdition`
+now copies each department's `BudgetLine` rows verbatim — `accountType`, `billingMonth`, `label`,
+`unitPrice`, `quantity`, `amount`, `notes` — into the department it just created for the target
+edition. The amounts come over unchanged on purpose; editing them is the next thing the admin does.
+
+Each copied line also keeps the source line's `createdAt`. The budget page orders lines by that
+column, and every row written inside one transaction shares the same `now()`, so without it the
+carried budget would come out in arbitrary order.
+
+The "Bring over from" hint changed in both locales — it no longer says budget lines are excluded.
+
+#### Verify — all passed 2026-08-18
+
+Same approach as steps 2-4: a fixture in a separate `baleinev_verify` database (3 departments, one
+of them deliberately budget-free, 5 budget lines with every optional column populated, 2 cost
+centers, `Coffre` 135.07 and `CompteCourant` 3922.92 with its IBAN), `npm start` on the production
+build, puppeteer driving the real new-edition dialog. 14/14 checks passed.
+
+- ✅ All 5 budget lines came over, attached to the matching department in the new edition.
+- ✅ Field by field identical — `accountType`, `billingMonth`, `label`, `unitPrice`, `quantity`,
+  `amount`, `notes`.
+- ✅ Copied lines read back in the order they were planned in.
+- ✅ A department with no budget lines still comes over.
+- ✅ The source edition is untouched — still holds its own 5 lines.
+- ✅ The new edition's `/budget` page renders the carried lines.
+- ✅ "Start empty" still copies nothing — 0 departments, 0 budget lines.
+- ✅ The rest of the carry-over is unchanged: 2 cost centers, 2 accounts with the bank identity
+  intact, and 2 opening entries of 135.07 and 3922.92 at distinct sequence numbers.
+- ✅ Both locales render the reworded hint.
+- ✅ `npx tsc --noEmit` clean, `npm run check:design` clean, `npm run build` green.
+
+Tag: `git tag -a v0.7.0 -m "non-breaking"`.
 
 ---
 
@@ -451,7 +489,7 @@ Tag: `git tag -a v0.6.0 -m "requires-migration"`.
 Not part of the original five steps; added on the owner's request, modelled on the same wiring in
 LeadDesk (`../LeadDesk_3.0/next.config.mjs`).
 
-`resolveVersion()` in [`app/next.config.ts`](../../app/next.config.ts) runs
+`resolveVersion()` in [`app/next.config.ts`](../../../app/next.config.ts) runs
 `git describe --tags --abbrev=0` at build time and exposes it as `NEXT_PUBLIC_APP_VERSION`. That is
 truthful here specifically because a deploy is `git checkout --detach tags/<tag>` followed by a
 build, so the closest tag *is* what is running. `package.json`'s `version` is the fallback for a
@@ -470,14 +508,14 @@ each is part of the commit that changes it — not a cleanup pass afterwards:
 
 | File | What changes |
 | --- | --- |
-| [business-processes.md](../business-processes.md) | §1 Editions — lines 14-35 describe activation and year-end as they work today. Rewrite for per-user selection, read-only close, manual carry-over. |
-| [database.md](../database.md) | `User.selectedEditionId`, `Edition.isDefault`, the `SetNull` relation. Keep the "`PasswordEntry` is **not** edition-scoped" line at :76 — it stays true. |
-| [overview.md](../overview.md) | The edition model in the app's mental picture. |
-| [auth.md](../auth.md) | First-login seeding is now part of `authorize()`. |
-| [summary.md](../summary.md) | Whatever it asserts about the active edition. |
+| [business-processes.md](../../business-processes.md) | §1 Editions — lines 14-35 describe activation and year-end as they work today. Rewrite for per-user selection, read-only close, manual carry-over. |
+| [database.md](../../database.md) | `User.selectedEditionId`, `Edition.isDefault`, the `SetNull` relation. Keep the "`PasswordEntry` is **not** edition-scoped" line at :76 — it stays true. |
+| [overview.md](../../overview.md) | The edition model in the app's mental picture. |
+| [auth.md](../../auth.md) | First-login seeding is now part of `authorize()`. |
+| [summary.md](../../summary.md) | Whatever it asserts about the active edition. |
 
 Step 1 rewrote the edition model in all five, plus
-[file-structure.md](../file-structure.md) for `lib/edition-context.ts` and the new preferences
+[file-structure.md](../../file-structure.md) for `lib/edition-context.ts` and the new preferences
 route. Steps 2, 3 and 4 each made their own pass over the same files as part of their commit.
 
 ---
@@ -491,4 +529,4 @@ route. Steps 2, 3 and 4 each made their own pass over the same files as part of 
   new edition creates a new role and silently drops department users' access to entries shared
   with the old one. Real, but a separate problem from editions.
 - **`/opt/caddy` being versioned nowhere**, inherited from
-  [001](done/001-production-deployment.md).
+  [001](001-production-deployment.md).

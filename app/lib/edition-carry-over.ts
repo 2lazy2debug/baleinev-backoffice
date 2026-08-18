@@ -6,12 +6,14 @@ import { decimalToNumber } from "@/lib/utils";
 export const CARRY_OVER_LABEL = "Report édition précédente";
 
 /**
- * Brings an edition's structure and closing balances into another edition:
- * departments, cost centers and money accounts, plus one locked opening entry
- * per account that does not close at zero.
+ * Brings an edition's structure, budget and closing balances into another
+ * edition: departments with their budget lines, cost centers and money
+ * accounts, plus one locked opening entry per account that does not close at
+ * zero.
  *
- * Budget lines are deliberately **not** copied — they belong to the year they
- * were planned for.
+ * A year's budget is mostly last year's budget with different amounts, so it is
+ * copied verbatim — the admin edits the numbers afterwards rather than typing
+ * every line again.
  *
  * Runs inside the caller's transaction so a failed copy leaves no
  * half-populated edition behind.
@@ -28,7 +30,7 @@ export async function carryOverEdition(
   const source = await tx.edition.findUnique({
     where: { id: sourceEditionId },
     include: {
-      departments: true,
+      departments: { include: { budgetLines: true } },
       costCenters: true,
       moneyAccounts: { include: { journalEntries: true } },
     },
@@ -39,8 +41,31 @@ export async function carryOverEdition(
   }
 
   for (const department of source.departments) {
-    await tx.department.create({
+    const carried = await tx.department.create({
       data: { editionId: targetEditionId, name: department.name },
+    });
+
+    if (department.budgetLines.length === 0) {
+      continue;
+    }
+
+    await tx.budgetLine.createMany({
+      data: department.budgetLines.map((line) => ({
+        departmentId: carried.id,
+        accountType: line.accountType,
+        // Free text from the workbook ("Septembre", …), not a dated value, so
+        // it stays true in the new edition.
+        billingMonth: line.billingMonth,
+        label: line.label,
+        unitPrice: line.unitPrice,
+        quantity: line.quantity,
+        amount: line.amount,
+        notes: line.notes,
+        // The budget page orders lines by `createdAt`, and every row written in
+        // one transaction shares the same `now()`. Keeping the source timestamp
+        // is what makes the carried budget read in the order it was planned in.
+        createdAt: line.createdAt,
+      })),
     });
   }
 
