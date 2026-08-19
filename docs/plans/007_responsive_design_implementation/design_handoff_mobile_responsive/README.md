@@ -27,7 +27,14 @@ the section below for what shipped.
 **Done: Calendar (§7).** The month grid is a dot calendar and the day timeline is an
 agenda list below `sm` — see the section below for what shipped.
 
-**Not started: section 8** (Budget cardlets).
+**Done: Budget (§8).** The department card's two four-column tables become a
+read-only planned-vs-actual roll-up plus cardlets below `sm` — see the section below,
+including where the data model forced a deviation from the mockup.
+
+**Every section of this handoff is now implemented.** What is left is the per-screen
+work this handoff never scoped: the admin-only tables (Invoices, Cost Centers, Money
+Accounts, Users) are readable on a phone but still render as desktop tables, and the
+Budget details modal is desktop-only. Follow the same recipe if you port them.
 
 ### What is on `main`
 
@@ -41,6 +48,7 @@ agenda list below `sm` — see the section below for what shipped.
 | `feat(events): shift cards and icon actions on a phone` | `events/client.tsx` (shift cards below `sm`, stacked event header, `Plus`/`Trash2` `IconButton`s for assign/delete-shift), `events/add-shift-form.tsx`, `events/create-event-form.tsx`, and the `deleteShift` dictionary key. |
 | `feat(journal): cardlets on a phone` | `components/journal-table.tsx` (one shared `rows` array, `<Table desktopOnly>`, the cardlet list), the `deleteEntry` dictionary key, `mobileFullScreen` on the add-entry modal, a wrapping `Modal` footer, and a save-then-return on the `[journalEntryId]` edit form. |
 | `feat(calendar): dot month grid and a day agenda on a phone` | `calendar/client.tsx` (day cells with dots below `sm`, the agenda list that replaces the hour timeline, one shared `kindClasses` colour map, `startLabel`/`rangeLabel`/`appointment` on the timeline items). No new dictionary key, no new component. |
+| `feat(budget): planned vs. actual roll-up and cardlets on a phone` | `budget/client.tsx` (one `summaries` memo feeding the tables, the cardlets and the details modal; the `BudgetRollup` block; `<Table desktopOnly>`; the two duplicated account-type tables collapsed into one `sections.map`), and the `stillToEarn`/`aboveTarget` dictionary keys. No new component. |
 
 Verified in the real app at 390×844 (admin role, local DB): bottom bar, apps sheet,
 "… other apps" with Back, edition modal, full-screen Settings. Desktop at 1440px is
@@ -75,10 +83,11 @@ design system won:
 Everything below is per-screen work. The pattern is always the same, and the pieces are
 already built — **do not add new primitives, and do not touch `components/mobile/`**:
 
-1. **Wide table → cardlets** (Expense Reports history §2, Journal §6, Budget §8 — only
-   §8 is left): wrap the existing `<Table>` in `desktopOnly`, then render the *same
-   array* through `<CardletList>`. Never recompute a status label or a running balance
-   for the mobile branch — lift the computation above both.
+1. **Wide table → cardlets** (Expense Reports history §2, Journal §6, Budget §8 — all
+   done; use them as the pattern for the tables this handoff never scoped): wrap the
+   existing `<Table>` in `desktopOnly`, then render the *same array* through
+   `<CardletList>`. Never recompute a status label or a running balance for the mobile
+   branch — lift the computation above both.
 2. **Touch sizing** is already handled by the control scale. If a screen looks cramped
    on a phone, the fix is a layout class on that screen, not a height on a control.
 3. ~~**Events (§4)**~~ — done. A screen whose rows are already cards needs no new
@@ -94,7 +103,11 @@ already built — **do not add new primitives, and do not touch `components/mobi
 6. ~~**Calendar (§7)**~~ — done. The pattern for a screen that is neither a table nor a
    list of cards: the same items, drawn a second way. Both views read one array whose
    labels and colours are computed once; the mobile branch adds no data of its own.
-7. Run `npm run check:design`, `npm run lint` and `npm run build` before committing;
+7. ~~**Budget (§8)**~~ — done. The pattern for a screen whose mockup asks for a number
+   the data model does not carry: put the figure at the level that is true (here, the
+   account type), say so in the code, and record the deviation here rather than
+   inventing a per-row value.
+8. Run `npm run check:design`, `npm run lint` and `npm run build` before committing;
    the design guard catches hardcoded hex, arbitrary radii, hand-sized controls and
    hand-rolled copies of existing components.
 
@@ -305,8 +318,56 @@ agenda, and opening an appointment's details from an agenda row were all exercis
 phone layout. The 1440px and 768px screenshots are **byte-identical** before and after.
 Test appointments and the test task were removed from the local DB afterwards.
 
-### 8. Budget (secondary, department-only in this handoff) ⬜ TO DO
+### 8. Budget (secondary, department-only in this handoff) ✅ DONE
 - New read-only mobile view: one cardlet per budget line (label, Charges/Produits badge, planned amount, actual amount rolled up from journal entries, a thin progress bar, and a remaining/over-budget line). No create/edit affordances on mobile for either role in this pass — budget management stays desktop-only for now.
+
+**How this shipped** — the whole port is `budget/client.tsx` plus two dictionary keys;
+no new component, no change to `page.tsx` or `actions.ts`:
+- **The mockup asks for a number the data model does not carry.** A `JournalEntry`
+  carries a `departmentId` and a `CHARGES`/`PRODUITS` type — never a `budgetLineId`
+  (`prisma/schema.prisma`), which is also why the dashboard compares budget to actuals
+  per department, not per line. There is no honest per-line actual to print, and
+  matching journal labels to budget labels would have invented one, so **planned vs.
+  actual, the progress bar and the gap line sit on the account-type section** — the
+  level at which the number is true — and the per-line cardlet carries what the table
+  row it replaces carries: label, amount, notes.
+- **The section roll-up is `BudgetRollup`**, a file-local block, not a new primitive:
+  `nestedSurfaceClasses` for the surface, `CardletFields`/`CardletField` for the two
+  figures (so the label recipe is not rewritten), a `h-1.5 rounded-full` track and a
+  `role="progressbar"` fill whose only inline style is its width percentage.
+- **The gap is worded per account type.** Charges reuse the details modal's existing
+  `available`/`overexpense` wording, so the same quantity reads the same in both places.
+  Earnings needed the opposite reading — money left to earn is not good news — hence the
+  two new keys, `stillToEarn` and `aboveTarget`. Four states are reachable and all were
+  exercised: over budget (rose, full bar), under budget (accent), still to earn (empty
+  bar), above target (emerald, full bar).
+- **One computation, three readers.** `summaries` (a `useMemo` over `departments`) is
+  now the only place a budget or actual total is summed; the desktop tables, the phone
+  cardlets and the details modal all read it. The modal used to re-filter and re-sum the
+  same department, and now takes `detailsDepartmentId` instead of a snapshot of the
+  department object, so it cannot show stale figures after a `router.refresh()`.
+- **The two account-type tables became one `sections.map`.** They were duplicated
+  verbatim — ~110 lines that had to be edited twice — and the mobile branch would have
+  made it three. Both tables render from the same JSX; 1440px and 768px are
+  byte-identical to before the change.
+- **No badge on the cardlet.** The mockup's flat list needs a Charges/Produits badge on
+  every card; here the cards sit under the section heading that already names the type,
+  so repeating it on every card is the "explanatory label that states the obvious" the
+  design rules forbid. The line's amount takes the header's trailing slot instead, the
+  way the journal cardlets carry theirs, and `Notes` renders full-width only when the
+  line has any.
+- **Not done, deliberately**: every management affordance is `hidden sm:flex` — Add
+  department, Add budget entry, Delete department, and the per-line edit/delete that
+  live inside the desktop-only table. **View details goes with them**: the modal behind
+  it is three wide tables, and its headline figures (charges availability, budgeted and
+  actual result) are exactly what the phone roll-up now shows inline. Porting that modal
+  is a separate job; the phone loses only the journal-entry list.
+
+Verified at 390×844, 768 and 1440 against the local DB, admin and department roles: no
+horizontal overflow at any width, no tap target under 44px on the phone, and the 768px
+and 1440px screenshots — page and details modal — are **byte-identical** before and
+after. Test departments, budget lines and journal entries were removed from the local DB
+afterwards.
 
 ## General rules (apply everywhere) ✅ DONE
 - **Cards in a row → one column.** The existing `Card`/`CardGrid` span classes (`col-span-12 sm:col-span-6 lg:col-span-3`, etc. in `components/ui/Card.tsx`) already default to full width below `sm` — **no change needed there**, just don't add a new `grid-cols-*` without a mobile override.

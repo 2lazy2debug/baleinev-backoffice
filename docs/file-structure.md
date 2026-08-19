@@ -32,7 +32,9 @@ app/
 │   │
 │   ├── budget/
 │   │   ├── page.tsx              ← Budget overview, department CRUD
-│   │   ├── client.tsx            ← Client-side interactive budget forms
+│   │   ├── client.tsx            ← Department cards: budget tables above `sm`, a read-only
+│   │   │                            planned-vs-actual roll-up and cardlets below (management
+│   │   │                            and the details modal are desktop-only)
 │   │   └── actions.ts            ← Server actions: create/edit/delete budget lines & departments
 │   │
 │   ├── journal/
