@@ -52,8 +52,10 @@ app/
 │   │   └── actions.ts            ← Server actions: create/update/delete cost centers
 │   │
 │   ├── expense-reports/
-│   │   ├── page.tsx              ← Expense report form + history table (data-fetching only)
-│   │   ├── client.tsx            ← Client-side approve/reject history table
+│   │   ├── page.tsx              ← Expense report form + history (data-fetching only)
+│   │   ├── tabs.tsx              ← Form beside history on desktop, History/New report tabs below `lg`
+│   │   ├── create-expense-report-form.tsx ← Submit form (standard + driving, proof upload)
+│   │   ├── client.tsx            ← History: table above `sm`, cardlets below; admin approve/reject
 │   │   └── actions.ts            ← Server actions: submit, approve, reject
 │   │
 │   ├── invoices/

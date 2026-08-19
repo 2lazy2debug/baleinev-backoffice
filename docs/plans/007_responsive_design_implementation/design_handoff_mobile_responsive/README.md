@@ -13,10 +13,14 @@ Baleinev Comptes currently has no mobile layout — the sidebar-driven desktop s
 live, the design system carries the responsive rules, and every remaining screen is now
 a *rendering* change against primitives that already exist.
 
-**Not started: the per-screen work.** Sections 2 and 4–8 below (Expense Reports tabs +
-cardlets, Events touch layout, Journal cardlets, Calendar agenda, Budget cardlets) are
-untouched. Section 3 (Tasks) and section 5 (Passwords) needed nothing beyond the global
-44px floor and are effectively done.
+**Done: Expense Reports (§2).** The first per-screen port is on `main` — the
+History/New report tabs and the history cardlets. It is the worked example for every
+remaining screen: read `expense-reports/tabs.tsx` and `expense-reports/client.tsx`
+before starting one.
+
+**Not started: sections 4 and 6–8** (Events touch layout, Journal cardlets, Calendar
+agenda, Budget cardlets). Section 3 (Tasks) and section 5 (Passwords) needed nothing
+beyond the global 44px floor and are effectively done.
 
 ### What is on `main`
 
@@ -26,6 +30,7 @@ untouched. Section 3 (Tasks) and section 5 (Passwords) needed nothing beyond the
 | `feat(ui): cardlets, the mobile stand-in for a wide table` | `components/ui/Cardlet.tsx` (`CardletList`, `Cardlet`, `CardletHeader`, `CardletFields`, `CardletField`, `CardletActions`) and `<Table desktopOnly>`. |
 | `feat(shell): mobile bottom bar replaces the sidebar below lg` | `components/mobile/` (`mobile-shell.tsx`, `mobile-sheet.tsx`, `mobile-nav-button.tsx`), `components/navigation.ts`, the `hidden lg:flex` sidebar, `pb-24` on `<main>`, `SignOutButton nav`, four new `shell` dictionary keys, two sheet animation tokens in `globals.css`. |
 | `docs: record the responsive rules in the design system` | `CLAUDE.md` and `docs/file-structure.md`. |
+| `feat(expense-reports): tabs and cardlets on a phone` | `expense-reports/tabs.tsx` (the History/New report toggle), the history cardlets in `expense-reports/client.tsx`, and the `newReport` dictionary key. |
 
 Verified in the real app at 390×844 (admin role, local DB): bottom bar, apps sheet,
 "… other apps" with Back, edition modal, full-screen Settings. Desktop at 1440px is
@@ -68,9 +73,10 @@ already built — **do not add new primitives, and do not touch `components/mobi
    on a phone, the fix is a layout class on that screen, not a height on a control.
 3. **Events (§4)** needs the shift card layout and full-width Sign up/Withdraw; the
    `×` chips in `component-changes.md` §6 are already solved by `ChipRemoveButton`.
-4. **Expense Reports tabs (§2)** is the one piece of new state: a local
-   `useState<'create' | 'history'>` in a mobile-only wrapper. Keep it local — it is a
-   view toggle, not server state.
+4. ~~**Expense Reports tabs (§2)**~~ — done. `expense-reports/tabs.tsx` is the pattern
+   for any other screen that has to choose between two panels on a phone: a client
+   wrapper that takes both halves as ReactNode props and keeps the toggle in local
+   `useState`, never in server state.
 5. Run `npm run check:design`, `npm run lint` and `npm run build` before committing;
    the design guard catches hardcoded hex, arbitrary radii, hand-sized controls and
    hand-rolled copies of existing components.
@@ -101,10 +107,46 @@ The desktop sidebar already renders two different navigations for `role === "ADM
 - **Settings**: tapping Settings opens the *existing* Settings `Modal` (language + refund details) but full-screen on mobile — see the `Modal.tsx` change below. It stays conceptually a modal (dismissible, no route change), just edge-to-edge.
 - **Edition switcher**: tapping Edition opens a `Modal` containing the *same* edition `<Select>` already in the sidebar (reuse `selectEdition()`), so there is no duplicated switching logic — just a different container.
 
-### 2. Expense Reports (priority) — both roles, admin sees more actions ⬜ TO DO
+### 2. Expense Reports (priority) — both roles, admin sees more actions ✅ DONE
 - **Layout**: the desktop `xl:grid-cols-[420px_1fr]` split (create form beside history) collapses to a single column below `xl`, and on mobile becomes two tabs — **Create** / **History** — in a segmented control under the page title, so the user isn't scrolling past a long create form to reach their history.
 - **Create tab**: existing `<Field>` + `<Select>`/`<Input>` stack, unchanged fields, but every control is a fixed `44px` tall (`box-sizing: border-box`) — the current `Input`/`Select` recipe (`rounded-2xl px-4 py-3`) computes taller than 44px with `min-height` because padding adds on top of it; use `height` + `box-sizing: border-box` instead of `min-height` for the mobile stack, or give mobile inputs their own compact height token.
 - **History tab → cardlets**: replace the `<table>` with one card per report. Each cardlet: description + status badge on top, a 2-column field grid (Date/Type, Department/Amount), a muted line for driving-route or "Submitted by", then full-width stacked actions (Approve primary, Reject destructive) for pending rows on admin, "Record in journal" outline button for approved rows on admin, nothing but the status + rejection reason for department users or resolved rows.
+
+**How this shipped** — and what a later screen should copy:
+- **The tabs are a layout wrapper, not a page rewrite.** `tabs.tsx` is a `"use client"`
+  component that takes the two halves as `create` / `history` **ReactNode props** from
+  the server page, so neither half became a client component to get a tab. It owns the
+  `xl:grid-cols-[420px_1fr]` grid that used to live in `page.tsx`; the segmented control
+  is `lg:hidden` and both panels stay **mounted** (`hidden lg:block`, not unmounted) so a
+  half-typed report survives a tab switch.
+- **The segmented control is two `<Button>`s** (`primary` when active, `ghost` when not)
+  in a `rounded-lg bg-[var(--panel-strong)] p-1` strip — no new primitive, and the 44px
+  height comes from the control scale for free.
+- **A closed edition renders no tab bar at all.** `WritableEditionOnly` already empties
+  the create half, so `tabs.tsx` reads the same `useEditionReadOnly()` context and falls
+  back to the history alone rather than offering a tab that leads nowhere.
+- **One array, one set of derived values.** `client.tsx` computes `statusLabel`,
+  `statusTone`, `typeLabel`, `paymentLabel`, `amountLabel`, `drivingSummary`,
+  `bankInfoTitle`, `canReview` and `canRecord` **once**, above both views; the
+  `<Table desktopOnly>` and the `<CardletList>` only render them. Do exactly this in §6
+  and §8 — no second status mapping, no second running-balance pass.
+- **The cardlet carries every column the table does**, so a phone user is never shown
+  less: six `<CardletField>`s (Date/Type, Department/Amount, Payment method/Proof) plus
+  the driving route, the submitted-by/reviewed-by line and the rejection reason.
+- **Deviations from the mockup**: dates stay `YYYY-MM-DD` (the desktop table's format —
+  a second date format would be drift, not fidelity), and the admin bank-info `i` badge
+  is desktop-only because its content lives in a `title` tooltip, which a touch device
+  cannot open. Payouts happen on desktop; approving does not need the IBAN.
+- **The submit button is `w-full lg:w-auto`** — the one layout class this section added
+  to a screen. Control *heights* still come only from the scale.
+- **Tab labels needed one new dictionary key.** `expenseReports.create` is "Create
+  expense report" / "Créer une note de frais" — too long for half a 390px strip — so the
+  tabs use `history` plus a new `newReport` ("New report" / "Nouvelle note").
+
+Verified at 390×844 against the local DB in both roles: admin sees Approve + reason +
+Reject on pending rows and Record in journal on approved ones; a department user sees
+their own rows with the status and rejection reason and no review actions. Desktop at
+1440px and tablet at 768px are unchanged apart from the tab strip appearing below `lg`.
 
 ### 3. Tasks (priority) — both roles ✅ DONE
 *Needed nothing beyond the global 44px control floor, which is now in `components/ui/control.ts`.*
@@ -150,7 +192,7 @@ The desktop sidebar already renders two different navigations for `role === "ADM
 - Settings and edition-switching state/logic already exist in `AppShell` (`selectedLocale`, `refundFirstName` etc., `saveSettings()`, `selectEdition()`) — **pass them down as props to `MobileShell` rather than duplicating them.**
 - Expense Reports tab state: new local `useState` in the mobile-only wrapper, not shared with server state.
 
-**How this shipped:** `MobileShell` holds `useState<Sheet>` with `Sheet = "closed" | "apps-primary" | "apps-other" | "edition"`, exactly as specified. Settings is *not* in the enum: it opens `AppShell`'s existing modal through an `onOpenSettings` prop, so there is one settings implementation rather than two. `selectEdition`, `switchingEdition`, the `editions` array and the `navigation` array are all passed down from `AppShell` — `MobileShell` duplicates no state and owns no fetch. The Expense Reports tab state is the only item here still to build.
+**How this shipped:** `MobileShell` holds `useState<Sheet>` with `Sheet = "closed" | "apps-primary" | "apps-other" | "edition"`, exactly as specified. Settings is *not* in the enum: it opens `AppShell`'s existing modal through an `onOpenSettings` prop, so there is one settings implementation rather than two. `selectEdition`, `switchingEdition`, the `editions` array and the `navigation` array are all passed down from `AppShell` — `MobileShell` duplicates no state and owns no fetch. The Expense Reports tab state shipped as specified: `useState<'history' | 'create'>` local to `expense-reports/tabs.tsx`, defaulting to `history` (the mockup's active tab).
 
 ## Design Tokens ✅ VERIFIED
 All from the existing `app/globals.css` — no new tokens needed.

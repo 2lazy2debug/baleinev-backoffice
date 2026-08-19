@@ -8,6 +8,7 @@ import { WritableEditionOnly } from "@/components/edition-read-only";
 
 import { ExpenseReportsPageClient } from "./client";
 import CreateExpenseReportForm from "./create-expense-report-form";
+import { ExpenseReportsTabs } from "./tabs";
 import { PageHeader } from "@/components/ui";
 
 export default async function ExpenseReportsPage() {
@@ -59,46 +60,50 @@ export default async function ExpenseReportsPage() {
         description={copy.expenseReports.subtitle}
       />
 
-      <section className="grid gap-6 xl:grid-cols-[420px_1fr]">
-        <WritableEditionOnly>
-        <CreateExpenseReportForm
-          departments={activeEdition.departments
-            .filter((department) => access.role === "ADMIN" || access.departmentRoleNames.includes(department.name))
-            .map((department) => ({ id: department.id, name: department.name }))}
-          drivingRatePerKm={decimalToNumber(activeEdition.drivingRatePerKm)}
-          copy={{
-            create: copy.expenseReports.create,
-            submit: copy.expenseReports.submit,
-            reportType: copy.expenseReports.reportType,
-            standardExpense: copy.expenseReports.standardExpense,
-            drivingExpense: copy.expenseReports.drivingExpense,
-            description: copy.expenseReports.description,
-            drivingReason: copy.expenseReports.drivingReason,
-            departure: copy.expenseReports.departure,
-            arrival: copy.expenseReports.arrival,
-            kilometers: copy.expenseReports.kilometers,
-            amount: copy.expenseReports.amount,
-            calculatedAmount: copy.expenseReports.calculatedAmount,
-            ratePerKm: copy.expenseReports.ratePerKm,
-            paymentMethod: copy.expenseReports.paymentMethod,
-            myMoney: copy.expenseReports.myMoney,
-            festivalAccount: copy.expenseReports.festivalAccount,
-            drivingRefundFixed: copy.expenseReports.drivingRefundFixed,
-            date: copy.expenseReports.date,
-            uploadProof: copy.expenseReports.uploadProof,
-            noProofRequired: copy.expenseReports.noProofRequired,
-            department: copy.expenseReports.department,
-            selectDepartment: copy.journal.selectDepartment,
-          }}
-        />
-        </WritableEditionOnly>
-
-        <ExpenseReportsPageClient
-          expenseReports={activeEdition.expenseReports}
-          access={{ role: access.role }}
-          copy={copy}
-        />
-      </section>
+      <ExpenseReportsTabs
+        copy={{ history: copy.expenseReports.history, newReport: copy.expenseReports.newReport }}
+        create={
+          <WritableEditionOnly>
+            <CreateExpenseReportForm
+              departments={activeEdition.departments
+                .filter((department) => access.role === "ADMIN" || access.departmentRoleNames.includes(department.name))
+                .map((department) => ({ id: department.id, name: department.name }))}
+              drivingRatePerKm={decimalToNumber(activeEdition.drivingRatePerKm)}
+              copy={{
+                create: copy.expenseReports.create,
+                submit: copy.expenseReports.submit,
+                reportType: copy.expenseReports.reportType,
+                standardExpense: copy.expenseReports.standardExpense,
+                drivingExpense: copy.expenseReports.drivingExpense,
+                description: copy.expenseReports.description,
+                drivingReason: copy.expenseReports.drivingReason,
+                departure: copy.expenseReports.departure,
+                arrival: copy.expenseReports.arrival,
+                kilometers: copy.expenseReports.kilometers,
+                amount: copy.expenseReports.amount,
+                calculatedAmount: copy.expenseReports.calculatedAmount,
+                ratePerKm: copy.expenseReports.ratePerKm,
+                paymentMethod: copy.expenseReports.paymentMethod,
+                myMoney: copy.expenseReports.myMoney,
+                festivalAccount: copy.expenseReports.festivalAccount,
+                drivingRefundFixed: copy.expenseReports.drivingRefundFixed,
+                date: copy.expenseReports.date,
+                uploadProof: copy.expenseReports.uploadProof,
+                noProofRequired: copy.expenseReports.noProofRequired,
+                department: copy.expenseReports.department,
+                selectDepartment: copy.journal.selectDepartment,
+              }}
+            />
+          </WritableEditionOnly>
+        }
+        history={
+          <ExpenseReportsPageClient
+            expenseReports={activeEdition.expenseReports}
+            access={{ role: access.role }}
+            copy={copy}
+          />
+        }
+      />
     </div>
   );
 }

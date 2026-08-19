@@ -182,7 +182,7 @@ export default function CreateExpenseReportForm({ departments, drivingRatePerKm,
             </Select>
           </Field>
 
-          <Button type="submit" variant="primary" disabled={isCreating}>
+          <Button type="submit" variant="primary" disabled={isCreating} className="w-full lg:w-auto">
             {copy.submit}
           </Button>
         </form>
