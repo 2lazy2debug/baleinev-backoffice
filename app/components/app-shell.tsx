@@ -23,15 +23,11 @@ import {
 import { useState, useRef } from "react";
 
 import { EditionClosedBanner, EditionReadOnlyProvider } from "@/components/edition-read-only";
+import { MobileShell } from "@/components/mobile/mobile-shell";
+import type { EditionOption, NavigationItem } from "@/components/navigation";
 import { SignOutButton } from "@/components/sign-out-button";
 import { Alert, Button, IconButton, Input, Modal, Radio, Select } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
-
-type EditionOption = {
-  id: string;
-  name: string;
-  isClosed: boolean;
-};
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -77,16 +73,6 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
   const isEditionScopedRoute = !GLOBAL_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
-
-  type NavigationItem = {
-    type: "item";
-    href: string;
-    label: string;
-    icon: React.ComponentType<{ className?: string }>;
-  } | {
-    type: "divider";
-    key: string;
-  };
 
   const moneyAccountsItem: NavigationItem = { type: "item", href: "/money-accounts", label: copy.moneyAccounts, icon: Landmark };
 
@@ -203,7 +189,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
       <div className="flex min-h-screen">
         <aside
           ref={asideRef}
-          className={`sticky top-0 flex h-screen shrink-0 flex-col border-r border-[var(--line)] bg-[color:rgba(16,30,43,0.9)] backdrop-blur ${isCollapsed ? "collapsed" : ""}`}
+          className={`sticky top-0 hidden h-screen shrink-0 flex-col border-r border-[var(--line)] bg-[color:rgba(16,30,43,0.9)] backdrop-blur lg:flex ${isCollapsed ? "collapsed" : ""}`}
           style={{ width: isCollapsed ? `${COLLAPSED_WIDTH}px` : "clamp(220px, 14.285vw, 320px)" }}
         >
           <div className={`shrink-0 border-b border-[var(--line)] ${isCollapsed ? "px-3 py-4" : "px-5 py-5"}`}>
@@ -320,7 +306,19 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 p-6 lg:p-8">
+        <MobileShell
+          navigation={navigation}
+          editions={editions}
+          selectedEditionId={selectedEditionId}
+          switchingEdition={switchingEdition}
+          onSelectEdition={selectEdition}
+          onOpenSettings={() => { setSaveError(false); setIsSettingsOpen(true); }}
+          locale={locale}
+          pendingTaskCount={pendingTaskCount}
+        />
+
+        {/* `pb-24` clears the fixed bottom bar; `lg:pb-8` gives the padding back once it is gone. */}
+        <main className="min-w-0 flex-1 p-4 pb-24 lg:p-8">
           <EditionReadOnlyProvider isReadOnly={isEditionReadOnly}>
             {isEditionReadOnly && isEditionScopedRoute && selectedEdition ? (
               <EditionClosedBanner locale={locale} editionName={selectedEdition.name} />
@@ -335,6 +333,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
         onClose={() => setIsSettingsOpen(false)}
         title={copy.settings}
         size="sm"
+        mobileFullScreen
         footer={
           <>
             <Button type="button" variant="secondary" onClick={() => setIsSettingsOpen(false)}>

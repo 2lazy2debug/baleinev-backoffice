@@ -38,6 +38,11 @@ export const dictionaries = {
       save: "Save",
       saveFailed: "Could not save your settings. Check your connection and try again.",
       signOut: "Sign out",
+      apps: "Apps",
+      otherApps: "Other apps",
+      switchEdition: "Switch edition",
+      back: "Back",
+      close: "Close",
     },
     common: {
       noEditionSelected: "No edition selected",
@@ -568,6 +573,11 @@ export const dictionaries = {
       save: "Enregistrer",
       saveFailed: "Impossible d'enregistrer vos paramètres. Vérifiez votre connexion et réessayez.",
       signOut: "Se déconnecter",
+      apps: "Applis",
+      otherApps: "Autres applis",
+      switchEdition: "Changer d'exercice",
+      back: "Retour",
+      close: "Fermer",
     },
     common: {
       noEditionSelected: "Aucun exercice sélectionné",

@@ -37,12 +37,35 @@
   --text-3xs: 0.625rem;
   --text-3xs--line-height: 0.875rem;
 
+  /* The two mobile-sheet motions — a bottom sheet slides up over a fading
+     backdrop. Short and linear-ish: motion here is feedback, not decoration. */
+  --animate-sheet-up: sheet-up 180ms ease-out;
+  --animate-fade-in: fade-in 150ms ease-out;
+
   --radius-sm: 3px;
   --radius-md: 5px;
   --radius-lg: 8px;
   --radius-xl: 8px;
   --radius-2xl: 10px;
   --radius-3xl: 12px;
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 * {
