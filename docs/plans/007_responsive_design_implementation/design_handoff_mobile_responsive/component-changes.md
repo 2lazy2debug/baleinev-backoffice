@@ -1,10 +1,21 @@
 # Component Changes — annotated current → new
 
+> **Status (2026-08-19).** Sections **1–3 are implemented and on `main`** — the code
+> below is the *plan* that was followed, not the code that exists. Where they differ,
+> the repo wins: read `app/components/ui/Modal.tsx`, `app/components/app-shell.tsx` and
+> `app/components/mobile/`. Known differences are listed in the README's
+> "Where the design deviated from the mockups" section.
+>
+> Sections **4–7 are still to do**, with one correction: §6's `×` chips and §7's
+> `IconButton` sizing are already handled by the responsive control scale in
+> `components/ui/control.ts` and by `ChipRemoveButton` — neither needs a call-site
+> change any more. §4 and §5 are the real remaining work (table → `<CardletList>`).
+
 Line numbers below are from the repo at the commit recorded in `github.md` (`app/` is the Next.js project root). Unmodified copies of the "current" files are in `reference-source/` for side-by-side diffing.
 
 ---
 
-## 1. `app/components/ui/Modal.tsx` — add a mobile-full-screen option
+## 1. `app/components/ui/Modal.tsx` — add a mobile-full-screen option ✅ DONE
 
 **Why**: the Settings modal needs to be edge-to-edge on mobile (per the brief: "full-screen but it stays a modal") without changing every other modal's behavior.
 
@@ -155,7 +166,7 @@ export function Modal({ open, onClose, title, size = "md", mobileFullScreen = fa
 
 ---
 
-## 2. `app/components/app-shell.tsx` — hide the sidebar on mobile, mount the bottom shell
+## 2. `app/components/app-shell.tsx` — hide the sidebar on mobile, mount the bottom shell ✅ DONE
 
 ### 2a. Lines 204–206 — make the sidebar desktop-only
 **Current:**
@@ -226,7 +237,7 @@ No other lines in `app-shell.tsx` change — `adminNavigation`/`departmentNaviga
 
 ---
 
-## 3. `app/components/mobile/mobile-shell.tsx` — new file
+## 3. `app/components/mobile/mobile-shell.tsx` — new file ✅ DONE (built as three files: `mobile-shell.tsx`, `mobile-sheet.tsx`, `mobile-nav-button.tsx`)
 
 ```tsx
 "use client";
@@ -433,7 +444,7 @@ export function MobileShell({
 
 ---
 
-## 4. `app/app/(app)/expense-reports/client.tsx` — table → cardlets on mobile
+## 4. `app/app/(app)/expense-reports/client.tsx` — table → cardlets on mobile ⬜ TO DO
 
 ### Lines 122–178 (the `<div className="mt-4 overflow-hidden ...">` wrapping the `<table>`)
 **Current** (excerpt, full block starts at line 121):
@@ -506,15 +517,23 @@ export function MobileShell({
 ```
 Treat the pseudo-code above as a starting point, not a literal drop-in — line up the field list and status/tone mapping with the real `statusLabel`/badge logic already written in the table branch (lines 138–150) so the two views never drift.
 
----
-
-## 5. `app/components/journal-table.tsx` — same table → cardlets pattern
-
-Apply the identical `hidden sm:block` / `sm:hidden` split around the `<table ref={tableRef}>` block (lines 280–404). Cardlet fields: **Date + Type** / **Department + Amount** / **Cost center + Account** as a 2×2 grid, then **Beneficiary**, then the running balance line, then Edit/Delete `IconButton`s (or "Locked" text) reusing the exact same `runningBalanceByEntryId`/`isEditing` logic already computed above the table (lines ~113–199) — do not duplicate that computation, just render it differently on mobile. Skip the inline-edit affordance on mobile for v1 (editing a 10-field row inline on a phone is a bad interaction) — mobile Edit can open the row in a small `Modal` form instead, reusing the same `handleEditStart`/`saveFormAction`.
+**Since this was written**, the recipe became components. Use `<Table desktopOnly>` for the desktop half and `<CardletList>` / `<Cardlet>` / `<CardletHeader>` / `<CardletFields>` / `<CardletField>` / `<CardletActions>` from `@/components/ui` for the mobile half — do not hand-roll the `hidden sm:block` / `sm:hidden` classes or the card surface. `<CardletActions>` already stretches its children full width, so the `className="w-full"` on each `<Button>` above is unnecessary.
 
 ---
 
-## 6. `app/app/(app)/events/client.tsx` — touch targets for admin controls
+## 5. `app/components/journal-table.tsx` — same table → cardlets pattern ⬜ TO DO
+
+Apply the identical split around the `<table ref={tableRef}>` block (lines 280–404) — `<Table desktopOnly>` plus a `<CardletList>`, both from `@/components/ui`; see the note at the end of §4. Cardlet fields: **Date + Type** / **Department + Amount** / **Cost center + Account** as a 2×2 grid, then **Beneficiary**, then the running balance line, then Edit/Delete `IconButton`s (or "Locked" text) reusing the exact same `runningBalanceByEntryId`/`isEditing` logic already computed above the table (lines ~113–199) — do not duplicate that computation, just render it differently on mobile. Skip the inline-edit affordance on mobile for v1 (editing a 10-field row inline on a phone is a bad interaction) — mobile Edit can open the row in a small `Modal` form instead, reusing the same `handleEditStart`/`saveFormAction`.
+
+---
+
+## 6. `app/app/(app)/events/client.tsx` — touch targets for admin controls ✅ SUPERSEDED
+
+> **Superseded.** Both changes below are already live without touching this file: the
+> responsive control scale gives every `Button`/`IconButton`/`Select` a 44px footprint
+> below `lg`, and `ChipRemoveButton` (in `components/ui/Chip.tsx`) is now the shared
+> version of the bigger `×` hit area sketched below. What §4 of the README still asks
+> for — shift cards with a full-width Sign up/Withdraw — is real work and is *not* done.
 
 ### Lines 387–396 — assign-staff row (already gated by `canManageEvents`)
 No structural change — just confirm the `<Select size="compact">` + `<Button size="sm">+</Button>` pair (currently ~32–36px tall) is swapped for `size="md"` / a 44×44 `IconButton` on mobile. Easiest: give `Button`/`IconButton` a `h-11`/`w-11` floor as noted in the README's general rules, so this fixes itself without a per-call-site change.
@@ -553,6 +572,6 @@ No other lines in this file change — the `canManageEvents` gate (line 148 area
 
 ---
 
-## 7. `app/app/(app)/passwords/client.tsx` — no structural change
+## 7. `app/app/(app)/passwords/client.tsx` — no structural change ✅ DONE (nothing to change)
 
-`EntryRow` (from line 178) already uses `flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4` for its detail row — this already collapses to one column on mobile. The only change here is the same global `IconButton` 44px floor; no line-level edit needed in this file.
+`EntryRow` (from line 178) already uses `flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4` for its detail row — this already collapses to one column on mobile. The only change here was the global `IconButton` 44px floor, which shipped in `components/ui/control.ts`; no line-level edit was needed in this file, and none is needed now.

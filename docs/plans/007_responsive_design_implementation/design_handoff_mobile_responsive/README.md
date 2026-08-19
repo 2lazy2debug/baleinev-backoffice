@@ -3,6 +3,82 @@
 ## Overview
 Baleinev Comptes currently has no mobile layout — the sidebar-driven desktop shell is unusable on a phone. This handoff replaces the sidebar with a bottom bar on small screens and makes four apps fully usable on mobile: **Expense Reports, Tasks, Events, Passwords**. Every other app is ported (readable, no dead links) but reachable only through a secondary "… other" menu — it does not need bespoke mobile layout beyond the general rules below.
 
+---
+
+## Implementation status — updated 2026-08-19
+
+**Done: the foundation.** The three cross-cutting sections of this handoff —
+[General rules](#general-rules-apply-everywhere), [State Management](#state-management),
+[Design Tokens](#design-tokens) — are implemented and on `main`. The mobile shell is
+live, the design system carries the responsive rules, and every remaining screen is now
+a *rendering* change against primitives that already exist.
+
+**Not started: the per-screen work.** Sections 2 and 4–8 below (Expense Reports tabs +
+cardlets, Events touch layout, Journal cardlets, Calendar agenda, Budget cardlets) are
+untouched. Section 3 (Tasks) and section 5 (Passwords) needed nothing beyond the global
+44px floor and are effectively done.
+
+### What is on `main`
+
+| Commit | What it added |
+|---|---|
+| `feat(ui): 44px touch targets below the lg breakpoint` | `components/ui/control.ts` is responsive: `md` and `sm` are both `h-11` below `lg`, `h-10`/`h-8` above. Button, IconButton, Input and Select inherit it. `Chip`'s remove button and `Modal`'s close button got real tap boxes. `Modal` gained `mobileFullScreen`. |
+| `feat(ui): cardlets, the mobile stand-in for a wide table` | `components/ui/Cardlet.tsx` (`CardletList`, `Cardlet`, `CardletHeader`, `CardletFields`, `CardletField`, `CardletActions`) and `<Table desktopOnly>`. |
+| `feat(shell): mobile bottom bar replaces the sidebar below lg` | `components/mobile/` (`mobile-shell.tsx`, `mobile-sheet.tsx`, `mobile-nav-button.tsx`), `components/navigation.ts`, the `hidden lg:flex` sidebar, `pb-24` on `<main>`, `SignOutButton nav`, four new `shell` dictionary keys, two sheet animation tokens in `globals.css`. |
+| `docs: record the responsive rules in the design system` | `CLAUDE.md` and `docs/file-structure.md`. |
+
+Verified in the real app at 390×844 (admin role, local DB): bottom bar, apps sheet,
+"… other apps" with Back, edition modal, full-screen Settings. Desktop at 1440px is
+pixel-identical to before the change.
+
+### Where the design deviated from the mockups, and why
+
+The mockups are static HTML with their own CSS; the app has a token-enforced design
+system (`npm run check:design` fails the build on drift). Where they disagreed, the
+design system won:
+
+- **Sheet corners** are `rounded-t-2xl` (10px), not the mockup's 18px — 10px is the
+  app's heaviest rounding and `rounded-[18px]` is a check-design violation.
+- **Type** is `text-3xs`/`text-sm` from the scale, not the mockup's `10px`/`13.5px`/`15px`.
+- **The sheet's close button** is a real `<IconButton>`, not a hand-rolled `h-9 w-9` box.
+- **`SignOutButton`** got a `nav` prop (stacked icon + label) rather than the
+  `iconOnly`/`className` passthrough `component-changes.md` guessed at; the shared
+  recipe lives in `mobile-nav-button.tsx` so the bar's four buttons are identical.
+- **`MobileShell` takes `locale` and `pendingTaskCount`**, not a `signOutLabel` string:
+  every label comes from `dictionaries[locale].shell` (new keys: `apps`, `otherApps`,
+  `switchEdition`, `back`, `close`), and the Tasks row carries the same pending-count
+  bubble the sidebar shows. The app is bilingual — no hardcoded English in the shell.
+- **Two animation tokens were added** to `globals.css` (`--animate-sheet-up`,
+  `--animate-fade-in`) despite this doc's "no new tokens needed". The sheet is specified
+  to slide up; Tailwind has no built-in for that, and a keyframe belongs in the token
+  file rather than in a component.
+- **`reference-source/`**, referenced under [Files](#files), was never delivered with
+  this bundle. Read the live files instead — they are the current source of truth.
+
+### Picking this up: what to do next
+
+Everything below is per-screen work. The pattern is always the same, and the pieces are
+already built — **do not add new primitives, and do not touch `components/mobile/`**:
+
+1. **Wide table → cardlets** (Expense Reports history §2, Journal §6, Budget §8):
+   wrap the existing `<Table>` in `desktopOnly`, then render the *same array* through
+   `<CardletList>`. Never recompute a status label or a running balance for the mobile
+   branch — lift the computation above both.
+2. **Touch sizing** is already handled by the control scale. If a screen looks cramped
+   on a phone, the fix is a layout class on that screen, not a height on a control.
+3. **Events (§4)** needs the shift card layout and full-width Sign up/Withdraw; the
+   `×` chips in `component-changes.md` §6 are already solved by `ChipRemoveButton`.
+4. **Expense Reports tabs (§2)** is the one piece of new state: a local
+   `useState<'create' | 'history'>` in a mobile-only wrapper. Keep it local — it is a
+   view toggle, not server state.
+5. Run `npm run check:design`, `npm run lint` and `npm run build` before committing;
+   the design guard catches hardcoded hex, arbitrary radii, hand-sized controls and
+   hand-rolled copies of existing components.
+
+The two mockup HTML files remain the visual target for the screens that are still to do.
+
+---
+
 ## About the Design Files
 The two HTML files in this bundle (`admin-mobile.html`, `department-mobile.html`) are **design references built as static HTML/CSS/JS** — they are not production code and must not be copied into the Next.js app verbatim. They exist so you can open them in a browser, click through the interactions (bottom bar → apps sheet → other apps → back, settings, edition switcher, expense tabs, password reveal, sign up/withdraw), and see the exact spacing/type/color to target. The task is to **recreate this behavior inside the existing Next.js + Tailwind + `components/ui` system**, using the patterns already established in the codebase (server components, `"use client"` islands, the shared `Button`/`Modal`/`Badge`/`IconButton` primitives) — not to introduce a new framework or a new design system.
 
@@ -16,7 +92,8 @@ The desktop sidebar already renders two different navigations for `role === "ADM
 
 ## Screens / Views
 
-### 1. Mobile shell (bottom bar + sheets) — both roles
+### 1. Mobile shell (bottom bar + sheets) — both roles ✅ DONE
+*Built as `app/components/mobile/`. The spec below is what shipped; read it as documentation, not as work to do.*
 - **Purpose**: replace the sidebar as the primary navigation surface below the `lg` breakpoint.
 - **Layout**: a `position: fixed` bar pinned to the bottom of the viewport, `lg:hidden`, height ≈ 64px content + safe-area padding, 4 evenly-spaced buttons (`justify-around`), background `var(--panel-strong)`, `border-top: 1px solid var(--line)`.
 - **Buttons** (left→right): **Apps** (grid icon), **Edition** (layers icon + short code like "25–26"), **Settings** (sliders icon), **Sign out** (existing `SignOutButton`, icon-only on mobile).
@@ -24,33 +101,40 @@ The desktop sidebar already renders two different navigations for `role === "ADM
 - **Settings**: tapping Settings opens the *existing* Settings `Modal` (language + refund details) but full-screen on mobile — see the `Modal.tsx` change below. It stays conceptually a modal (dismissible, no route change), just edge-to-edge.
 - **Edition switcher**: tapping Edition opens a `Modal` containing the *same* edition `<Select>` already in the sidebar (reuse `selectEdition()`), so there is no duplicated switching logic — just a different container.
 
-### 2. Expense Reports (priority) — both roles, admin sees more actions
+### 2. Expense Reports (priority) — both roles, admin sees more actions ⬜ TO DO
 - **Layout**: the desktop `xl:grid-cols-[420px_1fr]` split (create form beside history) collapses to a single column below `xl`, and on mobile becomes two tabs — **Create** / **History** — in a segmented control under the page title, so the user isn't scrolling past a long create form to reach their history.
 - **Create tab**: existing `<Field>` + `<Select>`/`<Input>` stack, unchanged fields, but every control is a fixed `44px` tall (`box-sizing: border-box`) — the current `Input`/`Select` recipe (`rounded-2xl px-4 py-3`) computes taller than 44px with `min-height` because padding adds on top of it; use `height` + `box-sizing: border-box` instead of `min-height` for the mobile stack, or give mobile inputs their own compact height token.
 - **History tab → cardlets**: replace the `<table>` with one card per report. Each cardlet: description + status badge on top, a 2-column field grid (Date/Type, Department/Amount), a muted line for driving-route or "Submitted by", then full-width stacked actions (Approve primary, Reject destructive) for pending rows on admin, "Record in journal" outline button for approved rows on admin, nothing but the status + rejection reason for department users or resolved rows.
 
-### 3. Tasks (priority) — both roles
+### 3. Tasks (priority) — both roles ✅ DONE
+*Needed nothing beyond the global 44px control floor, which is now in `components/ui/control.ts`.*
 - Already a single column of cards on desktop (todo cards + standalone task cards) — no structural change needed below `lg`, this screen mainly validates the bottom-bar overlay pattern. Bump the "Mark done" / status buttons to full-width 44px.
 
-### 4. Events (priority) — admin sees management controls, department sees sign up only
+### 4. Events (priority) — admin sees management controls, department sees sign up only ⬜ TO DO
 - Event header card → day sections (unchanged structure) → shift cards. On mobile, each shift is a full-width card: role/time/spots info, then a full-width Sign up/Withdraw button. Admin-only: an "Assign staff" row (`Select` + 44×44 icon button) and a 44×44 delete-shift `IconButton` (replacing today's inline `×` text buttons, which are well under the 44px minimum) — gate all of it behind `canManageEvents` exactly as today.
 
-### 5. Passwords (priority) — both roles
+### 5. Passwords (priority) — both roles ✅ DONE
+*Same: the `IconButton` floor covers it. Re-check on a device once §2 and §4 land.*
 - Already fairly responsive (`flex-col lg:flex-row` in `EntryRow`) — the main mobile change is sizing: bump `IconButton` touch targets and make the reveal/copy/2FA row wrap onto its own line under the password code on narrow screens. Reveal toggles the same `<code>` element's text between `••••••••••` and the plaintext value — do **not** render a second element for the revealed value.
 
-### 6. Journal (secondary, admin only) — cardlets
+### 6. Journal (secondary, admin only) — cardlets ⬜ TO DO
 - The desktop table is 10 columns (`Date, Department, Type, Amount, Label, Beneficiary, Account, CC, Balance, Actions`) — far too wide for a phone. Below `sm`, replace it with the same cardlet pattern as Expense Reports: header (label + amount, colored by Charges/Produits), a 2×2 field grid (Department/Account, Cost center/Beneficiary), a running-balance line, then Edit/Delete `IconButton`s (or a "Locked" note for opening/linked entries).
 
-### 7. Calendar (secondary, both roles)
+### 7. Calendar (secondary, both roles) ⬜ TO DO
 - The desktop `xl:grid-cols-[1.2fr_0.8fr]` (month grid beside a hour-by-hour day timeline) collapses to one column: month grid on top (7-col grid of day cells, task/appointment dot indicators), then a simple agenda list for the selected day below (not the absolute-positioned hour timeline — too fine-grained for touch) — colored by task (green) vs. appointment (rose), same as the existing color coding.
 
-### 8. Budget (secondary, department-only in this handoff)
+### 8. Budget (secondary, department-only in this handoff) ⬜ TO DO
 - New read-only mobile view: one cardlet per budget line (label, Charges/Produits badge, planned amount, actual amount rolled up from journal entries, a thin progress bar, and a remaining/over-budget line). No create/edit affordances on mobile for either role in this pass — budget management stays desktop-only for now.
 
-## General rules (apply everywhere)
+## General rules (apply everywhere) ✅ DONE
 - **Cards in a row → one column.** The existing `Card`/`CardGrid` span classes (`col-span-12 sm:col-span-6 lg:col-span-3`, etc. in `components/ui/Card.tsx`) already default to full width below `sm` — **no change needed there**, just don't add a new `grid-cols-*` without a mobile override.
 - **Wide tables → cardlets.** Applies concretely to Expense Reports history and the Journal table (both above). Any other admin table you port later (Invoices, Cost Centers) should follow the same recipe: a `hidden sm:block` table + a `sm:hidden` cardlet list mapped from the same array.
 - **Touch targets ≥ 44px.** The `Button` component is already `h-10` (40px) — bump to `h-11` (44px) at the component level, or pass a mobile-specific className, rather than special-casing every call site. `IconButton` is `h-9 w-9` (36px) — same treatment.
+
+**How this shipped:**
+- *Cards → one column*: confirmed, no change. `Card`'s span classes all start at `col-span-12`.
+- *Wide tables → cardlets*: both halves of the recipe are components now — `<Table desktopOnly>` (hides the table below `sm`) and `components/ui/Cardlet.tsx`. Screens compose them; they do not re-write the recipe.
+- *Touch targets*: solved once, in the scale. `controlHeight`/`controlSquare` in `components/ui/control.ts` resolve to `h-11` below `lg` and to `h-10`/`h-8` above it, so `Button`, `IconButton`, `Input` and `Select` are all 44px on a phone and unchanged on desktop. **Do not add `h-11` at a call site** — `npm run check:design` rejects hand-sized controls outside `components/ui/`. The two tap targets that live outside the scale, `ChipRemoveButton` and `Modal`'s close button, were sized in their own components.
 
 ## Interactions & Behavior
 - **Apps sheet**: slide up from the bottom nav's Apps button; tap the backdrop or the ✕ to close; "… other" swaps the sheet's inner content (not a second sheet) with a "‹ Back" affordance; selecting an app row navigates and closes the sheet.
@@ -61,12 +145,14 @@ The desktop sidebar already renders two different navigations for `role === "ADM
 - **Sign up / Withdraw**: same server actions as desktop (`signUpForShiftAction` / `withdrawFromShiftAction`), just triggered from the full-width mobile button instead of the desktop-sized one.
 - **Responsive breakpoint**: use Tailwind's `lg` breakpoint (1024px) as the sidebar/bottom-bar switch point, matching the existing `lg:p-8` / collapse behavior already in `app-shell.tsx`.
 
-## State Management
+## State Management ✅ DONE
 - `MobileShell` (new): local `useState` for which sheet is open (`'closed' | 'apps-primary' | 'apps-other' | 'settings' | 'edition'`) — a single enum avoids the "two things open at once" bugs a boolean-per-sheet approach invites.
 - Settings and edition-switching state/logic already exist in `AppShell` (`selectedLocale`, `refundFirstName` etc., `saveSettings()`, `selectEdition()`) — **pass them down as props to `MobileShell` rather than duplicating them.**
 - Expense Reports tab state: new local `useState` in the mobile-only wrapper, not shared with server state.
 
-## Design Tokens
+**How this shipped:** `MobileShell` holds `useState<Sheet>` with `Sheet = "closed" | "apps-primary" | "apps-other" | "edition"`, exactly as specified. Settings is *not* in the enum: it opens `AppShell`'s existing modal through an `onOpenSettings` prop, so there is one settings implementation rather than two. `selectEdition`, `switchingEdition`, the `editions` array and the `navigation` array are all passed down from `AppShell` — `MobileShell` duplicates no state and owns no fetch. The Expense Reports tab state is the only item here still to build.
+
+## Design Tokens ✅ VERIFIED
 All from the existing `app/globals.css` — no new tokens needed.
 | Token | Value | Use |
 |---|---|---|
@@ -81,12 +167,14 @@ All from the existing `app/globals.css` — no new tokens needed.
 | radius | `5px` (md, buttons/inputs) / `10px` (2xl, cards) / `999px` (pills/dots) | from the tight radius scale in `globals.css` |
 | status colors | success `emerald-500/15` + `emerald-300`, error `rose-500/15` + `rose-300`, warning `amber-500/15` + `amber-300` | matches existing `Badge` tones |
 
+**Verified** against `app/app/globals.css` and `components/ui/Badge.tsx`: all eight color tokens, the radius scale and the three status tones are present and match the values above exactly. Nothing was added except the two sheet animations noted in the status section — reach for a token, never a literal, and let `npm run check:design` prove it.
+
 ## Assets
 No new image assets. Icons are simple inline SVGs (grid, layers, sliders, log-out, chevrons, eye/eye-off, copy, pencil, trash, search, home, calendar, book, wallet, receipt, target/bullseye, users, landmark) drawn to match the existing `lucide-react` icon weight (1.6–1.8px stroke) already used throughout the app — swap them for the matching `lucide-react` imports during implementation (e.g. `Grid2x2`, `Layers`, `SlidersHorizontal`, `LogOut`) instead of inline SVG.
 
 ## Files
 - `admin-mobile.html` — standalone reference, admin role, 6 phones (Tasks/shell, Expense Reports, Events, Passwords, Journal, Calendar).
 - `department-mobile.html` — standalone reference, department role, 6 phones (Tasks/shell, Expense Reports, Events, Passwords, Budget, Calendar).
-- `reference-source/` — the current, unmodified source files this plan is grounded in, copied from the repo at sync time (see `component-changes.md` for what changes in each).
-- `component-changes.md` — file-by-file, line-annotated current → new code for the actual Next.js implementation.
+- ~~`reference-source/`~~ — never delivered with this bundle. Read the live files in `app/` instead; they are ahead of anything a snapshot would show.
+- `component-changes.md` — file-by-file, line-annotated current → new code for the actual Next.js implementation. **Its §1–§3 (Modal, app-shell, mobile-shell) are implemented — the real files differ from the snippets there and are the source of truth. §4–§7 are still the plan.**
 - The original interactive exploration (`Mobile Design Proposal.dc.html` in the parent project) is background/process reference only — these two HTML files supersede it as the handoff artifact.
