@@ -116,13 +116,25 @@ app/
 
 | File | Purpose |
 |---|---|
-| `app-shell.tsx` | Persistent sidebar navigation, edition picker, settings modal (locale + refund profile), sign-out. Provides the read-only context and renders the closed-edition banner |
+| `app-shell.tsx` | Persistent sidebar navigation (desktop, `lg` and up), edition picker, settings modal (locale + refund profile), sign-out. Owns the navigation array both shells render, provides the read-only context and renders the closed-edition banner |
+| `navigation.ts` | `NavigationItem` / `EditionOption` — the nav shape shared by the sidebar and the mobile shell |
 | `edition-read-only.tsx` | `useEditionReadOnly()` / `WritableEditionOnly` / `EditionClosedBanner` — lets pages hide create/edit/delete affordances while the selected edition is closed |
 | `journal-table.tsx` | Full interactive journal entry table with filter, sort, inline edit |
 | `add-journal-entry-modal.tsx` | Modal for creating/prefilling journal entries; used on journal page and from expense-report approval |
-| `sign-out-button.tsx` | Sign-out action for the app shell — a labelled `<Button>` when expanded, an icon `<IconButton>` when the sidebar is collapsed |
+| `sign-out-button.tsx` | Sign-out action for the app shell — a labelled `<Button>` when expanded, an icon `<IconButton>` when the sidebar is collapsed, a stacked nav button (`nav`) in the mobile bottom bar |
 | `form-error.tsx` | Renders a server-action error message through the shared `<Alert>` (nothing when there is no message) |
 | `tasks-create-modal.tsx` | Modal with the two "create todo" / "create task" forms used on the tasks page |
+
+### `components/mobile/` — the mobile shell
+
+Everything below the `lg` breakpoint, where the sidebar is hidden. Mounted once by
+`app-shell.tsx`; screens never import from here.
+
+| File | Purpose |
+|---|---|
+| `mobile-shell.tsx` | The fixed bottom bar (Apps · Edition · Settings · Sign out) and the apps sheet. Owns a single `Sheet` enum (`closed`/`apps-primary`/`apps-other`/`edition`) so two overlays can never be open at once; settings and edition switching are AppShell's own logic, passed in as props |
+| `mobile-sheet.tsx` | `<MobileSheet open onClose>` — bottom sheet with backdrop, drag handle and Escape-to-close. The mobile counterpart of `<Modal>` |
+| `mobile-nav-button.tsx` | `<MobileNavButton>` / `mobileNavButtonClasses` — the one bottom-bar button recipe, also used by `sign-out-button.tsx` |
 
 ### `components/ui/` — the design system
 
@@ -131,7 +143,7 @@ which. Nothing here should be re-implemented inline in a page.
 
 | File | Exports |
 |---|---|
-| `control.ts` | `ControlSize` (`md`/`sm`) plus `controlHeight`/`controlSquare` — the one height scale every control resolves to |
+| `control.ts` | `ControlSize` (`md`/`sm`) plus `controlHeight`/`controlSquare` — the one height scale every control resolves to, 44px below `lg` and dense above it |
 | `Button.tsx` | `<Button variant size>` and `buttonClasses()` for links that read as buttons |
 | `IconButton.tsx` | `<IconButton tone size label>` and `iconButtonClasses()` for non-button elements that act as one |
 | `Input.tsx` | `<Input size tone bare>`, plus `inputClasses()` / `autoHeightFieldClasses` shared by every field |
@@ -140,8 +152,9 @@ which. Nothing here should be re-implemented inline in a page.
 | `Card.tsx` | `<Card span dashed>` + `<CardGrid>` — padded surfaces in a 12-column grid |
 | `Panel.tsx` | `<Panel nested>`, `<PanelHeader>`, `<SectionTitle>` and `nestedSurfaceClasses` — frames around flush content |
 | `PageHeader.tsx` | `<PageHeader eyebrow title description actions>` — the heading block of every screen |
-| `Table.tsx` | `<Table frame dense>` + `<THead>` `<TFoot>` `<TR>` `<TH>` `<TD>` |
-| `Modal.tsx` | `<Modal open onClose title size footer>` — the only dialog implementation |
+| `Table.tsx` | `<Table frame dense desktopOnly>` + `<THead>` `<TFoot>` `<TR>` `<TH>` `<TD>` |
+| `Cardlet.tsx` | `<CardletList>` `<Cardlet>` `<CardletHeader>` `<CardletFields>` `<CardletField>` `<CardletActions>` — a wide table's rows as cards below `sm` |
+| `Modal.tsx` | `<Modal open onClose title size mobileFullScreen footer>` — the only dialog implementation |
 | `Alert.tsx`, `Badge.tsx`, `Chip.tsx` | Inline messages, status pills, removable tokens |
 | `cn.ts` | Three-line class joiner used by every component |
 

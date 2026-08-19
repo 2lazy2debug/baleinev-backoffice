@@ -50,7 +50,8 @@ or a heading, one of these already covers it:
 | Action | `<Button variant size>` · `buttonClasses()` for links that read as buttons |
 | Icon-only action | `<IconButton tone size label>` · `iconButtonClasses()` for non-buttons |
 | Fields | `<Field>` + `<Input>` / `<Textarea>` / `<Select>` / `<MultiSelect>` / `<Checkbox>` / `<Radio>` |
-| Table | `<Table frame dense>` + `<THead>` `<TR>` `<TH>` `<TD>` `<TFoot>` |
+| Table | `<Table frame dense desktopOnly>` + `<THead>` `<TR>` `<TH>` `<TD>` `<TFoot>` |
+| Wide table on a phone | `<CardletList>` + `<Cardlet>` `<CardletHeader>` `<CardletFields>` `<CardletField>` `<CardletActions>` |
 | Status pill / removable token | `<Badge tone>` · `<Chip>` + `<ChipRemoveButton>` |
 | Inline message | `<Alert tone>` (`<FormError>` wraps it for server-action errors) |
 | Dialog | `<Modal open onClose title size footer>` |
@@ -61,8 +62,10 @@ next to it the same height:
 - `md` (`h-10`, default) — section forms, modal footers, page-level actions
 - `sm` (`h-8`) — table/list-row actions and toolbars
 
-Everything in one row uses one size. Never hand-size a control (`h-9`, `py-1.5` on a
-button); if a size is missing, change the scale, not the screen.
+Those are the **desktop** heights. Below `lg` both sizes are `h-11` (44px), the
+minimum touch target — the scale is responsive so no screen ever hand-sizes a control
+for mobile. Everything in one row uses one size. Never hand-size a control (`h-9`,
+`py-1.5` on a button); if a size is missing, change the scale, not the screen.
 
 **Type scale**: `text-3xs` (10px) and `text-2xs` (11px) are tokens for micro labels;
 above that use Tailwind's `text-xs`/`text-sm`. Headings are `text-3xl` (page, via
@@ -84,6 +87,13 @@ action buttons are `rounded-md`, not pills.
 scale, there are no `--space-*` tokens (never write `var(--space-…)`). Dense elements
 use `p-2`–`p-3`; cards use `p-4`–`p-5`. Vertical rhythm is `space-y-*` / `gap-*`. Keep
 it functional — no gratuitous padding.
+
+**Responsive** — `lg` (1024px) is the one structural breakpoint: above it the sidebar
+shell and the dense control heights, below it the mobile bottom bar
+(`components/mobile/`) and 44px touch targets. Wide tables switch earlier, at `sm`:
+`<Table desktopOnly>` above, `<CardletList>` below, both fed by the same array.
+`Card`/`CardGrid` spans already stack to one column below `sm` — never add a
+`grid-cols-*` without a mobile override.
 
 UI copy rules:
 - Name things by what they do, not what they are internally
