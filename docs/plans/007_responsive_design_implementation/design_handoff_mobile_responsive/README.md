@@ -31,7 +31,10 @@ agenda list below `sm` — see the section below for what shipped.
 read-only planned-vs-actual roll-up plus cardlets below `sm` — see the section below,
 including where the data model forced a deviation from the mockup.
 
-**Every section of this handoff is now implemented.** What is left is the per-screen
+**Every section of this handoff is now implemented**, and
+[Interactions & Behavior](#interactions--behavior-verified) has been walked bullet by
+bullet against the shipped code — all seven behave as specified, in both locales, with
+no gap to close. What is left is the per-screen
 work this handoff never scoped: the admin-only tables (Invoices, Cost Centers, Money
 Accounts, Users) are readable on a phone but still render as desktop tables, and the
 Budget details modal is desktop-only. Follow the same recipe if you port them.
@@ -404,7 +407,7 @@ All from the existing `app/globals.css` — no new tokens needed.
 
 **Verified** against `app/app/globals.css` and `components/ui/Badge.tsx`: all eight color tokens, the radius scale and the three status tones are present and match the values above exactly. Nothing was added except the two sheet animations noted in the status section — reach for a token, never a literal, and let `npm run check:design` prove it.
 
-## Interactions & Behavior
+## Interactions & Behavior ✅ VERIFIED
 - **Apps sheet**: slide up from the bottom nav's Apps button; tap the backdrop or the ✕ to close; "… other" swaps the sheet's inner content (not a second sheet) with a "‹ Back" affordance; selecting an app row navigates and closes the sheet.
 - **Settings**: opens full-screen from the Settings nav button; ✕ or "Save changes" closes it; same `saveSettings()` logic as desktop.
 - **Edition switcher**: opens a modal from the Edition nav button; selecting a non-current edition calls the existing `selectEdition(id)` (POST to `/api/preferences/edition`, then `router.refresh()`) and closes the modal; the nav button's label updates to the new short code once the page re-renders with the new `selectedEditionId`.
@@ -412,6 +415,34 @@ All from the existing `app/globals.css` — no new tokens needed.
 - **Password reveal**: toggles the same code element's text + swaps the eye/eye-off icon; no extra element.
 - **Sign up / Withdraw**: same server actions as desktop (`signUpForShiftAction` / `withdrawFromShiftAction`), just triggered from the full-width mobile button instead of the desktop-sized one.
 - **Responsive breakpoint**: use Tailwind's `lg` breakpoint (1024px) as the sidebar/bottom-bar switch point, matching the existing `lg:p-8` / collapse behavior already in `app-shell.tsx`.
+
+**Verified** bullet by bullet against the shipped code — every behaviour above is
+implemented, in both locales, and nothing here needs new work:
+
+| Behaviour | Where it lives |
+|---|---|
+| Apps sheet slides up; backdrop or ✕ closes | `mobile-sheet.tsx` — `animate-sheet-up`, `onClick={onClose}` on the backdrop with `stopPropagation` on the panel; the ✕ is a real `<IconButton>` in `mobile-shell.tsx` |
+| "… other" swaps the sheet's content, with "‹ Back" | `mobile-shell.tsx` — one `<MobileSheet>` open for both `apps-primary` and `apps-other`; the back control is a `ChevronLeft` + `copy.back` button that sets the state back. The sheet never stacks. |
+| Selecting an app navigates and closes | each row is a `<Link>` with `onClick={() => setSheet("closed")}` |
+| Settings opens full-screen; ✕ or Save closes | `onOpenSettings` opens `AppShell`'s own `<Modal … mobileFullScreen>` (`h-full rounded-none sm:h-auto`); `saveSettings()` sets `isSettingsOpen` false on success. One implementation, shared with desktop. |
+| Edition switcher calls `selectEdition(id)` and closes | `mobile-shell.tsx`'s `<Modal>` calls the `onSelectEdition` prop — `AppShell.selectEdition`, POST `/api/preferences/edition` + `router.refresh()` — then `setSheet("closed")`. The bar's label is `shortEditionLabel(selectedEdition.name)`, so it follows the refreshed `selectedEditionId` prop. |
+| Expense Reports tabs are client-side only | `expense-reports/tabs.tsx` — `useState<Tab>` where `Tab = "history" \| "create"`, no navigation, both panels stay mounted |
+| Password reveal toggles one element + swaps the icon | `passwords/client.tsx` — the same `<code>` renders `{revealed ?? "••••••••••"}` and the button renders `revealed ? <EyeOff /> : <Eye />`. No second element. |
+| Sign up / Withdraw use the desktop server actions | `events/client.tsx` — `useActionState(signUpForShiftAction …)` / `(withdrawFromShiftAction …)`, submitted from a `w-full sm:w-auto` button |
+| `lg` is the sidebar/bottom-bar switch | `app-shell.tsx`'s `<aside>` is `hidden … lg:flex`; `MobileShell`'s bar and sheet are `lg:hidden` |
+
+Three places do slightly more than specified, all supersets — none is a deviation to
+undo:
+- **Dismissal is wider than "backdrop or ✕".** `MobileSheet` also closes on Escape, and
+  the settings modal keeps a Cancel button beside Save. A phone never sees Escape; both
+  cost nothing and match `Modal`'s existing contract.
+- **The Apps sheet carries the Tasks pending-count bubble**, the same one the sidebar
+  shows — the bar is the only nav on a phone, so the count has to be reachable there.
+- **Full-width buttons switch at `sm`, not `lg`.** The bullet's `lg` governs the
+  shell; inside a screen, a control goes full-width when its own layout stacks, which
+  the design system fixes at `sm` (`CLAUDE.md`, "Responsive"). The shell switch point
+  is untouched.
+
 
 ## Assets
 No new image assets. Icons are simple inline SVGs (grid, layers, sliders, log-out, chevrons, eye/eye-off, copy, pencil, trash, search, home, calendar, book, wallet, receipt, target/bullseye, users, landmark) drawn to match the existing `lucide-react` icon weight (1.6–1.8px stroke) already used throughout the app — swap them for the matching `lucide-react` imports during implementation (e.g. `Grid2x2`, `Layers`, `SlidersHorizontal`, `LogOut`) instead of inline SVG.
