@@ -1,5 +1,6 @@
 "use client";
 
+import { Button, Card, buttonClasses } from "@/components/ui";
 import { dictionaries, localeCookieName, type Locale } from "@/lib/i18n-dictionaries";
 
 import "./globals.css";
@@ -20,26 +21,19 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
     <html>
       <body>
         <div className="flex min-h-screen items-center justify-center p-6">
-          <div className="w-full max-w-md space-y-4 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 text-center">
+          <Card as="div" className="w-full max-w-md space-y-4 text-center">
             <h1 className="text-lg font-semibold">{copy.title}</h1>
             <p className="text-sm text-[var(--muted)]">{copy.description}</p>
             <div className="flex items-center justify-center gap-2 pt-2">
-              <button
-                type="button"
-                onClick={reset}
-                className="rounded-md bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--accent-strong)]"
-              >
+              <Button variant="primary" onClick={reset}>
                 {copy.retry}
-              </button>
+              </Button>
               {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- global-error replaces the root layout, so the router context Link needs may not be mounted */}
-              <a
-                href="/"
-                className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold hover:bg-[var(--panel-strong)]"
-              >
+              <a href="/" className={buttonClasses()}>
                 {copy.backToDashboard}
               </a>
             </div>
-          </div>
+          </Card>
         </div>
       </body>
     </html>

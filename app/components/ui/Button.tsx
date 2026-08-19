@@ -26,6 +26,11 @@ const variants: Record<ButtonVariant, string> = {
   destructive: "border border-rose-400/60 text-rose-300 hover:bg-rose-950/40",
 };
 
+/** Same recipe for elements that are links but read as buttons (`<Link href…>`). */
+export function buttonClasses(variant: ButtonVariant = "secondary", size: ControlSize = "md", className?: string) {
+  return cn(base, sizes[size], variants[variant], className);
+}
+
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   { variant = "secondary", size = "md", className, type, ...props },
   ref,
@@ -34,7 +39,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     <button
       ref={ref}
       type={type ?? "button"}
-      className={cn(base, sizes[size], variants[variant], className)}
+      className={buttonClasses(variant, size, className)}
       {...props}
     />
   );

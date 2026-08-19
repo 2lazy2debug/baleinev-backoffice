@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { getSession, signIn } from "next-auth/react";
 
-import { Badge, Button, Card, Field, Input } from "@/components/ui";
+import { Alert, Badge, Button, Card, Field, Input } from "@/components/ui";
 
 type LoginCopy = {
   badge: string;
@@ -72,7 +72,7 @@ export default function LoginForm({ copy }: { copy: LoginCopy }) {
                 </Field>
 
                 {error ? (
-                  <p className="rounded-md border border-rose-400/20 bg-rose-950/35 px-4 py-3 text-sm text-rose-200">{error}</p>
+                  <Alert>{error}</Alert>
                 ) : null}
 
                 <Button type="submit" variant="primary" disabled={pending} className="w-full">

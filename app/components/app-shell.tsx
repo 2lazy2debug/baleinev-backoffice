@@ -24,7 +24,7 @@ import { useState, useRef } from "react";
 
 import { EditionClosedBanner, EditionReadOnlyProvider } from "@/components/edition-read-only";
 import { SignOutButton } from "@/components/sign-out-button";
-import { Button, IconButton, Input, Modal, Radio, Select } from "@/components/ui";
+import { Alert, Button, IconButton, Input, Modal, Radio, Select } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 
 type EditionOption = {
@@ -399,9 +399,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
         </div>
 
         {saveError ? (
-          <p className="mt-4 rounded-xl border border-rose-400/20 bg-rose-950/35 px-3 py-2 text-sm text-rose-200">
-            {copy.saveFailed}
-          </p>
+          <Alert className="mt-4">{copy.saveFailed}</Alert>
         ) : null}
       </Modal>
     </div>
