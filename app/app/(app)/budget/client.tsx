@@ -6,7 +6,7 @@ import { Check, Eye, Pencil, Plus, TrendingDown, TrendingUp, Trash2, X } from "l
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, CardGrid, Field, IconButton, Input, Modal, Select, TFoot, THead, TR, TH, TD, Table, Textarea } from "@/components/ui";
+import { Button, Card, CardGrid, Field, IconButton, Input, Modal, PageHeader, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -125,17 +125,17 @@ export default function BudgetPageClient({ locale, editionName, departments, can
 
   return (
     <div className="space-y-8">
-      <header className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.budget.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.budget.entriesFor} {editionName}</h1>
-        <p className="max-w-3xl text-sm leading-7 text-[var(--muted)]">{copy.budget.subtitle}</p>
-        {canManage ? (
+      <PageHeader
+        eyebrow={copy.budget.title}
+        title={<>{copy.budget.entriesFor} {editionName}</>}
+        description={copy.budget.subtitle}
+        actions={canManage ? (
           <Button variant="secondary" onClick={() => setIsDepartmentModalOpen(true)}>
-            <Plus className="h-4 w-4" />
+            <Plus />
             {copy.budget.addDepartment}
           </Button>
         ) : null}
-      </header>
+      />
 
       <div className="space-y-4">
         <FormError message={deleteDeptState.error} />

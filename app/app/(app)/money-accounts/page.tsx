@@ -1,7 +1,7 @@
 import { AccountType } from "@prisma/client";
 
 import { requireMoneyAccountManager } from "@/lib/access";
-import { Card, CardGrid } from "@/components/ui";
+import { Card, CardGrid, PageHeader } from "@/components/ui";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
@@ -34,13 +34,11 @@ export default async function MoneyAccountsPage() {
 
   if (!activeEdition) {
     return (
-      <div className="space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.moneyAccounts.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.common.noEditionSelected}</h1>
-        <p className="max-w-2xl text-sm leading-7 text-[var(--muted)]">
-          {copy.common.pickEditionHint}
-        </p>
-      </div>
+      <PageHeader
+        eyebrow={copy.moneyAccounts.title}
+        title={copy.common.noEditionSelected}
+        description={copy.common.pickEditionHint}
+      />
     );
   }
 
@@ -70,13 +68,11 @@ export default async function MoneyAccountsPage() {
 
   return (
     <div className="space-y-8">
-      <header className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.moneyAccounts.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.moneyAccounts.forEdition} {activeEdition.name}</h1>
-        <p className="max-w-3xl text-sm leading-7 text-[var(--muted)]">
-          {copy.moneyAccounts.subtitle}
-        </p>
-      </header>
+      <PageHeader
+        eyebrow={copy.moneyAccounts.title}
+        title={<>{copy.moneyAccounts.forEdition} {activeEdition.name}</>}
+        description={copy.moneyAccounts.subtitle}
+      />
 
       <section className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div>

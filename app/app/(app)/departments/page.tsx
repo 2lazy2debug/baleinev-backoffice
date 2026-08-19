@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 
 import { DepartmentsPageClient } from "./client";
+import { PageHeader } from "@/components/ui";
 
 export default async function DepartmentsPage() {
   const editionId = await resolveEditionIdOrNull();
@@ -21,25 +22,21 @@ export default async function DepartmentsPage() {
 
   if (!activeEdition) {
     return (
-      <div className="space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Departments</p>
-        <h1 className="text-3xl font-semibold tracking-tight">No edition selected</h1>
-        <p className="max-w-2xl text-sm leading-7 text-[var(--muted)]">
-          Pick an edition in the sidebar before you start organizing departments.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Departments"
+        title="No edition selected"
+        description="Pick an edition in the sidebar before you start organizing departments."
+      />
     );
   }
 
   return (
     <div className="space-y-8">
-      <header className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Departments</p>
-        <h1 className="text-3xl font-semibold tracking-tight">Budget departments for {activeEdition.name}</h1>
-        <p className="max-w-3xl text-sm leading-7 text-[var(--muted)]">
-          Manage the structural budget categories used by this edition, including SANS EFFET.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Departments"
+        title={<>Budget departments for {activeEdition.name}</>}
+        description="Manage the structural budget categories used by this edition, including SANS EFFET."
+      />
 
       <DepartmentsPageClient departments={activeEdition.departments} />
     </div>

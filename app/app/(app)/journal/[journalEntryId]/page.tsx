@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { Card } from "@/components/ui";
+import { Card, PageHeader } from "@/components/ui";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
@@ -44,11 +44,11 @@ export default async function JournalEntryEditPage({ params }: JournalEntryEditP
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.journal.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.journal.edit} #{entry.sequenceNumber}</h1>
-        <p className="text-sm text-[var(--muted)]">{copy.journal.subtitle}</p>
-      </header>
+      <PageHeader
+        eyebrow={copy.journal.title}
+        title={<>{copy.journal.edit} #{entry.sequenceNumber}</>}
+        description={copy.journal.subtitle}
+      />
 
       <Card as="section">
         <JournalEntryEditForm

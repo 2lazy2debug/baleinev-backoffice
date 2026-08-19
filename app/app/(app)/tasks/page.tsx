@@ -1,6 +1,6 @@
 import { WritableEditionOnly } from "@/components/edition-read-only";
 import { TasksCreateModal } from "@/components/tasks-create-modal";
-import { Card } from "@/components/ui";
+import { Card, PageHeader } from "@/components/ui";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
@@ -35,26 +35,22 @@ export default async function TasksPage() {
 
   return (
     <div className="space-y-8">
-      <header className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
-          {copy.tasks.title}
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight">
-          {copy.tasks.title}
-        </h1>
-        <p className="max-w-3xl text-sm leading-7 text-[var(--muted)]">
-          {copy.tasks.subtitle}
-        </p>
-        <WritableEditionOnly>
-          <TasksCreateModal
-            copy={copy.tasks}
-            users={users}
-            isAdmin={access.role === "ADMIN"}
-            createTodoAction={createTodoAction}
-            createTodoTaskAction={createTodoTaskAction}
-          />
-        </WritableEditionOnly>
-      </header>
+      <PageHeader
+        eyebrow={copy.tasks.title}
+        title={copy.tasks.title}
+        description={copy.tasks.subtitle}
+        actions={
+          <WritableEditionOnly>
+            <TasksCreateModal
+              copy={copy.tasks}
+              users={users}
+              isAdmin={access.role === "ADMIN"}
+              createTodoAction={createTodoAction}
+              createTodoTaskAction={createTodoTaskAction}
+            />
+          </WritableEditionOnly>
+        }
+      />
 
       <Card as="section" className="space-y-5">
         <h2 className="text-xl font-semibold">{copy.tasks.allTasks}</h2>

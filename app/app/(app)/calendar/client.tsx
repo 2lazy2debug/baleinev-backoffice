@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
-import { Badge, Button, Card, Field, Input, Modal, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
+import { Badge, Button, Card, Field, Input, Modal, PageHeader, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
 import { type ActionState } from "@/lib/server-action-helpers";
 
 type CalendarTask = {
@@ -362,11 +362,7 @@ export default function CalendarPageClient({
 
   return (
     <div className="space-y-6">
-      <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.title}</h1>
-        <p className="text-sm text-[var(--muted)]">{copy.subtitle}</p>
-      </header>
+      <PageHeader eyebrow={copy.title} title={copy.title} description={copy.subtitle} />
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div>

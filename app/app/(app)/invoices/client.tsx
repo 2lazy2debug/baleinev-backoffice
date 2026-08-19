@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Check, Copy, Plus, RotateCcw, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
-import { Button, Card, Field, IconButton, Input, Modal, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
+import { Button, Card, Field, IconButton, Input, Modal, PageHeader, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { buildSwissQrPayload } from "@/lib/swiss-qr";
 import { formatCurrency } from "@/lib/utils";
@@ -618,12 +618,17 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
 
   return (
     <div className="space-y-8">
-      <header className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.invoices.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.invoices.title}</h1>
-        <p className="max-w-3xl text-sm leading-7 text-[var(--muted)]">{copy.invoices.subtitle}</p>
-        <p className="text-xs text-[var(--muted)]">{copy.invoices.activeTemplate}: {defaultTemplate.name}</p>
-      </header>
+      <PageHeader
+        eyebrow={copy.invoices.title}
+        title={copy.invoices.title}
+        description={
+          <>
+            {copy.invoices.subtitle}
+            <br />
+            {copy.invoices.activeTemplate}: {defaultTemplate.name}
+          </>
+        }
+      />
 
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}
 

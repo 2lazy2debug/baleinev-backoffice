@@ -1,7 +1,7 @@
 import { AccountType, TaskType } from "@prisma/client";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
-import { Card, CardGrid, Panel, PanelHeader, PanelTitle, Table, THead, TFoot, TR, TH, TD, buttonClasses } from "@/components/ui";
+import { Card, CardGrid, PageHeader, Panel, PanelHeader, PanelTitle, TD, TFoot, TH, THead, TR, Table, buttonClasses } from "@/components/ui";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
@@ -38,13 +38,11 @@ export default async function DashboardPage() {
 
   if (!activeEdition) {
     return (
-      <div className="space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.dashboard.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.common.noEditionSelected}</h1>
-        <p className="max-w-2xl text-sm leading-7 text-[var(--muted)]">
-          {copy.common.pickEditionHint}
-        </p>
-      </div>
+      <PageHeader
+        eyebrow={copy.dashboard.title}
+        title={copy.common.noEditionSelected}
+        description={copy.common.pickEditionHint}
+      />
     );
   }
 
@@ -101,15 +99,11 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.dashboard.title}</p>
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">{copy.dashboard.editionPrefix} {activeEdition.name}</h1>
-          <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--muted)]">
-            {copy.dashboard.subtitle}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow={copy.dashboard.title}
+        title={<>{copy.dashboard.editionPrefix} {activeEdition.name}</>}
+        description={copy.dashboard.subtitle}
+      />
 
       <CardGrid>
         {moneyAccountCards.length === 0 ? (

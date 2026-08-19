@@ -4,6 +4,7 @@ import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 
 import EventsPageClient from "./client";
+import { PageHeader } from "@/components/ui";
 
 export default async function EventsPage() {
   const access = await getCurrentUserAccess();
@@ -46,21 +47,17 @@ export default async function EventsPage() {
 
   if (!activeEdition) {
     return (
-      <div className="space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.events.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.events.title}</h1>
-        <p className="max-w-2xl text-sm leading-7 text-[var(--muted)]">{copy.common.noEditionSelected}</p>
-      </div>
+      <PageHeader eyebrow={copy.events.title} title={copy.events.title} description={copy.common.noEditionSelected} />
     );
   }
 
   return (
     <div className="space-y-10">
-      <header className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.events.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.events.title} — {activeEdition.name}</h1>
-        <p className="max-w-3xl text-sm leading-7 text-[var(--muted)]">{copy.events.subtitle}</p>
-      </header>
+      <PageHeader
+        eyebrow={copy.events.title}
+        title={<>{copy.events.title} — {activeEdition.name}</>}
+        description={copy.events.subtitle}
+      />
 
       <EventsPageClient
         isAdmin={isAdmin}

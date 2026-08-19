@@ -5,6 +5,7 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
 
 import JournalPageClient from "./client";
+import { PageHeader } from "@/components/ui";
 
 type JournalPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -39,13 +40,11 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
 
   if (!activeEdition) {
     return (
-      <div className="space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.journal.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.common.noEditionSelected}</h1>
-        <p className="max-w-2xl text-sm leading-7 text-[var(--muted)]">
-          {copy.journal.pickEditionHint}
-        </p>
-      </div>
+      <PageHeader
+        eyebrow={copy.journal.title}
+        title={copy.common.noEditionSelected}
+        description={copy.journal.pickEditionHint}
+      />
     );
   }
 
@@ -85,13 +84,11 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
 
   return (
     <div className="space-y-6 flex flex-col h-full">
-      <header className="space-y-2 shrink-0">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.journal.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.journal.entriesFor} - {activeEdition.name}</h1>
-        <p className="text-sm text-[var(--muted)]">
-          {copy.journal.subtitle}
-        </p>
-      </header>
+      <PageHeader
+        eyebrow={copy.journal.title}
+        title={<>{copy.journal.entriesFor} - {activeEdition.name}</>}
+        description={copy.journal.subtitle}
+      />
 
       <JournalPageClient
         activeEdition={{

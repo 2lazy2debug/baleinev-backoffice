@@ -6,6 +6,7 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
 
 import InvoicesClient from "./client";
+import { PageHeader } from "@/components/ui";
 
 export default async function InvoicesPage() {
   await requireAdmin();
@@ -26,13 +27,11 @@ export default async function InvoicesPage() {
 
   if (!activeEdition) {
     return (
-      <div className="space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.invoices.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.common.noEditionSelected}</h1>
-        <p className="max-w-2xl text-sm leading-7 text-[var(--muted)]">
-          {copy.common.pickEditionHint}
-        </p>
-      </div>
+      <PageHeader
+        eyebrow={copy.invoices.title}
+        title={copy.common.noEditionSelected}
+        description={copy.common.pickEditionHint}
+      />
     );
   }
 

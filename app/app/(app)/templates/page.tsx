@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { ensureDefaultInvoiceTemplate, invoiceTemplatePlaceholders } from "@/lib/document-templates";
 import { getDictionary, getLocale } from "@/lib/i18n";
 
+import { PageHeader } from "@/components/ui";
+
 import { TemplatesPageClient } from "./client";
 
 export default async function TemplatesPage() {
@@ -19,12 +21,15 @@ export default async function TemplatesPage() {
 
   return (
     <div className="space-y-8">
-      <header className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.templates.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.templates.manage}</h1>
-        <p className="max-w-3xl text-sm leading-7 text-[var(--muted)]">{copy.templates.subtitle}</p>
-        <p className="max-w-3xl text-sm leading-7 text-[var(--muted)]">{copy.templates.seededNote}</p>
-      </header>
+      <PageHeader
+        eyebrow={copy.templates.title}
+        title={copy.templates.manage}
+        description={
+          <>
+            {copy.templates.subtitle} {copy.templates.seededNote}
+          </>
+        }
+      />
 
       <TemplatesPageClient templates={templates} placeholders={invoiceTemplatePlaceholders} copy={copy} />
     </div>

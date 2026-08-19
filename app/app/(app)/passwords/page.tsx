@@ -4,6 +4,7 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { isVaultConfigured } from "@/lib/secret-crypto";
 
 import { PasswordsPageClient } from "./client";
+import { PageHeader } from "@/components/ui";
 
 export default async function PasswordsPage() {
   const locale = await getLocale();
@@ -12,11 +13,11 @@ export default async function PasswordsPage() {
 
   if (!isVaultConfigured()) {
     return (
-      <div className="space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.passwords.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.passwords.notConfiguredTitle}</h1>
-        <p className="max-w-2xl text-sm leading-7 text-[var(--muted)]">{copy.passwords.notConfiguredBody}</p>
-      </div>
+      <PageHeader
+        eyebrow={copy.passwords.title}
+        title={copy.passwords.notConfiguredTitle}
+        description={copy.passwords.notConfiguredBody}
+      />
     );
   }
 
@@ -60,11 +61,11 @@ export default async function PasswordsPage() {
 
   return (
     <div className="space-y-8">
-      <header className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{copy.passwords.title}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{copy.passwords.heading}</h1>
-        <p className="max-w-3xl text-sm leading-7 text-[var(--muted)]">{copy.passwords.subtitle}</p>
-      </header>
+      <PageHeader
+        eyebrow={copy.passwords.title}
+        title={copy.passwords.heading}
+        description={copy.passwords.subtitle}
+      />
 
       <PasswordsPageClient
         locale={locale}
