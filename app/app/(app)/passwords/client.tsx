@@ -4,7 +4,7 @@ import { useActionState, useEffect, useMemo, useState, useTransition } from "rea
 import { Check, Copy, Eye, EyeOff, KeyRound, Pencil, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, Checkbox, Field, IconButton, Input, Modal, MultiSelect } from "@/components/ui";
+import { Badge, Button, Card, Checkbox, Field, IconButton, Input, Modal, MultiSelect, Panel } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -115,8 +115,7 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
           {copy.noResults}
         </Card>
       ) : (
-        // check-design-ignore: list container with divide-y rows, not a padded Card — rows carry their own padding
-        <ul className="divide-y divide-[var(--line)] overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel-strong)]">
+        <Panel as="ul" className="divide-y divide-[var(--line)] bg-[var(--panel-strong)]">
           {filtered.map((entry) => (
             <EntryRow
               key={entry.id}
@@ -126,7 +125,7 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
               onDelete={() => setDeleting(entry)}
             />
           ))}
-        </ul>
+        </Panel>
       )}
 
       {isCreateOpen ? (

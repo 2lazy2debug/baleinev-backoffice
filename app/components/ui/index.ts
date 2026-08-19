@@ -3,6 +3,7 @@ export * from "./control";
 export * from "./Button";
 export * from "./IconButton";
 export * from "./Card";
+export * from "./Panel";
 export * from "./Field";
 export * from "./Input";
 export * from "./Textarea";

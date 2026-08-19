@@ -7,7 +7,7 @@ import { formatCurrency } from "@/lib/utils";
 import { deleteJournalEntryAction, updateJournalEntryAction } from "@/app/(app)/journal/actions";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { IconButton, Input, Select, TD, TH, THead, TR } from "@/components/ui";
+import { IconButton, Input, Panel, PanelHeader, PanelTitle, Select, TD, TH, THead, TR, Table } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
@@ -265,19 +265,18 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   const uniqueCostCenters = [...new Set(entries.map((e) => e.costCenter?.code).filter(Boolean))];
 
   return (
-    <div className="border border-[var(--line)] bg-[var(--panel)] rounded-2xl overflow-hidden flex flex-col h-full">
-      <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-3 shrink-0">
-        <h2 className="text-lg font-semibold">{copy.entries}</h2>
+    <Panel as="div" className="flex h-full flex-col bg-[var(--panel)]">
+      <PanelHeader className="shrink-0">
+        <PanelTitle>{copy.entries}</PanelTitle>
         <p className="text-xs text-[var(--muted)]">{copy.showing} {sortedEntries.length} {copy.of} {entries.length}</p>
-      </div>
+      </PanelHeader>
       {(saveState.error || deleteState.error) ? (
         <div className="border-b border-[var(--line)] px-4 py-2 shrink-0">
           <FormError message={saveState.error ?? deleteState.error} />
         </div>
       ) : null}
 
-      <div className="flex-1 overflow-auto">
-        <table ref={tableRef} className="w-full table-fixed text-left text-sm">
+      <Table ref={tableRef} frame={false} frameClassName="flex-1" className="table-fixed">
           <colgroup>
             <col className="w-32" />
             <col className="w-40" />
@@ -560,8 +559,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
               );
             })}
           </tbody>
-        </table>
-      </div>
-    </div>
+        </Table>
+    </Panel>
   );
 }

@@ -1,7 +1,7 @@
 import { AccountType, TaskType } from "@prisma/client";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
-import { Card, CardGrid, THead, TFoot, TR, TH, TD } from "@/components/ui";
+import { Card, CardGrid, Panel, PanelHeader, PanelTitle, Table, THead, TFoot, TR, TH, TD, buttonClasses } from "@/components/ui";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
@@ -125,12 +125,11 @@ export default async function DashboardPage() {
         )}
       </CardGrid>
 
-      <section className="overflow-hidden rounded-2xl border border-[var(--line)]">
-        <div className="border-b border-[var(--line)] bg-[var(--panel-strong)] px-5 py-4">
-          <h2 className="text-lg font-semibold">{copy.dashboard.budgetVsActuals}</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-full text-left text-sm">
+      <Panel>
+        <PanelHeader>
+          <PanelTitle>{copy.dashboard.budgetVsActuals}</PanelTitle>
+        </PanelHeader>
+        <Table frame={false} className="min-w-full">
             <THead>
               <TR>
                 <TH className="px-5 py-3">{copy.dashboard.department}</TH>
@@ -186,16 +185,15 @@ export default async function DashboardPage() {
                 </TD>
               </TR>
             </TFoot>
-          </table>
-        </div>
-      </section>
+        </Table>
+      </Panel>
 
       {pendingTasks.length > 0 ? (
-        <section className="overflow-hidden rounded-2xl border border-[var(--line)]">
-          <div className="flex items-center justify-between border-b border-[var(--line)] bg-[var(--panel-strong)] px-5 py-4">
-            <h2 className="text-lg font-semibold">{copy.tasks.title}</h2>
+        <Panel>
+          <PanelHeader>
+            <PanelTitle>{copy.tasks.title}</PanelTitle>
             <a href="/tasks" className="text-xs font-semibold text-[var(--accent)] hover:underline">{copy.tasks.allTasks} →</a>
-          </div>
+          </PanelHeader>
           <ul className="divide-y divide-[var(--line)]">
             {pendingTasks.slice(0, 5).map((task) => {
               const expenseReport = task.expenseReport;
@@ -220,24 +218,15 @@ export default async function DashboardPage() {
                     ) : null}
                   </div>
                   {task.type === TaskType.RECORD_JOURNAL && expenseReport ? (
-                    <a
-                      href={`/journal?fromExpenseReport=${expenseReport.id}`}
-                      className="shrink-0 rounded-md border border-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10"
-                    >
+                    <a href={`/journal?fromExpenseReport=${expenseReport.id}`} className={buttonClasses("primary", "sm")}>
                       {copy.tasks.recordJournal}
                     </a>
                   ) : task.type === TaskType.REVIEW_EXPENSE_REPORT ? (
-                    <a
-                      href="/expense-reports"
-                      className="shrink-0 rounded-md border border-[var(--line)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--panel)]"
-                    >
+                    <a href="/expense-reports" className={buttonClasses("secondary", "sm")}>
                       {copy.tasks.reviewExpenseReport} →
                     </a>
                   ) : (
-                    <a
-                      href="/tasks"
-                      className="shrink-0 rounded-md border border-[var(--line)] px-3 py-1.5 text-xs font-semibold hover:bg-[var(--panel)]"
-                    >
+                    <a href="/tasks" className={buttonClasses("secondary", "sm")}>
                       {copy.tasks.allTasks} →
                     </a>
                   )}
@@ -245,7 +234,7 @@ export default async function DashboardPage() {
               );
             })}
           </ul>
-        </section>
+        </Panel>
       ) : null}
     </div>
   );

@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Input, Select } from "@/components/ui";
+import { Badge, Button, Input, Panel, PanelHeader, Select } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import {
@@ -277,9 +277,9 @@ export default function EventsPageClient({
           <FormError message={pdfError} />
 
           {events.map((event) => (
-            <section key={event.id} className="overflow-hidden rounded-2xl border border-[var(--line)]">
+            <Panel key={event.id}>
               {/* Event header */}
-              <div className="flex items-start justify-between gap-4 border-b border-[var(--line)] bg-[var(--panel-strong)] px-5 py-4">
+              <PanelHeader className="items-start">
                 <div>
                   <div className="flex items-center gap-2">
                     <span
@@ -312,7 +312,7 @@ export default function EventsPageClient({
                     </form>
                   ) : null}
                 </div>
-              </div>
+              </PanelHeader>
 
               {/* Days */}
               <div className="divide-y divide-[var(--line)]">
@@ -448,7 +448,7 @@ export default function EventsPageClient({
                   </div>
                 ))}
               </div>
-            </section>
+            </Panel>
           ))}
         </div>
       )}

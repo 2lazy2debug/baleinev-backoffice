@@ -5,7 +5,7 @@ import { ExpenseReportStatus } from "@prisma/client";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, Input, TD, TH, THead, TR } from "@/components/ui";
+import { Badge, Button, Card, Input, Table, TD, TH, THead, TR, buttonClasses } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { decimalToNumber, formatCurrency } from "@/lib/utils";
 
@@ -119,8 +119,7 @@ export function ExpenseReportsPageClient({
         {expenseReports.length === 0 ? (
           <p className="mt-4 text-sm text-[var(--muted)]">{copy.expenseReports.noHistory}</p>
         ) : (
-          <div className="mt-4 overflow-hidden rounded-xl border border-[var(--line)]">
-            <table className="w-full text-left text-sm">
+          <Table frameClassName="mt-4">
               <THead>
                 <TR>
                   <TH className="px-3 py-2">{copy.expenseReports.date}</TH>
@@ -229,7 +228,7 @@ export function ExpenseReportsPageClient({
                           ) : report.status === ExpenseReportStatus.APPROVED ? (
                             <a
                               href={`/journal?fromExpenseReport=${report.id}`}
-                              className="block w-full rounded-lg border border-[var(--accent)] px-3 py-1.5 text-center text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10"
+                              className={buttonClasses("primary", "sm", "w-full")}
                             >
                               {copy.expenseReports.recordInJournal}
                             </a>
@@ -240,8 +239,7 @@ export function ExpenseReportsPageClient({
                   );
                 })}
               </tbody>
-            </table>
-          </div>
+          </Table>
         )}
       </Card>
     </div>

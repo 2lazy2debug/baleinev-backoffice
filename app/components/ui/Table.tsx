@@ -1,14 +1,36 @@
+import { forwardRef } from "react";
 import { cn } from "./cn";
 
-export function Table({ className, children, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
+type TableProps = React.TableHTMLAttributes<HTMLTableElement> & {
+  /** Bordered, rounded frame around the table. Off when it already sits inside a Panel or Card frame. */
+  frame?: boolean;
+  /** Denser type for nested tables (invoice line items). */
+  dense?: boolean;
+  /** Layout classes for the frame (margins, height) — `className` styles the table itself. */
+  frameClassName?: string;
+};
+
+export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
+  { frame = true, dense = false, frameClassName, className, children, ...props },
+  ref,
+) {
+  const table = (
+    <table ref={ref} className={cn("w-full text-left", dense ? "text-xs" : "text-sm", className)} {...props}>
+      {children}
+    </table>
+  );
+
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--line)]">
-      <table className={cn("w-full text-left text-sm", className)} {...props}>
-        {children}
-      </table>
+    <div
+      className={cn(
+        frame ? "overflow-hidden rounded-xl border border-[var(--line)]" : "overflow-auto",
+        frameClassName,
+      )}
+    >
+      {table}
     </div>
   );
-}
+});
 
 export function THead({ className, children, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
   return (

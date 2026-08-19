@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Check, Copy, Plus, RotateCcw, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
-import { Button, Card, Field, IconButton, Input, Modal, Select, TD, TFoot, TH, THead, TR, Textarea } from "@/components/ui";
+import { Button, Card, Field, IconButton, Input, Modal, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { buildSwissQrPayload } from "@/lib/swiss-qr";
 import { formatCurrency } from "@/lib/utils";
@@ -640,8 +640,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
         {invoiceHistory.length === 0 ? (
           <p className="mt-3 text-sm text-[var(--muted)]">{copy.invoices.noHistory}</p>
         ) : (
-          <div className="mt-3 overflow-hidden rounded-xl border border-[var(--line)]">
-            <table className="w-full text-left text-sm">
+          <Table frameClassName="mt-3">
               <THead>
                 <TR>
                   <TH>{copy.invoices.invoiceNumber}</TH>
@@ -732,8 +731,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                   );
                 })}
               </tbody>
-            </table>
-          </div>
+          </Table>
         )}
       </Card>
 
@@ -878,8 +876,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
               </div>
 
               {lineItems.length > 0 ? (
-                <div className="mt-3 overflow-hidden rounded-xl border border-[var(--line)]">
-                  <table className="w-full text-left text-xs">
+                <Table dense frameClassName="mt-3">
                     <THead>
                       <TR>
                         <TH className="px-3 py-2">{copy.invoices.description}</TH>
@@ -950,8 +947,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                         <TD />
                       </TR>
                     </TFoot>
-                  </table>
-                </div>
+                </Table>
               ) : (
                 <p className="mt-2 text-xs text-[var(--muted)]">{copy.invoices.noLineItems}</p>
               )}
