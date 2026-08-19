@@ -120,7 +120,30 @@ app/
 | `edition-read-only.tsx` | `useEditionReadOnly()` / `WritableEditionOnly` / `EditionClosedBanner` — lets pages hide create/edit/delete affordances while the selected edition is closed |
 | `journal-table.tsx` | Full interactive journal entry table with filter, sort, inline edit |
 | `add-journal-entry-modal.tsx` | Modal for creating/prefilling journal entries; used on journal page and from expense-report approval |
-| `sign-out-button.tsx` | Small sign-out button used inside the app shell |
+| `sign-out-button.tsx` | Sign-out action for the app shell — a labelled `<Button>` when expanded, an icon `<IconButton>` when the sidebar is collapsed |
+| `form-error.tsx` | Renders a server-action error message through the shared `<Alert>` (nothing when there is no message) |
+| `tasks-create-modal.tsx` | Modal with the two "create todo" / "create task" forms used on the tasks page |
+
+### `components/ui/` — the design system
+
+Every screen builds from these; see CLAUDE.md → "Design system rules" for when to use
+which. Nothing here should be re-implemented inline in a page.
+
+| File | Exports |
+|---|---|
+| `control.ts` | `ControlSize` (`md`/`sm`) plus `controlHeight`/`controlSquare` — the one height scale every control resolves to |
+| `Button.tsx` | `<Button variant size>` and `buttonClasses()` for links that read as buttons |
+| `IconButton.tsx` | `<IconButton tone size label>` and `iconButtonClasses()` for non-button elements that act as one |
+| `Input.tsx` | `<Input size tone bare>`, plus `inputClasses()` / `autoHeightFieldClasses` shared by every field |
+| `Textarea.tsx`, `Select.tsx`, `MultiSelect.tsx` | The other field controls, all on the same recipe |
+| `Field.tsx`, `Checkbox.tsx`, `Radio.tsx` | Labelled field wrapper and the two boolean/choice controls |
+| `Card.tsx` | `<Card span dashed>` + `<CardGrid>` — padded surfaces in a 12-column grid |
+| `Panel.tsx` | `<Panel nested>`, `<PanelHeader>`, `<SectionTitle>` and `nestedSurfaceClasses` — frames around flush content |
+| `PageHeader.tsx` | `<PageHeader eyebrow title description actions>` — the heading block of every screen |
+| `Table.tsx` | `<Table frame dense>` + `<THead>` `<TFoot>` `<TR>` `<TH>` `<TD>` |
+| `Modal.tsx` | `<Modal open onClose title size footer>` — the only dialog implementation |
+| `Alert.tsx`, `Badge.tsx`, `Chip.tsx` | Inline messages, status pills, removable tokens |
+| `cn.ts` | Three-line class joiner used by every component |
 
 ---
 

@@ -14,11 +14,12 @@ No branches creation.
 ## Design system rules
 
 Design tokens live in `app/app/globals.css` (`:root` for colors, `@theme` for the
-radius scale) and are the **single source of truth**. Never hardcode a color or an
-arbitrary radius (`#0f171f`, `rounded-[28px]`) in a component — pull from the tokens
-below. Run `npm run check:design` to catch violations. Before building UI, reuse what
-exists: shared components in `app/components/` and the button styles in
-`app/lib/button-classes.ts`.
+radius and micro-type scales) and are the **single source of truth**. Never hardcode a
+color, an arbitrary radius (`#0f171f`, `rounded-[28px]`) or a pixel font size
+(`text-[11px]`) in a component — pull from the tokens below. Run `npm run check:design`
+to catch violations. **Before building UI, reuse what exists**: every shared component
+lives in `app/components/ui/` (see the list below) — a screen should almost never write
+a border/background/height recipe of its own.
 
 **Aesthetic direction: dense and functional.** No large paddings, no heavy rounding,
 few decorative elements. Prefer flat, token-driven surfaces over gradients, glows, and
@@ -37,12 +38,42 @@ large shadows.
 Destructive/error states use Tailwind `rose-*` utilities directly
 (e.g. `border-rose-400/30 bg-rose-950/30 text-rose-200`).
 
+**Components** — import from `@/components/ui`. If a screen needs a surface, a control
+or a heading, one of these already covers it:
+
+| Need | Use |
+|---|---|
+| Page title block | `<PageHeader eyebrow title description actions>` |
+| Padded surface | `<Card span dashed>` inside `<CardGrid>` |
+| Frame around flush content (tables, lists) | `<Panel>` + `<PanelHeader>` + `<SectionTitle>` |
+| Surface nested in a Card/Modal | `<Panel nested>` or `nestedSurfaceClasses` |
+| Action | `<Button variant size>` · `buttonClasses()` for links that read as buttons |
+| Icon-only action | `<IconButton tone size label>` · `iconButtonClasses()` for non-buttons |
+| Fields | `<Field>` + `<Input>` / `<Textarea>` / `<Select>` / `<MultiSelect>` / `<Checkbox>` / `<Radio>` |
+| Table | `<Table frame dense>` + `<THead>` `<TR>` `<TH>` `<TD>` `<TFoot>` |
+| Status pill / removable token | `<Badge tone>` · `<Chip>` + `<ChipRemoveButton>` |
+| Inline message | `<Alert tone>` (`<FormError>` wraps it for server-action errors) |
+| Dialog | `<Modal open onClose title size footer>` |
+
+**Control size** is a two-step scale shared by `Button`, `IconButton`, `Input` and
+`Select` (`app/components/ui/control.ts`) — this is what keeps a field and the button
+next to it the same height:
+- `md` (`h-10`, default) — section forms, modal footers, page-level actions
+- `sm` (`h-8`) — table/list-row actions and toolbars
+
+Everything in one row uses one size. Never hand-size a control (`h-9`, `py-1.5` on a
+button); if a size is missing, change the scale, not the screen.
+
+**Type scale**: `text-3xs` (10px) and `text-2xs` (11px) are tokens for micro labels;
+above that use Tailwind's `text-xs`/`text-sm`. Headings are `text-3xl` (page, via
+`PageHeader`), `text-xl` (modal title) and `text-lg` (section, via `SectionTitle`).
+
 **Radius** is a deliberately tight scale defined as tokens in `@theme`, so every
 `rounded-*` utility already resolves to it. Use the utilities — never an arbitrary
 `rounded-[Npx]`:
-- Buttons and most controls: `rounded-md` (5px)
-- Inputs / selects: `rounded-md`–`rounded-xl` (5–8px)
-- Cards and panels: `rounded-2xl` (10px) — the heaviest rounding in the app
+- Buttons, inputs, selects and other controls: `rounded-md` (5px)
+- Cards, panels and modals: `rounded-2xl` (10px) — the heaviest rounding in the app
+- Tables and nested surfaces: `rounded-xl` (8px)
 - Small chips / list rows: `rounded-lg` (8px) or `rounded-sm` (3px)
 - Pills, badges, status dots, count bubbles, avatars: `rounded-full`
 
