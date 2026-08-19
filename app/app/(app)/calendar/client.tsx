@@ -514,9 +514,9 @@ export default function CalendarPageClient({
                         className={`absolute overflow-hidden rounded-lg border px-2 py-1 ${blockClass}`}
                         style={blockStyle}
                       >
-                        <p className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${tagClass}`}>{tag}</p>
+                        <p className={`text-3xs font-semibold uppercase tracking-[0.12em] ${tagClass}`}>{tag}</p>
                         <p className="text-xs font-semibold leading-4">{item.title}</p>
-                        {item.subtitle ? <p className="text-[11px] text-[var(--muted)] line-clamp-2">{item.subtitle}</p> : null}
+                        {item.subtitle ? <p className="text-2xs text-[var(--muted)] line-clamp-2">{item.subtitle}</p> : null}
                       </div>
                     );
 
@@ -543,9 +543,9 @@ export default function CalendarPageClient({
                           style={blockStyle}
                           aria-label={item.title}
                         >
-                          <p className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${tagClass}`}>{tag}</p>
+                          <p className={`text-3xs font-semibold uppercase tracking-[0.12em] ${tagClass}`}>{tag}</p>
                           <p className="text-xs font-semibold leading-4">{item.title}</p>
-                          {item.subtitle ? <p className="text-[11px] text-[var(--muted)] line-clamp-2">{item.subtitle}</p> : null}
+                          {item.subtitle ? <p className="text-2xs text-[var(--muted)] line-clamp-2">{item.subtitle}</p> : null}
                         </button>
                       );
                     }

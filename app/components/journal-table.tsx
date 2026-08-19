@@ -316,14 +316,14 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                   placeholder={copy.filter}
                   value={filters.date}
                   onChange={(e) => handleFilterChange("date", e.target.value)}
-                  size="compact"
+                  size="sm"
                 />
               </TH>
               <TH>
                 <Select
                   value={filters.department}
                   onChange={(e) => handleFilterChange("department", e.target.value)}
-                  size="compact"
+                  size="sm"
                 >
                   <option value="">{copy.all}</option>
                   {uniqueDepartments.map((dept) => (
@@ -337,7 +337,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                 <Select
                   value={filters.type}
                   onChange={(e) => handleFilterChange("type", e.target.value)}
-                  size="compact"
+                  size="sm"
                 >
                   <option value="">{copy.all}</option>
                   <option value="CHARGES">{dictionaries[locale].common.charges}</option>
@@ -350,7 +350,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                   placeholder={copy.filter}
                   value={filters.amount}
                   onChange={(e) => handleFilterChange("amount", e.target.value)}
-                  size="compact"
+                  size="sm"
                 />
               </TH>
               <TH>
@@ -359,7 +359,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                   placeholder={copy.filter}
                   value={filters.label}
                   onChange={(e) => handleFilterChange("label", e.target.value)}
-                  size="compact"
+                  size="sm"
                 />
               </TH>
               <TH>
@@ -368,14 +368,14 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                   placeholder={copy.filter}
                   value={filters.beneficiary}
                   onChange={(e) => handleFilterChange("beneficiary", e.target.value)}
-                  size="compact"
+                  size="sm"
                 />
               </TH>
               <TH>
                 <Select
                   value={filters.account}
                   onChange={(e) => handleFilterChange("account", e.target.value)}
-                  size="compact"
+                  size="sm"
                 >
                   <option value="">{copy.all}</option>
                   {uniqueAccounts.map((account) => (
@@ -389,7 +389,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                 <Select
                   value={filters.costCenter}
                   onChange={(e) => handleFilterChange("costCenter", e.target.value)}
-                  size="compact"
+                  size="sm"
                 >
                   <option value="">{copy.all}</option>
                   {uniqueCostCenters.map((cc) => (
@@ -414,7 +414,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                         type="date"
                         value={editDraft!.date}
                         onChange={(e) => setEditDraft({ ...editDraft!, date: e.target.value })}
-                        size="compact"
+                        size="sm"
                       />
                     ) : (
                       entry.date.toISOString().slice(0, 10)
@@ -425,7 +425,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                       <Select
                         value={editDraft!.departmentId}
                         onChange={(e) => setEditDraft({ ...editDraft!, departmentId: e.target.value })}
-                        size="compact"
+                        size="sm"
                       >
                         <option value="">-</option>
                         {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -439,7 +439,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                       <Select
                         value={editDraft!.accountType}
                         onChange={(e) => setEditDraft({ ...editDraft!, accountType: e.target.value })}
-                        size="compact"
+                        size="sm"
                       >
                         <option value="CHARGES">{dictionaries[locale].common.charges}</option>
                         <option value="PRODUITS">{dictionaries[locale].common.produits}</option>
@@ -456,7 +456,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                         min="0.01"
                         value={editDraft!.amount}
                         onChange={(e) => setEditDraft({ ...editDraft!, amount: e.target.value })}
-                        size="compact"
+                        size="sm"
                         className="text-right"
                       />
                     ) : (
@@ -469,7 +469,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                         type="text"
                         value={editDraft!.label}
                         onChange={(e) => setEditDraft({ ...editDraft!, label: e.target.value })}
-                        size="compact"
+                        size="sm"
                       />
                     ) : entry.linkedInvoice ? (
                       <a
@@ -491,7 +491,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                       <Select
                         value={editDraft!.moneyAccountId}
                         onChange={(e) => setEditDraft({ ...editDraft!, moneyAccountId: e.target.value })}
-                        size="compact"
+                        size="sm"
                       >
                         {moneyAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                       </Select>
@@ -504,7 +504,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                       <Select
                         value={editDraft!.costCenterId}
                         onChange={(e) => setEditDraft({ ...editDraft!, costCenterId: e.target.value })}
-                        size="compact"
+                        size="sm"
                       >
                         <option value="">-</option>
                         {costCenters.map((cc) => <option key={cc.id} value={cc.id}>{cc.code}</option>)}

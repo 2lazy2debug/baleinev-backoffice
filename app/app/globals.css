@@ -30,6 +30,13 @@
    `--radius-2xl` (10px), controls to `--radius-md`/`--radius-lg`, chips to
    `--radius-sm`. `rounded-full` stays circular for pills/badges/avatars. */
 @theme {
+  /* Micro type scale — the two sizes below `text-xs` used by badges, chips and
+     footnote labels. Named tokens so screens never hardcode `text-[11px]`. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-3xs: 0.625rem;
+  --text-3xs--line-height: 0.875rem;
+
   --radius-sm: 3px;
   --radius-md: 5px;
   --radius-lg: 8px;
@@ -60,14 +67,6 @@ input,
 textarea,
 select {
   color: var(--ink);
-}
-
-/* Safari/macOS can render select controls with cramped vertical spacing. */
-select[class*="rounded-2xl"]:not([multiple]) {
-  min-height: 3rem;
-  padding-top: 0.625rem;
-  padding-bottom: 0.625rem;
-  line-height: 1.35;
 }
 
 button {

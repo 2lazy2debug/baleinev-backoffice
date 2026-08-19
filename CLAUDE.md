@@ -2,6 +2,8 @@
 Update /docs when you change a core flow. Never let docs diverge from the
 actual implementation. you don´t have to parse this folder upon receiving a prompt unless you redeem it necessary/
 
+## Local database 
+You can use it to perform tests. there is no production data into it.
 
 # Git
 Keep .gitignore up to date.

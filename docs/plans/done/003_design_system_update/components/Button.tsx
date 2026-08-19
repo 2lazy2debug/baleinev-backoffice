@@ -1,22 +1,21 @@
 import { forwardRef } from "react";
 import { cn } from "./cn";
-import { controlHeight, type ControlSize } from "./control";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive";
+type ButtonSize = "md" | "sm";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
-  size?: ControlSize;
+  size?: ButtonSize;
 };
 
 const base =
-  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0";
+  "inline-flex items-center justify-center gap-2 rounded-md font-semibold transition disabled:cursor-not-allowed disabled:opacity-50";
 
-// One height per size, straight from the shared control scale — a button and a
-// field of the same size are always the same height.
-const sizes: Record<ControlSize, string> = {
-  md: cn(controlHeight.md, "px-4 text-xs"),
-  sm: cn(controlHeight.sm, "px-3 text-2xs"),
+// One height per size, shared by every button in the app — no more px-4 py-2 vs px-5 py-3 drift.
+const sizes: Record<ButtonSize, string> = {
+  md: "h-10 px-4 text-sm",
+  sm: "h-8 px-3 text-xs",
 };
 
 const variants: Record<ButtonVariant, string> = {

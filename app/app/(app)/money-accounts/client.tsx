@@ -114,8 +114,8 @@ function MoneyAccountCard({
           <form action={updateFormAction} className="mt-4 space-y-2">
             <input type="hidden" name="moneyAccountId" value={account.id} />
             <div className="grid gap-2 sm:grid-cols-[1fr_150px_150px]">
-              <Input type="text" name="name" defaultValue={account.name} required size="compact" />
-              <Select name="type" value={type} onChange={(e) => setType(e.target.value as MoneyAccountType)} size="compact">
+              <Input type="text" name="name" defaultValue={account.name} required size="sm" />
+              <Select name="type" value={type} onChange={(e) => setType(e.target.value as MoneyAccountType)} size="sm">
                 <option value="BANK">{copy.moneyAccounts.bank}</option>
                 <option value="CASH">{copy.moneyAccounts.cash}</option>
                 <option value="OTHER">{copy.moneyAccounts.other}</option>
@@ -125,7 +125,7 @@ function MoneyAccountCard({
                 step="0.01"
                 name="openingBalance"
                 defaultValue={account.openingBalance.toFixed(2)}
-                size="compact"
+                size="sm"
               />
             </div>
             {type === MoneyAccountType.BANK ? (
@@ -136,7 +136,7 @@ function MoneyAccountCard({
                   defaultValue={account.iban ?? ""}
                   placeholder="CH00 0000 0000 0000 0000 0"
                   className="uppercase"
-                  size="compact"
+                  size="sm"
                 />
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Input
@@ -144,14 +144,14 @@ function MoneyAccountCard({
                     name="beneficiaryName"
                     defaultValue={account.beneficiaryName ?? ""}
                     placeholder={copy.moneyAccounts.beneficiaryName}
-                    size="compact"
+                    size="sm"
                   />
                   <Input
                     type="text"
                     name="beneficiaryAddress"
                     defaultValue={account.beneficiaryAddress ?? ""}
                     placeholder={copy.moneyAccounts.beneficiaryAddress}
-                    size="compact"
+                    size="sm"
                   />
                 </div>
                 <div className="grid gap-2 sm:grid-cols-[110px_1fr_90px]">
@@ -160,14 +160,14 @@ function MoneyAccountCard({
                     name="beneficiaryPostalCode"
                     defaultValue={account.beneficiaryPostalCode ?? ""}
                     placeholder={copy.moneyAccounts.beneficiaryPostalCode}
-                    size="compact"
+                    size="sm"
                   />
                   <Input
                     type="text"
                     name="beneficiaryCity"
                     defaultValue={account.beneficiaryCity ?? ""}
                     placeholder={copy.moneyAccounts.beneficiaryCity}
-                    size="compact"
+                    size="sm"
                   />
                   <Input
                     type="text"
@@ -176,7 +176,7 @@ function MoneyAccountCard({
                     defaultValue={account.beneficiaryCountry}
                     placeholder="CH"
                     className="uppercase"
-                    size="compact"
+                    size="sm"
                   />
                 </div>
               </>

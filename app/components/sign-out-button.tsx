@@ -1,32 +1,31 @@
 "use client";
 
+import { LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 
+import { Button, IconButton } from "@/components/ui";
+
 type SignOutButtonProps = {
+  /** Icon-only, for the collapsed sidebar — same footprint as the icons next to it. */
   compact?: boolean;
   label?: string;
 };
 
 export function SignOutButton({ compact = false, label = "Sign out" }: SignOutButtonProps) {
+  const handleSignOut = () => signOut({ callbackUrl: "/login" });
+
+  if (compact) {
+    return (
+      <IconButton tone="primary" size="md" label={label} onClick={handleSignOut}>
+        <LogOut />
+      </IconButton>
+    );
+  }
+
   return (
-    <button
-      type="button"
-      onClick={() => signOut({ callbackUrl: "/login" })}
-      className={`inline-flex items-center justify-center rounded-md border border-transparent bg-[var(--accent)] text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)] ${
-        compact ? "h-9 w-9" : "h-9 w-full px-4 whitespace-nowrap"
-      }`}
-      title={compact ? label : undefined}
-      aria-label={label}
-    >
-      {compact ? (
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-          <path d="M16 17l5-5-5-5" />
-          <path d="M21 12H9" />
-        </svg>
-      ) : (
-        label
-      )}
-    </button>
+    <Button variant="primary" className="w-full" onClick={handleSignOut}>
+      <LogOut />
+      {label}
+    </Button>
   );
 }

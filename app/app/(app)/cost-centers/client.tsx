@@ -88,7 +88,7 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
                         </summary>
                         <form action={updateFormAction} className="mt-3 flex items-center gap-2">
                           <input type="hidden" name="costCenterId" value={costCenter.id} />
-                          <Input type="text" name="name" defaultValue={costCenter.name} required size="compact" />
+                          <Input type="text" name="name" defaultValue={costCenter.name} required size="sm" />
                           <Button type="submit" variant="secondary" size="sm" disabled={isSavingCostCenter}>
                             {copy.shell.save}
                           </Button>

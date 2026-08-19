@@ -4,7 +4,7 @@ import { useActionState, useEffect, useMemo, useState, useTransition } from "rea
 import { Check, Copy, Eye, EyeOff, KeyRound, Pencil, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, Checkbox, Field, IconButton, Input, inputClasses, Modal } from "@/components/ui";
+import { Badge, Button, Card, Checkbox, Field, IconButton, Input, Modal, MultiSelect } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -275,7 +275,7 @@ function EntryRow({
               totp ? (
                 <span className="inline-flex items-center gap-1.5 rounded-md bg-[var(--panel)] px-2 py-1">
                   <code className="font-mono text-xs tracking-[0.2em]">{totp.code}</code>
-                  <span className="w-6 text-right text-[10px] tabular-nums text-[var(--muted)]">{totp.secondsRemaining}s</span>
+                  <span className="w-6 text-right text-3xs tabular-nums text-[var(--muted)]">{totp.secondsRemaining}s</span>
                   <CopyButton getValue={async () => totp.code} label={copy.copyCode} />
                 </span>
               ) : (
@@ -409,22 +409,20 @@ function EntryDialog({
         </Field>
 
         <Field label={copy.fieldDepartments}>
-          <select
+          <MultiSelect
             name="departmentRoleIds"
-            multiple
             required
             defaultValue={(entry?.departmentRoles ?? [])
               .filter((role) => assignableDepartments.some((d) => d.id === role.id))
               .map((role) => role.id)}
-            size={Math.min(Math.max(assignableDepartments.length, 3), 8)}
-            className={inputClasses()}
+            rows={assignableDepartments.length}
           >
             {assignableDepartments.map((department) => (
               <option key={department.id} value={department.id}>
                 {department.name}
               </option>
             ))}
-          </select>
+          </MultiSelect>
           <span className="block text-xs text-[var(--muted)]">
             {isAdmin ? copy.departmentsHelpAdmin : copy.departmentsHelp}
           </span>

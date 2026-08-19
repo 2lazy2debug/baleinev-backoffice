@@ -229,10 +229,10 @@ export default function EventsPageClient({
           <FormError message={createEventTypeState.error} />
           <form action={createEventTypeFormAction} className="flex flex-wrap items-end gap-2">
             <div className="w-48">
-              <Input type="text" name="name" required placeholder={copy.eventTypeName} size="compact" />
+              <Input type="text" name="name" required placeholder={copy.eventTypeName} size="sm" />
             </div>
             <div className="w-56">
-              <Input type="text" name="description" placeholder={copy.eventTypeDescription} size="compact" />
+              <Input type="text" name="description" placeholder={copy.eventTypeDescription} size="sm" />
             </div>
             <Button type="submit" variant="primary" size="sm" disabled={isCreatingEventType}>
               {copy.createEventType}
@@ -388,7 +388,7 @@ export default function EventsPageClient({
                                       <form action={adminAssignFormAction} className="flex items-center gap-1">
                                         <input type="hidden" name="shiftId" value={shift.id} />
                                         <div className="w-40">
-                                          <Select name="userId" defaultValue="" size="compact">
+                                          <Select name="userId" defaultValue="" size="sm">
                                             <option value="" disabled>{copy.assignStaff}</option>
                                             {allUsers
                                               .filter((u) => !shift.assignments.some((a) => a.userId === u.id))

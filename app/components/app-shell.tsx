@@ -24,7 +24,7 @@ import { useState, useRef } from "react";
 
 import { EditionClosedBanner, EditionReadOnlyProvider } from "@/components/edition-read-only";
 import { SignOutButton } from "@/components/sign-out-button";
-import { Button, IconButton, Input, Modal, Select } from "@/components/ui";
+import { Button, IconButton, Input, Modal, Radio, Select } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 
 type EditionOption = {
@@ -206,17 +206,17 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
           className={`sticky top-0 flex h-screen shrink-0 flex-col border-r border-[var(--line)] bg-[color:rgba(16,30,43,0.9)] backdrop-blur ${isCollapsed ? "collapsed" : ""}`}
           style={{ width: isCollapsed ? `${COLLAPSED_WIDTH}px` : "clamp(220px, 14.285vw, 320px)" }}
         >
-          <div className="shrink-0 border-b border-[var(--line)] px-5 py-5">
+          <div className={`shrink-0 border-b border-[var(--line)] ${isCollapsed ? "px-3 py-4" : "px-5 py-5"}`}>
             <Image src="/logo_blv.png" alt="Baleinev" width={320} height={128} className="w-full object-contain" priority />
             {!isCollapsed ? (
               <div className="mt-3 space-y-1">
-                <label htmlFor="edition-picker" className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                <label htmlFor="edition-picker" className="block text-3xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
                   {copy.edition}
                 </label>
                 {editions.length > 0 ? (
                   <Select
                     id="edition-picker"
-                    size="compact"
+                    size="sm"
                     value={selectedEditionId ?? ""}
                     disabled={switchingEdition}
                     onChange={(event) => selectEdition(event.target.value)}
@@ -259,7 +259,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
                       {!isCollapsed ? <span>{item.label}</span> : null}
                     </span>
                   {item.href === "/tasks" && pendingTaskCount > 0 ? (
-                    <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[10px] font-bold text-white">
+                    <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-3xs font-bold text-white">
                       {pendingTaskCount}
                     </span>
                   ) : null}
@@ -269,31 +269,45 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
           </nav>
 
           <div className="shrink-0 border-t border-[var(--line)] p-3">
-            <p className="truncate text-sm font-medium">{!isCollapsed ? userName : userName?.split(" ")[0]}</p>
-            <div className="mt-2 flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => { setSaveError(false); setIsSettingsOpen(true); }}
-                className="flex-1 whitespace-nowrap"
-              >
-                <Settings className="h-4 w-4" />
-                {!isCollapsed ? <span>{copy.settings}</span> : null}
-              </Button>
-
-              <IconButton
-                type="button"
-                tone="neutral"
-                label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                onClick={toggleCollapse}
-              >
-                {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
-              </IconButton>
-            </div>
-            <div className="mt-2">
-              <SignOutButton label={copy.signOut} />
-            </div>
-            <p className="mt-3 truncate text-center text-[10px] text-[var(--muted)]">
+            {isCollapsed ? (
+              /* Collapsed: settings, the expand arrow and sign out stack as three
+                 identically sized icon buttons — no labels, no user name. */
+              <div className="flex flex-col items-center gap-2">
+                <IconButton
+                  size="md"
+                  tone="neutral"
+                  label={copy.settings}
+                  onClick={() => { setSaveError(false); setIsSettingsOpen(true); }}
+                >
+                  <Settings />
+                </IconButton>
+                <IconButton size="md" tone="neutral" label="Expand sidebar" onClick={toggleCollapse}>
+                  <ChevronRight />
+                </IconButton>
+                <SignOutButton compact label={copy.signOut} />
+              </div>
+            ) : (
+              <>
+                <p className="truncate text-sm font-medium">{userName}</p>
+                <div className="mt-2 flex gap-2">
+                  <Button
+                    variant="secondary"
+                    onClick={() => { setSaveError(false); setIsSettingsOpen(true); }}
+                    className="flex-1"
+                  >
+                    <Settings />
+                    <span>{copy.settings}</span>
+                  </Button>
+                  <IconButton size="md" tone="neutral" label="Collapse sidebar" onClick={toggleCollapse}>
+                    <ChevronLeft />
+                  </IconButton>
+                </div>
+                <div className="mt-2">
+                  <SignOutButton label={copy.signOut} />
+                </div>
+              </>
+            )}
+            <p className="mt-3 truncate text-center text-3xs text-[var(--muted)]">
               {isCollapsed ? null : "Baleinev Comptes "}v{process.env.NEXT_PUBLIC_APP_VERSION}
             </p>
           </div>
@@ -327,26 +341,22 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
       >
         <div className="space-y-3">
           <p className="text-sm font-medium">{copy.language}</p>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="language"
-              value="en"
-              checked={selectedLocale === "en"}
-              onChange={() => setSelectedLocale("en")}
-            />
-            {copy.english}
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="language"
-              value="fr"
-              checked={selectedLocale === "fr"}
-              onChange={() => setSelectedLocale("fr")}
-            />
-            {copy.french}
-          </label>
+          <Radio
+            id="language-en"
+            name="language"
+            value="en"
+            label={copy.english}
+            checked={selectedLocale === "en"}
+            onChange={() => setSelectedLocale("en")}
+          />
+          <Radio
+            id="language-fr"
+            name="language"
+            value="fr"
+            label={copy.french}
+            checked={selectedLocale === "fr"}
+            onChange={() => setSelectedLocale("fr")}
+          />
 
           <div className="pt-3">
             <p className="text-sm font-medium">{copy.refundDetails}</p>

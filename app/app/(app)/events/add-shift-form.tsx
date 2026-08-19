@@ -66,7 +66,7 @@ export default function AddShiftForm({ eventDayId, existingShifts, copy }: Props
           required
           value={startTime}
           onChange={(event) => setStartTime(event.target.value)}
-          size="compact"
+          size="sm"
         />
       </div>
       <div className="w-28">
@@ -76,14 +76,14 @@ export default function AddShiftForm({ eventDayId, existingShifts, copy }: Props
           required
           value={endTime}
           onChange={(event) => setEndTime(event.target.value)}
-          size="compact"
+          size="sm"
         />
       </div>
       <div className="w-40">
-        <Input type="text" name="role" required placeholder={copy.role} size="compact" />
+        <Input type="text" name="role" required placeholder={copy.role} size="sm" />
       </div>
       <div className="w-16">
-        <Input type="number" name="capacity" min="1" defaultValue="1" size="compact" />
+        <Input type="number" name="capacity" min="1" defaultValue="1" size="sm" />
       </div>
       <Button type="submit" variant="primary" size="sm" disabled={isPending}>
         {copy.addShift}

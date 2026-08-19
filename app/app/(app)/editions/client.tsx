@@ -74,7 +74,7 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
                       step="0.01"
                       min="0.01"
                       defaultValue={Number(edition.drivingRatePerKm).toFixed(2)}
-                      size="compact"
+                      size="sm"
                     />
                   </div>
                   <Button type="submit" variant="secondary" size="sm" disabled={isUpdatingRate}>

@@ -219,7 +219,7 @@ export function ExpenseReportsPageClient({
                                   type="text"
                                   name="rejectionReason"
                                   placeholder={copy.expenseReports.rejectionReasonOptional}
-                                  size="compact"
+                                  size="sm"
                                 />
                                 <Button type="submit" variant="destructive" size="sm" disabled={isRejecting} className="w-full">
                                   {copy.expenseReports.reject}

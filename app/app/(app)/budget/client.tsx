@@ -228,17 +228,17 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                                 <TR key={line.id} className={isEditingLine ? "bg-[var(--panel)]" : ""}>
                                   <TD>
                                     {isEditingLine
-                                      ? <Input type="text" size="compact" value={editBudgetDraft!.label} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, label: e.target.value })} />
+                                      ? <Input type="text" size="sm" value={editBudgetDraft!.label} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, label: e.target.value })} />
                                       : <span className="font-medium">{line.label}</span>}
                                   </TD>
                                   <TD>
                                     {isEditingLine
-                                      ? <Input type="text" size="compact" value={editBudgetDraft!.notes} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, notes: e.target.value })} />
+                                      ? <Input type="text" size="sm" value={editBudgetDraft!.notes} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, notes: e.target.value })} />
                                       : <span className="text-xs text-[var(--muted)]">{line.notes ?? "-"}</span>}
                                   </TD>
                                   <TD className="text-right">
                                     {isEditingLine
-                                      ? <Input type="number" step="0.01" min="0.01" size="compact" className="text-right" value={editBudgetDraft!.amount} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, amount: e.target.value })} />
+                                      ? <Input type="number" step="0.01" min="0.01" size="sm" className="text-right" value={editBudgetDraft!.amount} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, amount: e.target.value })} />
                                       : <span className="font-semibold">{formatCurrency(line.amount)}</span>}
                                   </TD>
                                   <TD>
@@ -310,17 +310,17 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                                 <TR key={line.id} className={isEditingLine ? "bg-[var(--panel)]" : ""}>
                                   <TD>
                                     {isEditingLine
-                                      ? <Input type="text" size="compact" value={editBudgetDraft!.label} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, label: e.target.value })} />
+                                      ? <Input type="text" size="sm" value={editBudgetDraft!.label} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, label: e.target.value })} />
                                       : <span className="font-medium">{line.label}</span>}
                                   </TD>
                                   <TD>
                                     {isEditingLine
-                                      ? <Input type="text" size="compact" value={editBudgetDraft!.notes} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, notes: e.target.value })} />
+                                      ? <Input type="text" size="sm" value={editBudgetDraft!.notes} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, notes: e.target.value })} />
                                       : <span className="text-xs text-[var(--muted)]">{line.notes ?? "-"}</span>}
                                   </TD>
                                   <TD className="text-right">
                                     {isEditingLine
-                                      ? <Input type="number" step="0.01" min="0.01" size="compact" className="text-right" value={editBudgetDraft!.amount} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, amount: e.target.value })} />
+                                      ? <Input type="number" step="0.01" min="0.01" size="sm" className="text-right" value={editBudgetDraft!.amount} onChange={(e) => setEditBudgetDraft({ ...editBudgetDraft!, amount: e.target.value })} />
                                       : <span className="font-semibold">{formatCurrency(line.amount)}</span>}
                                   </TD>
                                   <TD>
@@ -468,11 +468,11 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{copy.budget.journalEntries}</p>
                   <Card as="div" className="grid gap-3 sm:grid-cols-2">
                     <div>
-                      <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">{copy.common.charges}</p>
+                      <p className="text-2xs uppercase tracking-[0.14em] text-[var(--muted)]">{copy.common.charges}</p>
                       <p className="text-sm font-semibold text-rose-300">{formatCurrency(chargesActualTotal)}</p>
                     </div>
                     <div>
-                      <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--muted)]">{copy.common.produits}</p>
+                      <p className="text-2xs uppercase tracking-[0.14em] text-[var(--muted)]">{copy.common.produits}</p>
                       <p className="text-sm font-semibold text-emerald-300">{formatCurrency(produitsActualTotal)}</p>
                     </div>
                   </Card>

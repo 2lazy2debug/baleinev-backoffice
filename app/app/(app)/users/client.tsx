@@ -5,7 +5,7 @@ import { Trash2 } from "lucide-react";
 import { UserRole } from "@prisma/client";
 
 import { FormError } from "@/components/form-error";
-import { Button, Card, Field, IconButton, Input, Select, inputClasses } from "@/components/ui";
+import { Button, Card, Field, IconButton, Input, MultiSelect, Select } from "@/components/ui";
 import type { getDictionary } from "@/lib/i18n";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -55,34 +55,32 @@ export function UsersPageClient({
                   <form action={updateFormAction} className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_170px_200px]">
                     <input type="hidden" name="userId" value={user.id} />
                     <Field label={copy.users.name}>
-                      <Input type="text" name="name" defaultValue={user.name} required size="compact" />
+                      <Input type="text" name="name" defaultValue={user.name} required size="sm" />
                     </Field>
                     <Field label={copy.users.email}>
-                      <Input type="email" name="email" defaultValue={user.email} required size="compact" />
+                      <Input type="email" name="email" defaultValue={user.email} required size="sm" />
                     </Field>
                     <Field label={copy.users.role}>
-                      <Select name="role" defaultValue={user.role} size="compact">
+                      <Select name="role" defaultValue={user.role} size="sm">
                         <option value={UserRole.ADMIN}>{copy.users.admin}</option>
                         <option value={UserRole.DEPARTMENT}>{copy.users.department}</option>
                       </Select>
                     </Field>
                     <Field label={copy.users.departments}>
-                      <select
+                      <MultiSelect
                         name="departmentRoleIds"
                         defaultValue={user.departmentRoles.map((departmentRole) => departmentRole.id)}
-                        multiple
-                        size={Math.min(Math.max(departmentRoles.length, 3), 8)}
-                        className={inputClasses("compact")}
+                        rows={departmentRoles.length}
                       >
                         {departmentRoles.map((departmentRole) => (
                           <option key={departmentRole.id} value={departmentRole.id}>
                             {departmentRole.name}
                           </option>
                         ))}
-                      </select>
+                      </MultiSelect>
                     </Field>
                     <Field label={copy.users.newPasswordOptional} className="md:col-span-2 xl:col-span-3">
-                      <Input type="password" name="newPassword" size="compact" />
+                      <Input type="password" name="newPassword" size="sm" />
                     </Field>
                     <div className="flex items-end justify-end gap-2 md:col-span-2 xl:col-span-1">
                       <Button type="submit" variant="secondary" size="sm" disabled={isUpdating}>
@@ -138,19 +136,13 @@ export function UsersPageClient({
             </Field>
 
             <Field label={copy.users.departments}>
-              <select
-                name="departmentRoleIds"
-                defaultValue={[]}
-                multiple
-                size={Math.min(Math.max(departmentRoles.length, 3), 8)}
-                className={inputClasses()}
-              >
+              <MultiSelect name="departmentRoleIds" defaultValue={[]} rows={departmentRoles.length}>
                 {departmentRoles.map((departmentRole) => (
                   <option key={departmentRole.id} value={departmentRole.id}>
                     {departmentRole.name}
                   </option>
                 ))}
-              </select>
+              </MultiSelect>
             </Field>
 
             <Button type="submit" variant="primary" disabled={isCreating}>
