@@ -248,20 +248,27 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center justify-between rounded-md px-3 py-2 text-sm ${
+                  className={`relative flex items-center rounded-md px-3 py-2 text-sm ${
+                    isCollapsed ? "justify-center" : "justify-between"
+                  } ${
                     isActive
                       ? "bg-[var(--panel-strong)] font-semibold text-[var(--ink)]"
                       : "text-[var(--muted)] hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
                   }`}
                 >
-                    <span className="inline-flex items-center gap-2">
-                      <Icon className="h-4 w-4" />
-                      {!isCollapsed ? <span>{item.label}</span> : null}
-                    </span>
+                  <span className="inline-flex items-center gap-2">
+                    <Icon className="h-4 w-4" />
+                    {!isCollapsed ? <span>{item.label}</span> : null}
+                  </span>
                   {item.href === "/tasks" && pendingTaskCount > 0 ? (
-                    <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-3xs font-bold text-white">
-                      {pendingTaskCount}
-                    </span>
+                    isCollapsed ? (
+                      // No room for the count at 64px — a dot still says "something is waiting".
+                      <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[var(--accent)]" />
+                    ) : (
+                      <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-3xs font-bold text-white">
+                        {pendingTaskCount}
+                      </span>
+                    )
                   ) : null}
                 </Link>
               );
