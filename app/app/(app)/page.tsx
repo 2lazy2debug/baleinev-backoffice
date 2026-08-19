@@ -126,14 +126,14 @@ export default async function DashboardPage() {
         <Table frame={false} className="min-w-full">
             <THead>
               <TR>
-                <TH className="px-5 py-3">{copy.dashboard.department}</TH>
-                <TH className="px-5 py-3">{copy.dashboard.budgetCharges}</TH>
-                <TH className="px-5 py-3">{copy.dashboard.budgetProduits}</TH>
-                <TH className="px-5 py-3">{copy.dashboard.budgetResult}</TH>
-                <TH className="border-l border-[var(--line)] px-5 py-3">{copy.dashboard.actualCharges}</TH>
-                <TH className="px-5 py-3">{copy.dashboard.actualProduits}</TH>
-                <TH className="px-5 py-3">{copy.dashboard.actualResult}</TH>
-                <TH className="border-l border-[var(--line)] px-5 py-3">{copy.common.delta}</TH>
+                <TH>{copy.dashboard.department}</TH>
+                <TH>{copy.dashboard.budgetCharges}</TH>
+                <TH>{copy.dashboard.budgetProduits}</TH>
+                <TH>{copy.dashboard.budgetResult}</TH>
+                <TH className="border-l border-[var(--line)]">{copy.dashboard.actualCharges}</TH>
+                <TH>{copy.dashboard.actualProduits}</TH>
+                <TH>{copy.dashboard.actualResult}</TH>
+                <TH className="border-l border-[var(--line)]">{copy.common.delta}</TH>
               </TR>
             </THead>
             <tbody>
@@ -141,14 +141,14 @@ export default async function DashboardPage() {
                 const delta = row.actualResult - row.budgetResult;
                 return (
                   <TR key={row.name}>
-                    <TD className="px-5 py-4 font-medium">{row.name}</TD>
-                    <TD className="px-5 py-4">{formatCurrency(row.budgetCharges)}</TD>
-                    <TD className="px-5 py-4">{formatCurrency(row.budgetProduits)}</TD>
-                    <TD className="px-5 py-4">{formatCurrency(row.budgetResult)}</TD>
-                    <TD className="border-l border-[var(--line)] px-5 py-4">{formatCurrency(row.actualCharges)}</TD>
-                    <TD className="px-5 py-4">{formatCurrency(row.actualProduits)}</TD>
-                    <TD className="px-5 py-4">{formatCurrency(row.actualResult)}</TD>
-                    <TD className="border-l border-[var(--line)] px-5 py-4">
+                    <TD className="font-medium">{row.name}</TD>
+                    <TD>{formatCurrency(row.budgetCharges)}</TD>
+                    <TD>{formatCurrency(row.budgetProduits)}</TD>
+                    <TD>{formatCurrency(row.budgetResult)}</TD>
+                    <TD className="border-l border-[var(--line)]">{formatCurrency(row.actualCharges)}</TD>
+                    <TD>{formatCurrency(row.actualProduits)}</TD>
+                    <TD>{formatCurrency(row.actualResult)}</TD>
+                    <TD className="border-l border-[var(--line)]">
                       <div className="flex items-center gap-1.5">
                         <span className={`font-semibold ${delta >= 0 ? "text-emerald-400" : "text-rose-400"}`}>{formatCurrency(delta)}</span>
                         {delta >= 0
@@ -162,14 +162,14 @@ export default async function DashboardPage() {
             </tbody>
             <TFoot>
               <TR>
-                <TD className="px-5 py-4">{copy.common.total}</TD>
-                <TD className="px-5 py-4">{formatCurrency(totals.budgetCharges)}</TD>
-                <TD className="px-5 py-4">{formatCurrency(totals.budgetProduits)}</TD>
-                <TD className="px-5 py-4">{formatCurrency(totals.budgetResult)}</TD>
-                <TD className="border-l border-[var(--line)] px-5 py-4">{formatCurrency(totals.actualCharges)}</TD>
-                <TD className="px-5 py-4">{formatCurrency(totals.actualProduits)}</TD>
-                <TD className="px-5 py-4">{formatCurrency(totals.actualResult)}</TD>
-                <TD className="border-l border-[var(--line)] px-5 py-4">
+                <TD>{copy.common.total}</TD>
+                <TD>{formatCurrency(totals.budgetCharges)}</TD>
+                <TD>{formatCurrency(totals.budgetProduits)}</TD>
+                <TD>{formatCurrency(totals.budgetResult)}</TD>
+                <TD className="border-l border-[var(--line)]">{formatCurrency(totals.actualCharges)}</TD>
+                <TD>{formatCurrency(totals.actualProduits)}</TD>
+                <TD>{formatCurrency(totals.actualResult)}</TD>
+                <TD className="border-l border-[var(--line)]">
                   <div className="flex items-center gap-1.5">
                     <span className={totalDelta >= 0 ? "text-emerald-400" : "text-rose-400"}>{formatCurrency(totalDelta)}</span>
                     {totalDelta >= 0

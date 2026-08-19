@@ -119,18 +119,18 @@ export function ExpenseReportsPageClient({
         {expenseReports.length === 0 ? (
           <p className="mt-4 text-sm text-[var(--muted)]">{copy.expenseReports.noHistory}</p>
         ) : (
-          <Table frameClassName="mt-4">
+          <Table dense frameClassName="mt-4">
               <THead>
                 <TR>
-                  <TH className="px-3 py-2">{copy.expenseReports.date}</TH>
-                  <TH className="px-3 py-2">{copy.expenseReports.reportType}</TH>
-                  <TH className="px-3 py-2">{copy.expenseReports.description}</TH>
-                  <TH className="px-3 py-2">{copy.expenseReports.department}</TH>
-                  <TH className="px-3 py-2">{copy.expenseReports.amount}</TH>
-                  <TH className="px-3 py-2">{copy.expenseReports.paymentMethod}</TH>
-                  <TH className="px-3 py-2">{copy.expenseReports.status}</TH>
-                  <TH className="px-3 py-2">{copy.expenseReports.proof}</TH>
-                  {access.role === "ADMIN" ? <TH className="px-3 py-2">{copy.journal.actions}</TH> : null}
+                  <TH>{copy.expenseReports.date}</TH>
+                  <TH>{copy.expenseReports.reportType}</TH>
+                  <TH>{copy.expenseReports.description}</TH>
+                  <TH>{copy.expenseReports.department}</TH>
+                  <TH>{copy.expenseReports.amount}</TH>
+                  <TH>{copy.expenseReports.paymentMethod}</TH>
+                  <TH>{copy.expenseReports.status}</TH>
+                  <TH>{copy.expenseReports.proof}</TH>
+                  {access.role === "ADMIN" ? <TH>{copy.journal.actions}</TH> : null}
                 </TR>
               </THead>
               <tbody>
@@ -152,11 +152,11 @@ export function ExpenseReportsPageClient({
 
                   return (
                     <TR key={report.id} className="align-top">
-                      <TD className="px-3 py-2 text-xs">{formatDate(report.date)}</TD>
-                      <TD className="px-3 py-2 text-xs">
+                      <TD>{formatDate(report.date)}</TD>
+                      <TD>
                         {report.reportType === "DRIVING" ? copy.expenseReports.drivingExpense : copy.expenseReports.standardExpense}
                       </TD>
-                      <TD className="px-3 py-2">
+                      <TD>
                         <p className="font-medium">{report.description}</p>
                         {report.reportType === "DRIVING" ? (
                           <p className="text-xs text-[var(--muted)]">
@@ -172,12 +172,12 @@ export function ExpenseReportsPageClient({
                           ) : null}
                         </p>
                       </TD>
-                      <TD className="px-3 py-2">{report.department.name}</TD>
-                      <TD className="px-3 py-2">{formatCurrency(decimalToNumber(report.amount))}</TD>
-                      <TD className="px-3 py-2 text-xs">
+                      <TD>{report.department.name}</TD>
+                      <TD>{formatCurrency(decimalToNumber(report.amount))}</TD>
+                      <TD>
                         {report.paymentMethod === "MY_MONEY" ? copy.expenseReports.myMoney : copy.expenseReports.festivalAccount}
                       </TD>
-                      <TD className="px-3 py-2 text-xs">
+                      <TD>
                         <p>{statusLabel}</p>
                         {report.status !== ExpenseReportStatus.PENDING && report.reviewedBy ? (
                           <p className="text-[var(--muted)]">{copy.expenseReports.reviewedBy}: {report.reviewedBy.name}</p>
@@ -186,7 +186,7 @@ export function ExpenseReportsPageClient({
                           <p className="mt-1 text-rose-300">{report.rejectionReason}</p>
                         ) : null}
                       </TD>
-                      <TD className="px-3 py-2">
+                      <TD>
                         {report.proofFilename ? (
                           <a
                             href={`/api/expense-reports/${report.id}/proof`}
@@ -201,7 +201,7 @@ export function ExpenseReportsPageClient({
                         )}
                       </TD>
                       {access.role === "ADMIN" ? (
-                        <TD className="px-3 py-2">
+                        <TD>
                           {isReadOnly ? (
                             <span className="text-xs text-[var(--muted)]">-</span>
                           ) : report.status === ExpenseReportStatus.PENDING ? (

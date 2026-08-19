@@ -883,16 +883,16 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                 <Table dense frameClassName="mt-3">
                     <THead>
                       <TR>
-                        <TH className="px-3 py-2">{copy.invoices.description}</TH>
-                        <TH className="px-3 py-2 text-right">{copy.invoices.quantity}</TH>
-                        <TH className="px-3 py-2 text-right">{copy.invoices.unitPrice}</TH>
-                        <TH className="px-3 py-2" />
+                        <TH>{copy.invoices.description}</TH>
+                        <TH className="text-right">{copy.invoices.quantity}</TH>
+                        <TH className="text-right">{copy.invoices.unitPrice}</TH>
+                        <TH />
                       </TR>
                     </THead>
                     <tbody>
                       {lineItems.map((item) => (
                         <TR key={item.id}>
-                          <TD className="px-3 py-2">
+                          <TD>
                             <Input
                               bare
                               type="text"
@@ -904,7 +904,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                               placeholder={copy.invoices.description}
                             />
                           </TD>
-                          <TD className="px-3 py-2 text-right">
+                          <TD className="text-right">
                             <Input
                               bare
                               type="number"
@@ -918,7 +918,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                               className="text-right"
                             />
                           </TD>
-                          <TD className="px-3 py-2 text-right">
+                          <TD className="text-right">
                             <Input
                               bare
                               type="number"
@@ -932,7 +932,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                               className="text-right"
                             />
                           </TD>
-                          <TD className="px-3 py-2 text-right">
+                          <TD className="text-right">
                             <IconButton
                               tone="delete"
                               label="Remove line item"
@@ -947,9 +947,9 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                     </tbody>
                     <TFoot>
                       <TR>
-                        <TD className="px-3 py-2">{copy.invoices.total}</TD>
+                        <TD>{copy.invoices.total}</TD>
                         <TD />
-                        <TD className="px-3 py-2 text-right">{formatCurrency(lineItemsTotal)}</TD>
+                        <TD className="text-right">{formatCurrency(lineItemsTotal)}</TD>
                         <TD />
                       </TR>
                     </TFoot>

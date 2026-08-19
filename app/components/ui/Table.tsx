@@ -10,12 +10,23 @@ type TableProps = React.TableHTMLAttributes<HTMLTableElement> & {
   frameClassName?: string;
 };
 
+// Cell padding is a table-level decision, not a per-cell one — that is what kept
+// three different paddings alive across the app. TH/TD carry no padding of their own.
+const densityClasses = {
+  default: "text-sm [&_th]:px-4 [&_th]:py-3 [&_td]:px-4 [&_td]:py-3",
+  dense: "text-xs [&_th]:px-3 [&_th]:py-2 [&_td]:px-3 [&_td]:py-2",
+};
+
 export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
   { frame = true, dense = false, frameClassName, className, children, ...props },
   ref,
 ) {
   const table = (
-    <table ref={ref} className={cn("w-full text-left", dense ? "text-xs" : "text-sm", className)} {...props}>
+    <table
+      ref={ref}
+      className={cn("w-full text-left", dense ? densityClasses.dense : densityClasses.default, className)}
+      {...props}
+    >
       {children}
     </table>
   );
@@ -64,7 +75,7 @@ export function TR({ className, children, ...props }: React.HTMLAttributes<HTMLT
 
 export function TH({ className, children, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) {
   return (
-    <th className={cn("px-4 py-3 font-medium", className)} {...props}>
+    <th className={cn("font-medium", className)} {...props}>
       {children}
     </th>
   );
@@ -72,7 +83,7 @@ export function TH({ className, children, ...props }: React.ThHTMLAttributes<HTM
 
 export function TD({ className, children, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
-    <td className={cn("px-4 py-3", className)} {...props}>
+    <td className={className} {...props}>
       {children}
     </td>
   );
