@@ -24,7 +24,10 @@ before starting one.
 **Done: Journal (§6).** The 10-column table now renders as cardlets below `sm` — see
 the section below for what shipped.
 
-**Not started: sections 7–8** (Calendar agenda, Budget cardlets).
+**Done: Calendar (§7).** The month grid is a dot calendar and the day timeline is an
+agenda list below `sm` — see the section below for what shipped.
+
+**Not started: section 8** (Budget cardlets).
 
 ### What is on `main`
 
@@ -37,6 +40,7 @@ the section below for what shipped.
 | `feat(expense-reports): tabs and cardlets on a phone` | `expense-reports/tabs.tsx` (the History/New report toggle), the history cardlets in `expense-reports/client.tsx`, and the `newReport` dictionary key. |
 | `feat(events): shift cards and icon actions on a phone` | `events/client.tsx` (shift cards below `sm`, stacked event header, `Plus`/`Trash2` `IconButton`s for assign/delete-shift), `events/add-shift-form.tsx`, `events/create-event-form.tsx`, and the `deleteShift` dictionary key. |
 | `feat(journal): cardlets on a phone` | `components/journal-table.tsx` (one shared `rows` array, `<Table desktopOnly>`, the cardlet list), the `deleteEntry` dictionary key, `mobileFullScreen` on the add-entry modal, a wrapping `Modal` footer, and a save-then-return on the `[journalEntryId]` edit form. |
+| `feat(calendar): dot month grid and a day agenda on a phone` | `calendar/client.tsx` (day cells with dots below `sm`, the agenda list that replaces the hour timeline, one shared `kindClasses` colour map, `startLabel`/`rangeLabel`/`appointment` on the timeline items). No new dictionary key, no new component. |
 
 Verified in the real app at 390×844 (admin role, local DB): bottom bar, apps sheet,
 "… other apps" with Back, edition modal, full-screen Settings. Desktop at 1440px is
@@ -87,7 +91,10 @@ already built — **do not add new primitives, and do not touch `components/mobi
    for any other screen that has to choose between two panels on a phone: a client
    wrapper that takes both halves as ReactNode props and keeps the toggle in local
    `useState`, never in server state.
-6. Run `npm run check:design`, `npm run lint` and `npm run build` before committing;
+6. ~~**Calendar (§7)**~~ — done. The pattern for a screen that is neither a table nor a
+   list of cards: the same items, drawn a second way. Both views read one array whose
+   labels and colours are computed once; the mobile branch adds no data of its own.
+7. Run `npm run check:design`, `npm run lint` and `npm run build` before committing;
    the design guard catches hardcoded hex, arbitrary radii, hand-sized controls and
    hand-rolled copies of existing components.
 
@@ -250,8 +257,53 @@ pixel-identical to before the change apart from the delete tooltip now reading "
 entry" — the pre-existing column overlap in the desktop table (Label/Beneficiary) was
 there before this change and is untouched.
 
-### 7. Calendar (secondary, both roles) ⬜ TO DO
+### 7. Calendar (secondary, both roles) ✅ DONE
 - The desktop `xl:grid-cols-[1.2fr_0.8fr]` (month grid beside a hour-by-hour day timeline) collapses to one column: month grid on top (7-col grid of day cells, task/appointment dot indicators), then a simple agenda list for the selected day below (not the absolute-positioned hour timeline — too fine-grained for touch) — colored by task (green) vs. appointment (rose), same as the existing color coding.
+
+**How this shipped** — the whole port is `calendar/client.tsx`; no new component, no new
+dictionary key, no change to `page.tsx`, `actions.ts` or the create form:
+- **The one-column collapse was already there.** `xl:grid-cols-[1.2fr_0.8fr]` stacks on
+  its own below `xl`, so nothing in the section wrapper changed. What did not fit was the
+  *content* of the two cards, and that is all this section touches.
+- **The day cell has two shapes, one behaviour.** Below `sm` it is a centred number with
+  a dot per kind (green task, rose appointment) in a `gap-1` grid — seven columns leave
+  ~42px each on a 390px phone, which is room for a number and two 4px dots and nothing
+  else. The badges (`1 task(s)`, `2 appointments`) are wrapped in a `hidden … sm:flex`
+  div, so they come back untouched at `sm`. The counts behind both are the same
+  `taskCountsByDay` / `appointmentCountsByDay` maps as before.
+- **`sm:block` is load-bearing.** A `<button>` vertically centres its own content, which
+  is what put the desktop day number in the middle of its cell. The mobile branch makes
+  the cell a flex column, so the `sm` branch has to hand the layout *back* to the button
+  (`sm:block`) rather than restating it as `sm:items-stretch sm:justify-start` — that
+  version was one pixel row off, and the screenshot diff caught it.
+- **The agenda replaces the timeline below `sm`, and reads the same array.** The existing
+  `timelineItems` memo now also carries `startLabel` (`HH:MM`), `rangeLabel`
+  (`HH:MM–HH:MM`, and **null** unless the appointment has a real `endAt` — a task's end
+  is a synthetic +45min and must not be printed as fact) and the source `appointment`.
+  The agenda maps that array in start order; the timeline maps the same objects with the
+  same overlap/column maths it always did.
+- **One colour mapping.** `kindClasses` is a module-level constant (`task` → emerald,
+  `appointment` → rose) read by both views, and `kindLabel` maps the kind to the existing
+  `copy.tasks` / `copy.appointments` keys once per render. Neither view owns a colour.
+- **Actions are the same actions.** A task row is an `<a>` to the same `/tasks` or
+  `/events` href the timeline block uses; an appointment row opens the same
+  `openAppointmentDetails()` modal, so edit/delete stay the one implementation with the
+  same `createdById === currentUserId` guard. The timeline no longer needs
+  `dayAppointments.find(...)` — it reads `item.appointment`.
+- **Not done, deliberately**: the month header keeps its three text buttons
+  (Previous / Next / Today) rather than the mockup's chevron `IconButton`s. They already
+  fit on one line at 390px in both locales and are already 44px tall from the control
+  scale, so swapping them would have changed desktop for no mobile gain. The weekday
+  strip stays `Mon…Sun` (hardcoded English before this change, unchanged by it) and the
+  day heading keeps `toLocaleDateString`'s browser locale, exactly as desktop does.
+
+Verified at 390×844, 768 and 1440 against the local DB, admin and department roles, in
+both locales: no horizontal overflow at 390 (there was 3px of it before this change) and
+no tap target under 40×44 anywhere on the page; the dots, the agenda order (09:00 task,
+09:30 appointment with no end, 14:00–15:00 appointment), tapping a day cell to move the
+agenda, and opening an appointment's details from an agenda row were all exercised on the
+phone layout. The 1440px and 768px screenshots are **byte-identical** before and after.
+Test appointments and the test task were removed from the local DB afterwards.
 
 ### 8. Budget (secondary, department-only in this handoff) ⬜ TO DO
 - New read-only mobile view: one cardlet per budget line (label, Charges/Produits badge, planned amount, actual amount rolled up from journal entries, a thin progress bar, and a remaining/over-budget line). No create/edit affordances on mobile for either role in this pass — budget management stays desktop-only for now.

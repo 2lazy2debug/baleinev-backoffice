@@ -77,7 +77,20 @@ type DayTimelineItem = {
   href?: string;
   startMinute: number;
   endMinute: number;
+  /** Start time as `HH:MM` — the agenda's leading column. */
+  startLabel: string;
+  /** `HH:MM–HH:MM`, only when the item has a real end (a task's end is synthetic). */
+  rangeLabel: string | null;
+  /** The source appointment, so neither view has to look it back up to open the details. */
+  appointment?: CalendarAppointment;
 };
+
+// Task = green, appointment = rose. One colour mapping, read by both the desktop
+// timeline blocks and the mobile agenda rows.
+const kindClasses = {
+  task: { block: "border-emerald-500/40 bg-emerald-500/15", tag: "text-emerald-300" },
+  appointment: { block: "border-rose-400/40 bg-rose-400/15", tag: "text-rose-300" },
+} as const;
 
 function toDayKey(d: Date) {
   const year = d.getFullYear();
@@ -104,6 +117,10 @@ function clampMinute(value: number) {
 
 function minuteOfDay(date: Date) {
   return date.getHours() * 60 + date.getMinutes();
+}
+
+function formatMinute(minute: number) {
+  return `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
 }
 
 function formatDateTimeLocalInput(value: string) {
@@ -223,6 +240,8 @@ export default function CalendarPageClient({
         href: task.href,
         startMinute,
         endMinute: Math.max(endMinute, startMinute + 20),
+        startLabel: formatMinute(startMinute),
+        rangeLabel: null,
       });
     }
 
@@ -239,6 +258,9 @@ export default function CalendarPageClient({
         subtitle: appointment.description,
         startMinute,
         endMinute: Math.max(endMinute, startMinute + 20),
+        startLabel: formatMinute(startMinute),
+        rangeLabel: end ? `${formatMinute(startMinute)}–${formatMinute(endMinute)}` : null,
+        appointment,
       });
     }
 
@@ -280,6 +302,7 @@ export default function CalendarPageClient({
   }, [dayAppointments, dayTasks]);
 
   const selectedDate = parseIsoDate(selectedDay);
+  const kindLabel: Record<DayTimelineItem["kind"], string> = { task: copy.tasks, appointment: copy.appointments };
   const canManageSelectedAppointment = selectedAppointment?.createdById === currentUserId && !isReadOnly;
   const HOUR_ROW_HEIGHT = 56;
   const MINUTE_HEIGHT = HOUR_ROW_HEIGHT / 60;
@@ -406,13 +429,13 @@ export default function CalendarPageClient({
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 text-center text-xs text-[var(--muted)]">
+          <div className="grid grid-cols-7 gap-1 text-center text-xs text-[var(--muted)] sm:gap-2">
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
               <div key={d}>{d}</div>
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {monthDays.map((cell) => {
               const taskCount = taskCountsByDay.get(cell.isoDay) ?? 0;
               const appointmentCount = appointmentCountsByDay.get(cell.isoDay) ?? 0;
@@ -424,14 +447,29 @@ export default function CalendarPageClient({
                   key={cell.isoDay}
                   type="button"
                   onClick={() => setSelectedDay(cell.isoDay)}
-                  className={`min-h-20 rounded-xl border p-2 text-left transition ${
+                  aria-pressed={isSelected}
+                  className={cn(
+                    // Seven columns fit in ~42px each on a 390px phone — room for the
+                    // number and a dot per kind, not for a badge. The desktop cell
+                    // (taller, left-aligned, badges) comes back at `sm`.
+                    "flex min-h-11 flex-col items-center justify-center rounded-lg border p-1 text-center transition",
+                    // `sm:block` hands the cell back to the button's own layout, which is
+                    // what centred the desktop day number before the mobile branch existed.
+                    "sm:block sm:min-h-20 sm:rounded-xl sm:p-2 sm:text-left",
                     isSelected
                       ? "border-[var(--accent)] bg-[var(--panel)]"
-                      : "border-[var(--line)] bg-[var(--panel)] hover:border-[var(--accent)]/60"
-                  } ${!cell.inMonth ? "opacity-45" : ""}`}
+                      : "border-[var(--line)] bg-[var(--panel)] hover:border-[var(--accent)]/60",
+                    !cell.inMonth ? "opacity-45" : null,
+                  )}
                 >
                   <p className={`text-xs font-semibold ${isToday ? "text-[var(--accent)]" : "text-[var(--ink)]"}`}>{cell.day}</p>
-                  <div className="mt-1 flex flex-wrap gap-1">
+
+                  <div className="mt-1 flex h-1 items-center gap-1 sm:hidden">
+                    {taskCount > 0 ? <span className="h-1 w-1 rounded-full bg-emerald-400" /> : null}
+                    {appointmentCount > 0 ? <span className="h-1 w-1 rounded-full bg-rose-400" /> : null}
+                  </div>
+
+                  <div className="mt-1 hidden flex-wrap gap-1 sm:flex">
                     {taskCount > 0 ? (
                       <Badge tone="success">
                         {taskCount} {copy.taskPills}
@@ -456,9 +494,66 @@ export default function CalendarPageClient({
             {copy.dayView}: {selectedDate.toLocaleDateString(undefined, { weekday: "long", day: "2-digit", month: "long" })}
           </p>
 
+          {/* An hour-by-hour timeline is too fine-grained for a thumb: below `sm` the
+              same items render as an agenda list, in start order, each with its time. */}
+          <div className="flex flex-col gap-2 sm:hidden">
+            {timelineItems.length === 0 ? (
+              <p className="text-sm text-[var(--muted)]">{copy.noItemsDay}</p>
+            ) : (
+              timelineItems.map((item) => {
+                const rowClass = cn(
+                  "flex min-h-11 w-full items-center gap-3 rounded-lg border px-3 py-2 text-left",
+                  kindClasses[item.kind].block,
+                );
+                const content = (
+                  <>
+                    <span className={cn("w-11 shrink-0 text-2xs font-semibold", kindClasses[item.kind].tag)}>
+                      {item.startLabel}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium">{item.title}</span>
+                      <span className="block text-2xs text-[var(--muted)]">
+                        {item.rangeLabel ? `${item.rangeLabel} · ` : null}
+                        {kindLabel[item.kind]}
+                      </span>
+                    </span>
+                  </>
+                );
+
+                if (item.href) {
+                  return (
+                    <a key={item.id} href={item.href} className={rowClass}>
+                      {content}
+                    </a>
+                  );
+                }
+
+                const appointment = item.appointment;
+                if (appointment) {
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => openAppointmentDetails(appointment)}
+                      className={rowClass}
+                    >
+                      {content}
+                    </button>
+                  );
+                }
+
+                return (
+                  <div key={item.id} className={rowClass}>
+                    {content}
+                  </div>
+                );
+              })
+            )}
+          </div>
+
           <div
             ref={dayTimelineScrollRef}
-            className={cn(nestedSurfaceClasses, "max-h-[70vh] overflow-y-auto")}
+            className={cn(nestedSurfaceClasses, "hidden max-h-[70vh] overflow-y-auto sm:block")}
           >
             <div className="grid grid-cols-[64px_1fr]">
               <div>
@@ -491,13 +586,9 @@ export default function CalendarPageClient({
                     const width = 100 / item.columnCount;
                     const left = item.column * width;
 
-                    const blockClass = item.kind === "task"
-                      ? "border-emerald-500/40 bg-emerald-500/15"
-                      : "border-rose-400/40 bg-rose-400/15";
-                    const tagClass = item.kind === "task"
-                      ? "text-emerald-300"
-                      : "text-rose-300";
-                    const tag = item.kind === "task" ? copy.tasks : copy.appointments;
+                    const blockClass = kindClasses[item.kind].block;
+                    const tagClass = kindClasses[item.kind].tag;
+                    const tag = kindLabel[item.kind];
                     const blockStyle = {
                       top: `${top}px`,
                       height: `${height}px`,
@@ -524,17 +615,13 @@ export default function CalendarPageClient({
                       );
                     }
 
-                    if (item.kind === "appointment") {
-                      const appointment = dayAppointments.find((candidate) => candidate.id === item.id);
+                    const appointment = item.appointment;
+                    if (appointment) {
                       return (
                         <button
                           key={item.id}
                           type="button"
-                          onClick={() => {
-                            if (appointment) {
-                              openAppointmentDetails(appointment);
-                            }
-                          }}
+                          onClick={() => openAppointmentDetails(appointment)}
                           className={`absolute overflow-hidden rounded-lg border px-2 py-1 text-left ${blockClass}`}
                           style={blockStyle}
                           aria-label={item.title}
