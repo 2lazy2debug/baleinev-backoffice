@@ -6,6 +6,8 @@ type TableProps = React.TableHTMLAttributes<HTMLTableElement> & {
   frame?: boolean;
   /** Denser type for nested tables (invoice line items). */
   dense?: boolean;
+  /** Hidden below `sm`, where a <CardletList> renders the same rows as cards. */
+  desktopOnly?: boolean;
   /** Layout classes for the frame (margins, height) — `className` styles the table itself. */
   frameClassName?: string;
 };
@@ -18,7 +20,7 @@ const densityClasses = {
 };
 
 export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
-  { frame = true, dense = false, frameClassName, className, children, ...props },
+  { frame = true, dense = false, desktopOnly = false, frameClassName, className, children, ...props },
   ref,
 ) {
   const table = (
@@ -35,6 +37,7 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
     <div
       className={cn(
         frame ? "overflow-hidden rounded-xl border border-[var(--line)]" : "overflow-auto",
+        desktopOnly ? "hidden sm:block" : null,
         frameClassName,
       )}
     >
