@@ -69,7 +69,7 @@ export default async function CalendarPage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <CalendarPageClient
         copy={copy.calendar}
         currentUserId={access.id}

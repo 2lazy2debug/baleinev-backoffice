@@ -361,7 +361,7 @@ export default function CalendarPageClient({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader eyebrow={copy.title} title={copy.title} description={copy.subtitle} />
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">

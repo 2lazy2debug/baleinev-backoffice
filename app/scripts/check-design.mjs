@@ -64,8 +64,38 @@ const RULES = [
   },
   {
     id: "hand-rolled-field",
-    re: /rounded-2xl border border-\[var\(--line\)\] bg-\[var\(--panel\)\] px-4 py-3/g,
+    re: /rounded-(?:md|xl|2xl) border border-\[var\(--line\)\] bg-\[var\(--panel\)\] px-\d/g,
     msg: "hand-rolled field recipe — use <Input>/<Textarea>/<Select> from @/components/ui instead",
+    exempt: UI_LIB,
+  },
+  {
+    id: "hand-rolled-nested-surface",
+    re: /rounded-xl border border-\[var\(--line\)\] bg-\[var\(--panel\)\]/g,
+    msg: "hand-rolled nested surface — use <Panel nested> or nestedSurfaceClasses from @/components/ui",
+    exempt: UI_LIB,
+  },
+  {
+    id: "hand-rolled-panel",
+    re: /overflow-hidden rounded-2xl border border-\[var\(--line\)\]/g,
+    msg: "hand-rolled panel frame — use <Panel> from @/components/ui instead",
+    exempt: UI_LIB,
+  },
+  {
+    id: "hand-rolled-page-header",
+    re: /tracking-\[0\.22em\]/g,
+    msg: "hand-rolled page header — use <PageHeader> from @/components/ui instead",
+    exempt: UI_LIB,
+  },
+  {
+    id: "hardcoded-control-height",
+    re: /(?<![\w-])h-(?:9|11|12)(?![\w-])[^"]*(?:px-|border)/g,
+    msg: "hand-sized control — heights come from the md/sm control scale (<Button>, <IconButton>, <Input>)",
+    exempt: UI_LIB,
+  },
+  {
+    id: "micro-text-size",
+    re: /text-\[\d+px\]/g,
+    msg: "hardcoded text size — use the type scale (text-3xs/text-2xs/text-xs/…)",
     exempt: UI_LIB,
   },
 ];

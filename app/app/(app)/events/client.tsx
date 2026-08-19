@@ -198,7 +198,7 @@ export default function EventsPageClient({
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       {/* Event types are global, so they stay editable in a closed edition.
           Everything below them belongs to the edition and does not. */}
       {/* ── Admin: Event types ────────────────────────────────────────────── */}
