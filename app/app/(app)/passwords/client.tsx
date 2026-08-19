@@ -98,7 +98,7 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
             {filtered.length} {filtered.length === 1 ? copy.entrySingular : copy.entryPlural}
           </p>
           <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
-            <Plus className="h-4 w-4" />
+            <Plus />
             {copy.add}
           </Button>
         </div>
@@ -279,7 +279,7 @@ function EntryRow({
                 </span>
               ) : (
                 <Button variant="secondary" size="sm" onClick={loadTotp} disabled={isLoadingTotp}>
-                  <ShieldCheck className="h-4 w-4" />
+                  <ShieldCheck />
                   {isLoadingTotp ? copy.loading : copy.field2fa}
                 </Button>
               )

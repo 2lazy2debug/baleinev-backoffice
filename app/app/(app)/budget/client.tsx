@@ -6,7 +6,7 @@ import { Check, Eye, Pencil, Plus, TrendingDown, TrendingUp, Trash2, X } from "l
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, CardGrid, Field, IconButton, Input, Modal, PageHeader, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
+import { Button, Card, CardGrid, Field, IconButton, Input, Modal, PageHeader, SectionTitle, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -161,7 +161,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                 <Card key={department.id} as="article" span="1/2">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h2 className="text-lg font-semibold">{department.name}</h2>
+                      <SectionTitle>{department.name}</SectionTitle>
                       <p className="mt-2 text-sm text-[var(--muted)]">
                         {department.budgetLines.length} {copy.budget.budgetEntries}
                       </p>

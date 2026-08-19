@@ -5,7 +5,7 @@ import type { Prisma } from "@prisma/client";
 import { Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, Checkbox, Field, IconButton, Input, Select } from "@/components/ui";
+import { Badge, Button, Card, Checkbox, Field, IconButton, Input, SectionTitle, Select } from "@/components/ui";
 import { getDictionary } from "@/lib/i18n";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -56,7 +56,7 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <h2 className="text-xl font-semibold">{edition.name}</h2>
+                  <SectionTitle>{edition.name}</SectionTitle>
                   {edition.isDefault ? <Badge tone="success">{copy.editions.default}</Badge> : null}
                   {edition.closedAt ? <Badge tone="neutral">{copy.editions.closed}</Badge> : null}
                 </div>
@@ -124,7 +124,7 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
 
       <div>
       <Card as="section">
-        <h2 className="text-xl font-semibold">{copy.editions.create}</h2>
+        <SectionTitle>{copy.editions.create}</SectionTitle>
         <form action={createFormAction} className="mt-6 space-y-4">
           <FormError message={createState.error} />
           <Field label={copy.editions.editionName}>

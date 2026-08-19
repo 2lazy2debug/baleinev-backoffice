@@ -5,7 +5,7 @@ import { DocumentType } from "@prisma/client";
 import { Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, CardGrid, Field, IconButton, Input, Select, Textarea } from "@/components/ui";
+import { Badge, Button, Card, CardGrid, Field, IconButton, Input, SectionTitle, Select, Textarea } from "@/components/ui";
 import type { getDictionary } from "@/lib/i18n";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -120,7 +120,7 @@ export function TemplatesPageClient({
 
       <section className="space-y-6">
         <Card as="section">
-          <h2 className="text-xl font-semibold">{copy.templates.create}</h2>
+          <SectionTitle>{copy.templates.create}</SectionTitle>
           <form action={createFormAction} className="mt-6 space-y-4">
             <FormError message={createState.error} />
             <Field label={copy.templates.name}>
@@ -155,7 +155,7 @@ export function TemplatesPageClient({
         </Card>
 
         <Card as="section">
-          <h2 className="text-xl font-semibold">{copy.templates.placeholders}</h2>
+          <SectionTitle>{copy.templates.placeholders}</SectionTitle>
           <ul className="mt-4 space-y-2 font-mono text-xs text-[var(--muted)]">
             {placeholders.map((placeholder) => (
               <li key={placeholder}>{placeholder}</li>

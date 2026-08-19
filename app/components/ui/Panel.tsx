@@ -48,11 +48,13 @@ export function PanelHeader({ className, children, ...props }: React.HTMLAttribu
   );
 }
 
-/** Section title inside a PanelHeader — same weight/size as a Card heading. */
-export function PanelTitle({ className, children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
+type SectionTitleProps = React.HTMLAttributes<HTMLHeadingElement> & { as?: "h2" | "h3" };
+
+/** The heading of a section — a Card, a Panel header, a grouped list. One size app-wide. */
+export function SectionTitle({ as: As = "h2", className, children, ...props }: SectionTitleProps) {
   return (
-    <h2 className={cn("text-lg font-semibold", className)} {...props}>
+    <As className={cn("text-lg font-semibold", className)} {...props}>
       {children}
-    </h2>
+    </As>
   );
 }

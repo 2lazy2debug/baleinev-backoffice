@@ -47,7 +47,7 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
   return (
     <>
       <Button type="button" variant="primary" onClick={() => setOpen(true)}>
-        <Plus className="h-4 w-4" />
+        <Plus />
         {copy.openCreateModal}
       </Button>
 

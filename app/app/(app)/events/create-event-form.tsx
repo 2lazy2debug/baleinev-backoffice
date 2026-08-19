@@ -3,7 +3,7 @@
 import { useActionState, useMemo, useState } from "react";
 
 import { FormError } from "@/components/form-error";
-import { Button, Card, Field, Input, Select } from "@/components/ui";
+import { Button, Card, Field, Input, SectionTitle, Select } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import { createEventAction } from "./actions";
@@ -63,7 +63,7 @@ export default function CreateEventForm({ eventTypes, costCenters, editionStartD
 
   return (
     <Card as="section" className="space-y-4">
-      <h2 className="text-lg font-semibold">{copy.createEvent}</h2>
+      <SectionTitle>{copy.createEvent}</SectionTitle>
       {eventTypes.length === 0 ? (
         <p className="text-sm text-[var(--muted)]">{copy.noEventTypes}</p>
       ) : (

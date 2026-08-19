@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Chip, ChipRemoveButton, Input, Panel, PanelHeader, Select, cn, nestedSurfaceClasses } from "@/components/ui";
+import { Badge, Button, Chip, ChipRemoveButton, Input, Panel, PanelHeader, SectionTitle, Select, cn, nestedSurfaceClasses } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import {
@@ -204,7 +204,7 @@ export default function EventsPageClient({
       {/* ── Admin: Event types ────────────────────────────────────────────── */}
       {isAdmin ? (
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold">{copy.eventTypes}</h2>
+          <SectionTitle>{copy.eventTypes}</SectionTitle>
           <FormError message={deleteEventTypeState.error} />
           <div className="flex flex-wrap gap-2">
             {eventTypes.map((et) => (
@@ -280,7 +280,7 @@ export default function EventsPageClient({
                     />
                     <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{event.eventType.name}</span>
                   </div>
-                  <h3 className="mt-0.5 text-lg font-semibold">{event.name}</h3>
+                  <SectionTitle as="h3" className="mt-0.5">{event.name}</SectionTitle>
                   <p className="text-xs text-[var(--muted)]">{formatDate(event.startDate)} → {formatDate(event.endDate)}</p>
                   {event.costCenter ? <p className="text-xs text-[var(--muted)]">{event.costCenter.code}</p> : null}
                   {event.notes ? <p className="mt-1 text-xs text-[var(--muted)]">{event.notes}</p> : null}

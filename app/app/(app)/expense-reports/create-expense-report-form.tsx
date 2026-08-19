@@ -3,7 +3,7 @@
 import { useActionState, useMemo, useState } from "react";
 
 import { FormError } from "@/components/form-error";
-import { Alert, Button, Card, Field, Input, Select } from "@/components/ui";
+import { Alert, Button, Card, Field, Input, SectionTitle, Select } from "@/components/ui";
 import { allowedProofMimeTypes } from "@/lib/proof-upload";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -74,7 +74,7 @@ export default function CreateExpenseReportForm({ departments, drivingRatePerKm,
   return (
     <div>
       <Card as="section">
-        <h2 className="text-xl font-semibold">{copy.create}</h2>
+        <SectionTitle>{copy.create}</SectionTitle>
 
         <form action={createFormAction} className="mt-6 space-y-4">
           <FormError message={createState.error} />

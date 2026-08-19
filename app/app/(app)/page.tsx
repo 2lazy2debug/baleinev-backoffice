@@ -1,7 +1,7 @@
 import { AccountType, TaskType } from "@prisma/client";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
-import { Card, CardGrid, PageHeader, Panel, PanelHeader, PanelTitle, TD, TFoot, TH, THead, TR, Table, buttonClasses } from "@/components/ui";
+import { Card, CardGrid, PageHeader, Panel, PanelHeader, SectionTitle, TD, TFoot, TH, THead, TR, Table, buttonClasses } from "@/components/ui";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
@@ -112,7 +112,7 @@ export default async function DashboardPage() {
           moneyAccountCards.map((account) => (
             <Card key={account.name} span="1/4">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">{account.type}</p>
-              <h2 className="mt-2 text-lg font-semibold">{account.name}</h2>
+              <SectionTitle className="mt-2">{account.name}</SectionTitle>
               <p className="mt-4 text-2xl font-semibold tracking-tight">{formatCurrency(account.balance)}</p>
             </Card>
           ))
@@ -121,7 +121,7 @@ export default async function DashboardPage() {
 
       <Panel>
         <PanelHeader>
-          <PanelTitle>{copy.dashboard.budgetVsActuals}</PanelTitle>
+          <SectionTitle>{copy.dashboard.budgetVsActuals}</SectionTitle>
         </PanelHeader>
         <Table frame={false} className="min-w-full">
             <THead>
@@ -185,7 +185,7 @@ export default async function DashboardPage() {
       {pendingTasks.length > 0 ? (
         <Panel>
           <PanelHeader>
-            <PanelTitle>{copy.tasks.title}</PanelTitle>
+            <SectionTitle>{copy.tasks.title}</SectionTitle>
             <a href="/tasks" className="text-xs font-semibold text-[var(--accent)] hover:underline">{copy.tasks.allTasks} →</a>
           </PanelHeader>
           <ul className="divide-y divide-[var(--line)]">

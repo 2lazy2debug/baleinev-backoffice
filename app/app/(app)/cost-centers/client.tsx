@@ -5,7 +5,7 @@ import { Pencil, TrendingDown, TrendingUp, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, CardGrid, Field, IconButton, Input, iconButtonClasses } from "@/components/ui";
+import { Button, Card, CardGrid, Field, IconButton, Input, SectionTitle, iconButtonClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -62,7 +62,7 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{costCenter.code}</p>
-                    <h2 className="mt-2 text-lg font-semibold">{costCenter.name}</h2>
+                    <SectionTitle className="mt-2">{costCenter.name}</SectionTitle>
                     <p className="mt-3 text-sm text-[var(--muted)]">
                       {costCenter.journalEntriesCount} {copy.costCenters.journalEntries}
                     </p>
@@ -120,7 +120,7 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
       {isReadOnly ? null : (
       <div>
         <Card as="section">
-          <h2 className="text-xl font-semibold">{copy.costCenters.create}</h2>
+          <SectionTitle>{copy.costCenters.create}</SectionTitle>
           <form action={createFormAction} className="mt-6 space-y-4">
             <FormError message={createState.error} />
             <Field label={copy.costCenters.code}>

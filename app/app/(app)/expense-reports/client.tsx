@@ -5,7 +5,7 @@ import { ExpenseReportStatus } from "@prisma/client";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, Input, Table, TD, TH, THead, TR, buttonClasses } from "@/components/ui";
+import { Badge, Button, Card, Input, SectionTitle, TD, TH, THead, TR, Table, buttonClasses } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { decimalToNumber, formatCurrency } from "@/lib/utils";
 
@@ -107,7 +107,7 @@ export function ExpenseReportsPageClient({
   return (
     <div>
       <Card as="section">
-        <h2 className="text-xl font-semibold">{copy.expenseReports.history}</h2>
+        <SectionTitle>{copy.expenseReports.history}</SectionTitle>
 
         {access.role === "ADMIN" ? (
           <div className="mt-4 space-y-2">

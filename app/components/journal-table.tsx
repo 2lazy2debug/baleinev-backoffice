@@ -7,7 +7,7 @@ import { formatCurrency } from "@/lib/utils";
 import { deleteJournalEntryAction, updateJournalEntryAction } from "@/app/(app)/journal/actions";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { IconButton, Input, Panel, PanelHeader, PanelTitle, Select, TD, TH, THead, TR, Table } from "@/components/ui";
+import { IconButton, Input, Panel, PanelHeader, SectionTitle, Select, TD, TH, THead, TR, Table } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
@@ -267,7 +267,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   return (
     <Panel as="div" className="flex h-full flex-col bg-[var(--panel)]">
       <PanelHeader className="shrink-0">
-        <PanelTitle>{copy.entries}</PanelTitle>
+        <SectionTitle>{copy.entries}</SectionTitle>
         <p className="text-xs text-[var(--muted)]">{copy.showing} {sortedEntries.length} {copy.of} {entries.length}</p>
       </PanelHeader>
       {(saveState.error || deleteState.error) ? (

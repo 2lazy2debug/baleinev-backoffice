@@ -6,7 +6,7 @@ import { Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, IconButton, Input, Select } from "@/components/ui";
+import { Button, Card, IconButton, Input, SectionTitle, Select } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -98,7 +98,7 @@ function MoneyAccountCard({
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
             {copy.moneyAccounts[typeLabels[account.type]]}
           </p>
-          <h2 className="mt-2 text-lg font-semibold">{account.name}</h2>
+          <SectionTitle className="mt-2">{account.name}</SectionTitle>
           <p className="mt-3 text-sm text-[var(--muted)]">
             {account.journalEntriesCount} {copy.moneyAccounts.journalEntries}
           </p>

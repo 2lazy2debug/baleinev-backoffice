@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 
 import { FormError } from "@/components/form-error";
-import { Button, Card, Checkbox, Field, Input, Textarea, nestedSurfaceClasses } from "@/components/ui";
+import { Button, Card, Checkbox, Field, Input, SectionTitle, Textarea, nestedSurfaceClasses } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import { createAppointmentAction } from "./actions";
@@ -35,7 +35,7 @@ export function CreateAppointmentForm({
 
   return (
     <Card as="section">
-      <h2 className="text-lg font-semibold">{copy.createAppointment}</h2>
+      <SectionTitle>{copy.createAppointment}</SectionTitle>
       <form action={formAction} className="mt-4 grid gap-3 md:grid-cols-2">
         <FormError message={state.error} className="md:col-span-2" />
         <div className="md:col-span-2">

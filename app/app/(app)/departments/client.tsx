@@ -5,7 +5,7 @@ import { Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, CardGrid, Field, IconButton, Input } from "@/components/ui";
+import { Button, Card, CardGrid, Field, IconButton, Input, SectionTitle } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import { createDepartmentAction, deleteDepartmentAction } from "./actions";
@@ -35,7 +35,7 @@ export function DepartmentsPageClient({ departments }: { departments: Department
               <Card key={department.id} as="article" span="1/2">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-semibold">{department.name}</h2>
+                    <SectionTitle>{department.name}</SectionTitle>
                     <p className="mt-2 text-sm text-[var(--muted)]">
                       {department._count.budgetLines} budget lines, {department._count.journalEntries} journal entries
                     </p>
@@ -59,7 +59,7 @@ export function DepartmentsPageClient({ departments }: { departments: Department
       {isReadOnly ? null : (
       <div>
         <Card as="section">
-          <h2 className="text-xl font-semibold">Create a department</h2>
+          <SectionTitle>Create a department</SectionTitle>
           <form action={createFormAction} className="mt-6 space-y-4">
             <FormError message={createState.error} />
             <Field label="Department name">

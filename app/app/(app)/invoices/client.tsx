@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Check, Copy, Plus, RotateCcw, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
-import { Button, Card, Field, IconButton, Input, Modal, PageHeader, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
+import { Button, Card, Field, IconButton, Input, Modal, PageHeader, SectionTitle, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { buildSwissQrPayload } from "@/lib/swiss-qr";
 import { formatCurrency } from "@/lib/utils";
@@ -634,13 +634,13 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
 
       {isReadOnly ? null : (
         <Button variant="primary" onClick={openCreateModal} className="self-start">
-          <Plus className="h-4 w-4" />
+          <Plus />
           {copy.invoices.create}
         </Button>
       )}
 
       <Card as="section">
-        <h2 className="text-xl font-semibold">{copy.invoices.historyTitle}</h2>
+        <SectionTitle>{copy.invoices.historyTitle}</SectionTitle>
 
         {invoiceHistory.length === 0 ? (
           <p className="mt-3 text-sm text-[var(--muted)]">{copy.invoices.noHistory}</p>
@@ -874,7 +874,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                   onClick={addLineItem}
                   disabled={isEditingPaidInvoice}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus />
                   {copy.invoices.addLineItem}
                 </Button>
               </div>

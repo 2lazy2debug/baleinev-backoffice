@@ -1,7 +1,7 @@
 import { AccountType } from "@prisma/client";
 
 import { requireMoneyAccountManager } from "@/lib/access";
-import { Card, CardGrid, PageHeader } from "@/components/ui";
+import { Card, CardGrid, PageHeader, SectionTitle } from "@/components/ui";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
@@ -84,7 +84,7 @@ export default async function MoneyAccountsPage() {
         <WritableEditionOnly>
           <div>
             <Card as="section">
-              <h2 className="text-xl font-semibold">{copy.moneyAccounts.create}</h2>
+              <SectionTitle>{copy.moneyAccounts.create}</SectionTitle>
               <CreateMoneyAccountForm locale={locale} />
             </Card>
           </div>

@@ -5,7 +5,7 @@ import { Trash2 } from "lucide-react";
 import { UserRole } from "@prisma/client";
 
 import { FormError } from "@/components/form-error";
-import { Button, Card, Field, IconButton, Input, MultiSelect, Select } from "@/components/ui";
+import { Button, Card, Field, IconButton, Input, MultiSelect, SectionTitle, Select } from "@/components/ui";
 import type { getDictionary } from "@/lib/i18n";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -112,7 +112,7 @@ export function UsersPageClient({
 
       <div>
         <Card as="section">
-          <h2 className="text-xl font-semibold">{copy.users.create}</h2>
+          <SectionTitle>{copy.users.create}</SectionTitle>
           <p className="mt-2 text-sm text-[var(--muted)]">{copy.users.passwordRules}</p>
           <form action={createFormAction} className="mt-6 space-y-4">
             <FormError message={createState.error} />
