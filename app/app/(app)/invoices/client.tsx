@@ -866,7 +866,6 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                 <Button
                   type="button"
                   variant="secondary"
-                  size="sm"
                   onClick={addLineItem}
                   disabled={isEditingPaidInvoice}
                 >

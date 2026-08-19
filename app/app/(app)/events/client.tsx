@@ -221,12 +221,12 @@ export default function EventsPageClient({
           <FormError message={createEventTypeState.error} />
           <form action={createEventTypeFormAction} className="flex flex-wrap items-end gap-2">
             <div className="w-48">
-              <Input type="text" name="name" required placeholder={copy.eventTypeName} size="sm" />
+              <Input type="text" name="name" required placeholder={copy.eventTypeName} />
             </div>
             <div className="w-56">
-              <Input type="text" name="description" placeholder={copy.eventTypeDescription} size="sm" />
+              <Input type="text" name="description" placeholder={copy.eventTypeDescription} />
             </div>
-            <Button type="submit" variant="primary" size="sm" disabled={isCreatingEventType}>
+            <Button type="submit" variant="primary" disabled={isCreatingEventType}>
               {copy.createEventType}
             </Button>
           </form>
@@ -289,7 +289,6 @@ export default function EventsPageClient({
                   <Button
                     type="button"
                     variant="secondary"
-                    size="sm"
                     disabled={downloadingEventId === event.id}
                     onClick={() => handleDownloadPdf(event)}
                   >
@@ -298,7 +297,7 @@ export default function EventsPageClient({
                   {canManageEvents ? (
                     <form action={deleteEventFormAction}>
                       <input type="hidden" name="id" value={event.id} />
-                      <Button type="submit" variant="destructive" size="sm" disabled={isDeletingEvent}>
+                      <Button type="submit" variant="destructive" disabled={isDeletingEvent}>
                         {copy.deleteEvent}
                       </Button>
                     </form>

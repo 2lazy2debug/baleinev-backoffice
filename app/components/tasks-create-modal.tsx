@@ -87,7 +87,7 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
                 </Select>
               </Field>
             ) : null}
-            <Button type="submit" variant="secondary" size="sm" disabled={isCreatingTodo}>
+            <Button type="submit" variant="secondary" disabled={isCreatingTodo}>
               {copy.createTodo}
             </Button>
           </form>
@@ -119,7 +119,7 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
                 </Select>
               </Field>
             ) : null}
-            <Button type="submit" variant="secondary" size="sm" disabled={isCreatingTask}>
+            <Button type="submit" variant="secondary" disabled={isCreatingTask}>
               {copy.createTask}
             </Button>
           </form>

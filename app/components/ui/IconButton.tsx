@@ -26,6 +26,11 @@ const tones: Record<IconTone, string> = {
   warning: "border-amber-400/40 text-amber-300 hover:bg-amber-950/40",
 };
 
+/** Same recipe for elements that act as icon buttons but are not <button> (e.g. a <summary>). */
+export function iconButtonClasses(tone: IconTone = "neutral", size: ControlSize = "sm", className?: string) {
+  return cn(base, controlSquare[size], tones[tone], className);
+}
+
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
   { tone = "neutral", size = "sm", label, className, children, type, ...props },
   ref,
@@ -36,7 +41,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       type={type ?? "button"}
       title={label}
       aria-label={label}
-      className={cn(base, controlSquare[size], tones[tone], className)}
+      className={iconButtonClasses(tone, size, className)}
       {...props}
     >
       {children}

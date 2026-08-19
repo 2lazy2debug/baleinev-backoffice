@@ -7,7 +7,7 @@ import { Plus } from "lucide-react";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { JournalTable } from "@/components/journal-table";
 import { AddJournalEntryModal } from "@/components/add-journal-entry-modal";
-import { IconButton } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 
 type JournalPageClientProps = {
@@ -66,9 +66,10 @@ export default function JournalPageClient({ activeEdition, accountBalances, loca
     <div className="relative flex-1 flex flex-col gap-4">
       {/* Plus button above table */}
       {isReadOnly ? null : (
-        <IconButton onClick={() => setIsModalOpen(true)} tone="accent" label={copy.addEntry} className="self-start">
+        <Button variant="primary" onClick={() => setIsModalOpen(true)} className="self-start">
           <Plus />
-        </IconButton>
+          {copy.addEntry}
+        </Button>
       )}
 
       {/* Modal for adding entry */}

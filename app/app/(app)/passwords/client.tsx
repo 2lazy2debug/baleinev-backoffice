@@ -352,10 +352,10 @@ function EntryDialog({
       size="md"
       footer={
         <>
-          <Button variant="secondary" size="sm" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             {copy.cancel}
           </Button>
-          <Button type="submit" form="password-entry-form" variant="primary" size="sm" disabled={pending}>
+          <Button type="submit" form="password-entry-form" variant="primary" disabled={pending}>
             {pending ? copy.saving : copy.save}
           </Button>
         </>
@@ -467,10 +467,10 @@ function DeleteDialog({
       size="sm"
       footer={
         <>
-          <Button variant="secondary" size="sm" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             {copy.cancel}
           </Button>
-          <Button type="submit" form="password-delete-form" variant="destructive" size="sm" disabled={pending}>
+          <Button type="submit" form="password-delete-form" variant="destructive" disabled={pending}>
             {pending ? copy.deleting : copy.delete}
           </Button>
         </>

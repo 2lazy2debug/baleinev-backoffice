@@ -389,10 +389,10 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
             </Field>
           ) : null}
           <div className="md:col-span-2 flex gap-2">
-            <Button type="submit" variant="primary" size="sm" disabled={isSavingTodo}>
+            <Button type="submit" variant="primary" disabled={isSavingTodo}>
               {copy.tasks.saveTodo}
             </Button>
-            <Button type="button" variant="secondary" size="sm" onClick={() => setEditingTodoId(null)}>
+            <Button type="button" variant="secondary" onClick={() => setEditingTodoId(null)}>
               {copy.common.cancel ?? "Cancel"}
             </Button>
           </div>
@@ -436,10 +436,10 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
             <Input type="text" name="confirmDelete" tone="danger" required placeholder="delete" autoFocus />
           </Field>
           <div className="flex items-end gap-2">
-            <Button type="submit" variant="destructive" size="sm" disabled={isDeletingTodo}>
+            <Button type="submit" variant="destructive" disabled={isDeletingTodo}>
               {copy.tasks.delete}
             </Button>
-            <Button type="button" variant="secondary" size="sm" onClick={() => setDeletingTodoId(null)}>
+            <Button type="button" variant="secondary" onClick={() => setDeletingTodoId(null)}>
               {copy.common.cancel ?? "Cancel"}
             </Button>
           </div>
@@ -474,7 +474,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
               </div>
             ) : null}
             <div className="md:col-span-2">
-              <Button type="submit" variant="primary" size="sm" disabled={isCreatingTask}>
+              <Button type="submit" variant="primary" disabled={isCreatingTask}>
                 {copy.tasks.createTask}
               </Button>
             </div>

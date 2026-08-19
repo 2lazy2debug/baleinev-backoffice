@@ -82,7 +82,7 @@ export function TemplatesPageClient({
                         />
                       </Field>
                       <div className="flex flex-wrap gap-2">
-                        <Button type="submit" variant="secondary" size="sm" disabled={isUpdating}>
+                        <Button type="submit" variant="secondary" disabled={isUpdating}>
                           {copy.templates.save}
                         </Button>
                       </div>
@@ -93,7 +93,7 @@ export function TemplatesPageClient({
                     {!template.isDefault ? (
                       <form action={makeDefaultFormAction}>
                         <input type="hidden" name="templateId" value={template.id} />
-                        <Button type="submit" variant="secondary" size="sm" disabled={isMakingDefault}>
+                        <Button type="submit" variant="secondary" disabled={isMakingDefault}>
                           {copy.templates.makeDefault}
                         </Button>
                       </form>
@@ -102,6 +102,7 @@ export function TemplatesPageClient({
                       <input type="hidden" name="templateId" value={template.id} />
                       <IconButton
                         type="submit"
+                        size="md"
                         tone="delete"
                         label={template.isDefault ? copy.templates.cannotDeleteDefault : copy.templates.deleteButton}
                         disabled={template.isDefault || isDeleting}

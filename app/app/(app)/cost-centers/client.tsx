@@ -5,7 +5,7 @@ import { Pencil, TrendingDown, TrendingUp, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, CardGrid, Field, IconButton, Input } from "@/components/ui";
+import { Button, Card, CardGrid, Field, IconButton, Input, iconButtonClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -83,7 +83,7 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
                   <div className="space-y-3">
                     <div className="flex items-center justify-end gap-2">
                       <details className="group">
-                        <summary className="list-none cursor-pointer rounded-md border border-[var(--line)] p-2 text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)] [&_svg]:h-4 [&_svg]:w-4">
+                        <summary className={iconButtonClasses("neutral", "sm", "list-none cursor-pointer")}>
                           <Pencil />
                         </summary>
                         <form action={updateFormAction} className="mt-3 flex items-center gap-2">

@@ -112,7 +112,7 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
 
                 <form action={deleteFormAction}>
                   <input type="hidden" name="editionId" value={edition.id} />
-                  <IconButton type="submit" tone="delete" label="Delete" disabled={isDeleting}>
+                  <IconButton type="submit" size="md" tone="delete" label="Delete" disabled={isDeleting}>
                     <Trash2 />
                   </IconButton>
                 </form>
