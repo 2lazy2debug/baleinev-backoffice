@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Input, Panel, PanelHeader, Select, cn, nestedSurfaceClasses } from "@/components/ui";
+import { Badge, Button, Chip, ChipRemoveButton, Input, Panel, PanelHeader, Select, cn, nestedSurfaceClasses } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import {
@@ -208,21 +208,13 @@ export default function EventsPageClient({
           <FormError message={deleteEventTypeState.error} />
           <div className="flex flex-wrap gap-2">
             {eventTypes.map((et) => (
-              <form
-                key={et.id}
-                action={deleteEventTypeFormAction}
-                className="inline-flex items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--panel-strong)] px-3 py-1.5 text-sm"
-              >
-                <span>{et.name}</span>
+              <form key={et.id} action={deleteEventTypeFormAction} className="inline-flex">
                 <input type="hidden" name="id" value={et.id} />
-                <button
-                  disabled={isDeletingEventType}
-                  className="text-[var(--muted)] hover:text-rose-400 disabled:opacity-50"
-                  title={copy.deleteEventType}
-                  type="submit"
+                <Chip
+                  action={<ChipRemoveButton label={copy.deleteEventType} disabled={isDeletingEventType} />}
                 >
-                  ×
-                </button>
+                  {et.name}
+                </Chip>
               </form>
             ))}
           </div>
@@ -417,11 +409,12 @@ export default function EventsPageClient({
                                 {canManageEvents && shift.assignments.length > 0 ? (
                                   <div className="flex flex-wrap gap-1.5 border-t border-[var(--line)] px-4 py-2">
                                     {shift.assignments.map((a) => (
-                                      <form key={a.id} action={withdrawFormAction} className="inline-flex items-center gap-1">
+                                      <form key={a.id} action={withdrawFormAction} className="inline-flex">
                                         <input type="hidden" name="shiftId" value={shift.id} />
                                         <input type="hidden" name="userId" value={a.userId} />
-                                        <span className="text-xs">{a.user.name}</span>
-                                        <button disabled={isWithdrawing} className="text-[var(--muted)] hover:text-rose-400 text-xs disabled:opacity-50">×</button>
+                                        <Chip action={<ChipRemoveButton label={copy.withdraw} disabled={isWithdrawing} />}>
+                                          {a.user.name}
+                                        </Chip>
                                       </form>
                                     ))}
                                   </div>

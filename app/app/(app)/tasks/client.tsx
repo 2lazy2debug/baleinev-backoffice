@@ -432,19 +432,9 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
         >
           <FormError message={deleteTodoState.error} className="md:col-span-2" />
           <input type="hidden" name="todoId" value={todo.id} />
-          <label className="block space-y-1">
-            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-rose-300">
-              {copy.tasks.typeDeleteToConfirm}
-            </span>
-            <input
-              type="text"
-              name="confirmDelete"
-              required
-              placeholder="delete"
-              autoFocus
-              className="w-full rounded-xl border border-rose-300 bg-[var(--panel-strong)] px-3 py-2 text-sm outline-none focus:bg-[var(--panel)]"
-            />
-          </label>
+          <Field label={copy.tasks.typeDeleteToConfirm} className="text-rose-300">
+            <Input type="text" name="confirmDelete" tone="danger" required placeholder="delete" autoFocus />
+          </Field>
           <div className="flex items-end gap-2">
             <Button type="submit" variant="destructive" size="sm" disabled={isDeletingTodo}>
               {copy.tasks.delete}

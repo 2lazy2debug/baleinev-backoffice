@@ -10,21 +10,43 @@ export const fieldSizeClasses: Record<ControlSize, string> = {
 };
 
 export const inputBaseClasses =
-  "w-full rounded-md border border-[var(--line)] bg-[var(--panel)] outline-none transition focus:border-[var(--accent)] disabled:opacity-50";
+  "w-full rounded-md border bg-[var(--panel)] outline-none transition focus:border-[var(--accent)] disabled:opacity-50";
+
+/** Border colour of a field: the line token, or rose when the field is the risky one. */
+const fieldTones = {
+  default: "border-[var(--line)]",
+  danger: "border-rose-400/60",
+} as const;
+
+type FieldTone = keyof typeof fieldTones;
+
+/** Borderless variant for fields that live inside a table cell and provide their own frame. */
+const bareFieldClasses = "w-full bg-transparent outline-none disabled:opacity-50";
 
 /** For fields whose height is driven by their content — textareas, multi-selects.
  *  Same recipe, padding instead of a fixed height. */
-export const autoHeightFieldClasses = cn(inputBaseClasses, "px-3 py-2");
+export const autoHeightFieldClasses = cn(inputBaseClasses, fieldTones.default, "px-3 py-2");
 
-export function inputClasses(size: ControlSize = "md") {
-  return cn(inputBaseClasses, fieldSizeClasses[size]);
+export function inputClasses(size: ControlSize = "md", tone: FieldTone = "default") {
+  return cn(inputBaseClasses, fieldTones[tone], fieldSizeClasses[size]);
 }
 
-type InputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> & { size?: ControlSize };
+type InputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> & {
+  size?: ControlSize;
+  tone?: FieldTone;
+  /** No frame — for inputs inside a table cell, where the cell is the frame. */
+  bare?: boolean;
+};
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { className, size = "md", ...props },
+  { className, size = "md", tone = "default", bare = false, ...props },
   ref,
 ) {
-  return <input ref={ref} className={cn(inputClasses(size), className)} {...props} />;
+  return (
+    <input
+      ref={ref}
+      className={cn(bare ? bareFieldClasses : inputClasses(size, tone), className)}
+      {...props}
+    />
+  );
 });

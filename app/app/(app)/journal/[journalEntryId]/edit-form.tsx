@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { AccountType } from "@prisma/client";
 
 import { FormError } from "@/components/form-error";
-import { Button, Field, Input, Select } from "@/components/ui";
+import { Button, Field, Input, Select, buttonClasses } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import { updateJournalEntryAction } from "../actions";
@@ -132,10 +132,7 @@ export function JournalEntryEditForm({
         <Button type="submit" variant="primary" disabled={isPending}>
           {shellCopy.save}
         </Button>
-        <Link
-          href="/journal"
-          className="inline-flex h-10 items-center justify-center rounded-md border border-[var(--line)] px-4 text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--panel-strong)]"
-        >
+        <Link href="/journal" className={buttonClasses()}>
           {shellCopy.cancel}
         </Link>
       </div>

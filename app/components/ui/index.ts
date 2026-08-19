@@ -10,6 +10,7 @@ export * from "./Textarea";
 export * from "./Select";
 export * from "./MultiSelect";
 export * from "./Checkbox";
+export * from "./Chip";
 export * from "./Radio";
 export * from "./Modal";
 export * from "./Alert";

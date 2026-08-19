@@ -889,19 +889,20 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                       {lineItems.map((item) => (
                         <TR key={item.id}>
                           <TD className="px-3 py-2">
-                            <input
+                            <Input
+                              bare
                               type="text"
                               value={item.description}
                               onChange={(e) =>
                                 updateLineItem(item.id, "description", e.target.value)
                               }
                               disabled={isEditingPaidInvoice}
-                              className="w-full rounded-lg border-0 bg-transparent outline-none"
-                              placeholder="Description"
+                              placeholder={copy.invoices.description}
                             />
                           </TD>
                           <TD className="px-3 py-2 text-right">
-                            <input
+                            <Input
+                              bare
                               type="number"
                               step="0.01"
                               min="0"
@@ -910,11 +911,12 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                                 updateLineItem(item.id, "quantity", Number(e.target.value))
                               }
                               disabled={isEditingPaidInvoice}
-                              className="w-full rounded-lg border-0 bg-transparent text-right outline-none"
+                              className="text-right"
                             />
                           </TD>
                           <TD className="px-3 py-2 text-right">
-                            <input
+                            <Input
+                              bare
                               type="number"
                               step="0.01"
                               min="0"
@@ -923,7 +925,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                                 updateLineItem(item.id, "unitPrice", Number(e.target.value))
                               }
                               disabled={isEditingPaidInvoice}
-                              className="w-full rounded-lg border-0 bg-transparent text-right outline-none"
+                              className="text-right"
                             />
                           </TD>
                           <TD className="px-3 py-2 text-right">
