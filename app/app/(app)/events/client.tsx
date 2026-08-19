@@ -1,10 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Chip, ChipRemoveButton, Input, Panel, PanelHeader, SectionTitle, Select, cn, nestedSurfaceClasses } from "@/components/ui";
+import { Badge, Button, Chip, ChipRemoveButton, IconButton, Input, Panel, PanelHeader, SectionTitle, Select, cn, nestedSurfaceClasses } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import {
@@ -93,6 +94,7 @@ type EventsCopy = {
   notes: string;
   noEvents: string;
   deleteEvent: string;
+  deleteShift: string;
   isOff: string;
   toggleOn: string;
   toggleOff: string;
@@ -220,13 +222,13 @@ export default function EventsPageClient({
           </div>
           <FormError message={createEventTypeState.error} />
           <form action={createEventTypeFormAction} className="flex flex-wrap items-end gap-2">
-            <div className="w-48">
+            <div className="w-full sm:w-48">
               <Input type="text" name="name" required placeholder={copy.eventTypeName} />
             </div>
-            <div className="w-56">
+            <div className="w-full sm:w-56">
               <Input type="text" name="description" placeholder={copy.eventTypeDescription} />
             </div>
-            <Button type="submit" variant="primary" disabled={isCreatingEventType}>
+            <Button type="submit" variant="primary" disabled={isCreatingEventType} className="w-full sm:w-auto">
               {copy.createEventType}
             </Button>
           </form>
@@ -271,8 +273,8 @@ export default function EventsPageClient({
           {events.map((event) => (
             <Panel key={event.id}>
               {/* Event header */}
-              <PanelHeader className="items-start">
-                <div>
+              <PanelHeader className="flex-col items-start sm:flex-row">
+                <div className="w-full sm:w-auto">
                   <div className="flex items-center gap-2">
                     <span
                       className="inline-block h-2.5 w-2.5 rounded-full"
@@ -285,19 +287,20 @@ export default function EventsPageClient({
                   {event.costCenter ? <p className="text-xs text-[var(--muted)]">{event.costCenter.code}</p> : null}
                   {event.notes ? <p className="mt-1 text-xs text-[var(--muted)]">{event.notes}</p> : null}
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
                   <Button
                     type="button"
                     variant="secondary"
                     disabled={downloadingEventId === event.id}
                     onClick={() => handleDownloadPdf(event)}
+                    className="grow sm:grow-0"
                   >
                     {downloadingEventId === event.id ? copy.downloadingPdf : copy.exportPdf}
                   </Button>
                   {canManageEvents ? (
-                    <form action={deleteEventFormAction}>
+                    <form action={deleteEventFormAction} className="grow sm:grow-0">
                       <input type="hidden" name="id" value={event.id} />
-                      <Button type="submit" variant="destructive" disabled={isDeletingEvent}>
+                      <Button type="submit" variant="destructive" disabled={isDeletingEvent} className="w-full sm:w-auto">
                         {copy.deleteEvent}
                       </Button>
                     </form>
@@ -337,7 +340,10 @@ export default function EventsPageClient({
 
                             return (
                               <div key={shift.id} className={cn(nestedSurfaceClasses, "overflow-hidden")}>
-                                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5">
+                                {/* On a phone a shift is a full-width card: the info block,
+                                    then its actions stacked underneath. From sm — where the
+                                    row has room again — it is back to one dense line. */}
+                                <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:py-2.5">
                                   <div className="space-y-0.5">
                                     <p className="text-sm font-semibold text-[var(--ink)]">{shift.role || "General"}</p>
                                     <p className="text-xs text-[var(--muted)]">{formatTime(shift.startTime)}–{formatTime(shift.endTime)}</p>
@@ -357,18 +363,18 @@ export default function EventsPageClient({
                                     ) : null}
                                   </div>
 
-                                  <div className="flex flex-wrap items-center gap-2">
+                                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                                     {isReadOnly ? null : signed ? (
                                       <form action={withdrawFormAction}>
                                         <input type="hidden" name="shiftId" value={shift.id} />
-                                        <Button type="submit" variant="destructive" size="sm" disabled={isWithdrawing}>
+                                        <Button type="submit" variant="destructive" size="sm" disabled={isWithdrawing} className="w-full sm:w-auto">
                                           {copy.withdraw}
                                         </Button>
                                       </form>
                                     ) : !isFull ? (
                                       <form action={signUpFormAction}>
                                         <input type="hidden" name="shiftId" value={shift.id} />
-                                        <Button type="submit" variant="primary" size="sm" disabled={isSigningUp}>
+                                        <Button type="submit" variant="primary" size="sm" disabled={isSigningUp} className="w-full sm:w-auto">
                                           {copy.signUp}
                                         </Button>
                                       </form>
@@ -376,9 +382,9 @@ export default function EventsPageClient({
 
                                     {/* Admin: assign someone else */}
                                     {canManageEvents && !isFull ? (
-                                      <form action={adminAssignFormAction} className="flex items-center gap-1">
+                                      <form action={adminAssignFormAction} className="flex items-center gap-2">
                                         <input type="hidden" name="shiftId" value={shift.id} />
-                                        <div className="w-40">
+                                        <div className="min-w-0 grow sm:w-40 sm:grow-0">
                                           <Select name="userId" defaultValue="" size="sm">
                                             <option value="" disabled>{copy.assignStaff}</option>
                                             {allUsers
@@ -388,17 +394,19 @@ export default function EventsPageClient({
                                               ))}
                                           </Select>
                                         </div>
-                                        <Button type="submit" variant="secondary" size="sm" disabled={isAdminAssigning}>
-                                          +
-                                        </Button>
+                                        <IconButton type="submit" tone="accent" label={copy.assignStaff} disabled={isAdminAssigning}>
+                                          <Plus />
+                                        </IconButton>
                                       </form>
                                     ) : null}
 
-                                    {/* Admin: remove staff, add shift, delete shift */}
+                                    {/* Admin: delete the shift */}
                                     {canManageEvents ? (
-                                      <form action={deleteShiftFormAction}>
+                                      <form action={deleteShiftFormAction} className="self-end sm:self-auto">
                                         <input type="hidden" name="id" value={shift.id} />
-                                        <Button type="submit" variant="destructive" size="sm" disabled={isDeletingShift}>×</Button>
+                                        <IconButton type="submit" tone="delete" label={copy.deleteShift} disabled={isDeletingShift}>
+                                          <Trash2 />
+                                        </IconButton>
                                       </form>
                                     ) : null}
                                   </div>

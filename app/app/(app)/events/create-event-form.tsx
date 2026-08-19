@@ -121,7 +121,7 @@ export default function CreateEventForm({ eventTypes, costCenters, editionStartD
           </Field>
           {dateError ? <FormError message={dateError} className="sm:col-span-2 lg:col-span-3" /> : null}
           <div className="sm:col-span-2 lg:col-span-3">
-            <Button type="submit" variant="primary" disabled={isPending || !!dateError}>
+            <Button type="submit" variant="primary" disabled={isPending || !!dateError} className="w-full sm:w-auto">
               {copy.createEvent}
             </Button>
           </div>

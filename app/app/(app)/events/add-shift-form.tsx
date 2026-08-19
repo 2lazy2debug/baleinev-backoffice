@@ -79,7 +79,8 @@ export default function AddShiftForm({ eventDayId, existingShifts, copy }: Props
           size="sm"
         />
       </div>
-      <div className="w-40">
+      {/* Grows into whatever the wrapped row leaves it on a phone; fixed again at sm. */}
+      <div className="min-w-0 grow sm:w-40 sm:grow-0">
         <Input type="text" name="role" required placeholder={copy.role} size="sm" />
       </div>
       <div className="w-16">

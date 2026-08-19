@@ -5,6 +5,13 @@ Baleinev Comptes currently has no mobile layout — the sidebar-driven desktop s
 
 ---
 
+## !!! Important notice !!!
+Refrain from performing any kind of test until the implementation of all the steps + the "## Interactions & Behavior" section are marked as **done**
+
+Only then, perform the variety of tests you would usually perform : screenshots with puppeteer, front-end validation check, ensuring that nothing is broken, verify that desktop is preserved etc. 
+
+You are still allowed to run linting to find obvious mistakes and fix them on the go.
+
 ## Implementation status — updated 2026-08-19
 
 **Done: the foundation.** The three cross-cutting sections of this handoff —
@@ -18,9 +25,10 @@ History/New report tabs and the history cardlets. It is the worked example for e
 remaining screen: read `expense-reports/tabs.tsx` and `expense-reports/client.tsx`
 before starting one.
 
-**Not started: sections 4 and 6–8** (Events touch layout, Journal cardlets, Calendar
-agenda, Budget cardlets). Section 3 (Tasks) and section 5 (Passwords) needed nothing
-beyond the global 44px floor and are effectively done.
+**Done: Events (§4).** Shift cards, the assign-staff row and the icon actions are on
+`main` — see the section below for what shipped.
+
+**Not started: sections 6–8** (Journal cardlets, Calendar agenda, Budget cardlets).
 
 ### What is on `main`
 
@@ -31,6 +39,7 @@ beyond the global 44px floor and are effectively done.
 | `feat(shell): mobile bottom bar replaces the sidebar below lg` | `components/mobile/` (`mobile-shell.tsx`, `mobile-sheet.tsx`, `mobile-nav-button.tsx`), `components/navigation.ts`, the `hidden lg:flex` sidebar, `pb-24` on `<main>`, `SignOutButton nav`, four new `shell` dictionary keys, two sheet animation tokens in `globals.css`. |
 | `docs: record the responsive rules in the design system` | `CLAUDE.md` and `docs/file-structure.md`. |
 | `feat(expense-reports): tabs and cardlets on a phone` | `expense-reports/tabs.tsx` (the History/New report toggle), the history cardlets in `expense-reports/client.tsx`, and the `newReport` dictionary key. |
+| `feat(events): shift cards and icon actions on a phone` | `events/client.tsx` (shift cards below `sm`, stacked event header, `Plus`/`Trash2` `IconButton`s for assign/delete-shift), `events/add-shift-form.tsx`, `events/create-event-form.tsx`, and the `deleteShift` dictionary key. |
 
 Verified in the real app at 390×844 (admin role, local DB): bottom bar, apps sheet,
 "… other apps" with Back, edition modal, full-screen Settings. Desktop at 1440px is
@@ -71,8 +80,9 @@ already built — **do not add new primitives, and do not touch `components/mobi
    branch — lift the computation above both.
 2. **Touch sizing** is already handled by the control scale. If a screen looks cramped
    on a phone, the fix is a layout class on that screen, not a height on a control.
-3. **Events (§4)** needs the shift card layout and full-width Sign up/Withdraw; the
-   `×` chips in `component-changes.md` §6 are already solved by `ChipRemoveButton`.
+3. ~~**Events (§4)**~~ — done. A screen whose rows are already cards needs no new
+   primitive: the row becomes `flex-col … sm:flex-row`, the action cluster stacks, and
+   the sub-44px `+`/`×` text buttons become `<IconButton>`s.
 4. ~~**Expense Reports tabs (§2)**~~ — done. `expense-reports/tabs.tsx` is the pattern
    for any other screen that has to choose between two panels on a phone: a client
    wrapper that takes both halves as ReactNode props and keeps the toggle in local
@@ -152,8 +162,39 @@ their own rows with the status and rejection reason and no review actions. Deskt
 *Needed nothing beyond the global 44px control floor, which is now in `components/ui/control.ts`.*
 - Already a single column of cards on desktop (todo cards + standalone task cards) — no structural change needed below `lg`, this screen mainly validates the bottom-bar overlay pattern. Bump the "Mark done" / status buttons to full-width 44px.
 
-### 4. Events (priority) — admin sees management controls, department sees sign up only ⬜ TO DO
+### 4. Events (priority) — admin sees management controls, department sees sign up only ✅ DONE
 - Event header card → day sections (unchanged structure) → shift cards. On mobile, each shift is a full-width card: role/time/spots info, then a full-width Sign up/Withdraw button. Admin-only: an "Assign staff" row (`Select` + 44×44 icon button) and a 44×44 delete-shift `IconButton` (replacing today's inline `×` text buttons, which are well under the 44px minimum) — gate all of it behind `canManageEvents` exactly as today.
+
+**How this shipped:**
+- **No new component, no new state.** The shift row is the same markup with a
+  direction switch: `flex flex-col gap-3 … sm:flex-row sm:flex-wrap sm:items-center
+  sm:justify-between`. The action cluster does the same, so on a phone the info block
+  is followed by stacked, full-width actions and from `sm` it is one dense line again.
+- **The breakpoint is `sm`, not `lg`.** Below `lg` the sidebar is gone, so at 768px the
+  row has *more* room than it does on desktop — a full-width 660px "Sign up" would be a
+  worse design, not a more touchable one. The 44px control floor still applies below
+  `lg` either way, so the tablet row is touch-sized without being stretched. Same
+  breakpoint the table→cardlet split uses.
+- **`+` and `×` are gone.** Assign staff is `<IconButton tone="accent">` with a `Plus`,
+  delete shift is `<IconButton tone="delete">` with a `Trash2` — both `type="submit"`
+  inside the form they already lived in, so the server actions are untouched. They come
+  out of `controlSquare` at 44×44 on a phone and 32×32 on desktop, which is the whole
+  reason the scale exists. The delete sits `self-end` on a phone, as in the mockup.
+- **Delete event stays a labelled `<Button>`**, not the mockup's bare trash icon: it is
+  destructive and irreversible, and desktop should not change. It just goes full-width
+  next to Export PDF below `sm`.
+- **One new dictionary key**: `deleteShift` ("Delete shift" / "Supprimer le shift") —
+  the `×` button had no accessible name at all before, and `IconButton` requires one.
+- **The two admin forms on this screen got a mobile width, nothing else**: the event-type
+  name/description inputs and the add-shift description field are `w-full` /
+  `grow` on a phone and go back to their fixed widths at `sm`.
+
+Verified at 390×844, 768 and 1440 in both roles against the local DB: a department user
+sees the event header, the day sections and a full-width Sign up/Withdraw and nothing
+else; an admin additionally gets the assign row, the delete-shift icon, the day-off
+toggle and Add shift. Sign up, assign-staff and delete-shift were each submitted from
+the phone layout and checked in the database. Desktop at 1440px is unchanged apart from
+the two icon buttons replacing the `+`/`×` text buttons.
 
 ### 5. Passwords (priority) — both roles ✅ DONE
 *Same: the `IconButton` floor covers it. Re-check on a device once §2 and §4 land.*
@@ -178,14 +219,6 @@ their own rows with the status and rejection reason and no review actions. Deskt
 - *Wide tables → cardlets*: both halves of the recipe are components now — `<Table desktopOnly>` (hides the table below `sm`) and `components/ui/Cardlet.tsx`. Screens compose them; they do not re-write the recipe.
 - *Touch targets*: solved once, in the scale. `controlHeight`/`controlSquare` in `components/ui/control.ts` resolve to `h-11` below `lg` and to `h-10`/`h-8` above it, so `Button`, `IconButton`, `Input` and `Select` are all 44px on a phone and unchanged on desktop. **Do not add `h-11` at a call site** — `npm run check:design` rejects hand-sized controls outside `components/ui/`. The two tap targets that live outside the scale, `ChipRemoveButton` and `Modal`'s close button, were sized in their own components.
 
-## Interactions & Behavior
-- **Apps sheet**: slide up from the bottom nav's Apps button; tap the backdrop or the ✕ to close; "… other" swaps the sheet's inner content (not a second sheet) with a "‹ Back" affordance; selecting an app row navigates and closes the sheet.
-- **Settings**: opens full-screen from the Settings nav button; ✕ or "Save changes" closes it; same `saveSettings()` logic as desktop.
-- **Edition switcher**: opens a modal from the Edition nav button; selecting a non-current edition calls the existing `selectEdition(id)` (POST to `/api/preferences/edition`, then `router.refresh()`) and closes the modal; the nav button's label updates to the new short code once the page re-renders with the new `selectedEditionId`.
-- **Expense Reports tabs**: client-side only, no navigation — `useState<'create' | 'history'>` local to the mobile view.
-- **Password reveal**: toggles the same code element's text + swaps the eye/eye-off icon; no extra element.
-- **Sign up / Withdraw**: same server actions as desktop (`signUpForShiftAction` / `withdrawFromShiftAction`), just triggered from the full-width mobile button instead of the desktop-sized one.
-- **Responsive breakpoint**: use Tailwind's `lg` breakpoint (1024px) as the sidebar/bottom-bar switch point, matching the existing `lg:p-8` / collapse behavior already in `app-shell.tsx`.
 
 ## State Management ✅ DONE
 - `MobileShell` (new): local `useState` for which sheet is open (`'closed' | 'apps-primary' | 'apps-other' | 'settings' | 'edition'`) — a single enum avoids the "two things open at once" bugs a boolean-per-sheet approach invites.
@@ -210,6 +243,15 @@ All from the existing `app/globals.css` — no new tokens needed.
 | status colors | success `emerald-500/15` + `emerald-300`, error `rose-500/15` + `rose-300`, warning `amber-500/15` + `amber-300` | matches existing `Badge` tones |
 
 **Verified** against `app/app/globals.css` and `components/ui/Badge.tsx`: all eight color tokens, the radius scale and the three status tones are present and match the values above exactly. Nothing was added except the two sheet animations noted in the status section — reach for a token, never a literal, and let `npm run check:design` prove it.
+
+## Interactions & Behavior
+- **Apps sheet**: slide up from the bottom nav's Apps button; tap the backdrop or the ✕ to close; "… other" swaps the sheet's inner content (not a second sheet) with a "‹ Back" affordance; selecting an app row navigates and closes the sheet.
+- **Settings**: opens full-screen from the Settings nav button; ✕ or "Save changes" closes it; same `saveSettings()` logic as desktop.
+- **Edition switcher**: opens a modal from the Edition nav button; selecting a non-current edition calls the existing `selectEdition(id)` (POST to `/api/preferences/edition`, then `router.refresh()`) and closes the modal; the nav button's label updates to the new short code once the page re-renders with the new `selectedEditionId`.
+- **Expense Reports tabs**: client-side only, no navigation — `useState<'create' | 'history'>` local to the mobile view.
+- **Password reveal**: toggles the same code element's text + swaps the eye/eye-off icon; no extra element.
+- **Sign up / Withdraw**: same server actions as desktop (`signUpForShiftAction` / `withdrawFromShiftAction`), just triggered from the full-width mobile button instead of the desktop-sized one.
+- **Responsive breakpoint**: use Tailwind's `lg` breakpoint (1024px) as the sidebar/bottom-bar switch point, matching the existing `lg:p-8` / collapse behavior already in `app-shell.tsx`.
 
 ## Assets
 No new image assets. Icons are simple inline SVGs (grid, layers, sliders, log-out, chevrons, eye/eye-off, copy, pencil, trash, search, home, calendar, book, wallet, receipt, target/bullseye, users, landmark) drawn to match the existing `lucide-react` icon weight (1.6–1.8px stroke) already used throughout the app — swap them for the matching `lucide-react` imports during implementation (e.g. `Grid2x2`, `Layers`, `SlidersHorizontal`, `LogOut`) instead of inline SVG.
