@@ -19,13 +19,15 @@ type ModalProps = {
   onClose: () => void;
   title: string;
   size?: ModalSize;
+  /** Edge-to-edge below `sm` — for modals that are the whole screen on a phone (Settings). */
+  mobileFullScreen?: boolean;
   children: React.ReactNode;
   footer?: React.ReactNode;
 };
 
 // One modal implementation for the whole app — replaces both the two-div and
 // flex-wrapper patterns found in the audit. Always shadow-lg, always Escape-to-close.
-export function Modal({ open, onClose, title, size = "md", children, footer }: ModalProps) {
+export function Modal({ open, onClose, title, size = "md", mobileFullScreen = false, children, footer }: ModalProps) {
   useEffect(() => {
     if (!open) {
       return;
@@ -44,10 +46,17 @@ export function Modal({ open, onClose, title, size = "md", children, footer }: M
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div
+      className={cn(
+        "fixed inset-0 z-40 flex items-center justify-center bg-black/50",
+        mobileFullScreen ? "p-0 sm:p-4" : "p-4",
+      )}
+      onClick={onClose}
+    >
       <div
         className={cn(
-          "w-full overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg",
+          "w-full overflow-y-auto border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg",
+          mobileFullScreen ? "h-full rounded-none sm:h-auto sm:rounded-2xl" : "rounded-2xl",
           sizeClasses[size],
         )}
         onClick={(event) => event.stopPropagation()}
@@ -58,7 +67,7 @@ export function Modal({ open, onClose, title, size = "md", children, footer }: M
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="text-[var(--muted)] hover:text-[var(--ink)]"
+            className="-mr-2 flex h-11 w-11 items-center justify-center rounded-md text-[var(--muted)] transition hover:text-[var(--ink)] lg:mr-0 lg:h-8 lg:w-8"
           >
             <X className="h-5 w-5" />
           </button>

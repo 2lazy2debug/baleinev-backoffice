@@ -11,8 +11,9 @@ type IconButtonProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "size
   label: string;
 };
 
-// Square version of the shared control scale: `sm` (h-8) for row actions — the
-// common case — and `md` (h-10) alongside full-size buttons. Icon is always h-4 w-4.
+// Square version of the shared control scale: `sm` for row actions — the common
+// case — and `md` alongside full-size buttons. Both are a 44px touch target below
+// `lg` and collapse to the dense desktop footprint above it. Icon is always h-4 w-4.
 const base =
   "inline-flex shrink-0 items-center justify-center rounded-md border transition disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:h-4 [&_svg]:w-4";
 

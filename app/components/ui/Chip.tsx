@@ -11,7 +11,7 @@ export function Chip({ action, className, children, ...props }: ChipProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--panel-strong)] px-2.5 py-1 text-xs",
+        "inline-flex items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--panel-strong)] px-2.5 py-2 text-xs lg:py-1",
         className,
       )}
       {...props}
@@ -31,7 +31,9 @@ export function ChipRemoveButton({ label, className, type, ...props }: ChipRemov
       title={label}
       aria-label={label}
       className={cn(
-        "text-[var(--muted)] transition hover:text-rose-400 disabled:opacity-50",
+        // The chip itself stays a compact token; only the tap target grows below
+        // `lg`, where the row it sits in is touched rather than clicked.
+        "flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition hover:text-rose-400 disabled:opacity-50 lg:h-5 lg:w-5",
         className,
       )}
       {...props}
