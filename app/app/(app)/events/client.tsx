@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Input, Panel, PanelHeader, Select } from "@/components/ui";
+import { Badge, Button, Input, Panel, PanelHeader, Select, cn, nestedSurfaceClasses } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import {
@@ -345,7 +345,7 @@ export default function EventsPageClient({
                             const isFull = spotsFilled >= shift.capacity;
 
                             return (
-                              <div key={shift.id} className="overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--panel)]">
+                              <div key={shift.id} className={cn(nestedSurfaceClasses, "overflow-hidden")}>
                                 <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5">
                                   <div className="space-y-0.5">
                                     <p className="text-sm font-semibold text-[var(--ink)]">{shift.role || "General"}</p>

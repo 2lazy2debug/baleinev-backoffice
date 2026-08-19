@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 
 import { FormError } from "@/components/form-error";
-import { Button, Card, Checkbox, Field, Input, Textarea } from "@/components/ui";
+import { Button, Card, Checkbox, Field, Input, Textarea, nestedSurfaceClasses } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import { createAppointmentAction } from "./actions";
@@ -60,7 +60,7 @@ export function CreateAppointmentForm({
 
         <div className="md:col-span-2 space-y-1">
           <span className="text-sm font-medium">{copy.audience}</span>
-          <details className="rounded-xl border border-[var(--line)] bg-[var(--panel)]">
+          <details className={nestedSurfaceClasses}>
             <summary className="cursor-pointer px-3 py-2 text-sm text-[var(--muted)]">{copy.audienceHelp}</summary>
             <div className="max-h-56 space-y-2 overflow-y-auto border-t border-[var(--line)] px-3 py-2 text-sm">
               <Checkbox id="audience-everyone" name="audience" value="@everyone" label="@everyone" />

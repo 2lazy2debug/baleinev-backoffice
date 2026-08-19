@@ -18,7 +18,7 @@ export const MultiSelect = forwardRef<HTMLSelectElement, MultiSelectProps>(funct
       ref={ref}
       multiple
       size={Math.min(Math.max(rows, 3), 8)}
-      className={cn(autoHeightFieldClasses, className)}
+      className={cn(autoHeightFieldClasses, "text-sm", className)}
       {...props}
     >
       {children}

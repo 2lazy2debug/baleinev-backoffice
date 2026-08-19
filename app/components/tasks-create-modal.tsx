@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { Plus } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
-import { Button, Field, Input, Modal, Select, Textarea } from "@/components/ui";
+import { Button, Field, Input, Modal, Select, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
 type UserItem = {
@@ -65,7 +65,7 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
         <div className="grid gap-4 md:grid-cols-2">
           <form
             action={createTodoFormAction}
-            className="space-y-3 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4"
+            className={cn(nestedSurfaceClasses, "space-y-3 p-4")}
           >
             <h4 className="font-semibold">{copy.createTodo}</h4>
             <FormError message={createTodoState.error} />
@@ -94,7 +94,7 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
 
           <form
             action={createTaskFormAction}
-            className="space-y-3 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4"
+            className={cn(nestedSurfaceClasses, "space-y-3 p-4")}
           >
             <h4 className="font-semibold">{copy.createStandaloneTask}</h4>
             <FormError message={createTaskState.error} />

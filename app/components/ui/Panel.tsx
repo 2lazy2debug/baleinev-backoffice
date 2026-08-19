@@ -1,7 +1,16 @@
 import { cn } from "./cn";
 
+/**
+ * Frame for a surface nested inside a Card, Panel or Modal — one step lighter
+ * than the page-level frame. Exported as classes because the elements that need
+ * it are semantic and varied (form, details, div).
+ */
+export const nestedSurfaceClasses = "rounded-xl border border-[var(--line)] bg-[var(--panel)]";
+
 type PanelProps = React.HTMLAttributes<HTMLElement> & {
   as?: "section" | "div" | "article" | "ul";
+  /** Nested inside another surface — lighter frame, no page-level rounding. */
+  nested?: boolean;
 };
 
 /**
@@ -9,9 +18,16 @@ type PanelProps = React.HTMLAttributes<HTMLElement> & {
  * grouped rows. Where <Card> is a padded surface, <Panel> is the frame around
  * content that brings its own padding.
  */
-export function Panel({ as: As = "section", className, children, ...props }: PanelProps) {
+export function Panel({ as: As = "section", nested = false, className, children, ...props }: PanelProps) {
   return (
-    <As className={cn("overflow-hidden rounded-2xl border border-[var(--line)]", className)} {...props}>
+    <As
+      className={cn(
+        "overflow-hidden",
+        nested ? nestedSurfaceClasses : "rounded-2xl border border-[var(--line)]",
+        className,
+      )}
+      {...props}
+    >
       {children}
     </As>
   );

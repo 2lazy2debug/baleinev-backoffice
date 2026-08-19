@@ -14,7 +14,7 @@ export const inputBaseClasses =
 
 /** For fields whose height is driven by their content — textareas, multi-selects.
  *  Same recipe, padding instead of a fixed height. */
-export const autoHeightFieldClasses = cn(inputBaseClasses, "px-3 py-2 text-sm");
+export const autoHeightFieldClasses = cn(inputBaseClasses, "px-3 py-2");
 
 export function inputClasses(size: ControlSize = "md") {
   return cn(inputBaseClasses, fieldSizeClasses[size]);

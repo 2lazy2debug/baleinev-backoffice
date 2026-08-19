@@ -3,7 +3,7 @@
 import { useActionState, useMemo, useState } from "react";
 
 import { FormError } from "@/components/form-error";
-import { Button, Card, Field, Input, Select } from "@/components/ui";
+import { Alert, Button, Card, Field, Input, Select } from "@/components/ui";
 import { allowedProofMimeTypes } from "@/lib/proof-upload";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -127,11 +127,11 @@ export default function CreateExpenseReportForm({ departments, drivingRatePerKm,
                 />
               </Field>
 
-              <p className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--muted)]">
+              <Alert tone="info">
                 {copy.ratePerKm}: CHF {drivingRatePerKm.toFixed(2)} / km
                 <br />
                 <span className="font-semibold text-[var(--ink)]">{copy.calculatedAmount}: CHF {computedAmount.toFixed(2)}</span>
-              </p>
+              </Alert>
             </>
           )}
 
@@ -139,9 +139,9 @@ export default function CreateExpenseReportForm({ departments, drivingRatePerKm,
             <>
               <input type="hidden" name="paymentMethod" value={EXPENSE_PAYMENT_METHOD.MY_MONEY} />
               <Field label={copy.paymentMethod}>
-                <p className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--muted)]">
+                <Alert tone="info">
                   {copy.drivingRefundFixed}: <span className="font-semibold text-[var(--ink)]">{copy.myMoney}</span>
-                </p>
+                </Alert>
               </Field>
             </>
           ) : (
@@ -159,9 +159,7 @@ export default function CreateExpenseReportForm({ departments, drivingRatePerKm,
 
           {reportType === EXPENSE_REPORT_TYPE.DRIVING ? (
             <Field label={copy.uploadProof}>
-              <p className="rounded-xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-sm text-[var(--muted)]">
-                {copy.noProofRequired}
-              </p>
+              <Alert tone="info">{copy.noProofRequired}</Alert>
             </Field>
           ) : (
             <Field label={copy.uploadProof}>

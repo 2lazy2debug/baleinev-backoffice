@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
-import { Badge, Button, Card, Field, Input, Modal, Textarea } from "@/components/ui";
+import { Badge, Button, Card, Field, Input, Modal, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
 import { type ActionState } from "@/lib/server-action-helpers";
 
 type CalendarTask = {
@@ -462,7 +462,7 @@ export default function CalendarPageClient({
 
           <div
             ref={dayTimelineScrollRef}
-            className="max-h-[70vh] overflow-y-auto rounded-xl border border-[var(--line)] bg-[var(--panel)]"
+            className={cn(nestedSurfaceClasses, "max-h-[70vh] overflow-y-auto")}
           >
             <div className="grid grid-cols-[64px_1fr]">
               <div>

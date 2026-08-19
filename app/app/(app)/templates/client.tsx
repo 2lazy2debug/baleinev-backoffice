@@ -5,7 +5,7 @@ import { DocumentType } from "@prisma/client";
 import { Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, CardGrid, Field, IconButton, Input, Select } from "@/components/ui";
+import { Badge, Button, Card, CardGrid, Field, IconButton, Input, Select, Textarea } from "@/components/ui";
 import type { getDictionary } from "@/lib/i18n";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -72,12 +72,13 @@ export function TemplatesPageClient({
                         <Input type="text" name="name" defaultValue={template.name} required />
                       </Field>
                       <Field label={copy.templates.html}>
-                        <textarea
+                        <Textarea
                           name="html"
                           defaultValue={template.html}
                           required
                           rows={26}
-                          className="min-h-[420px] w-full rounded-xl border border-[var(--line)] bg-[var(--panel)] px-3 py-2 font-mono text-xs outline-none transition focus:border-[var(--accent)]"
+                          size="sm"
+                          className="min-h-[420px] font-mono"
                         />
                       </Field>
                       <div className="flex flex-wrap gap-2">
@@ -136,13 +137,13 @@ export function TemplatesPageClient({
             </Field>
 
             <Field label={copy.templates.html}>
-              <textarea
+              <Textarea
                 name="html"
                 defaultValue={templates.find((template) => template.isDefault && template.documentType === DocumentType.INVOICE)?.html ?? ""}
                 required
                 rows={18}
-                // check-design-ignore: code editor needs font-mono text-xs, Textarea is fixed to text-sm
-                className="min-h-[320px] w-full rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 font-mono text-xs outline-none transition focus:border-[var(--accent)]"
+                size="sm"
+                className="min-h-[320px] font-mono"
               />
             </Field>
 
