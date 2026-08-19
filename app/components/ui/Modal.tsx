@@ -73,7 +73,7 @@ export function Modal({ open, onClose, title, size = "md", mobileFullScreen = fa
           </button>
         </div>
         {children}
-        {footer ? <div className="mt-6 flex items-center justify-end gap-2">{footer}</div> : null}
+        {footer ? <div className="mt-6 flex flex-wrap items-center justify-end gap-2">{footer}</div> : null}
       </div>
     </div>
   );

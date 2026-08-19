@@ -74,6 +74,7 @@ export function AddJournalEntryModal({
       onClose={onClose}
       title={copy.addEntry}
       size="lg"
+      mobileFullScreen
       footer={
         <>
           <Button type="button" variant="secondary" onClick={onClose}>

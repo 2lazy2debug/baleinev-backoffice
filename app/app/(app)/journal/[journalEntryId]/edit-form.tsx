@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { AccountType } from "@prisma/client";
 
 import { FormError } from "@/components/form-error";
 import { Button, Field, Input, Select, buttonClasses } from "@/components/ui";
-import { initialActionState } from "@/lib/server-action-helpers";
+import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
 import { updateJournalEntryAction } from "../actions";
 
@@ -56,7 +57,20 @@ export function JournalEntryEditForm({
   moneyAccounts,
   costCenters,
 }: JournalEntryEditFormProps) {
-  const [state, formAction, isPending] = useActionState(updateJournalEntryAction, initialActionState);
+  const router = useRouter();
+
+  // This page is where a phone edits an entry — the table's inline editor is
+  // desktop-only. A save has to land the user back on the list, the same way
+  // closing the inline editor does; staying on the form reads as "nothing happened".
+  async function save(previous: ActionState, formData: FormData): Promise<ActionState> {
+    const result = await updateJournalEntryAction(previous, formData);
+    if (!result.error) {
+      router.push("/journal");
+    }
+    return result;
+  }
+
+  const [state, formAction, isPending] = useActionState(save, initialActionState);
 
   return (
     <form action={formAction} className="space-y-4">

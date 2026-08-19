@@ -45,7 +45,9 @@ export function Cardlet({ className, children, ...props }: React.HTMLAttributes<
   );
 }
 
-type CardletHeaderProps = React.HTMLAttributes<HTMLDivElement> & {
+// `title` is intentionally not the HTML attribute here — a cardlet header can carry a
+// stacked identity (a reference line above a label), so it takes a node, not a string.
+type CardletHeaderProps = Omit<React.HTMLAttributes<HTMLDivElement>, "title"> & {
   /** The row's identity — the column you would scan the table by. */
   title: React.ReactNode;
   /** Trailing element, typically a status <Badge> or an amount. */

@@ -38,6 +38,8 @@ app/
 │   ├── journal/
 │   │   ├── page.tsx              ← Journal entry list, reads ?fromExpenseReport for prefill
 │   │   ├── client.tsx            ← Client page with add-entry modal, filters, sorting
+│   │   ├── [journalEntryId]/     ← Full-page edit form — how a phone edits an entry (the
+│   │   │                            table's inline editor is desktop-only); returns to /journal on save
 │   │   └── actions.ts            ← Server actions: create/update/delete journal entries
 │   │
 │   ├── money-accounts/
@@ -121,7 +123,7 @@ app/
 | `app-shell.tsx` | Persistent sidebar navigation (desktop, `lg` and up), edition picker, settings modal (locale + refund profile), sign-out. Owns the navigation array both shells render, provides the read-only context and renders the closed-edition banner |
 | `navigation.ts` | `NavigationItem` / `EditionOption` — the nav shape shared by the sidebar and the mobile shell |
 | `edition-read-only.tsx` | `useEditionReadOnly()` / `WritableEditionOnly` / `EditionClosedBanner` — lets pages hide create/edit/delete affordances while the selected edition is closed |
-| `journal-table.tsx` | Full interactive journal entry table with filter, sort, inline edit |
+| `journal-table.tsx` | Full interactive journal entry table with filter, sort, inline edit above `sm`; the same rows as `<CardletList>` cards below it (filtering/sorting stay desktop-only, editing goes to `/journal/[journalEntryId]`) |
 | `add-journal-entry-modal.tsx` | Modal for creating/prefilling journal entries; used on journal page and from expense-report approval |
 | `sign-out-button.tsx` | Sign-out action for the app shell — a labelled `<Button>` when expanded, an icon `<IconButton>` when the sidebar is collapsed, a stacked nav button (`nav`) in the mobile bottom bar |
 | `form-error.tsx` | Renders a server-action error message through the shared `<Alert>` (nothing when there is no message) |

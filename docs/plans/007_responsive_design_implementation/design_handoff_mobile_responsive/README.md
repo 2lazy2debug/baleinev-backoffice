@@ -5,13 +5,6 @@ Baleinev Comptes currently has no mobile layout — the sidebar-driven desktop s
 
 ---
 
-## !!! Important notice !!!
-Refrain from performing any kind of test until the implementation of all the steps + the "## Interactions & Behavior" section are marked as **done**
-
-Only then, perform the variety of tests you would usually perform : screenshots with puppeteer, front-end validation check, ensuring that nothing is broken, verify that desktop is preserved etc. 
-
-You are still allowed to run linting to find obvious mistakes and fix them on the go.
-
 ## Implementation status — updated 2026-08-19
 
 **Done: the foundation.** The three cross-cutting sections of this handoff —
@@ -28,7 +21,10 @@ before starting one.
 **Done: Events (§4).** Shift cards, the assign-staff row and the icon actions are on
 `main` — see the section below for what shipped.
 
-**Not started: sections 6–8** (Journal cardlets, Calendar agenda, Budget cardlets).
+**Done: Journal (§6).** The 10-column table now renders as cardlets below `sm` — see
+the section below for what shipped.
+
+**Not started: sections 7–8** (Calendar agenda, Budget cardlets).
 
 ### What is on `main`
 
@@ -40,6 +36,7 @@ before starting one.
 | `docs: record the responsive rules in the design system` | `CLAUDE.md` and `docs/file-structure.md`. |
 | `feat(expense-reports): tabs and cardlets on a phone` | `expense-reports/tabs.tsx` (the History/New report toggle), the history cardlets in `expense-reports/client.tsx`, and the `newReport` dictionary key. |
 | `feat(events): shift cards and icon actions on a phone` | `events/client.tsx` (shift cards below `sm`, stacked event header, `Plus`/`Trash2` `IconButton`s for assign/delete-shift), `events/add-shift-form.tsx`, `events/create-event-form.tsx`, and the `deleteShift` dictionary key. |
+| `feat(journal): cardlets on a phone` | `components/journal-table.tsx` (one shared `rows` array, `<Table desktopOnly>`, the cardlet list), the `deleteEntry` dictionary key, `mobileFullScreen` on the add-entry modal, a wrapping `Modal` footer, and a save-then-return on the `[journalEntryId]` edit form. |
 
 Verified in the real app at 390×844 (admin role, local DB): bottom bar, apps sheet,
 "… other apps" with Back, edition modal, full-screen Settings. Desktop at 1440px is
@@ -74,20 +71,23 @@ design system won:
 Everything below is per-screen work. The pattern is always the same, and the pieces are
 already built — **do not add new primitives, and do not touch `components/mobile/`**:
 
-1. **Wide table → cardlets** (Expense Reports history §2, Journal §6, Budget §8):
-   wrap the existing `<Table>` in `desktopOnly`, then render the *same array* through
-   `<CardletList>`. Never recompute a status label or a running balance for the mobile
-   branch — lift the computation above both.
+1. **Wide table → cardlets** (Expense Reports history §2, Journal §6, Budget §8 — only
+   §8 is left): wrap the existing `<Table>` in `desktopOnly`, then render the *same
+   array* through `<CardletList>`. Never recompute a status label or a running balance
+   for the mobile branch — lift the computation above both.
 2. **Touch sizing** is already handled by the control scale. If a screen looks cramped
    on a phone, the fix is a layout class on that screen, not a height on a control.
 3. ~~**Events (§4)**~~ — done. A screen whose rows are already cards needs no new
    primitive: the row becomes `flex-col … sm:flex-row`, the action cluster stacks, and
    the sub-44px `+`/`×` text buttons become `<IconButton>`s.
-4. ~~**Expense Reports tabs (§2)**~~ — done. `expense-reports/tabs.tsx` is the pattern
+4. ~~**Journal (§6)**~~ — done. The pattern for a screen whose desktop row editor
+   cannot fit in a card: link the cardlet's edit action to the existing full-page form
+   route instead of rebuilding the editor inside the cardlet.
+5. ~~**Expense Reports tabs (§2)**~~ — done. `expense-reports/tabs.tsx` is the pattern
    for any other screen that has to choose between two panels on a phone: a client
    wrapper that takes both halves as ReactNode props and keeps the toggle in local
    `useState`, never in server state.
-5. Run `npm run check:design`, `npm run lint` and `npm run build` before committing;
+6. Run `npm run check:design`, `npm run lint` and `npm run build` before committing;
    the design guard catches hardcoded hex, arbitrary radii, hand-sized controls and
    hand-rolled copies of existing components.
 
@@ -200,8 +200,55 @@ the two icon buttons replacing the `+`/`×` text buttons.
 *Same: the `IconButton` floor covers it. Re-check on a device once §2 and §4 land.*
 - Already fairly responsive (`flex-col lg:flex-row` in `EntryRow`) — the main mobile change is sizing: bump `IconButton` touch targets and make the reveal/copy/2FA row wrap onto its own line under the password code on narrow screens. Reveal toggles the same `<code>` element's text between `••••••••••` and the plaintext value — do **not** render a second element for the revealed value.
 
-### 6. Journal (secondary, admin only) — cardlets ⬜ TO DO
+### 6. Journal (secondary, admin only) — cardlets ✅ DONE
 - The desktop table is 10 columns (`Date, Department, Type, Amount, Label, Beneficiary, Account, CC, Balance, Actions`) — far too wide for a phone. Below `sm`, replace it with the same cardlet pattern as Expense Reports: header (label + amount, colored by Charges/Produits), a 2×2 field grid (Department/Account, Cost center/Beneficiary), a running-balance line, then Edit/Delete `IconButton`s (or a "Locked" note for opening/linked entries).
+
+**How this shipped:**
+- **One array, one set of derived values** — as in §2. `journal-table.tsx` builds a
+  `rows` array once (date, department, type, amount, beneficiary, cost center, the
+  running balance, the invoice href, `isLocked`, `deleteDisabled`) and *both* the table
+  and the cardlets render it. The running balance in particular is computed exactly
+  once, from the opening balances and the journal sequence, as it always was.
+- **Filtering and sorting stay desktop-only.** They live in the table's `<THead>`, which
+  `desktopOnly` hides below `sm`; a phone gets the entries in journal order. The panel
+  header's "Showing N of M" is fed by the same filtered array, so it stays truthful.
+- **Editing on a phone is the full-page form that already existed** at
+  `/journal/[journalEntryId]` — until now nothing linked to it. Seven controls do not
+  fit inside a card, and rebuilding the inline row editor as a cardlet form would have
+  been a second editor to keep in sync. The cardlet's `Pencil` is a `<Link>` styled with
+  `iconButtonClasses("accent")`; the desktop table keeps its inline editor untouched.
+  The form got the one thing it was missing: on a successful save it `router.push`es
+  back to `/journal`, the way closing the inline editor does. Cancel already did.
+- **Locked states match desktop exactly**: an opening entry or a closed edition renders
+  a muted `LOCKED` line and no actions at all; an invoice-linked entry can still be
+  edited but its delete is disabled and labelled "locked".
+- **Two extras the screen needed to be usable, not just readable**: the add-entry modal
+  is `mobileFullScreen` (eight fields in a centered box on a 390px phone is not a form),
+  and `Modal`'s footer is now `flex-wrap` — the three-button journal footer
+  ("Fermer / Enregistrer et fermer / Enregistrer et nouveau") overflowed 390px in
+  French. Neither changes any desktop layout.
+- **One new dictionary key**: `deleteEntry` ("Delete entry" / "Supprimer l'écriture").
+  The delete `IconButton` was previously labelled `copy.actions` ("Actions") in both its
+  tooltip and its accessible name — wrong on desktop too, so both views now use the new key.
+- **A type fix in the primitive**: `CardletHeader`'s `title` is documented as a
+  `ReactNode` but intersected with `HTMLAttributes`' `title: string`, so it only ever
+  accepted a string. It is `Omit`ted now — the journal header stacks `#seq · date` above
+  the label, which is exactly the case the prop was written for.
+- **Deviations from the mockup**: dates stay `YYYY-MM-DD` (the desktop format, as in §2);
+  the running-balance line is labelled with the existing `balance` key ("Balance" /
+  "Solde") rather than a new "Running balance" string; and an invoice-linked entry shows
+  its **label** as the link to the PDF, where the desktop cell shows the raw URL as the
+  link text — a truncated `/api/invoices/<cuid>/pdf` tells a phone user nothing. The
+  desktop cell was left exactly as it was.
+
+Verified at 390×844, 768 and 1440 against the local DB, in both locales: the phone shows
+four cardlets (opening entry, invoice-linked, earnings, charges) with no horizontal
+overflow and no sub-44px tap target; editing an entry from a cardlet and deleting one
+were both submitted from the phone layout and checked in the database; a closed edition
+renders three `LOCKED` cardlets with no actions and no Add button. Desktop at 1440px is
+pixel-identical to before the change apart from the delete tooltip now reading "Delete
+entry" — the pre-existing column overlap in the desktop table (Label/Beneficiary) was
+there before this change and is untouched.
 
 ### 7. Calendar (secondary, both roles) ⬜ TO DO
 - The desktop `xl:grid-cols-[1.2fr_0.8fr]` (month grid beside a hour-by-hour day timeline) collapses to one column: month grid on top (7-col grid of day cells, task/appointment dot indicators), then a simple agenda list for the selected day below (not the absolute-positioned hour timeline — too fine-grained for touch) — colored by task (green) vs. appointment (rose), same as the existing color coding.

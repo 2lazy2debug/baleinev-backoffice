@@ -1,13 +1,34 @@
 "use client";
 
 import { useActionState, useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { deleteJournalEntryAction, updateJournalEntryAction } from "@/app/(app)/journal/actions";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { IconButton, Input, Panel, PanelHeader, SectionTitle, Select, TD, TH, THead, TR, Table } from "@/components/ui";
+import {
+  Badge,
+  Cardlet,
+  CardletField,
+  CardletFields,
+  CardletHeader,
+  CardletList,
+  IconButton,
+  Input,
+  Panel,
+  PanelHeader,
+  SectionTitle,
+  Select,
+  TD,
+  TH,
+  THead,
+  TR,
+  Table,
+  cn,
+  iconButtonClasses,
+} from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
@@ -264,6 +285,29 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   const uniqueAccounts = [...new Set(entries.map((e) => e.moneyAccount.name))];
   const uniqueCostCenters = [...new Set(entries.map((e) => e.costCenter?.code).filter(Boolean))];
 
+  // Every value the two views show is derived once, here. The desktop table and the
+  // mobile cardlets render this same array — neither recomputes a label, an amount or
+  // a running balance of its own.
+  const rows = sortedEntries.map((entry) => ({
+    entry,
+    dateLabel: entry.date.toISOString().slice(0, 10),
+    departmentName: entry.department?.name ?? "-",
+    typeText: typeLabel(entry.accountType, locale),
+    isProduits: entry.accountType === "PRODUITS",
+    amountLabel: formatCurrency(Number(entry.amount.toString())),
+    beneficiary: entry.counterparty ?? "-",
+    costCenterCode: entry.costCenter?.code ?? "-",
+    balanceLabel: formatCurrency(
+      runningBalanceByEntryId[entry.id] ?? accountBalances[entry.moneyAccount.name] ?? 0,
+    ),
+    invoiceHref: entry.linkedInvoice ? `/api/invoices/${entry.linkedInvoice.id}/pdf` : null,
+    invoiceNumber: entry.linkedInvoice?.invoiceNumber ?? null,
+    // An opening entry, or any entry in a closed edition, has no actions at all;
+    // an invoice-linked entry can still be edited but never deleted.
+    isLocked: entry.isOpeningEntry || isReadOnly,
+    deleteDisabled: Boolean(entry.linkedInvoice),
+  }));
+
   return (
     <Panel as="div" className="flex h-full flex-col bg-[var(--panel)]">
       <PanelHeader className="shrink-0">
@@ -276,7 +320,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
         </div>
       ) : null}
 
-      <Table ref={tableRef} frame={false} frameClassName="flex-1" className="table-fixed">
+      <Table ref={tableRef} frame={false} desktopOnly frameClassName="flex-1" className="table-fixed">
           <colgroup>
             <col className="w-32" />
             <col className="w-40" />
@@ -403,7 +447,8 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
             </TR>
           </THead>
           <tbody>
-            {sortedEntries.map((entry) => {
+            {rows.map((row) => {
+              const entry = row.entry;
               const isEditing = editingId === entry.id;
               return (
                 <TR key={entry.id} className={isEditing ? "bg-[var(--panel-strong)]" : undefined}>
@@ -416,7 +461,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                         size="sm"
                       />
                     ) : (
-                      entry.date.toISOString().slice(0, 10)
+                      row.dateLabel
                     )}
                   </TD>
                   <TD>
@@ -430,7 +475,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                         {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
                       </Select>
                     ) : (
-                      entry.department?.name ?? "-"
+                      row.departmentName
                     )}
                   </TD>
                   <TD>
@@ -444,7 +489,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                         <option value="PRODUITS">{dictionaries[locale].common.produits}</option>
                       </Select>
                     ) : (
-                      typeLabel(entry.accountType, locale)
+                      row.typeText
                     )}
                   </TD>
                   <TD>
@@ -459,7 +504,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                         className="text-right"
                       />
                     ) : (
-                      formatCurrency(Number(entry.amount.toString()))
+                      row.amountLabel
                     )}
                   </TD>
                   <TD>
@@ -470,21 +515,21 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                         onChange={(e) => setEditDraft({ ...editDraft!, label: e.target.value })}
                         size="sm"
                       />
-                    ) : entry.linkedInvoice ? (
+                    ) : row.invoiceHref ? (
                       <a
-                        href={`/api/invoices/${entry.linkedInvoice.id}/pdf`}
+                        href={row.invoiceHref}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="truncate text-[var(--accent)] hover:underline"
-                        title={entry.linkedInvoice.invoiceNumber}
+                        title={row.invoiceNumber ?? undefined}
                       >
-                        {`/api/invoices/${entry.linkedInvoice.id}/pdf`}
+                        {row.invoiceHref}
                       </a>
                     ) : (
                       <span className="truncate">{entry.label}</span>
                     )}
                   </TD>
-                  <TD>{entry.counterparty ?? "-"}</TD>
+                  <TD>{row.beneficiary}</TD>
                   <TD>
                     {isEditing ? (
                       <Select
@@ -509,14 +554,12 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                         {costCenters.map((cc) => <option key={cc.id} value={cc.id}>{cc.code}</option>)}
                       </Select>
                     ) : (
-                      entry.costCenter?.code ?? "-"
+                      row.costCenterCode
                     )}
                   </TD>
-                  <TD className="font-semibold">
-                    {formatCurrency(runningBalanceByEntryId[entry.id] ?? accountBalances[entry.moneyAccount.name] ?? 0)}
-                  </TD>
+                  <TD className="font-semibold">{row.balanceLabel}</TD>
                   <TD>
-                    {entry.isOpeningEntry || isReadOnly ? (
+                    {row.isLocked ? (
                       <span className="text-xs text-[var(--muted)]">{copy.locked}</span>
                     ) : isEditing ? (
                       <div className="flex items-center gap-2">
@@ -546,8 +589,8 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                           <IconButton
                             type="submit"
                             tone="delete"
-                            label={entry.linkedInvoice ? copy.locked : copy.actions}
-                            disabled={Boolean(entry.linkedInvoice) || isDeleting}
+                            label={row.deleteDisabled ? copy.locked : copy.deleteEntry}
+                            disabled={row.deleteDisabled || isDeleting}
                           >
                             <Trash2 />
                           </IconButton>
@@ -560,6 +603,85 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
             })}
           </tbody>
         </Table>
+
+      {/* Below `sm` the 10-column table is unreadable, so the same rows render as
+          cards. Filtering and sorting live in the table header and stay desktop-only —
+          a phone gets the entries in journal order. */}
+      <CardletList className="p-3">
+        {rows.map((row) => (
+          <Cardlet key={row.entry.id}>
+            <CardletHeader
+              title={
+                <>
+                  <p className="text-3xs font-normal text-[var(--muted)]">
+                    #{row.entry.sequenceNumber} · {row.dateLabel}
+                  </p>
+                  {row.invoiceHref ? (
+                    <a
+                      href={row.invoiceHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-0.5 block truncate text-[var(--accent)]"
+                      title={row.invoiceNumber ?? undefined}
+                    >
+                      {row.entry.label}
+                    </a>
+                  ) : (
+                    <p className="mt-0.5 truncate">{row.entry.label}</p>
+                  )}
+                </>
+              }
+              action={
+                <div className="shrink-0 text-right">
+                  <Badge tone={row.isProduits ? "success" : "neutral"}>{row.typeText}</Badge>
+                  <p className={cn("mt-1 text-sm font-semibold", row.isProduits ? "text-emerald-300" : null)}>
+                    {row.amountLabel}
+                  </p>
+                </div>
+              }
+            />
+
+            <CardletFields>
+              <CardletField label={copy.department}>{row.departmentName}</CardletField>
+              <CardletField label={copy.account}>{row.entry.moneyAccount.name}</CardletField>
+              <CardletField label={copy.costCenter}>{row.costCenterCode}</CardletField>
+              <CardletField label={copy.beneficiary}>{row.beneficiary}</CardletField>
+            </CardletFields>
+
+            <p className="text-xs text-[var(--muted)]">
+              {copy.balance}: <span className="font-semibold text-[var(--ink)]">{row.balanceLabel}</span>
+            </p>
+
+            {row.isLocked ? (
+              <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.locked}</p>
+            ) : (
+              <div className="flex gap-2">
+                {/* Editing on a phone is the existing full-page form, not the table's
+                    inline row editor — seven controls do not fit inside a card. */}
+                <Link
+                  href={`/journal/${row.entry.id}`}
+                  title={copy.edit}
+                  aria-label={copy.edit}
+                  className={iconButtonClasses("accent")}
+                >
+                  <Pencil />
+                </Link>
+                <form action={deleteFormAction}>
+                  <input type="hidden" name="journalEntryId" value={row.entry.id} />
+                  <IconButton
+                    type="submit"
+                    tone="delete"
+                    label={row.deleteDisabled ? copy.locked : copy.deleteEntry}
+                    disabled={row.deleteDisabled || isDeleting}
+                  >
+                    <Trash2 />
+                  </IconButton>
+                </form>
+              </div>
+            )}
+          </Cardlet>
+        ))}
+      </CardletList>
     </Panel>
   );
 }
