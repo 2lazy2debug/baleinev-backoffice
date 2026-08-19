@@ -6,7 +6,7 @@ import { Check, Circle, Pencil, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Field, IconButton, Input, Select, Textarea } from "@/components/ui";
+import { Button, Card, Field, IconButton, Input, Select, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { decimalToNumber, formatCurrency } from "@/lib/utils";
 
@@ -171,7 +171,7 @@ export function TasksPageClient({
       ))}
 
       {ungroupedTasks.length > 0 ? (
-        <div className="space-y-2 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4">
+        <Card as="div" className="space-y-2">
           <h3 className="text-sm font-semibold">{copy.tasks.standaloneTasks}</h3>
           <FormError message={updateTaskState.error} />
           <FormError message={statusState.error} />
@@ -186,7 +186,7 @@ export function TasksPageClient({
             const canManageTask = task.createdById === access.id && !isReadOnly;
 
             return (
-              <div key={task.id} className="rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] p-3">
+              <div key={task.id} className={cn(nestedSurfaceClasses, "p-3")}>
                 <TaskTypeLabel type={task.type} copy={copy.tasks} />
 
                 {isGeneral ? (
@@ -219,7 +219,7 @@ export function TasksPageClient({
                           </div>
                         ) : null}
                         <div className="md:col-span-2">
-                          <Button type="submit" variant="primary" size="sm" disabled={isUpdatingTask}>
+                          <Button type="submit" variant="primary" disabled={isUpdatingTask}>
                             {copy.tasks.saveTask}
                           </Button>
                         </div>
@@ -321,7 +321,7 @@ export function TasksPageClient({
               </div>
             );
           })}
-        </div>
+        </Card>
       ) : null}
     </div>
   );
@@ -365,7 +365,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
   );
 
   return (
-    <article className="space-y-3 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4">
+    <Card as="article" className="space-y-3">
       {isEditing ? (
         <form action={updateTodoFormAction} className="grid gap-3 md:grid-cols-2">
           <FormError message={updateTodoState.error} className="md:col-span-2" />
@@ -446,7 +446,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
         </form>
       ) : null}
 
-      <div className="space-y-2 rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] p-3">
+      <div className={cn(nestedSurfaceClasses, "space-y-2 p-3")}>
         <p className="text-sm font-semibold">{copy.tasks.todoTasks}</p>
 
         {canManageTodoTasks ? (
@@ -492,7 +492,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
             {todo.tasks.map((task) => (
               <li
                 key={task.id}
-                className="flex items-center justify-between gap-3 rounded-lg border border-[var(--line)] bg-[var(--panel)] p-3"
+                className="flex items-center justify-between gap-3 rounded-lg border border-[var(--line)] bg-[var(--panel-strong)] p-3"
               >
                 <div className="min-w-0 flex-1">
                   <p className="font-medium break-words">{task.title}</p>
@@ -560,6 +560,6 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
           </ul>
         )}
       </div>
-    </article>
+    </Card>
   );
 }
