@@ -82,7 +82,9 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="relative min-w-0 flex-1 sm:max-w-sm">
+        {/* The search takes the whole first row on a phone — a 44px field sharing
+            390px with a count and a button is a field nobody can read. */}
+        <div className="relative w-full min-w-0 sm:w-auto sm:flex-1 sm:max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
           <Input
             type="search"
@@ -93,7 +95,7 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
             className="pl-9"
           />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end">
           <p className="text-sm text-[var(--muted)]">
             {filtered.length} {filtered.length === 1 ? copy.entrySingular : copy.entryPlural}
           </p>
