@@ -58,7 +58,7 @@ export function AccountPageClient({ locale, profile, bankDetails, joinableDepart
   );
 
   return (
-    <CardGrid className="items-start">
+    <CardGrid>
       <Card as="section" span="1/2">
         <SectionTitle>{copy.profile}</SectionTitle>
 

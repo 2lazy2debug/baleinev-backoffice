@@ -98,6 +98,14 @@ earlier, at `sm`: `<Table desktopOnly>` above, `<CardletList>` below, both fed b
 same array. `Card`/`CardGrid` spans already stack to one column below `sm` — never add
 a `grid-cols-*` without a mobile override.
 
+**Cards in one row are the height of the tallest.** `<CardGrid>` stretches its items,
+so a row of cards reads as one band instead of a ragged edge. This is a rule, not a
+default to be turned off: never write `items-start` (or `self-start` on a `<Card>`) to
+let a card shrink to its content. A card that looks empty beside a tall neighbour is a
+content or `span` problem. Below `sm` every span is `col-span-12`, so a row holds one
+card and there is nothing to equalise — the rule is desktop-only for free, with no
+media query.
+
 **A phone screen is a bar, a body and a bar.** Below `lg` the bottom bar names the
 app and `<PageHeader>` becomes the top bar: full-bleed, sticky, on `--panel`, closed
 by a rule. What that means when you build a screen:

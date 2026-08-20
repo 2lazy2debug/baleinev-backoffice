@@ -51,9 +51,21 @@ export function Card({
   );
 }
 
+/**
+ * The 12-column track that `<Card span>` slices.
+ *
+ * **Cards in one row are the height of the tallest one.** `items-stretch` is the
+ * grid default, but it is spelled out because it is a rule rather than an
+ * accident: a row of cards has to read as one band, and ragged bottoms make a
+ * screen look broken. Never opt a screen out with `items-start` — if a card is
+ * mostly empty next to a tall neighbour, the fix is its content or its `span`.
+ *
+ * The rule costs nothing on a phone: below `sm` every span is `col-span-12`, so
+ * a row holds one card and there is nothing to equalise.
+ */
 export function CardGrid({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("grid grid-cols-12 gap-4", className)} {...props}>
+    <div className={cn("grid grid-cols-12 items-stretch gap-4", className)} {...props}>
       {children}
     </div>
   );

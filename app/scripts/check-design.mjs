@@ -93,6 +93,12 @@ const RULES = [
     exempt: UI_LIB,
   },
   {
+    id: "card-row-opt-out",
+    re: /<CardGrid[^>]*\b(?:items|content)-start\b|<Card\b[^>]*\bself-start\b/g,
+    msg: "cards in a row are the height of the tallest — don't opt out with items-start/self-start (see CLAUDE.md)",
+    exempt: UI_LIB,
+  },
+  {
     id: "micro-text-size",
     re: /text-\[\d+px\]/g,
     msg: "hardcoded text size — use the type scale (text-3xs/text-2xs/text-xs/…)",
