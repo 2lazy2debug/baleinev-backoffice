@@ -1,0 +1,276 @@
+"use client";
+
+import { useActionState } from "react";
+import { FormError } from "@/components/form-error";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  CardGrid,
+  Chip,
+  Field,
+  Input,
+  SectionTitle,
+  Select,
+} from "@/components/ui";
+import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
+import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
+
+import { changePasswordAction, updateAccountNameAction, updateBankDetailsAction } from "./actions";
+
+type Copy = (typeof dictionaries)[Locale]["account"];
+
+type Props = {
+  locale: Locale;
+  profile: {
+    name: string;
+    email: string;
+    role: "ADMIN" | "DEPARTMENT";
+    departmentRoleNames: string[];
+  };
+  bankDetails: {
+    firstName: string | null;
+    lastName: string | null;
+    iban: string | null;
+    zip: string | null;
+    city: string | null;
+  };
+  /** Departments the user is not already in — the only ones worth asking to join. */
+  joinableDepartments: { id: string; name: string }[];
+};
+
+/**
+ * The account screen: one card per thing a user can change about themselves.
+ *
+ * Each card owns its own form and its own `useActionState`, so a failed password
+ * change never blanks the name field next to it, and "Saved." names the card it
+ * belongs to.
+ */
+export function AccountPageClient({ locale, profile, bankDetails, joinableDepartments }: Props) {
+  const copy = dictionaries[locale].account;
+
+  const [nameState, nameFormAction, isSavingName] = useActionState(updateAccountNameAction, initialActionState);
+  const [bankState, bankFormAction, isSavingBank] = useActionState(updateBankDetailsAction, initialActionState);
+  const [passwordState, passwordFormAction, isChangingPassword] = useActionState(
+    changePasswordAction,
+    initialActionState,
+  );
+
+  return (
+    <CardGrid className="items-start">
+      <Card as="section" span="1/2">
+        <SectionTitle>{copy.profile}</SectionTitle>
+
+        <form action={nameFormAction} className="mt-4 space-y-3">
+          <Field label={copy.name} htmlFor="account-name">
+            <Input id="account-name" name="name" type="text" defaultValue={profile.name} required />
+          </Field>
+          <div className="flex items-center gap-3">
+            <Button type="submit" variant="primary" disabled={isSavingName}>
+              {isSavingName ? copy.saving : copy.save}
+            </Button>
+            <SavedNotice state={nameState} copy={copy} />
+          </div>
+          <FormError message={nameState.error} />
+        </form>
+
+        <dl className="mt-5 space-y-3 border-t border-[var(--line)] pt-4 text-sm">
+          <ReadOnlyRow label={copy.email}>{profile.email}</ReadOnlyRow>
+          <ReadOnlyRow label={copy.role}>
+            {profile.role === "ADMIN" ? copy.roleAdmin : copy.roleDepartment}
+          </ReadOnlyRow>
+          <ReadOnlyRow label={copy.departments}>
+            {profile.departmentRoleNames.length > 0 ? (
+              <span className="flex flex-wrap gap-1.5">
+                {profile.departmentRoleNames.map((name) => (
+                  <Chip key={name}>{name}</Chip>
+                ))}
+              </span>
+            ) : (
+              <span className="text-[var(--muted)]">{copy.noDepartments}</span>
+            )}
+          </ReadOnlyRow>
+        </dl>
+      </Card>
+
+      <Card as="section" span="1/2">
+        <SectionTitle>{copy.bankDetails}</SectionTitle>
+        <p className="mt-1 text-sm text-[var(--muted)]">{copy.bankDetailsHint}</p>
+
+        <form action={bankFormAction} className="mt-4 space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label={copy.firstName} htmlFor="refund-first-name">
+              <Input
+                id="refund-first-name"
+                name="refundFirstName"
+                type="text"
+                defaultValue={bankDetails.firstName ?? ""}
+              />
+            </Field>
+            <Field label={copy.lastName} htmlFor="refund-last-name">
+              <Input
+                id="refund-last-name"
+                name="refundLastName"
+                type="text"
+                defaultValue={bankDetails.lastName ?? ""}
+              />
+            </Field>
+          </div>
+          <Field label={copy.iban} htmlFor="refund-iban">
+            <Input
+              id="refund-iban"
+              name="refundIban"
+              type="text"
+              defaultValue={bankDetails.iban ?? ""}
+              className="uppercase"
+            />
+          </Field>
+          <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
+            <Field label={copy.zip} htmlFor="refund-zip">
+              <Input id="refund-zip" name="refundZip" type="text" defaultValue={bankDetails.zip ?? ""} />
+            </Field>
+            <Field label={copy.city} htmlFor="refund-city">
+              <Input id="refund-city" name="refundCity" type="text" defaultValue={bankDetails.city ?? ""} />
+            </Field>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button type="submit" variant="primary" disabled={isSavingBank}>
+              {isSavingBank ? copy.saving : copy.save}
+            </Button>
+            <SavedNotice state={bankState} copy={copy} />
+          </div>
+          <FormError message={bankState.error} />
+        </form>
+      </Card>
+
+      <Card as="section" span="1/2">
+        <SectionTitle>{copy.password}</SectionTitle>
+
+        {/* `key` remounts the form once a change goes through, which is what clears
+            the three fields — a password field must not keep what was typed in it. */}
+        <form
+          key={passwordState.saved ? "changed" : "editing"}
+          action={passwordFormAction}
+          className="mt-4 space-y-3"
+        >
+          <Field label={copy.currentPassword} htmlFor="current-password">
+            <Input
+              id="current-password"
+              name="currentPassword"
+              type="password"
+              autoComplete="current-password"
+              required
+            />
+          </Field>
+          <Field label={copy.newPassword} htmlFor="new-password">
+            <Input
+              id="new-password"
+              name="newPassword"
+              type="password"
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+          </Field>
+          <Field label={copy.confirmPassword} htmlFor="confirm-password">
+            <Input
+              id="confirm-password"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+          </Field>
+          <Button type="submit" variant="primary" disabled={isChangingPassword}>
+            {isChangingPassword ? copy.saving : copy.changePassword}
+          </Button>
+        </form>
+
+        {passwordState.saved ? (
+          <Alert tone="success" className="mt-3">
+            {copy.passwordChanged}
+          </Alert>
+        ) : null}
+        <FormError message={passwordState.error} className="mt-3" />
+      </Card>
+
+      {/* The two cards below are drawn but not wired: their own plans come later. */}
+      <SoonCard
+        span="1/2"
+        title={copy.departmentAccess}
+        hint={copy.departmentAccessHint}
+        soonLabel={copy.availableSoon}
+      >
+        <Select aria-label={copy.departmentAccess} disabled defaultValue="">
+          <option value="">{copy.pickDepartment}</option>
+          {joinableDepartments.map((department) => (
+            <option key={department.id} value={department.id}>
+              {department.name}
+            </option>
+          ))}
+        </Select>
+        <Button type="button" variant="primary" disabled className="mt-3">
+          {copy.requestAccess}
+        </Button>
+      </SoonCard>
+
+      <SoonCard
+        span="1/2"
+        title={copy.twoFactor}
+        hint={copy.twoFactorHint}
+        soonLabel={copy.availableSoon}
+      >
+        <Button type="button" variant="primary" disabled>
+          {copy.enableTwoFactor}
+        </Button>
+      </SoonCard>
+    </CardGrid>
+  );
+}
+
+function ReadOnlyRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <dt className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{label}</dt>
+      <dd className="min-w-0 text-right">{children}</dd>
+    </div>
+  );
+}
+
+function SavedNotice({ state, copy }: { state: ActionState; copy: Copy }) {
+  if (!state.saved) {
+    return null;
+  }
+
+  return <span className="text-xs font-medium text-emerald-300">{copy.saved}</span>;
+}
+
+/** A card for a feature the screen already shows but cannot do yet — controls disabled, label says why. */
+function SoonCard({
+  span,
+  title,
+  hint,
+  soonLabel,
+  children,
+}: {
+  span: "1/2";
+  title: string;
+  hint: string;
+  soonLabel: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card as="section" span={span}>
+      <div className="flex items-start justify-between gap-3">
+        <SectionTitle>{title}</SectionTitle>
+        <Badge tone="neutral" className="shrink-0 whitespace-nowrap">
+          {soonLabel}
+        </Badge>
+      </div>
+      <p className="mt-1 text-sm text-[var(--muted)]">{hint}</p>
+      <div className="mt-4">{children}</div>
+    </Card>
+  );
+}
