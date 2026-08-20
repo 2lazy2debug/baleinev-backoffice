@@ -250,7 +250,7 @@ Document templates allow the admin to customise the HTML layout used for PDF gen
 - When departments are renamed, `syncDepartmentRolesFromDepartments()` updates `DepartmentRole.name` to keep display names current.
 
 ### Refund profile
-Each user can fill in their own bank details (first name, last name, IBAN, ZIP, city) via the settings modal in the app shell. These fields are saved to `/api/preferences/language` and stored on the `User` record. Admins can see these details when reviewing expense reports to know where to send reimbursements.
+Each user can fill in their own bank details (first name, last name, IBAN, ZIP, city) on the Account screen (`/account`). The Bank details card saves them through `updateBankDetailsAction`, which normalises the IBAN (upper-case, no spaces) and stores the five fields on the `User` record. Admins can see these details when reviewing expense reports to know where to send reimbursements.
 
 ---
 

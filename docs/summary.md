@@ -124,10 +124,11 @@ baleinev-backoffice/
   the user from the database on every server action and API route, so a stale JWT cannot grant
   admin rights.
 - **Mutations:** almost everything is a `"use server"` server action posting a `FormData`. The
-  exceptions are invoices, PDF rendering, proof download, QR rendering, and language/refund
+  exceptions are invoices, PDF rendering, proof download, QR rendering, and the edition/language
   preferences, which are REST route handlers.
 - **Error handling:** every server action takes `(prevState: ActionState, formData)` and returns
-  `{ error: string | null }` instead of throwing for expected validation/permission failures (see
+  `{ error: string | null, saved?: boolean }` instead of throwing for expected validation/permission
+  failures (`saved` is for forms whose success has nothing else to show — see
   `app/lib/server-action-helpers.ts`). Forms consume this via React's `useActionState` and render
   the message inline through `<FormError>` (`app/components/form-error.tsx`). `app/app/error.tsx`,
   `global-error.tsx`, and `not-found.tsx` are the fallback boundaries for anything unexpected that

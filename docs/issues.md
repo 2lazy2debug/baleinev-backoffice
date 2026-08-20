@@ -24,8 +24,8 @@ sandbox enabled where possible, and block network/file access during rendering.
 
 ### S6. State-changing REST routes rely on session cookie without explicit CSRF defense — low
 The invoice routes ([api/invoices/route.ts](../app/app/api/invoices/route.ts), POST/PATCH/PUT/DELETE)
-and [api/preferences/language](../app/app/api/preferences/language/route.ts) authorize purely via the
-NextAuth session cookie. Server *actions* get NextAuth/Next's built-in CSRF handling, but these
+and [api/preferences/edition](../app/app/api/preferences/edition/route.ts) authorize purely via the
+NextAuth session cookie. (`api/preferences/language` now only sets a cookie and writes nothing.) Server *actions* get NextAuth/Next's built-in CSRF handling, but these
 hand-rolled route handlers do not. The NextAuth session cookie defaults to `SameSite=Lax`, which
 blocks cross-site POSTs and mitigates most of the risk, but this is implicit — worth an explicit
 same-origin/`Origin` check on these mutating endpoints.

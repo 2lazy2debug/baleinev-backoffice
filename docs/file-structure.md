@@ -86,10 +86,15 @@ app/
 │   │   ├── client.tsx            ← Client-side create/activate/close/delete forms
 │   │   └── actions.ts            ← Server actions: create/set-active/delete/close edition, update driving rate
 │   │
-│   └── departments/
-│       ├── page.tsx              ← Department list (admin only, data-fetching only)
-│       ├── client.tsx            ← Client-side create/delete forms
-│       └── actions.ts            ← Server actions: create/delete department
+│   ├── departments/
+│   │   ├── page.tsx              ← Department list (admin only, data-fetching only)
+│   │   ├── client.tsx            ← Client-side create/delete forms
+│   │   └── actions.ts            ← Server actions: create/delete department
+│   │
+│   └── account/
+│       ├── page.tsx              ← The signed-in user's own account (global, not edition-scoped)
+│       ├── client.tsx            ← One card each: profile/name, bank details, password, + the two "available soon" ones
+│       └── actions.ts            ← Server actions: update name, update bank details, change password (all self-only)
 │
 ├── (auth)/
 │   └── login/
@@ -100,7 +105,7 @@ app/
     │   └── [...nextauth]/route.ts  ← NextAuth catch-all handler
     │
     ├── preferences/
-    │   ├── language/route.ts       ← POST: save locale + user refund profile
+    │   ├── language/route.ts       ← POST: set the locale cookie (nothing else — the Account screen owns the rest)
     │   └── edition/route.ts        ← POST: switch this user's selected edition
     │
     ├── documents/
@@ -122,7 +127,8 @@ app/
 
 | File | Purpose |
 |---|---|
-| `app-shell.tsx` | Persistent sidebar navigation (desktop, `lg` and up), edition picker, settings modal (locale + refund profile), sign-out. Owns the navigation array both shells render, provides the read-only context and renders the closed-edition banner |
+| `app-shell.tsx` | Persistent sidebar navigation (desktop, `lg` and up), edition picker, the Account link and the language dialog's trigger, sign-out. Owns the navigation array both shells render, provides the read-only context and renders the closed-edition banner |
+| `language-modal.tsx` | `<LanguageModal>` — the app's one language switch, opened by the globe button in both shells. Mount it only while open; the pending choice is local state |
 | `navigation.ts` | `NavigationItem` / `EditionOption` — the nav shape shared by the sidebar and the mobile shell |
 | `edition-read-only.tsx` | `useEditionReadOnly()` / `WritableEditionOnly` / `EditionClosedBanner` — lets pages hide create/edit/delete affordances while the selected edition is closed |
 | `journal-table.tsx` | Full interactive journal entry table with filter, sort, inline edit above `sm`; the same rows as `<CardletList>` cards below it (filtering/sorting stay desktop-only, editing goes to `/journal/[journalEntryId]`) |
@@ -138,9 +144,9 @@ Everything below the `lg` breakpoint, where the sidebar is hidden. Mounted once 
 
 | File | Purpose |
 |---|---|
-| `mobile-shell.tsx` | The fixed bottom bar (Apps · Edition · Settings · Sign out) and the apps sheet. Owns a single `Sheet` enum (`closed`/`apps-primary`/`apps-other`/`edition`) so two overlays can never be open at once; settings and edition switching are AppShell's own logic, passed in as props |
+| `mobile-shell.tsx` | The fixed bottom bar (Apps · Edition · Account · Language · Sign out) and the apps sheet. Owns a single `Sheet` enum (`closed`/`apps-primary`/`apps-other`/`edition`) so two overlays can never be open at once; the language dialog and edition switching are AppShell's own logic, passed in as props |
 | `mobile-sheet.tsx` | `<MobileSheet open onClose>` — bottom sheet with backdrop, drag handle and Escape-to-close. The mobile counterpart of `<Modal>` |
-| `mobile-nav-button.tsx` | `<MobileNavButton>` / `mobileNavButtonClasses` — the one bottom-bar button recipe, also used by `sign-out-button.tsx` |
+| `mobile-nav-button.tsx` | `<MobileNavButton>` / `<MobileNavLink>` / `mobileNavButtonClasses` — the one bottom-bar button recipe (slots share the bar evenly, so five fit at 320px), also used by `sign-out-button.tsx` |
 
 ### `components/ui/` — the design system
 
