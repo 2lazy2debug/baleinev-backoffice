@@ -140,9 +140,25 @@ The order to try things in, and it is strict:
    from the scales; a screen that reaches for `h-11` or `text-[13px]` is a scale that
    needs fixing, not a screen that needs an exception.
 
-Never copy a mockup's raw CSS. The mockups in `docs/plans/` are the visual target, not
-the source: where they disagree with the tokens (an 18px radius, a 13.5px type size),
-the tokens win, and `npm run check:design` will say so.
+**A mockup in `docs/plans/` is the approved target state.** A plan lands in that folder
+because the look it draws was decided on, so where a mockup and the app disagree, the
+app is what's out of date. An 18px radius or a 13.5px type size in a mockup is not a
+violation to correct back to the current scale — it is a change *to* the scale.
+
+The tokens stay the single source of truth in code, so the way to honour a mockup is to
+move its value into the scale — `:root`, `@theme`, `control.ts`, the primitive in
+`components/ui/` — and then build the screen from the token as always. Never paste a
+mockup's raw CSS into a component; `npm run check:design` keeps that honest. The value
+is the mockup's, the plumbing is still the design system's, and every other screen picks
+up the change for free.
+
+Two things follow from that:
+- **Editing a token repaints the whole app.** That reach is the point of having one, but
+  say what else moves before you change it, and look at the screens that share it.
+- **A mockup decides what it is about, not everything it draws.** A plan to restyle a
+  button decides buttons; the fields and panels it happens to render around them are
+  backdrop, and a stale backdrop is not an instruction to touch them. When it is
+  genuinely unclear whether something is the subject or the backdrop, ask.
 
 UI copy rules:
 - Name things by what they do, not what they are internally

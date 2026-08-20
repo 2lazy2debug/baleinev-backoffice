@@ -85,6 +85,12 @@ The mockups are static HTML with their own CSS; the app has a token-enforced des
 system (`npm run check:design` fails the build on drift). Where they disagreed, the
 design system won:
 
+> **Not the rule any more (2026-08-20).** Resolving these disagreements in the app's
+> favour was never asked for. A mockup under `docs/plans/` is the approved target, so a
+> radius or a type size it asks for is a change to the scale, not a violation — see the
+> mockup rule in `CLAUDE.md`. The list below is what shipped, not a precedent; the first
+> two entries are open questions rather than settled decisions.
+
 - **Sheet corners** are `rounded-t-2xl` (10px), not the mockup's 18px — 10px is the
   app's heaviest rounding and `rounded-[18px]` is a check-design violation.
 - **Type** is `text-3xs`/`text-sm` from the scale, not the mockup's `10px`/`13.5px`/`15px`.
