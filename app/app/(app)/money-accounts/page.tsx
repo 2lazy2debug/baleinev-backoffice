@@ -1,7 +1,7 @@
 import { AccountType } from "@prisma/client";
 
 import { requireMoneyAccountManager } from "@/lib/access";
-import { Card, CardGrid, PageHeader, SectionTitle } from "@/components/ui";
+import { Card, CardGrid, EmptyPage, PageHeader, SectionTitle } from "@/components/ui";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
@@ -34,11 +34,9 @@ export default async function MoneyAccountsPage() {
 
   if (!activeEdition) {
     return (
-      <PageHeader
-        eyebrow={copy.moneyAccounts.title}
-        title={copy.common.noEditionSelected}
-        description={copy.common.pickEditionHint}
-      />
+      <EmptyPage eyebrow={copy.moneyAccounts.title} title={copy.common.noEditionSelected}>
+        {copy.common.pickEditionHint}
+      </EmptyPage>
     );
   }
 

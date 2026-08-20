@@ -6,7 +6,7 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
 
 import InvoicesClient from "./client";
-import { PageHeader } from "@/components/ui";
+import { EmptyPage } from "@/components/ui";
 
 export default async function InvoicesPage() {
   await requireAdmin();
@@ -27,11 +27,9 @@ export default async function InvoicesPage() {
 
   if (!activeEdition) {
     return (
-      <PageHeader
-        eyebrow={copy.invoices.title}
-        title={copy.common.noEditionSelected}
-        description={copy.common.pickEditionHint}
-      />
+      <EmptyPage eyebrow={copy.invoices.title} title={copy.common.noEditionSelected}>
+        {copy.common.pickEditionHint}
+      </EmptyPage>
     );
   }
 

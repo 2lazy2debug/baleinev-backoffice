@@ -9,7 +9,7 @@ import { WritableEditionOnly } from "@/components/edition-read-only";
 
 import CalendarPageClient from "./client";
 import { CreateAppointmentForm } from "./create-appointment-form";
-import { PageHeader } from "@/components/ui";
+import { EmptyPage } from "@/components/ui";
 
 export default async function CalendarPage() {
   const access = await getCurrentUserAccess();
@@ -26,11 +26,9 @@ export default async function CalendarPage() {
 
   if (!activeEdition) {
     return (
-      <PageHeader
-        eyebrow={copy.calendar.title}
-        title={copy.common.noEditionSelected}
-        description={copy.common.pickEditionHint}
-      />
+      <EmptyPage eyebrow={copy.calendar.title} title={copy.common.noEditionSelected}>
+        {copy.common.pickEditionHint}
+      </EmptyPage>
     );
   }
 

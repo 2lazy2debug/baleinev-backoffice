@@ -5,7 +5,7 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
 
 import JournalPageClient from "./client";
-import { PageHeader } from "@/components/ui";
+import { EmptyPage, PageHeader } from "@/components/ui";
 
 type JournalPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -40,11 +40,9 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
 
   if (!activeEdition) {
     return (
-      <PageHeader
-        eyebrow={copy.journal.title}
-        title={copy.common.noEditionSelected}
-        description={copy.journal.pickEditionHint}
-      />
+      <EmptyPage eyebrow={copy.journal.title} title={copy.common.noEditionSelected}>
+        {copy.journal.pickEditionHint}
+      </EmptyPage>
     );
   }
 

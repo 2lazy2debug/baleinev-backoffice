@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 
 import { DepartmentsPageClient } from "./client";
-import { PageHeader } from "@/components/ui";
+import { EmptyPage, PageHeader } from "@/components/ui";
 
 export default async function DepartmentsPage() {
   const editionId = await resolveEditionIdOrNull();
@@ -22,11 +22,9 @@ export default async function DepartmentsPage() {
 
   if (!activeEdition) {
     return (
-      <PageHeader
-        eyebrow="Departments"
-        title="No edition selected"
-        description="Pick an edition in the sidebar before you start organizing departments."
-      />
+      <EmptyPage eyebrow="Departments" title="No edition selected">
+        Pick an edition before you start organizing departments.
+      </EmptyPage>
     );
   }
 

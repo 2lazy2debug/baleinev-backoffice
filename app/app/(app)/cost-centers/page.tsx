@@ -6,7 +6,7 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
 
 import { CostCentersPageClient } from "./client";
-import { PageHeader } from "@/components/ui";
+import { EmptyPage, PageHeader } from "@/components/ui";
 
 export default async function CostCentersPage() {
   const locale = await getLocale();
@@ -28,11 +28,9 @@ export default async function CostCentersPage() {
 
   if (!activeEdition) {
     return (
-      <PageHeader
-        eyebrow={copy.costCenters.title}
-        title={copy.common.noEditionSelected}
-        description={copy.common.pickEditionHint}
-      />
+      <EmptyPage eyebrow={copy.costCenters.title} title={copy.common.noEditionSelected}>
+        {copy.common.pickEditionHint}
+      </EmptyPage>
     );
   }
 

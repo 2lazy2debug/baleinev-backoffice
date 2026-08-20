@@ -5,7 +5,7 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
 
 import BudgetPageClient from "./client";
-import { PageHeader } from "@/components/ui";
+import { EmptyPage } from "@/components/ui";
 
 export default async function BudgetPage() {
   const locale = await getLocale();
@@ -42,11 +42,9 @@ export default async function BudgetPage() {
 
   if (!activeEdition) {
     return (
-      <PageHeader
-        eyebrow={copy.budget.title}
-        title={copy.common.noEditionSelected}
-        description={copy.common.pickEditionHint}
-      />
+      <EmptyPage eyebrow={copy.budget.title} title={copy.common.noEditionSelected}>
+        {copy.common.pickEditionHint}
+      </EmptyPage>
     );
   }
 

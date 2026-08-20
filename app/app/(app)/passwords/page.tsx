@@ -4,7 +4,7 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { isVaultConfigured } from "@/lib/secret-crypto";
 
 import { PasswordsPageClient } from "./client";
-import { PageHeader } from "@/components/ui";
+import { EmptyPage, PageHeader } from "@/components/ui";
 
 export default async function PasswordsPage() {
   const locale = await getLocale();
@@ -13,11 +13,9 @@ export default async function PasswordsPage() {
 
   if (!isVaultConfigured()) {
     return (
-      <PageHeader
-        eyebrow={copy.passwords.title}
-        title={copy.passwords.notConfiguredTitle}
-        description={copy.passwords.notConfiguredBody}
-      />
+      <EmptyPage eyebrow={copy.passwords.title} title={copy.passwords.notConfiguredTitle}>
+        {copy.passwords.notConfiguredBody}
+      </EmptyPage>
     );
   }
 

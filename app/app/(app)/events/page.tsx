@@ -4,7 +4,7 @@ import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 
 import EventsPageClient from "./client";
-import { PageHeader } from "@/components/ui";
+import { EmptyPage, PageHeader } from "@/components/ui";
 
 export default async function EventsPage() {
   const access = await getCurrentUserAccess();
@@ -47,7 +47,9 @@ export default async function EventsPage() {
 
   if (!activeEdition) {
     return (
-      <PageHeader eyebrow={copy.events.title} title={copy.events.title} description={copy.common.noEditionSelected} />
+      <EmptyPage eyebrow={copy.events.title} title={copy.common.noEditionSelected}>
+        {copy.common.pickEditionHint}
+      </EmptyPage>
     );
   }
 
