@@ -96,9 +96,14 @@ button {
   cursor: pointer;
 }
 
-input,
-button,
-textarea,
-select {
-  font: inherit;
+/* Form elements inherit the app font — but from `base`, so the type scale still
+   wins. Unlayered, this rule beats every `text-*` utility, and a <button> quietly
+   renders at the body's 16px however the control scale sized it. */
+@layer base {
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+  }
 }
