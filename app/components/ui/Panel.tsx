@@ -48,12 +48,20 @@ export function PanelHeader({ className, children, ...props }: React.HTMLAttribu
   );
 }
 
-type SectionTitleProps = React.HTMLAttributes<HTMLHeadingElement> & { as?: "h2" | "h3" };
+type SectionTitleProps = React.HTMLAttributes<HTMLHeadingElement> & {
+  as?: "h2" | "h3";
+  /**
+   * Hidden below `sm` — same meaning as <Table desktopOnly>. For a heading the
+   * mobile layout already states somewhere else (a <SegmentedControl> segment,
+   * the page title), so a phone is not shown the same word twice.
+   */
+  desktopOnly?: boolean;
+};
 
 /** The heading of a section — a Card, a Panel header, a grouped list. One size app-wide. */
-export function SectionTitle({ as: As = "h2", className, children, ...props }: SectionTitleProps) {
+export function SectionTitle({ as: As = "h2", desktopOnly = false, className, children, ...props }: SectionTitleProps) {
   return (
-    <As className={cn("text-lg font-semibold", className)} {...props}>
+    <As className={cn("text-lg font-semibold", desktopOnly ? "hidden sm:block" : null, className)} {...props}>
       {children}
     </As>
   );

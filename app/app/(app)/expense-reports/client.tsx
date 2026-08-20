@@ -165,18 +165,20 @@ export function ExpenseReportsPageClient({
 
   return (
     <div>
-      <Card as="section">
-        <SectionTitle>{copy.expenseReports.history}</SectionTitle>
+      {/* Below `sm` the frame and the heading go: the tab strip in the top bar
+          already says "History", and the cardlets are surfaces of their own. */}
+      <Card as="section" flushOnMobile>
+        <SectionTitle desktopOnly>{copy.expenseReports.history}</SectionTitle>
 
         {isAdmin ? (
-          <div className="mt-4 space-y-2">
+          <div className="space-y-2 sm:mt-4">
             <FormError message={approveState.error} />
             <FormError message={rejectState.error} />
           </div>
         ) : null}
 
         {rows.length === 0 ? (
-          <p className="mt-4 text-sm text-[var(--muted)]">{copy.expenseReports.noHistory}</p>
+          <p className="text-sm text-[var(--muted)] sm:mt-4">{copy.expenseReports.noHistory}</p>
         ) : (
           <>
             <Table dense desktopOnly frameClassName="mt-4">
@@ -278,7 +280,7 @@ export function ExpenseReportsPageClient({
               </tbody>
             </Table>
 
-            <CardletList className="mt-4">
+            <CardletList>
               {rows.map((row) => (
                 <Cardlet key={row.report.id}>
                   <CardletHeader

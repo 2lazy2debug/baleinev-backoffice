@@ -15,10 +15,24 @@ type CardProps = React.HTMLAttributes<HTMLElement> & {
   span?: CardSpan;
   /** Empty-state treatment: dashed border, no strong background. */
   dashed?: boolean;
+  /**
+   * Below `sm` the frame collapses — no border, no background, no padding.
+   * For a section whose mobile content is a <CardletList>: a cardlet is already
+   * a surface, and a card of cards reads as noise inside a 390px viewport.
+   */
+  flushOnMobile?: boolean;
   as?: "article" | "section" | "div";
 };
 
-export function Card({ span = "full", dashed = false, as: As = "article", className, children, ...props }: CardProps) {
+export function Card({
+  span = "full",
+  dashed = false,
+  flushOnMobile = false,
+  as: As = "article",
+  className,
+  children,
+  ...props
+}: CardProps) {
   return (
     <As
       className={cn(
@@ -26,6 +40,7 @@ export function Card({ span = "full", dashed = false, as: As = "article", classN
         dashed
           ? "border-dashed border-[var(--line)] bg-[var(--panel-strong)] text-sm text-[var(--muted)]"
           : "border-[var(--line)] bg-[var(--panel-strong)]",
+        flushOnMobile ? "max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:p-0" : null,
         spanClasses[span],
         className,
       )}

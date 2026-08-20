@@ -9,7 +9,7 @@ import { WritableEditionOnly } from "@/components/edition-read-only";
 import { ExpenseReportsPageClient } from "./client";
 import CreateExpenseReportForm from "./create-expense-report-form";
 import { ExpenseReportsTabs } from "./tabs";
-import { PageHeader } from "@/components/ui";
+import { EmptyPage } from "@/components/ui";
 
 export default async function ExpenseReportsPage() {
   const access = await getCurrentUserAccess();
@@ -44,23 +44,18 @@ export default async function ExpenseReportsPage() {
 
   if (!activeEdition) {
     return (
-      <PageHeader
-        eyebrow={copy.expenseReports.title}
-        title={copy.common.noEditionSelected}
-        description={copy.common.pickEditionHint}
-      />
+      <EmptyPage eyebrow={copy.expenseReports.title} title={copy.common.noEditionSelected}>
+        {copy.common.pickEditionHint}
+      </EmptyPage>
     );
   }
 
   return (
     <div className="space-y-8">
-      <PageHeader
+      <ExpenseReportsTabs
         eyebrow={copy.expenseReports.title}
         title={<>{copy.expenseReports.title} {activeEdition.name}</>}
         description={copy.expenseReports.subtitle}
-      />
-
-      <ExpenseReportsTabs
         copy={{ history: copy.expenseReports.history, newReport: copy.expenseReports.newReport }}
         create={
           <WritableEditionOnly>
