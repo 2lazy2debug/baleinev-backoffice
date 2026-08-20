@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Grid2x2, Layers, SlidersHorizontal, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleUserRound, Globe, Grid2x2, Layers, X } from "lucide-react";
 
-import { MobileNavButton } from "@/components/mobile/mobile-nav-button";
+import { MobileNavButton, MobileNavLink } from "@/components/mobile/mobile-nav-button";
 import { MobileSheet } from "@/components/mobile/mobile-sheet";
 import type { EditionOption, NavigationItem } from "@/components/navigation";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -20,8 +20,8 @@ type NavItem = Extract<NavigationItem, { type: "item" }>;
 /**
  * Which overlay is up, as a single enum rather than a boolean per surface — two
  * sheets can never be open at once, and closing is always `setSheet("closed")`.
- * Settings is not in here: it is the shell's existing <Modal>, opened through
- * `onOpenSettings` so there is one settings implementation, not two.
+ * The language dialog is not in here: it is AppShell's <LanguageModal>, opened
+ * through `onOpenLanguage` so the app has one language switch, not two.
  */
 type Sheet = "closed" | "apps-primary" | "apps-other" | "edition";
 
@@ -33,8 +33,8 @@ type MobileShellProps = {
   switchingEdition: boolean;
   /** AppShell's `selectEdition` — the mobile switcher is a container, not new logic. */
   onSelectEdition: (editionId: string) => void;
-  /** Opens AppShell's settings modal (which renders `mobileFullScreen`). */
-  onOpenSettings: () => void;
+  /** Opens AppShell's <LanguageModal> — the same dialog the sidebar's globe opens. */
+  onOpenLanguage: () => void;
   locale: Locale;
   pendingTaskCount: number;
 };
@@ -57,7 +57,7 @@ export function MobileShell({
   selectedEditionId,
   switchingEdition,
   onSelectEdition,
-  onOpenSettings,
+  onOpenLanguage,
   locale,
   pendingTaskCount,
 }: MobileShellProps) {
@@ -85,8 +85,9 @@ export function MobileShell({
       <nav className="fixed inset-x-0 bottom-0 z-30 flex justify-around border-t border-[var(--line)] bg-[var(--panel-strong)] px-1 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-2 lg:hidden">
         <MobileNavButton icon={Grid2x2} label={copy.apps} onClick={() => setSheet("apps-primary")} />
         <MobileNavButton icon={Layers} label={editionLabel} onClick={() => setSheet("edition")} />
-        <MobileNavButton icon={SlidersHorizontal} label={copy.settings} onClick={onOpenSettings} />
-        <SignOutButton nav label={copy.signOut} />
+        <MobileNavLink href="/account" icon={CircleUserRound} label={copy.account} active={isActive("/account")} />
+        <MobileNavButton icon={Globe} label={copy.language} onClick={onOpenLanguage} />
+        <SignOutButton nav label={copy.signOutShort} />
       </nav>
 
       <MobileSheet open={sheet === "apps-primary" || sheet === "apps-other"} onClose={() => setSheet("closed")}>

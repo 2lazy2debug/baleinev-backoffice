@@ -40,13 +40,6 @@ export default async function ProtectedLayout({ children }: { children: React.Re
       role={access.role}
       canManageMoneyAccounts={canManageMoneyAccounts(access)}
       pendingTaskCount={pendingTaskCount}
-      refundProfile={{
-        firstName: access.refundFirstName,
-        lastName: access.refundLastName,
-        iban: access.refundIban,
-        zip: access.refundZip,
-        city: access.refundCity,
-      }}
     >
       {children}
     </AppShell>

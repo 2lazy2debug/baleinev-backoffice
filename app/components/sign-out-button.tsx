@@ -3,7 +3,7 @@
 import { LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 
-import { mobileNavButtonClasses } from "@/components/mobile/mobile-nav-button";
+import { mobileNavButtonClasses, mobileNavLabelClasses } from "@/components/mobile/mobile-nav-button";
 import { Button, IconButton } from "@/components/ui";
 
 type SignOutButtonProps = {
@@ -21,7 +21,7 @@ export function SignOutButton({ compact = false, nav = false, label = "Sign out"
     return (
       <button type="button" className={mobileNavButtonClasses} onClick={handleSignOut}>
         <LogOut />
-        <span className="max-w-16 truncate">{label}</span>
+        <span className={mobileNavLabelClasses}>{label}</span>
       </button>
     );
   }

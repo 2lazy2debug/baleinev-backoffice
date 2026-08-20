@@ -13,20 +13,22 @@ import {
   Landmark,
   ListTodo,
   ReceiptText,
-  Settings,
   Target,
   Users,
   Wallet,
   ChevronLeft,
   ChevronRight,
+  CircleUserRound,
+  Globe,
 } from "lucide-react";
 import { useState, useRef } from "react";
 
 import { EditionClosedBanner, EditionReadOnlyProvider } from "@/components/edition-read-only";
+import { LanguageModal } from "@/components/language-modal";
 import { MobileShell } from "@/components/mobile/mobile-shell";
 import type { EditionOption, NavigationItem } from "@/components/navigation";
 import { SignOutButton } from "@/components/sign-out-button";
-import { Alert, Button, IconButton, Input, Modal, Radio, Select } from "@/components/ui";
+import { IconButton, Select, buttonClasses, iconButtonClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 
 type AppShellProps = {
@@ -38,30 +40,15 @@ type AppShellProps = {
   role: "ADMIN" | "DEPARTMENT";
   canManageMoneyAccounts: boolean;
   pendingTaskCount: number;
-  refundProfile: {
-    firstName: string | null;
-    lastName: string | null;
-    iban: string | null;
-    zip: string | null;
-    city: string | null;
-  };
 };
 
-const GLOBAL_ROUTES = ["/passwords", "/users", "/templates", "/editions"];
+const GLOBAL_ROUTES = ["/passwords", "/users", "/templates", "/editions", "/account"];
 
-export function AppShell({ children, userName, editions, selectedEditionId, locale, role, canManageMoneyAccounts, pendingTaskCount, refundProfile }: AppShellProps) {
+export function AppShell({ children, userName, editions, selectedEditionId, locale, role, canManageMoneyAccounts, pendingTaskCount }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [switchingEdition, setSwitchingEdition] = useState(false);
-  const [selectedLocale, setSelectedLocale] = useState<Locale>(locale);
-  const [refundFirstName, setRefundFirstName] = useState(refundProfile.firstName ?? "");
-  const [refundLastName, setRefundLastName] = useState(refundProfile.lastName ?? "");
-  const [refundIban, setRefundIban] = useState(refundProfile.iban ?? "");
-  const [refundZip, setRefundZip] = useState(refundProfile.zip ?? "");
-  const [refundCity, setRefundCity] = useState(refundProfile.city ?? "");
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const asideRef = useRef<HTMLElement | null>(null);
   const copy = dictionaries[locale].shell;
@@ -110,35 +97,6 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
   const navigation = role === "ADMIN"
     ? adminNavigation
     : departmentNavigation;
-
-  async function saveSettings() {
-    setSaving(true);
-    setSaveError(false);
-    try {
-      const response = await fetch("/api/preferences/language", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          locale: selectedLocale,
-          refundFirstName,
-          refundLastName,
-          refundIban,
-          refundZip,
-          refundCity,
-        }),
-      });
-      if (!response.ok) {
-        setSaveError(true);
-        return;
-      }
-      setIsSettingsOpen(false);
-      router.refresh();
-    } catch {
-      setSaveError(true);
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function selectEdition(editionId: string) {
     if (!editionId || editionId === selectedEditionId) {
@@ -263,18 +221,21 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
 
           <div className="shrink-0 border-t border-[var(--line)] p-3">
             {isCollapsed ? (
-              /* Collapsed: settings, the expand arrow and sign out stack as three
-                 identically sized icon buttons — no labels, no user name. */
+              /* Collapsed: account, language, the expand arrow and sign out stack as
+                 four identically sized icon buttons — no labels, no user name. */
               <div className="flex flex-col items-center gap-2">
-                <IconButton
-                  size="md"
-                  tone="neutral"
-                  label={copy.settings}
-                  onClick={() => { setSaveError(false); setIsSettingsOpen(true); }}
+                <Link
+                  href="/account"
+                  title={copy.account}
+                  aria-label={copy.account}
+                  className={iconButtonClasses("neutral", "md")}
                 >
-                  <Settings />
+                  <CircleUserRound />
+                </Link>
+                <IconButton size="md" tone="neutral" label={copy.language} onClick={() => setIsLanguageOpen(true)}>
+                  <Globe />
                 </IconButton>
-                <IconButton size="md" tone="neutral" label="Expand sidebar" onClick={toggleCollapse}>
+                <IconButton size="md" tone="neutral" label={copy.expandSidebar} onClick={toggleCollapse}>
                   <ChevronRight />
                 </IconButton>
                 <SignOutButton compact label={copy.signOut} />
@@ -283,15 +244,14 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
               <>
                 <p className="truncate text-sm font-medium">{userName}</p>
                 <div className="mt-2 flex gap-2">
-                  <Button
-                    variant="secondary"
-                    onClick={() => { setSaveError(false); setIsSettingsOpen(true); }}
-                    className="flex-1"
-                  >
-                    <Settings />
-                    <span>{copy.settings}</span>
-                  </Button>
-                  <IconButton size="md" tone="neutral" label="Collapse sidebar" onClick={toggleCollapse}>
+                  <Link href="/account" className={buttonClasses("secondary", "md", "flex-1")}>
+                    <CircleUserRound />
+                    <span>{copy.account}</span>
+                  </Link>
+                  <IconButton size="md" tone="neutral" label={copy.language} onClick={() => setIsLanguageOpen(true)}>
+                    <Globe />
+                  </IconButton>
+                  <IconButton size="md" tone="neutral" label={copy.collapseSidebar} onClick={toggleCollapse}>
                     <ChevronLeft />
                   </IconButton>
                 </div>
@@ -312,7 +272,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
           selectedEditionId={selectedEditionId}
           switchingEdition={switchingEdition}
           onSelectEdition={selectEdition}
-          onOpenSettings={() => { setSaveError(false); setIsSettingsOpen(true); }}
+          onOpenLanguage={() => setIsLanguageOpen(true)}
           locale={locale}
           pendingTaskCount={pendingTaskCount}
         />
@@ -328,86 +288,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
         </main>
       </div>
 
-      <Modal
-        open={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        title={copy.settings}
-        size="sm"
-        mobileFullScreen
-        footer={
-          <>
-            <Button type="button" variant="secondary" onClick={() => setIsSettingsOpen(false)}>
-              {copy.cancel}
-            </Button>
-            <Button type="button" variant="primary" onClick={saveSettings} disabled={saving}>
-              {saving ? "..." : copy.save}
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-3">
-          <p className="text-sm font-medium">{copy.language}</p>
-          <Radio
-            id="language-en"
-            name="language"
-            value="en"
-            label={copy.english}
-            checked={selectedLocale === "en"}
-            onChange={() => setSelectedLocale("en")}
-          />
-          <Radio
-            id="language-fr"
-            name="language"
-            value="fr"
-            label={copy.french}
-            checked={selectedLocale === "fr"}
-            onChange={() => setSelectedLocale("fr")}
-          />
-
-          <div className="pt-3">
-            <p className="text-sm font-medium">{copy.refundDetails}</p>
-            <div className="mt-2 grid gap-2">
-              <Input
-                type="text"
-                value={refundFirstName}
-                onChange={(event) => setRefundFirstName(event.target.value)}
-                placeholder={copy.refundFirstName}
-              />
-              <Input
-                type="text"
-                value={refundLastName}
-                onChange={(event) => setRefundLastName(event.target.value)}
-                placeholder={copy.refundLastName}
-              />
-              <Input
-                type="text"
-                value={refundIban}
-                onChange={(event) => setRefundIban(event.target.value)}
-                placeholder={copy.refundIban}
-                className="uppercase"
-              />
-              <div className="grid gap-2 sm:grid-cols-2">
-                <Input
-                  type="text"
-                  value={refundZip}
-                  onChange={(event) => setRefundZip(event.target.value)}
-                  placeholder={copy.refundZip}
-                />
-                <Input
-                  type="text"
-                  value={refundCity}
-                  onChange={(event) => setRefundCity(event.target.value)}
-                  placeholder={copy.refundCity}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {saveError ? (
-          <Alert className="mt-4">{copy.saveFailed}</Alert>
-        ) : null}
-      </Modal>
+      {isLanguageOpen ? <LanguageModal locale={locale} onClose={() => setIsLanguageOpen(false)} /> : null}
     </div>
   );
 }
