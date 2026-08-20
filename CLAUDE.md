@@ -43,7 +43,9 @@ or a heading, one of these already covers it:
 
 | Need | Use |
 |---|---|
-| Page title block | `<PageHeader eyebrow title description actions>` |
+| Page title block | `<PageHeader eyebrow title description actions controls>` |
+| Screen with nothing to show yet | `<EmptyPage eyebrow title>` — never a `PageHeader` alone |
+| One of two panels on a phone | `<SegmentedControl options value onChange>` in `<PageHeader controls>` |
 | Padded surface | `<Card span dashed>` inside `<CardGrid>` |
 | Frame around flush content (tables, lists) | `<Panel>` + `<PanelHeader>` + `<SectionTitle>` |
 | Surface nested in a Card/Modal | `<Panel nested>` or `nestedSurfaceClasses` |
@@ -69,7 +71,8 @@ for mobile. Everything in one row uses one size. Never hand-size a control (`h-9
 
 **Type scale**: `text-3xs` (10px) and `text-2xs` (11px) are tokens for micro labels;
 above that use Tailwind's `text-xs`/`text-sm`. Headings are `text-3xl` (page, via
-`PageHeader`), `text-xl` (modal title) and `text-lg` (section, via `SectionTitle`).
+`PageHeader`, `text-xl` on the mobile top bar), `text-xl` (modal title) and `text-lg`
+(section, via `SectionTitle`).
 
 **Radius** is a deliberately tight scale defined as tokens in `@theme`, so every
 `rounded-*` utility already resolves to it. Use the utilities — never an arbitrary
@@ -90,10 +93,48 @@ it functional — no gratuitous padding.
 
 **Responsive** — `lg` (1024px) is the one structural breakpoint: above it the sidebar
 shell and the dense control heights, below it the mobile bottom bar
-(`components/mobile/`) and 44px touch targets. Wide tables switch earlier, at `sm`:
-`<Table desktopOnly>` above, `<CardletList>` below, both fed by the same array.
-`Card`/`CardGrid` spans already stack to one column below `sm` — never add a
-`grid-cols-*` without a mobile override.
+(`components/mobile/`), the sticky top bar and 44px touch targets. Wide tables switch
+earlier, at `sm`: `<Table desktopOnly>` above, `<CardletList>` below, both fed by the
+same array. `Card`/`CardGrid` spans already stack to one column below `sm` — never add
+a `grid-cols-*` without a mobile override.
+
+**A phone screen is a bar, a body and a bar.** Below `lg` the bottom bar names the
+app and `<PageHeader>` becomes the top bar: full-bleed, sticky, on `--panel`, closed
+by a rule. What that means when you build a screen:
+- **Never hand-roll a mobile header.** No screen sets its own sticky strip, its own
+  title size or its own `-mx-4` bleed. The bleed cancels `<main>`'s `p-4` gutter —
+  those two are one decision, and they live in `PageHeader` and `app-shell.tsx`.
+- **`PageHeader` must be the first element on the page**, or the bleed has nothing to
+  cancel and the bar sticks to the wrong edge.
+- **The description is desktop-only.** Write it as explanation. If the one line the
+  screen needs is *direction* — "pick an edition first" — the screen is an
+  `<EmptyPage>`, where that line is content and a phone still sees it.
+- **A screen's own controls go in `<PageHeader controls>`**, not in a strip below it:
+  a tab switcher or a search that scrolls away from the list it filters is a control
+  in the wrong place.
+- **Never say the same word twice on one screen.** If a `<SegmentedControl>` segment
+  or the page title already names a section, its heading is `<SectionTitle desktopOnly>`
+  and its frame is `<Card flushOnMobile>` — a cardlet is already a surface.
+- **Copy cannot name desktop furniture.** There is no sidebar below `lg`; "pick an
+  edition in the sidebar" is wrong on half the devices that read it.
+
+**Making a screen work on a phone is a design-system change, not a screen change.**
+The order to try things in, and it is strict:
+1. **Reuse a primitive.** The table is `<CardletList>`, the toggle is
+   `<SegmentedControl>`, the empty screen is `<EmptyPage>`, the dialog is
+   `<Modal mobileFullScreen>`. Feed the mobile view the *same array* the desktop view
+   reads — never a second status mapping, a second running balance or a second query.
+2. **Add a prop to the primitive** when the rule is general — `desktopOnly`,
+   `flushOnMobile`, `controls` all started as one screen's problem. Name it after the
+   rule, document it in the component, and every later screen gets it for free.
+3. **A layout class on the screen** — `w-full sm:w-auto`, `flex-col sm:flex-row` — is
+   the last resort, and only ever about *layout*. Heights, colors, radii and type come
+   from the scales; a screen that reaches for `h-11` or `text-[13px]` is a scale that
+   needs fixing, not a screen that needs an exception.
+
+Never copy a mockup's raw CSS. The mockups in `docs/plans/` are the visual target, not
+the source: where they disagree with the tokens (an 18px radius, a 13.5px type size),
+the tokens win, and `npm run check:design` will say so.
 
 UI copy rules:
 - Name things by what they do, not what they are internally

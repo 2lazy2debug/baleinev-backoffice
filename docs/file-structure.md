@@ -155,9 +155,11 @@ which. Nothing here should be re-implemented inline in a page.
 | `Input.tsx` | `<Input size tone bare>`, plus `inputClasses()` / `autoHeightFieldClasses` shared by every field |
 | `Textarea.tsx`, `Select.tsx`, `MultiSelect.tsx` | The other field controls, all on the same recipe |
 | `Field.tsx`, `Checkbox.tsx`, `Radio.tsx` | Labelled field wrapper and the two boolean/choice controls |
-| `Card.tsx` | `<Card span dashed>` + `<CardGrid>` — padded surfaces in a 12-column grid |
-| `Panel.tsx` | `<Panel nested>`, `<PanelHeader>`, `<SectionTitle>` and `nestedSurfaceClasses` — frames around flush content |
-| `PageHeader.tsx` | `<PageHeader eyebrow title description actions>` — the heading block of every screen |
+| `Card.tsx` | `<Card span dashed flushOnMobile>` + `<CardGrid>` — padded surfaces in a 12-column grid; `flushOnMobile` drops the frame below `sm` for a section whose mobile content is a `<CardletList>` |
+| `Panel.tsx` | `<Panel nested>`, `<PanelHeader>`, `<SectionTitle desktopOnly>` and `nestedSurfaceClasses` — frames around flush content |
+| `PageHeader.tsx` | `<PageHeader eyebrow title description actions controls>` — the heading block of every screen, and the sticky full-bleed top bar below `lg`. `description` is desktop-only; `controls` is the screen's own control row, pinned with the title |
+| `EmptyPage.tsx` | `<EmptyPage eyebrow title>` — a whole screen with nothing to show yet: what is missing in the header, what to do about it in a dashed card |
+| `SegmentedControl.tsx` | `<SegmentedControl options value onChange>` — one row of mutually exclusive choices, for a screen that shows one of two panels on a phone |
 | `Table.tsx` | `<Table frame dense desktopOnly>` + `<THead>` `<TFoot>` `<TR>` `<TH>` `<TD>` |
 | `Cardlet.tsx` | `<CardletList>` `<Cardlet>` `<CardletHeader>` `<CardletFields>` `<CardletField>` `<CardletActions>` — a wide table's rows as cards below `sm` |
 | `Modal.tsx` | `<Modal open onClose title size mobileFullScreen footer>` — the only dialog implementation |

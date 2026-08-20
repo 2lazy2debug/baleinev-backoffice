@@ -5,7 +5,28 @@ Baleinev Comptes currently has no mobile layout — the sidebar-driven desktop s
 
 ---
 
-## Implementation status — updated 2026-08-19
+## Implementation status — updated 2026-08-20
+
+**Done: the mobile top bar (2026-08-20).** The one piece of these mockups nobody had
+built: `.phone-topbar`. Every screen still rendered the desktop heading on a phone —
+`text-3xl` title, description paragraph, 32px of air — while the mockups have a
+sticky, full-bleed, `--panel` strip closed by a rule. `<PageHeader>` now carries both
+shapes off one breakpoint, so every app got it at once; nothing on desktop moved. What
+came with it:
+
+| What | Why it is not in a screen |
+|---|---|
+| `<PageHeader controls>` | A screen's own controls (Expense Reports' tab strip) ride *inside* the sticky bar instead of scrolling away from the list they switch. |
+| `<SegmentedControl>` | The tab strip was a border-and-background recipe living in `expense-reports/tabs.tsx`; it is a primitive now, 44px segments straight from the control scale. |
+| `<EmptyPage>` | The header description is desktop-only now, so the nine "no edition selected" screens — where that line was the *direction*, and the only thing on the page — say it as content in a dashed card. Their copy also stopped naming the sidebar: a phone has an Edition button. |
+| `<Card flushOnMobile>` / `<SectionTitle desktopOnly>` | The history card wrapped its cardlets in a second surface and repeated the word the active tab already said. |
+
+`expense-reports/tabs.tsx` renders the page header now, because the tabs belong inside
+it — that is the whole reason a server page hands its title down to a client shell.
+Verified at 390×844 against the local DB (sticky bar under scroll, both tabs, the
+empty state) and at 1440px, where every screen is unchanged.
+
+## Earlier status — updated 2026-08-19
 
 **Done: the foundation.** The three cross-cutting sections of this handoff —
 [General rules](#general-rules-apply-everywhere), [State Management](#state-management),
@@ -31,7 +52,8 @@ agenda list below `sm` — see the section below for what shipped.
 read-only planned-vs-actual roll-up plus cardlets below `sm` — see the section below,
 including where the data model forced a deviation from the mockup.
 
-**Every section of this handoff is now implemented**, and
+**Every *written* section of this handoff is now implemented** (the top bar the
+mockups draw was not one of them — see the 2026-08-20 entry above), and
 [Interactions & Behavior](#interactions--behavior-verified) has been walked bullet by
 bullet against the shipped code — all seven behave as specified, in both locales, with
 no gap to close. What is left is the per-screen
