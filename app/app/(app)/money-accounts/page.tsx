@@ -1,7 +1,7 @@
 import { AccountType } from "@prisma/client";
 
 import { requireMoneyAccountManager } from "@/lib/access";
-import { Card, CardGrid, EmptyPage, PageHeader, SectionTitle } from "@/components/ui";
+import { CardGrid, EmptyPage, PageHeader } from "@/components/ui";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
@@ -10,7 +10,7 @@ import { decimalToNumber } from "@/lib/utils";
 import { MoneyAccountsPageClient } from "./client";
 import { WritableEditionOnly } from "@/components/edition-read-only";
 
-import CreateMoneyAccountForm from "./create-money-account-form";
+import CreateMoneyAccountModal from "./create-money-account-modal";
 
 export default async function MoneyAccountsPage() {
   await requireMoneyAccountManager();
@@ -70,24 +70,16 @@ export default async function MoneyAccountsPage() {
         eyebrow={copy.moneyAccounts.title}
         title={<>{copy.moneyAccounts.forEdition} {activeEdition.name}</>}
         description={copy.moneyAccounts.subtitle}
+        actions={
+          <WritableEditionOnly>
+            <CreateMoneyAccountModal locale={locale} />
+          </WritableEditionOnly>
+        }
       />
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_360px]">
-        <div>
-          <CardGrid>
-            <MoneyAccountsPageClient locale={locale} accounts={accounts} />
-          </CardGrid>
-        </div>
-
-        <WritableEditionOnly>
-          <div>
-            <Card as="section">
-              <SectionTitle>{copy.moneyAccounts.create}</SectionTitle>
-              <CreateMoneyAccountForm locale={locale} />
-            </Card>
-          </div>
-        </WritableEditionOnly>
-      </section>
+      <CardGrid>
+        <MoneyAccountsPageClient locale={locale} accounts={accounts} />
+      </CardGrid>
     </div>
   );
 }
