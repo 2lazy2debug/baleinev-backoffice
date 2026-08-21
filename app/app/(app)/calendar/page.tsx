@@ -8,7 +8,7 @@ import { deleteAppointmentAction, updateAppointmentAction } from "./actions";
 import { WritableEditionOnly } from "@/components/edition-read-only";
 
 import CalendarPageClient from "./client";
-import { CreateAppointmentForm } from "./create-appointment-form";
+import { CreateAppointmentModal } from "./create-appointment-modal";
 import { EmptyPage } from "@/components/ui";
 
 export default async function CalendarPage() {
@@ -67,35 +67,38 @@ export default async function CalendarPage() {
   ]);
 
   return (
-    <div className="space-y-8">
-      <CalendarPageClient
-        copy={copy.calendar}
-        currentUserId={access.id}
-        updateAppointmentAction={updateAppointmentAction}
-        deleteAppointmentAction={deleteAppointmentAction}
-        tasks={pendingTasks
-          .filter((task) => Boolean(task.dueDate))
-          .map((task) => ({
-            id: task.id,
-            title: task.title,
-            dueDate: task.dueDate!.toISOString(),
-            href: task.type === "STAFF_SHIFT" ? "/events" : "/tasks",
-          }))}
-        appointments={appointments.map((appointment) => ({
-          id: appointment.id,
-          createdById: appointment.createdById,
-          title: appointment.title,
-          description: appointment.description,
-          startAt: appointment.startAt.toISOString(),
-          endAt: appointment.endAt ? appointment.endAt.toISOString() : null,
+    <CalendarPageClient
+      copy={copy.calendar}
+      createAction={
+        access.role === "ADMIN" ? (
+          <WritableEditionOnly>
+            <CreateAppointmentModal
+              copy={{ ...copy.calendar, cancel: copy.shell.cancel }}
+              users={users}
+              departments={activeEdition.departments}
+            />
+          </WritableEditionOnly>
+        ) : null
+      }
+      currentUserId={access.id}
+      updateAppointmentAction={updateAppointmentAction}
+      deleteAppointmentAction={deleteAppointmentAction}
+      tasks={pendingTasks
+        .filter((task) => Boolean(task.dueDate))
+        .map((task) => ({
+          id: task.id,
+          title: task.title,
+          dueDate: task.dueDate!.toISOString(),
+          href: task.type === "STAFF_SHIFT" ? "/events" : "/tasks",
         }))}
-      />
-
-      {access.role === "ADMIN" ? (
-        <WritableEditionOnly>
-          <CreateAppointmentForm copy={copy.calendar} users={users} departments={activeEdition.departments} />
-        </WritableEditionOnly>
-      ) : null}
-    </div>
+      appointments={appointments.map((appointment) => ({
+        id: appointment.id,
+        createdById: appointment.createdById,
+        title: appointment.title,
+        description: appointment.description,
+        startAt: appointment.startAt.toISOString(),
+        endAt: appointment.endAt ? appointment.endAt.toISOString() : null,
+      }))}
+    />
   );
 }

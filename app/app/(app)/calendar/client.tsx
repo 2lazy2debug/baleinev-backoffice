@@ -62,6 +62,12 @@ type Copy = {
 
 type Props = {
   copy: Copy;
+  /**
+   * The page header's create button. It is rendered by the server page (which
+   * owns the admin + writable-edition gate) and handed down, because the header
+   * that has to hold it lives here.
+   */
+  createAction?: React.ReactNode;
   currentUserId: string;
   updateAppointmentAction: (prevState: ActionState, formData: FormData) => Promise<ActionState>;
   deleteAppointmentAction: (prevState: ActionState, formData: FormData) => Promise<ActionState>;
@@ -139,6 +145,7 @@ function formatDateTimeLocalInput(value: string) {
 
 export default function CalendarPageClient({
   copy,
+  createAction,
   currentUserId,
   updateAppointmentAction,
   deleteAppointmentAction,
@@ -385,7 +392,7 @@ export default function CalendarPageClient({
 
   return (
     <div className="space-y-8">
-      <PageHeader eyebrow={copy.title} title={copy.title} description={copy.subtitle} />
+      <PageHeader eyebrow={copy.title} title={copy.title} description={copy.subtitle} actions={createAction} />
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div>
