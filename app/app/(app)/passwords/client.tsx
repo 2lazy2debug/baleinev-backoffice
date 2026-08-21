@@ -4,7 +4,7 @@ import { useActionState, useEffect, useMemo, useState, useTransition } from "rea
 import { Check, Copy, Eye, EyeOff, KeyRound, Pencil, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, Checkbox, Field, IconButton, Input, Modal, MultiSelect, Panel } from "@/components/ui";
+import { Badge, Button, Card, Checkbox, Field, IconButton, Input, Modal, MultiSelect, PageHeader, Panel } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -80,31 +80,38 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
   }, [entries, query]);
 
   return (
-    <section className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* The search takes the whole first row on a phone — a 44px field sharing
-            390px with a count and a button is a field nobody can read. */}
-        <div className="relative w-full min-w-0 sm:w-auto sm:flex-1 sm:max-w-sm">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
-          <Input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={copy.search}
-            aria-label={copy.search}
-            className="pl-9"
-          />
-        </div>
-        <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end">
-          <p className="text-sm text-[var(--muted)]">
-            {filtered.length} {filtered.length === 1 ? copy.entrySingular : copy.entryPlural}
-          </p>
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow={copy.title}
+        title={copy.heading}
+        description={copy.subtitle}
+        actions={
           <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
             <Plus />
             {copy.add}
           </Button>
-        </div>
-      </div>
+        }
+        // The search filters the list it sits above, so it belongs in the header
+        // that stays pinned while that list scrolls — not in a strip below it.
+        controls={
+          <div className="flex items-center gap-3 lg:mt-4">
+            <div className="relative min-w-0 flex-1 sm:max-w-sm">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
+              <Input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={copy.search}
+                aria-label={copy.search}
+                className="pl-9"
+              />
+            </div>
+            <p className="shrink-0 text-sm text-[var(--muted)]">
+              {filtered.length} {filtered.length === 1 ? copy.entrySingular : copy.entryPlural}
+            </p>
+          </div>
+        }
+      />
 
       <FormError message={deleteState.error} />
 
@@ -170,7 +177,7 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
           closeOnSuccessKey={deleteState}
         />
       ) : null}
-    </section>
+    </div>
   );
 }
 
