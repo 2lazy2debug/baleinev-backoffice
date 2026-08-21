@@ -3,7 +3,10 @@ import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 
+import { WritableEditionOnly } from "@/components/edition-read-only";
+
 import EventsPageClient from "./client";
+import CreateEventModal from "./create-event-modal";
 import { EmptyPage, PageHeader } from "@/components/ui";
 
 export default async function EventsPage() {
@@ -59,17 +62,39 @@ export default async function EventsPage() {
         eyebrow={copy.events.title}
         title={<>{copy.events.title} — {activeEdition.name}</>}
         description={copy.events.subtitle}
+        actions={
+          isAdmin ? (
+            <WritableEditionOnly>
+              <CreateEventModal
+                eventTypes={eventTypes}
+                costCenters={activeEdition.costCenters}
+                editionStartDate={activeEdition.startDate ? activeEdition.startDate.toISOString().slice(0, 10) : null}
+                editionEndDate={activeEdition.endDate ? activeEdition.endDate.toISOString().slice(0, 10) : null}
+                copy={{
+                  createEvent: copy.events.createEvent,
+                  cancel: copy.shell.cancel,
+                  noEventTypes: copy.events.noEventTypes,
+                  eventName: copy.events.eventName,
+                  eventType: copy.events.eventType,
+                  costCenter: copy.events.costCenter,
+                  startDate: copy.events.startDate,
+                  endDate: copy.events.endDate,
+                  notes: copy.events.notes,
+                  dateOrderError: copy.events.dateOrderError,
+                  dateOutOfEditionRange: copy.events.dateOutOfEditionRange,
+                }}
+              />
+            </WritableEditionOnly>
+          ) : null
+        }
       />
 
       <EventsPageClient
         isAdmin={isAdmin}
         accessId={access.id}
         eventTypes={eventTypes}
-        costCenters={activeEdition.costCenters}
         events={activeEdition.events}
         allUsers={allUsers}
-        editionStartDate={activeEdition.startDate ? activeEdition.startDate.toISOString().slice(0, 10) : null}
-        editionEndDate={activeEdition.endDate ? activeEdition.endDate.toISOString().slice(0, 10) : null}
         copy={copy.events}
       />
     </div>

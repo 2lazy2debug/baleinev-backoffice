@@ -19,7 +19,6 @@ import {
   withdrawFromShiftAction,
 } from "./actions";
 import AddShiftForm from "./add-shift-form";
-import CreateEventForm from "./create-event-form";
 
 function formatTime(t: string) {
   return t.slice(0, 5);
@@ -31,12 +30,6 @@ function formatDate(d: Date | string) {
 
 type EventTypeItem = {
   id: string;
-  name: string;
-};
-
-type CostCenterItem = {
-  id: string;
-  code: string;
   name: string;
 };
 
@@ -84,14 +77,6 @@ type EventsCopy = {
   createEventType: string;
   eventTypeName: string;
   eventTypeDescription: string;
-  createEvent: string;
-  noEventTypes: string;
-  eventName: string;
-  eventType: string;
-  costCenter: string;
-  startDate: string;
-  endDate: string;
-  notes: string;
   noEvents: string;
   deleteEvent: string;
   deleteShift: string;
@@ -107,8 +92,6 @@ type EventsCopy = {
   role: string;
   addShift: string;
   shiftOverlapWarning: string;
-  dateOrderError: string;
-  dateOutOfEditionRange: string;
   exportPdf: string;
   downloadingPdf: string;
 };
@@ -117,11 +100,8 @@ type Props = {
   isAdmin: boolean;
   accessId: string;
   eventTypes: EventTypeItem[];
-  costCenters: CostCenterItem[];
   events: EventItem[];
   allUsers: UserItem[];
-  editionStartDate: string | null;
-  editionEndDate: string | null;
   copy: EventsCopy;
 };
 
@@ -129,11 +109,8 @@ export default function EventsPageClient({
   isAdmin,
   accessId,
   eventTypes,
-  costCenters,
   events,
   allUsers,
-  editionStartDate,
-  editionEndDate,
   copy,
 }: Props) {
   const [deleteEventTypeState, deleteEventTypeFormAction, isDeletingEventType] = useActionState(
@@ -233,28 +210,6 @@ export default function EventsPageClient({
             </Button>
           </form>
         </section>
-      ) : null}
-
-      {/* ── Admin: Create event ───────────────────────────────────────────── */}
-      {canManageEvents ? (
-        <CreateEventForm
-          eventTypes={eventTypes}
-          costCenters={costCenters}
-          editionStartDate={editionStartDate}
-          editionEndDate={editionEndDate}
-          copy={{
-            createEvent: copy.createEvent,
-            noEventTypes: copy.noEventTypes,
-            eventName: copy.eventName,
-            eventType: copy.eventType,
-            costCenter: copy.costCenter,
-            startDate: copy.startDate,
-            endDate: copy.endDate,
-            notes: copy.notes,
-            dateOrderError: copy.dateOrderError,
-            dateOutOfEditionRange: copy.dateOutOfEditionRange,
-          }}
-        />
       ) : null}
 
       {/* ── Events list ──────────────────────────────────────────────────── */}
