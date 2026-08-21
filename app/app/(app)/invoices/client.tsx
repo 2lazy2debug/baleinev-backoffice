@@ -628,16 +628,17 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
             {copy.invoices.activeTemplate}: {defaultTemplate.name}
           </>
         }
+        actions={
+          isReadOnly ? null : (
+            <Button variant="primary" onClick={openCreateModal}>
+              <Plus />
+              {copy.invoices.create}
+            </Button>
+          )
+        }
       />
 
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}
-
-      {isReadOnly ? null : (
-        <Button variant="primary" onClick={openCreateModal} className="self-start">
-          <Plus />
-          {copy.invoices.create}
-        </Button>
-      )}
 
       <Card as="section">
         <SectionTitle>{copy.invoices.historyTitle}</SectionTitle>
