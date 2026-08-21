@@ -3,12 +3,13 @@ import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { syncDepartmentRolesFromDepartments } from "@/lib/department-roles";
 import { getDictionary, getLocale } from "@/lib/i18n";
+import { isTwoFactorConfigured } from "@/lib/two-factor";
 
 import { AccountPageClient } from "./client";
 
 /**
- * The signed-in user's own account — name, bank details and password, plus the
- * two things that are drawn but not wired yet (joining a department, 2FA).
+ * The signed-in user's own account — name, bank details, password and two-factor
+ * sign-in, plus the one thing still drawn but not wired (joining a department).
  *
  * Global, not edition-scoped: it is listed in AppShell's GLOBAL_ROUTES, so a
  * closed edition does not put this screen in read-only.
@@ -21,10 +22,15 @@ export default async function AccountPage() {
   // Same call `/users` makes: department roles exist only once a department of
   // that name has been created in some edition.
   await syncDepartmentRolesFromDepartments();
-  const departments = await prisma.departmentRole.findMany({
-    orderBy: { name: "asc" },
-    select: { id: true, name: true },
-  });
+  const [departments, twoFactor] = await Promise.all([
+    prisma.departmentRole.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    // Read here rather than off the access context: that context travels to
+    // every screen, and this flag is only ever this one card's business.
+    prisma.user.findUnique({ where: { id: access.id }, select: { twoFactorEnabled: true } }),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -52,6 +58,12 @@ export default async function AccountPage() {
         joinableDepartments={departments.filter(
           (department) => !access.departmentRoleNames.includes(department.name),
         )}
+        twoFactor={{
+          enabled: twoFactor?.twoFactorEnabled ?? false,
+          // No master key on this server means no seed can be sealed, so the
+          // card says so instead of offering a button that would only fail.
+          configured: isTwoFactorConfigured(),
+        }}
       />
     </div>
   );

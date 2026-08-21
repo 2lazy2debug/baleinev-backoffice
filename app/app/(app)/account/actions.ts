@@ -6,6 +6,13 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { type ActionState, getRequiredString, toActionErrorMessage } from "@/lib/server-action-helpers";
+import { generateTotpSecret } from "@/lib/totp";
+import {
+  buildTwoFactorEnrolment,
+  isTwoFactorConfigured,
+  sealTwoFactorSecret,
+  verifyUserTwoFactorCode,
+} from "@/lib/two-factor";
 
 /** The shortest password the app will accept — matched by the client's `minLength`. */
 const MIN_PASSWORD_LENGTH = 8;
@@ -88,6 +95,139 @@ export async function changePasswordAction(_prevState: ActionState, formData: Fo
       data: { passwordHash: await hash(newPassword, 12) },
     });
 
+    return { error: null, saved: true };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Two-factor sign-in                                                         */
+/* -------------------------------------------------------------------------- */
+
+/** What the enrolment step hands back to the screen: the QR, and the secret behind it. */
+export type TwoFactorEnrolmentResult =
+  | { ok: true; secret: string; qrDataUrl: string }
+  | { ok: false; error: string };
+
+/**
+ * Step one of turning 2FA on: mint a secret, seal it onto the account and show
+ * it once. `twoFactorEnabled` stays false — the seed is a *pending* enrolment
+ * that login ignores until the user proves, in step two, that their phone can
+ * produce a code from it. Called directly rather than as a form action, because
+ * it returns something to draw.
+ */
+export async function startTwoFactorEnrolmentAction(): Promise<TwoFactorEnrolmentResult> {
+  try {
+    if (!isTwoFactorConfigured()) {
+      throw new Error("Two-factor sign-in is not configured on this server.");
+    }
+
+    const access = await getCurrentUserAccess();
+
+    const current = await prisma.user.findUnique({
+      where: { id: access.id },
+      select: { twoFactorEnabled: true },
+    });
+
+    // Re-enrolling in place would silently replace the seed the user's phone
+    // already holds, so it goes through "turn it off" first.
+    if (current?.twoFactorEnabled) {
+      throw new Error("Two-factor sign-in is already on. Turn it off before setting it up again.");
+    }
+
+    const secret = generateTotpSecret();
+    const sealed = sealTwoFactorSecret(secret);
+
+    await prisma.user.update({
+      where: { id: access.id },
+      data: {
+        twoFactorEnabled: false,
+        twoFactorCipher: sealed.cipher,
+        twoFactorIv: sealed.iv,
+        twoFactorTag: sealed.tag,
+      },
+    });
+
+    const enrolment = await buildTwoFactorEnrolment(access.email, secret);
+    return { ok: true, secret: enrolment.secret, qrDataUrl: enrolment.qrDataUrl };
+  } catch (err) {
+    return { ok: false, error: toActionErrorMessage(err) };
+  }
+}
+
+/**
+ * Step two: a code from the pending seed turns 2FA on. Until this succeeds the
+ * account signs in on its password alone, so a half-finished enrolment can
+ * never lock anyone out.
+ */
+export async function enableTwoFactorAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    const access = await getCurrentUserAccess();
+    const code = getRequiredString(formData, "code");
+
+    const user = await prisma.user.findUnique({
+      where: { id: access.id },
+      select: { twoFactorEnabled: true, twoFactorCipher: true, twoFactorIv: true, twoFactorTag: true },
+    });
+
+    if (!user?.twoFactorCipher) {
+      throw new Error("Start the setup again — there is nothing to confirm.");
+    }
+
+    if (!verifyUserTwoFactorCode(user, code)) {
+      throw new Error("That code is wrong or has expired. Type the current one from your app.");
+    }
+
+    await prisma.user.update({ where: { id: access.id }, data: { twoFactorEnabled: true } });
+
+    revalidatePath("/account");
+    return { error: null, saved: true };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+/** Drops a pending enrolment the user backed out of. Never touches an active one. */
+export async function cancelTwoFactorEnrolmentAction(): Promise<void> {
+  const access = await getCurrentUserAccess();
+
+  await prisma.user.updateMany({
+    where: { id: access.id, twoFactorEnabled: false },
+    data: { twoFactorCipher: null, twoFactorIv: null, twoFactorTag: null },
+  });
+}
+
+/**
+ * Turning 2FA off weakens the account, so it costs the account password — the
+ * same proof changing the password costs. An open session on a borrowed laptop
+ * is not enough.
+ */
+export async function disableTwoFactorAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    const access = await getCurrentUserAccess();
+    const password = getRequiredString(formData, "currentPassword");
+
+    const user = await prisma.user.findUnique({
+      where: { id: access.id },
+      select: { passwordHash: true },
+    });
+
+    if (!user || !(await compare(password, user.passwordHash))) {
+      throw new Error("Your current password is wrong.");
+    }
+
+    await prisma.user.update({
+      where: { id: access.id },
+      data: {
+        twoFactorEnabled: false,
+        twoFactorCipher: null,
+        twoFactorIv: null,
+        twoFactorTag: null,
+      },
+    });
+
+    revalidatePath("/account");
     return { error: null, saved: true };
   } catch (err) {
     return { error: toActionErrorMessage(err) };

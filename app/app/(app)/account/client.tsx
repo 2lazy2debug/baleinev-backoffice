@@ -18,6 +18,7 @@ import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
 import { changePasswordAction, updateAccountNameAction, updateBankDetailsAction } from "./actions";
+import { TwoFactorCard } from "./two-factor-card";
 
 type Copy = (typeof dictionaries)[Locale]["account"];
 
@@ -38,6 +39,7 @@ type Props = {
   };
   /** Departments the user is not already in — the only ones worth asking to join. */
   joinableDepartments: { id: string; name: string }[];
+  twoFactor: { enabled: boolean; configured: boolean };
 };
 
 /**
@@ -47,7 +49,7 @@ type Props = {
  * change never blanks the name field next to it, and "Saved." names the card it
  * belongs to.
  */
-export function AccountPageClient({ locale, profile, bankDetails, joinableDepartments }: Props) {
+export function AccountPageClient({ locale, profile, bankDetails, joinableDepartments, twoFactor }: Props) {
   const copy = dictionaries[locale].account;
 
   const [nameState, nameFormAction, isSavingName] = useActionState(updateAccountNameAction, initialActionState);
@@ -196,7 +198,7 @@ export function AccountPageClient({ locale, profile, bankDetails, joinableDepart
         <FormError message={passwordState.error} className="mt-3" />
       </Card>
 
-      {/* The two cards below are drawn but not wired: their own plans come later. */}
+      {/* Still drawn but not wired — its own plan comes later. */}
       <SoonCard
         span="1/2"
         title={copy.departmentAccess}
@@ -216,16 +218,7 @@ export function AccountPageClient({ locale, profile, bankDetails, joinableDepart
         </Button>
       </SoonCard>
 
-      <SoonCard
-        span="1/2"
-        title={copy.twoFactor}
-        hint={copy.twoFactorHint}
-        soonLabel={copy.availableSoon}
-      >
-        <Button type="button" variant="primary" disabled>
-          {copy.enableTwoFactor}
-        </Button>
-      </SoonCard>
+      <TwoFactorCard copy={copy} enabled={twoFactor.enabled} configured={twoFactor.configured} />
     </CardGrid>
   );
 }

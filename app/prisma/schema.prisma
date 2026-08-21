@@ -70,6 +70,15 @@ model User {
   refundIban        String?
   refundZip         String?
   refundCity        String?
+  // Two-factor sign-in (TOTP). The seed is sealed with AES-256-GCM under the
+  // same server-only master key as the Passwords vault (PASSWORD_VAULT_KEY) and
+  // is only ever unsealed to check a code. `twoFactorEnabled` flips to true once
+  // the user has proved they can produce a code from it — until then the three
+  // columns hold a *pending* enrolment that login ignores.
+  twoFactorEnabled  Boolean  @default(false)
+  twoFactorCipher   String?
+  twoFactorIv       String?
+  twoFactorTag      String?
   // The edition this user is working in. Seeded once from the default edition
   // (see lib/edition-context.ts) and never touched again unless the user picks
   // another one — changing the default moves nobody.
