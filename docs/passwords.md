@@ -98,3 +98,8 @@ pattern, consistent with the rest of the app.
 entries undecryptable.** To rotate safely: decrypt every entry with the old key,
 re-encrypt with the new key, and persist — then swap the env var. There is no
 migration script for this yet; rotate deliberately.
+
+**The key is not only this vault's.** Account two-factor seeds (`User.twoFactorCipher/Iv/Tag`)
+are sealed with the same key, so a rotation also locks every enrolled user out of their second
+factor — their accounts need `twoFactorEnabled` cleared in the database before they can sign in
+again. Re-encrypt those rows in the same pass, or clear them. See [auth.md](auth.md).

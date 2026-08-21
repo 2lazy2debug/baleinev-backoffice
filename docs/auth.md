@@ -10,17 +10,20 @@ This app uses **NextAuth v4** with a custom credentials provider, JWT sessions, 
 User submits login form
         │
         ▼
-signIn("credentials", { email, password })   ← next-auth client call
+signIn("credentials", { email, password, totp })   ← next-auth client call
         │
         ▼
 NextAuth CredentialsProvider.authorize()     ← lib/auth.ts
   1. prisma.user.findUnique({ where: { email } })
   2. bcrypt.compare(password, user.passwordHash)
-  3. If valid → ensureUserEdition(user.id)   ← lib/edition-context.ts
+  3. If invalid → return null (NextAuth shows "Invalid email or password")
+  4. If user.twoFactorEnabled:
+       no totp     → throw "2FA_REQUIRED"  ← the form swaps to a code field
+       wrong totp  → throw "2FA_INVALID"   ← the form says the code is wrong
+  5. ensureUserEdition(user.id)             ← lib/edition-context.ts
        Seeds User.selectedEditionId from the default edition on first login.
        No-op once the account has an edition; no-op if no default exists.
-  4. If valid → return { id, email, name, role, departmentRoleIds, departmentRoleNames }
-  5. If invalid → return null (NextAuth shows error)
+  6. return { id, email, name, role, departmentRoleIds, departmentRoleNames }
         │
         ▼
 jwt() callback                               ← lib/auth.ts
@@ -48,6 +51,46 @@ After login, `session.user` contains:
 ```
 
 These fields are added by the module augmentation in [`types/next-auth.d.ts`](../types/next-auth.d.ts).
+
+### Two-factor sign-in (TOTP)
+
+Optional, per account, turned on by the user from the 2FA card on `/account`
+([`two-factor-card.tsx`](../app/(app)/account/two-factor-card.tsx)). Standard TOTP —
+6 digits, 30-second period, SHA-1 — so any authenticator app works.
+
+**Enrolment is two steps, and the order is the point:**
+
+| Step | Action | What changes on `User` |
+|---|---|---|
+| 1. Turn on | `startTwoFactorEnrolmentAction()` mints a 160-bit base32 secret, seals it, and returns the `otpauth://` QR plus the key to type by hand | `twoFactorCipher/Iv/Tag` set, `twoFactorEnabled` stays **false** |
+| 2. Confirm | `enableTwoFactorAction()` checks a code against that seed | `twoFactorEnabled` → **true** |
+| Cancel | `cancelTwoFactorEnrolmentAction()` drops a pending seed (never an active one) | the three cipher columns cleared |
+| Turn off | `disableTwoFactorAction()` — **costs the account password**, the same proof changing the password costs, so an open session on a borrowed laptop is not enough | all four columns cleared |
+
+Between the two steps the account still signs in on its password alone: a seed with
+`twoFactorEnabled = false` is a pending enrolment that `authorize()` ignores, so backing out
+half-way — or closing the tab — can never lock anyone out. Re-enrolling while 2FA is on is
+refused; it would silently replace the seed the user's phone already holds, so it goes through
+"turn it off" first.
+
+**The secret is on screen exactly once**, during step 1. After that the server only ever
+unseals it to check a code — there is no "show me my key again". The way back is to turn 2FA
+off and enrol again.
+
+**Order of checks matters.** The code is only asked for *after* `bcrypt.compare` succeeds, so
+a wrong password never reveals whether an account carries a second factor.
+
+**The seed shares the Passwords vault key.** `lib/two-factor.ts` seals it through
+`lib/secret-crypto.ts` with `PASSWORD_VAULT_KEY`. Two consequences:
+- No key configured → the 2FA card says so and offers no button, rather than a button that
+  can only fail.
+- **Rotating that key locks every enrolled user out of their second factor**, exactly as it
+  makes vault entries unreadable. `verifyUserTwoFactorCode()` answers `false` on a seed it
+  cannot open, so those accounts need `twoFactorEnabled` cleared in the database before they
+  can sign in again. See [passwords.md](passwords.md).
+
+**There are no recovery codes and no admin reset.** A user who loses their authenticator has
+to have `twoFactorEnabled` cleared directly in the database.
 
 ---
 
@@ -174,4 +217,4 @@ There is no self-service signup — all accounts are created by an admin.
 | `NEXTAUTH_URL` | NextAuth (base URL of the app) |
 | `ADMIN_EMAIL` | Seed script initial admin email |
 | `ADMIN_PASSWORD` | Seed script initial admin password |
-| `PASSWORD_VAULT_KEY` | AES-256-GCM master key for the Passwords vault (32 bytes, base64). See [passwords.md](passwords.md) |
+| `PASSWORD_VAULT_KEY` | AES-256-GCM master key for the Passwords vault **and for account 2FA seeds** (32 bytes, base64). See [passwords.md](passwords.md) |

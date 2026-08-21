@@ -95,12 +95,14 @@ app/
 │   │
 │   └── account/
 │       ├── page.tsx              ← The signed-in user's own account (global, not edition-scoped)
-│       ├── client.tsx            ← One card each: profile/name, bank details, password, + the two "available soon" ones
-│       └── actions.ts            ← Server actions: update name, update bank details, change password (all self-only)
+│       ├── client.tsx            ← One card each: profile/name, bank details, password, 2FA, + the "available soon" one
+│       ├── two-factor-card.tsx   ← The 2FA card in its three states: off, enrolling (QR + key + code), on
+│       └── actions.ts            ← Server actions: update name/bank details/password, plus 2FA start/confirm/cancel/disable (all self-only)
 │
 ├── (auth)/
 │   └── login/
-│       └── page.tsx              ← Login form (client component, calls signIn())
+│       ├── page.tsx              ← Reads the locale, renders the form
+│       └── login-form.tsx        ← Login form (client component, calls signIn()); swaps to a code field when 2FA is on
 │
 └── api/
     ├── auth/
@@ -181,11 +183,13 @@ which. Nothing here should be re-implemented inline in a page.
 
 | File | Purpose |
 |---|---|
-| `auth.ts` | NextAuth config: credentials provider, bcrypt verify, JWT/session callbacks |
+| `auth.ts` | NextAuth config: credentials provider, bcrypt verify, TOTP second factor, JWT/session callbacks |
+| `auth-signals.ts` | The two sign-in outcome strings (`2FA_REQUIRED`, `2FA_INVALID`) `authorize()` throws and the login form reads back off `signIn(...).error`. Import-free so a client component can use it without pulling bcrypt/Prisma into the browser bundle |
 | `access.ts` | `getCurrentUserAccess()`, `requireAdmin()`, plus department helpers (`isAdmin`, `accessibleDepartmentRoleIds`, `canAccessDepartments`, `canManageMoneyAccounts`/`requireMoneyAccountManager`) used by every protected page/action |
 | `money-account-roles.ts` | Just the `"Comptabilité"` department-name constant, kept import-free so `proxy.ts` (edge) and `access.ts` (server) can both use it without pulling Prisma/bcrypt into the edge bundle |
 | `secret-crypto.ts` | AES-256-GCM seal/open for the Passwords vault (`encryptSecret`/`decryptSecret`/`isVaultConfigured`), keyed by `PASSWORD_VAULT_KEY`. See docs/passwords.md |
-| `totp.ts` | Generates live TOTP codes from a stored 2FA seed (`otpauth`); `generateTotpCode`/`assertValidTotpSeed` |
+| `totp.ts` | TOTP primitives over `otpauth`: `generateTotpCode`/`assertValidTotpSeed` for the Passwords vault, plus `generateTotpSecret`/`buildTotpUri`/`verifyTotpCode` for account enrolment |
+| `two-factor.ts` | Account 2FA: seals/opens the seed on `User` (`sealTwoFactorSecret`, `verifyUserTwoFactorCode`) and builds the enrolment QR (`buildTwoFactorEnrolment`). Keyed by `PASSWORD_VAULT_KEY` via `secret-crypto.ts` |
 | `db.ts` | Singleton Prisma client (re-used across hot reloads in dev) |
 | `i18n-dictionaries.ts` | Complete EN/FR translation dictionary as a `const` object; also defines `Locale` type and cookie name |
 | `i18n.ts` | `getLocale()` (reads cookie server-side) and `getDictionary()` |

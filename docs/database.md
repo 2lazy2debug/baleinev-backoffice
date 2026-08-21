@@ -51,6 +51,10 @@ Represents an authenticated application user.
 | `refundIban` | String? | |
 | `refundZip` | String? | |
 | `refundCity` | String? | |
+| `twoFactorEnabled` | Boolean | Default `false`. When true, login asks for a TOTP code on top of the password |
+| `twoFactorCipher` | String? | Base64 AES-256-GCM ciphertext of the TOTP seed |
+| `twoFactorIv` | String? | Base64 nonce |
+| `twoFactorTag` | String? | Base64 GCM auth tag |
 | `selectedEditionId` | String? | FK → Edition (`onDelete: SetNull`). The edition this user works in — see below |
 | `departmentRoles` | `DepartmentRole[]` | Which departments this user belongs to |
 
@@ -60,6 +64,13 @@ seeded once from `Edition.isDefault` — at account creation, at first login, or
 if it is still null — and only the user's own picker changes it afterwards. The relation is
 `SetNull`, not `Cascade` like every other `Edition` relation: deleting an edition must never delete
 its users, so their selection is cleared and re-seeds from the default instead.
+
+**The three `twoFactor*` cipher columns hold a seed, not a state.** They are written the
+moment the user starts enrolling and `twoFactorEnabled` only flips once a code from that seed
+has been verified — so a seed with `twoFactorEnabled = false` is a *pending* enrolment that
+login ignores, and a half-finished setup can never lock an account out. The seed is sealed with
+the same `PASSWORD_VAULT_KEY` as the Passwords vault (`app/lib/secret-crypto.ts`), so rotating
+that key makes every enrolled account's 2FA unverifiable — see [`auth.md`](./auth.md).
 
 **Role enum:** `ADMIN` can access all routes and all admin actions. `DEPARTMENT` is blocked by
 middleware from admin routes (editions, journal, cost centers, invoices, templates, departments,
