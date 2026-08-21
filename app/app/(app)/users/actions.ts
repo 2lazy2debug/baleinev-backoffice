@@ -1,7 +1,7 @@
 "use server";
 
 import { hash } from "bcrypt";
-import { UserRole } from "@prisma/client";
+import { TaskType, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/access";
@@ -160,9 +160,16 @@ export async function deleteUserAction(_prevState: ActionState, formData: FormDa
 
     await assertAdminCanBeRemoved(userId);
 
+    // `Task.createdById` is SetNull, so tasks survive their creator on purpose.
+    // A department access request must not: nobody is left to grant it to, and
+    // every admin would keep seeing it.
+    await prisma.task.deleteMany({
+      where: { type: TaskType.DEPARTMENT_ACCESS_REQUEST, createdById: userId },
+    });
     await prisma.user.delete({ where: { id: userId } });
 
     revalidatePath("/users");
+    revalidatePath("/tasks");
     return { error: null };
   } catch (err) {
     return { error: toActionErrorMessage(err) };

@@ -202,7 +202,9 @@ export default async function DashboardPage() {
                           ? copy.tasks.recordJournal
                           : task.type === TaskType.STAFF_SHIFT
                             ? copy.tasks.staffShift
-                            : copy.tasks.generalTask}
+                            : task.type === TaskType.DEPARTMENT_ACCESS_REQUEST
+                              ? copy.tasks.departmentAccessRequest
+                              : copy.tasks.generalTask}
                     </p>
                     <p className="truncate text-sm font-medium">{task.title}</p>
                     {event && eventDay ? (
@@ -216,6 +218,10 @@ export default async function DashboardPage() {
                   ) : task.type === TaskType.REVIEW_EXPENSE_REPORT ? (
                     <a href="/expense-reports" className={buttonClasses("secondary", "sm")}>
                       {copy.tasks.reviewExpenseReport} →
+                    </a>
+                  ) : task.type === TaskType.DEPARTMENT_ACCESS_REQUEST ? (
+                    <a href="/users" className={buttonClasses("secondary", "sm")}>
+                      {copy.tasks.reviewDepartments} →
                     </a>
                   ) : (
                     <a href="/tasks" className={buttonClasses("secondary", "sm")}>

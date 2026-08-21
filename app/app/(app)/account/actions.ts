@@ -1,11 +1,13 @@
 "use server";
 
+import { TaskStatus, TaskType } from "@prisma/client";
 import { compare, hash } from "bcrypt";
 import { revalidatePath } from "next/cache";
 
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { type ActionState, getRequiredString, toActionErrorMessage } from "@/lib/server-action-helpers";
+import { createDepartmentAccessRequestTask } from "@/lib/tasks";
 import { generateTotpSecret } from "@/lib/totp";
 import {
   buildTwoFactorEnrolment,
@@ -95,6 +97,63 @@ export async function changePasswordAction(_prevState: ActionState, formData: Fo
       data: { passwordHash: await hash(newPassword, 12) },
     });
 
+    return { error: null, saved: true };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+/**
+ * Ask to join a department. This only files a task for the admins — it grants
+ * nothing, and an admin marking it done is not the same as an admin adding the
+ * membership in `/users`. The request stands until an admin clears it, so the
+ * user cannot pile up duplicates for the same department.
+ */
+export async function requestDepartmentAccessAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const access = await getCurrentUserAccess();
+    const departmentRoleId = getRequiredString(formData, "departmentRoleId");
+
+    const departmentRole = await prisma.departmentRole.findUnique({
+      where: { id: departmentRoleId },
+      select: { id: true, name: true },
+    });
+
+    if (!departmentRole) {
+      throw new Error("That department no longer exists.");
+    }
+
+    if (access.departmentRoleIds.includes(departmentRole.id)) {
+      throw new Error(`You are already in ${departmentRole.name}.`);
+    }
+
+    const pending = await prisma.task.findFirst({
+      where: {
+        type: TaskType.DEPARTMENT_ACCESS_REQUEST,
+        status: TaskStatus.PENDING,
+        createdById: access.id,
+        departmentRoleId: departmentRole.id,
+      },
+      select: { id: true },
+    });
+
+    if (pending) {
+      throw new Error(`Your request to join ${departmentRole.name} is still with the admins.`);
+    }
+
+    await createDepartmentAccessRequestTask({
+      userId: access.id,
+      userName: access.userName,
+      departmentRoleId: departmentRole.id,
+      departmentRoleName: departmentRole.name,
+    });
+
+    revalidatePath("/account");
+    revalidatePath("/tasks");
+    revalidatePath("/");
     return { error: null, saved: true };
   } catch (err) {
     return { error: toActionErrorMessage(err) };

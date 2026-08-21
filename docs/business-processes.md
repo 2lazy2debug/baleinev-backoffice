@@ -249,6 +249,21 @@ Document templates allow the admin to customise the HTML layout used for PDF gen
 - `DEPARTMENT` users are assigned to one or more departments via `DepartmentRole` records.
 - When departments are renamed, `syncDepartmentRolesFromDepartments()` updates `DepartmentRole.name` to keep display names current.
 
+### Asking to join a department
+Users cannot grant themselves access. From the **Department access** card on `/account` a user picks
+a department and requests it; `requestDepartmentAccessAction` files a `DEPARTMENT_ACCESS_REQUEST`
+task assigned to the `ADMIN` role, titled "&lt;user&gt; asked to join &lt;department&gt;" and carrying
+`Task.departmentRoleId`.
+
+- Every admin sees the task on `/tasks` and on the dashboard, with a link to `/users`.
+- The first admin to **Mark done** clears it for all of them (role-assigned tasks are shared).
+- **Marking it done grants nothing.** The membership is still assigned by hand in `/users`, and the
+  two are deliberately independent — an admin can refuse a request by simply clearing the task.
+- One pending request per user per department: the card shows the ones waiting and leaves them out
+  of the picker, and the action refuses a duplicate. Once a request is cleared the user may ask again.
+- Deleting the `DepartmentRole` cascades the request away; deleting the requesting user deletes their
+  pending requests (`deleteUserAction`), since nobody is left to grant them to.
+
 ### Refund profile
 Each user can fill in their own bank details (first name, last name, IBAN, ZIP, city) on the Account screen (`/account`). The Bank details card saves them through `updateBankDetailsAction`, which normalises the IBAN (upper-case, no spaces) and stores the five fields on the `User` record. Admins can see these details when reviewing expense reports to know where to send reimbursements.
 

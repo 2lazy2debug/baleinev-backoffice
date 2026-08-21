@@ -31,6 +31,52 @@ export async function createUserTask({
   });
 }
 
+/**
+ * A user asking to join a department. Assigned to the ADMIN *role*, not to one
+ * admin: every admin sees it, and the first one to mark it done clears it for
+ * all of them. Nothing here grants anything — the membership is still assigned
+ * by hand in `/users`, and resolving the task never touches it.
+ *
+ * Global rather than edition-scoped, like the department roles it points at.
+ */
+export async function createDepartmentAccessRequestTask({
+  userId,
+  userName,
+  departmentRoleId,
+  departmentRoleName,
+}: {
+  userId: string;
+  userName: string;
+  departmentRoleId: string;
+  departmentRoleName: string;
+}) {
+  await prisma.task.create({
+    data: {
+      type: TaskType.DEPARTMENT_ACCESS_REQUEST,
+      title: `${userName} asked to join ${departmentRoleName}`,
+      assignedToRole: UserRole.ADMIN,
+      createdById: userId,
+      departmentRoleId,
+    },
+  });
+}
+
+/** Department ids the user has an unanswered request for — one request at a time each. */
+export async function getPendingDepartmentAccessRequests(userId: string) {
+  const requests = await prisma.task.findMany({
+    where: {
+      type: TaskType.DEPARTMENT_ACCESS_REQUEST,
+      status: TaskStatus.PENDING,
+      createdById: userId,
+      departmentRoleId: { not: null },
+    },
+    select: { departmentRole: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return requests.flatMap((request) => (request.departmentRole ? [request.departmentRole] : []));
+}
+
 export async function resolvePendingTask({
   type,
   expenseReportId,

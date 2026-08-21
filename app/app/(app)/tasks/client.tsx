@@ -25,13 +25,20 @@ function TaskTypeLabel({
   copy,
 }: {
   type: TaskType;
-  copy: { generalTask: string; reviewExpenseReport: string; recordJournal: string; staffShift: string };
+  copy: {
+    generalTask: string;
+    reviewExpenseReport: string;
+    recordJournal: string;
+    staffShift: string;
+    departmentAccessRequest: string;
+  };
 }) {
   const labels: Record<TaskType, string> = {
     GENERAL: copy.generalTask,
     REVIEW_EXPENSE_REPORT: copy.reviewExpenseReport,
     RECORD_JOURNAL: copy.recordJournal,
     STAFF_SHIFT: copy.staffShift,
+    DEPARTMENT_ACCESS_REQUEST: copy.departmentAccessRequest,
   };
 
   return <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{labels[type]}</span>;
@@ -284,6 +291,14 @@ export function TasksPageClient({
                           {expenseReport.description} — {formatCurrency(decimalToNumber(expenseReport.amount))}
                         </a>
                       </p>
+                    ) : null}
+                    {task.type === "DEPARTMENT_ACCESS_REQUEST" && access.role === "ADMIN" ? (
+                      <a
+                        href="/users"
+                        className="inline-block text-xs font-semibold text-[var(--accent)] hover:underline"
+                      >
+                        → {copy.tasks.reviewDepartments}
+                      </a>
                     ) : null}
                     {task.type === "RECORD_JOURNAL" && expenseReport ? (
                       <a

@@ -82,6 +82,14 @@ edited or deleted until set back to unpaid.
 a capacity. Users sign up for a shift, which creates a `StaffAssignment` and a `STAFF_SHIFT` task;
 withdrawing removes both. Admins can assign users directly.
 
+**Department access requests.** A user asks to join a department from the Department access card on
+[app/app/(app)/account/client.tsx](../app/app/(app)/account/client.tsx). That files one
+`DEPARTMENT_ACCESS_REQUEST` task assigned to the ADMIN *role*, so every admin sees it and the first
+one to mark it done clears it for all of them. The task is a request and nothing more: resolving it
+grants no membership — an admin still assigns the department by hand in `/users`. The card shows the
+user's own unanswered requests as "Waiting" and drops those departments from the picker, so one
+request stands at a time per department.
+
 **Edition lifecycle.** Admins create editions, mark one as the default that new accounts start in,
 set the driving rate, and close or reopen an edition (`closeEditionAction` / `reopenEditionAction`).
 A **closed edition is read-only**: still selectable, browsable, exportable and printable, but every

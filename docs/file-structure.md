@@ -95,9 +95,9 @@ app/
 │   │
 │   └── account/
 │       ├── page.tsx              ← The signed-in user's own account (global, not edition-scoped)
-│       ├── client.tsx            ← One card each: profile/name, bank details, password, 2FA, + the "available soon" one
+│       ├── client.tsx            ← One card each: profile/name, bank details, password, department access, 2FA
 │       ├── two-factor-card.tsx   ← The 2FA card in its three states: off, enrolling (QR + key + code), on
-│       └── actions.ts            ← Server actions: update name/bank details/password, plus 2FA start/confirm/cancel/disable (all self-only)
+│       └── actions.ts            ← Server actions: update name/bank details/password, ask to join a department, plus 2FA start/confirm/cancel/disable (all self-only)
 │
 ├── (auth)/
 │   └── login/

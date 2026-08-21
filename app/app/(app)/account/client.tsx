@@ -13,11 +13,18 @@ import {
   Input,
   SectionTitle,
   Select,
+  cn,
+  nestedSurfaceClasses,
 } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
-import { changePasswordAction, updateAccountNameAction, updateBankDetailsAction } from "./actions";
+import {
+  changePasswordAction,
+  requestDepartmentAccessAction,
+  updateAccountNameAction,
+  updateBankDetailsAction,
+} from "./actions";
 import { TwoFactorCard } from "./two-factor-card";
 
 type Copy = (typeof dictionaries)[Locale]["account"];
@@ -37,8 +44,10 @@ type Props = {
     zip: string | null;
     city: string | null;
   };
-  /** Departments the user is not already in — the only ones worth asking to join. */
+  /** Departments the user is neither in nor already waiting on — the only ones worth asking for. */
   joinableDepartments: { id: string; name: string }[];
+  /** Departments already asked for and not yet cleared by an admin. */
+  pendingDepartmentRequests: { id: string; name: string }[];
   twoFactor: { enabled: boolean; configured: boolean };
 };
 
@@ -49,13 +58,24 @@ type Props = {
  * change never blanks the name field next to it, and "Saved." names the card it
  * belongs to.
  */
-export function AccountPageClient({ locale, profile, bankDetails, joinableDepartments, twoFactor }: Props) {
+export function AccountPageClient({
+  locale,
+  profile,
+  bankDetails,
+  joinableDepartments,
+  pendingDepartmentRequests,
+  twoFactor,
+}: Props) {
   const copy = dictionaries[locale].account;
 
   const [nameState, nameFormAction, isSavingName] = useActionState(updateAccountNameAction, initialActionState);
   const [bankState, bankFormAction, isSavingBank] = useActionState(updateBankDetailsAction, initialActionState);
   const [passwordState, passwordFormAction, isChangingPassword] = useActionState(
     changePasswordAction,
+    initialActionState,
+  );
+  const [requestState, requestFormAction, isRequesting] = useActionState(
+    requestDepartmentAccessAction,
     initialActionState,
   );
 
@@ -198,25 +218,59 @@ export function AccountPageClient({ locale, profile, bankDetails, joinableDepart
         <FormError message={passwordState.error} className="mt-3" />
       </Card>
 
-      {/* Still drawn but not wired — its own plan comes later. */}
-      <SoonCard
-        span="1/2"
-        title={copy.departmentAccess}
-        hint={copy.departmentAccessHint}
-        soonLabel={copy.availableSoon}
-      >
-        <Select aria-label={copy.departmentAccess} disabled defaultValue="">
-          <option value="">{copy.pickDepartment}</option>
-          {joinableDepartments.map((department) => (
-            <option key={department.id} value={department.id}>
-              {department.name}
-            </option>
-          ))}
-        </Select>
-        <Button type="button" variant="primary" disabled className="mt-3">
-          {copy.requestAccess}
-        </Button>
-      </SoonCard>
+      <Card as="section" span="1/2">
+        <SectionTitle>{copy.departmentAccess}</SectionTitle>
+        <p className="mt-1 text-sm text-[var(--muted)]">{copy.departmentAccessHint}</p>
+
+        {pendingDepartmentRequests.length > 0 ? (
+          <ul className="mt-4 space-y-2">
+            {pendingDepartmentRequests.map((department) => (
+              <li
+                key={department.id}
+                className={cn(nestedSurfaceClasses, "flex items-center justify-between gap-3 px-3 py-2 text-sm")}
+              >
+                <span className="min-w-0 truncate">{department.name}</span>
+                <Badge tone="warning" className="shrink-0">
+                  {copy.requestPending}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {/* `key` remounts the form once a request goes through, so the select drops
+            back to its placeholder instead of pointing at a department that has
+            just left the list. */}
+        {joinableDepartments.length > 0 ? (
+          <form
+            key={pendingDepartmentRequests.length}
+            action={requestFormAction}
+            className="mt-4 space-y-3"
+          >
+            {/* No field label: the card title already says what this picks. */}
+            <Select aria-label={copy.departmentAccess} name="departmentRoleId" defaultValue="" required>
+              <option value="">{copy.pickDepartment}</option>
+              {joinableDepartments.map((department) => (
+                <option key={department.id} value={department.id}>
+                  {department.name}
+                </option>
+              ))}
+            </Select>
+            <Button type="submit" variant="primary" disabled={isRequesting}>
+              {isRequesting ? copy.saving : copy.requestAccess}
+            </Button>
+          </form>
+        ) : (
+          <p className="mt-4 text-sm text-[var(--muted)]">{copy.noDepartmentsToJoin}</p>
+        )}
+
+        {requestState.saved ? (
+          <Alert tone="success" className="mt-3">
+            {copy.requestSent}
+          </Alert>
+        ) : null}
+        <FormError message={requestState.error} className="mt-3" />
+      </Card>
 
       <TwoFactorCard copy={copy} enabled={twoFactor.enabled} configured={twoFactor.configured} />
     </CardGrid>
@@ -238,32 +292,4 @@ function SavedNotice({ state, copy }: { state: ActionState; copy: Copy }) {
   }
 
   return <span className="text-xs font-medium text-emerald-300">{copy.saved}</span>;
-}
-
-/** A card for a feature the screen already shows but cannot do yet — controls disabled, label says why. */
-function SoonCard({
-  span,
-  title,
-  hint,
-  soonLabel,
-  children,
-}: {
-  span: "1/2";
-  title: string;
-  hint: string;
-  soonLabel: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Card as="section" span={span}>
-      <div className="flex items-start justify-between gap-3">
-        <SectionTitle>{title}</SectionTitle>
-        <Badge tone="neutral" className="shrink-0 whitespace-nowrap">
-          {soonLabel}
-        </Badge>
-      </div>
-      <p className="mt-1 text-sm text-[var(--muted)]">{hint}</p>
-      <div className="mt-4">{children}</div>
-    </Card>
-  );
 }

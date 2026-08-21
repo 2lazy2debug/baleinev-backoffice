@@ -27,6 +27,10 @@ JournalEntry ─── Department
 
 ExpenseReport ─── User (submittedBy)
 
+Task ─── User (createdBy / assignedTo / resolvedBy)
+     ─── DepartmentRole (DEPARTMENT_ACCESS_REQUEST)
+     ─── ExpenseReport | StaffAssignment | Todo
+
 Invoice ─── MoneyAccount (bankAccount)
 
 DocumentTemplate  (global, not Edition-scoped)
@@ -270,6 +274,35 @@ An expense submitted by a department user for approval and reimbursement.
 | `editionId` | String | FK → Edition (onDelete: Cascade) |
 
 **ExpenseStatus enum:** `PENDING` (just submitted), `APPROVED` (admin approved — links to journal), `REJECTED` (admin rejected with reason).
+
+---
+
+### `Task`
+One thing waiting to be done. A task is addressed either to **one user** (`assignedToUserId`) or to
+a **role** (`assignedToRole`) — a role-assigned task is shared: every user with that role sees it,
+and the first to resolve it clears it for all of them.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `type` | `TaskType` | See below |
+| `status` | `TaskStatus` | `PENDING` or `DONE` |
+| `title` | String | Written server-side in English, displayed as-is |
+| `createdById` | String? | FK → User (onDelete: SetNull — tasks outlive their creator) |
+| `editionId` | String? | FK → Edition; null for global tasks, which stay writable in a closed edition |
+| `assignedToUserId` | String? | FK → User (onDelete: Cascade) |
+| `assignedToRole` | `UserRole?` | Shared task: every user of that role sees it |
+| `resolvedById` / `resolvedAt` | String? / DateTime? | Who marked it done, and when |
+| `expenseReportId` | String? | `REVIEW_EXPENSE_REPORT` / `RECORD_JOURNAL` |
+| `staffAssignmentId` | String? | `STAFF_SHIFT`, unique |
+| `departmentRoleId` | String? | `DEPARTMENT_ACCESS_REQUEST`: the department asked for (onDelete: Cascade) |
+| `todoId` | String? | `GENERAL` tasks grouped under a `Todo` |
+| `dueDate` | DateTime? | |
+
+**TaskType enum:** `GENERAL` (hand-written), `REVIEW_EXPENSE_REPORT`, `RECORD_JOURNAL`,
+`STAFF_SHIFT`, `DEPARTMENT_ACCESS_REQUEST` (a user asked to join a department — see
+[business-processes.md](./business-processes.md)). Resolving a task never performs the underlying
+action: it records that somebody dealt with it.
 
 ---
 

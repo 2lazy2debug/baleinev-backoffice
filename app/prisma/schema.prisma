@@ -52,6 +52,7 @@ enum TaskType {
   REVIEW_EXPENSE_REPORT
   RECORD_JOURNAL
   STAFF_SHIFT
+  DEPARTMENT_ACCESS_REQUEST
 }
 
 enum TaskStatus {
@@ -115,6 +116,8 @@ model DepartmentRole {
 
   users           User[]
   passwordEntries PasswordEntry[]
+  // Pending DEPARTMENT_ACCESS_REQUEST tasks pointing at this department.
+  tasks           Task[]
 }
 
 // Shared, department-scoped credential store. Secret fields (password, TOTP
@@ -496,6 +499,9 @@ model Task {
   resolvedAt        DateTime?
   expenseReportId   String?
   staffAssignmentId String?    @unique
+  // DEPARTMENT_ACCESS_REQUEST only: the department the creator asked to join.
+  // The task is a *request*, never a grant — resolving it changes no membership.
+  departmentRoleId  String?
   dueDate           DateTime?
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @default(now()) @updatedAt
@@ -507,12 +513,14 @@ model Task {
   resolvedBy      User?            @relation("TaskResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
   expenseReport   ExpenseReport?   @relation(fields: [expenseReportId], references: [id], onDelete: Cascade)
   staffAssignment StaffAssignment? @relation(fields: [staffAssignmentId], references: [id], onDelete: Cascade)
+  departmentRole  DepartmentRole?  @relation(fields: [departmentRoleId], references: [id], onDelete: Cascade)
 
   @@index([createdById])
   @@index([editionId])
   @@index([todoId])
   @@index([status, assignedToUserId])
   @@index([status, assignedToRole])
+  @@index([status, departmentRoleId])
 }
 
 model Todo {

@@ -3,13 +3,14 @@ import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { syncDepartmentRolesFromDepartments } from "@/lib/department-roles";
 import { getDictionary, getLocale } from "@/lib/i18n";
+import { getPendingDepartmentAccessRequests } from "@/lib/tasks";
 import { isTwoFactorConfigured } from "@/lib/two-factor";
 
 import { AccountPageClient } from "./client";
 
 /**
- * The signed-in user's own account — name, bank details, password and two-factor
- * sign-in, plus the one thing still drawn but not wired (joining a department).
+ * The signed-in user's own account — name, bank details, password, two-factor
+ * sign-in and asking to join a department.
  *
  * Global, not edition-scoped: it is listed in AppShell's GLOBAL_ROUTES, so a
  * closed edition does not put this screen in read-only.
@@ -22,15 +23,18 @@ export default async function AccountPage() {
   // Same call `/users` makes: department roles exist only once a department of
   // that name has been created in some edition.
   await syncDepartmentRolesFromDepartments();
-  const [departments, twoFactor] = await Promise.all([
+  const [departments, pendingRequests, twoFactor] = await Promise.all([
     prisma.departmentRole.findMany({
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
+    getPendingDepartmentAccessRequests(access.id),
     // Read here rather than off the access context: that context travels to
     // every screen, and this flag is only ever this one card's business.
     prisma.user.findUnique({ where: { id: access.id }, select: { twoFactorEnabled: true } }),
   ]);
+
+  const pendingRequestIds = new Set(pendingRequests.map((request) => request.id));
 
   return (
     <div className="space-y-8">
@@ -56,8 +60,10 @@ export default async function AccountPage() {
           city: access.refundCity,
         }}
         joinableDepartments={departments.filter(
-          (department) => !access.departmentRoleNames.includes(department.name),
+          (department) =>
+            !access.departmentRoleNames.includes(department.name) && !pendingRequestIds.has(department.id),
         )}
+        pendingDepartmentRequests={pendingRequests}
         twoFactor={{
           enabled: twoFactor?.twoFactorEnabled ?? false,
           // No master key on this server means no seed can be sealed, so the
