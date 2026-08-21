@@ -5,7 +5,10 @@ import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
 
+import { WritableEditionOnly } from "@/components/edition-read-only";
+
 import { CostCentersPageClient } from "./client";
+import CreateCostCenterModal from "./create-cost-center-modal";
 import { EmptyPage, PageHeader } from "@/components/ui";
 
 export default async function CostCentersPage() {
@@ -63,6 +66,11 @@ export default async function CostCentersPage() {
         eyebrow={copy.costCenters.title}
         title={<>{copy.costCenters.forEdition} {activeEdition.name}</>}
         description={copy.costCenters.subtitle}
+        actions={
+          <WritableEditionOnly>
+            <CreateCostCenterModal locale={locale} />
+          </WritableEditionOnly>
+        }
       />
 
       <CostCentersPageClient locale={locale} costCenters={costCenters} />
