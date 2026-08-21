@@ -77,13 +77,21 @@ above that use Tailwind's `text-xs`/`text-sm`. Headings are `text-3xl` (page, vi
 **Radius** is a deliberately tight scale defined as tokens in `@theme`, so every
 `rounded-*` utility already resolves to it. Use the utilities — never an arbitrary
 `rounded-[Npx]`:
-- Buttons, inputs, selects and other controls: `rounded-md` (5px)
-- Cards, panels and modals: `rounded-2xl` (10px)
+- Buttons and icon buttons: `rounded-md` (5px)
+- Inputs, selects, textareas: `rounded-lg` (8px) — a field is one step softer than the
+  button beside it, so a row reads as a field *plus* a button
+- Cards and panels: `rounded-2xl` (10px)
+- Modals: `rounded-3xl` (14px) — a dialog sits above the page and is rounded harder
+  than a card to say so
 - The mobile bottom sheet: `rounded-t-4xl` (18px) — the heaviest rounding in the app,
   and the sheet is the only thing that gets it
 - Tables and nested surfaces: `rounded-xl` (8px)
 - Small chips / list rows: `rounded-lg` (8px) or `rounded-sm` (3px)
 - Pills, badges, status dots, count bubbles, avatars: `rounded-full`
+
+Card 10 → modal 14 → sheet 18 is a ladder, not three arbitrary numbers: the further a
+surface floats above the page, the rounder it gets. Keep them on separate tokens — the
+app once had all three on `--radius-2xl`, and the hierarchy the mockups drew was invisible.
 
 `rounded-full` is only for genuinely circular/pill elements (badges, dots, avatars) —
 action buttons are `rounded-md`, not pills.

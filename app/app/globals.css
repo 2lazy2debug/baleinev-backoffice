@@ -47,7 +47,9 @@
   --radius-lg: 8px;
   --radius-xl: 8px;
   --radius-2xl: 10px;
-  --radius-3xl: 12px;
+  /* Modals. A dialog sits above the page, so the mockups round it harder than a
+     card (10px) and softer than the sheet (18px). */
+  --radius-3xl: 14px;
   /* The bottom sheet, and only it. The mockups give the mobile surfaces a
      hierarchy — card 10px, modal 14px, sheet 18px — so the sheet is not a card
      that happens to be rounder; it is the one surface that owns the bottom of

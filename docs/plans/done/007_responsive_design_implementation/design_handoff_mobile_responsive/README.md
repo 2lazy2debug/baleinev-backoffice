@@ -88,20 +88,23 @@ design system won:
 > **Not the rule any more (2026-08-20).** Resolving these disagreements in the app's
 > favour was never asked for. A mockup under `docs/plans/` is the approved target, so a
 > radius or a type size it asks for is a change to the scale, not a violation — see the
-> mockup rule in `CLAUDE.md`. The list below is what shipped, not a precedent; the first
-> two entries are open questions rather than settled decisions.
+> mockup rule in `CLAUDE.md`. Every radius below has since been reconciled with the
+> mockups; the list is kept as a record of what shipped, not as a precedent.
 
 - ~~**Sheet corners**~~ — reconciled 2026-08-21. The sheet is `rounded-t-4xl` (18px),
   as the mockup asked. 18px went into `@theme` as `--radius-4xl` rather than into
   `--radius-2xl`, so cards, panels and modals keep their 10px: the mockups give the
   mobile surfaces a hierarchy (card 10px, modal 14px, sheet 18px), and the sheet is the
   only thing at the top of it.
-- **Type** is `text-3xs`/`text-sm` from the scale, not the mockup's `10px`/`13.5px`/`15px`.
-  `text-3xs` already *is* 10px; 13.5px and 15px both landed on `text-sm` (14px). Still open.
-- **Modals** are `rounded-2xl` (10px), not the mockup's 14px. Still open — a 14px
-  `--radius-3xl` is the natural slot for it (the token exists, currently 12px and unused).
-- **Fields** are `rounded-md` (5px), the same as buttons; the mockup gives `.field-control`
-  8px and keeps 5px for `.btn`. Still open.
+- ~~**Modals**~~ — reconciled 2026-08-21. `rounded-3xl` (14px); `--radius-3xl` was
+  retuned from an unused 12px.
+- ~~**Fields**~~ — reconciled 2026-08-21. Inputs, selects and textareas are `rounded-lg`
+  (8px) while buttons stay `rounded-md` (5px), as the mockup has it. One line in
+  `inputBaseClasses` — every field in the app shares that recipe.
+- **Type** stays as it is — `text-3xs`/`text-sm` from the scale, not the mockup's
+  `10px`/`13.5px`/`15px`. Decided 2026-08-21, not an oversight: `text-3xs` already *is*
+  10px, and 13.5px/15px are close enough to `text-sm` (14px) that two more type tokens
+  would cost more than they buy.
 - **The sheet's close button** is a real `<IconButton>`, not a hand-rolled `h-9 w-9` box.
 - **`SignOutButton`** got a `nav` prop (stacked icon + label) rather than the
   `iconOnly`/`className` passthrough `component-changes.md` guessed at; the shared

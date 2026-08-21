@@ -56,7 +56,7 @@ export function Modal({ open, onClose, title, size = "md", mobileFullScreen = fa
       <div
         className={cn(
           "w-full overflow-y-auto border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg",
-          mobileFullScreen ? "h-full rounded-none sm:h-auto sm:rounded-2xl" : "rounded-2xl",
+          mobileFullScreen ? "h-full rounded-none sm:h-auto sm:rounded-3xl" : "rounded-3xl",
           sizeClasses[size],
         )}
         onClick={(event) => event.stopPropagation()}

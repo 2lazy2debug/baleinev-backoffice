@@ -9,8 +9,11 @@ export const fieldSizeClasses: Record<ControlSize, string> = {
   sm: cn(controlHeight.sm, "px-2.5 text-xs"),
 };
 
+// `rounded-lg` (8px), not the button's `rounded-md` (5px): the mockups give a field a
+// softer corner than the control next to it, so the row reads as a field plus a button
+// rather than one undifferentiated strip.
 export const inputBaseClasses =
-  "w-full rounded-md border bg-[var(--panel)] outline-none transition focus:border-[var(--accent)] disabled:opacity-50";
+  "w-full rounded-lg border bg-[var(--panel)] outline-none transition focus:border-[var(--accent)] disabled:opacity-50";
 
 /** Border colour of a field: the line token, or rose when the field is the risky one. */
 const fieldTones = {
