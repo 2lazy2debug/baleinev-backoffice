@@ -266,12 +266,10 @@ export default function BudgetPageClient({ locale, editionName, departments, can
         title={<>{copy.budget.entriesFor} {editionName}</>}
         description={copy.budget.subtitle}
         actions={canManage ? (
-          <span className="hidden sm:flex">
-            <Button variant="secondary" onClick={() => setIsDepartmentModalOpen(true)}>
-              <Plus />
-              {copy.budget.addDepartment}
-            </Button>
-          </span>
+          <Button variant="secondary" onClick={() => setIsDepartmentModalOpen(true)}>
+            <Plus />
+            {copy.budget.addDepartment}
+          </Button>
         ) : null}
       />
 
