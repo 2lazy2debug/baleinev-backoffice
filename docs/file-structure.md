@@ -45,20 +45,20 @@ app/
 │   │   └── actions.ts            ← Server actions: create/update/delete journal entries
 │   │
 │   ├── money-accounts/
-│   │   ├── page.tsx                       ← Money account CRUD, opening balance management (data-fetching only)
-│   │   ├── client.tsx                     ← Client-side interactive update/delete forms
-│   │   ├── create-money-account-form.tsx  ← Create form (bank/cash/other, IBAN fields shown for bank only)
-│   │   └── actions.ts                     ← Server actions: create/update/delete money accounts (admin + Comptabilité)
+│   │   ├── page.tsx                        ← Money account CRUD, opening balance management (data-fetching only)
+│   │   ├── client.tsx                      ← Client-side interactive update/delete forms
+│   │   ├── create-money-account-modal.tsx  ← Header button + create modal (bank/cash/other, IBAN fields for bank only)
+│   │   └── actions.ts                      ← Server actions: create/update/delete money accounts (admin + Comptabilité)
 │   │
 │   ├── cost-centers/
 │   │   ├── page.tsx              ← Cost center CRUD (data-fetching only)
-│   │   ├── client.tsx            ← Client-side interactive create/update/delete forms
+│   │   ├── client.tsx            ← Cost center cards with inline rename/delete
+│   │   ├── create-cost-center-modal.tsx ← Header button + create modal
 │   │   └── actions.ts            ← Server actions: create/update/delete cost centers
 │   │
 │   ├── expense-reports/
-│   │   ├── page.tsx              ← Expense report form + history (data-fetching only)
-│   │   ├── tabs.tsx              ← Form beside history on desktop, History/New report tabs below `lg`
-│   │   ├── create-expense-report-form.tsx ← Submit form (standard + driving, proof upload)
+│   │   ├── page.tsx              ← Header + history (data-fetching only)
+│   │   ├── create-expense-report-modal.tsx ← Header button + create modal (standard + driving, proof upload)
 │   │   ├── client.tsx            ← History: table above `sm`, cardlets below; admin approve/reject
 │   │   └── actions.ts            ← Server actions: submit, approve, reject
 │   │
@@ -73,12 +73,14 @@ app/
 │   │
 │   ├── passwords/
 │   │   ├── page.tsx              ← Department-scoped shared password manager (data-fetching, no ciphertext to client)
-│   │   ├── client.tsx            ← Cards + create/edit/delete modals, reveal & 2FA on demand
+│   │   ├── client.tsx            ← Owns the page header (create button + search); list rows,
+│   │   │                            create/edit/delete modals, reveal & 2FA on demand
 │   │   └── actions.ts            ← Server actions: create/update/delete + revealPassword/getTotpCode (see docs/passwords.md)
 │   │
 │   ├── users/
 │   │   ├── page.tsx              ← User management (admin only, data-fetching only)
-│   │   ├── client.tsx            ← Client-side create/update/delete forms
+│   │   ├── client.tsx            ← One card per user: inline update + delete
+│   │   ├── create-user-modal.tsx ← Header button + create modal
 │   │   └── actions.ts            ← Server actions: create/update/delete users
 │   │
 │   ├── editions/
@@ -136,6 +138,7 @@ app/
 | `sign-out-button.tsx` | Sign-out action for the app shell — a labelled `<Button>` when expanded, an icon `<IconButton>` when the sidebar is collapsed, a stacked nav button (`nav`) in the mobile bottom bar |
 | `form-error.tsx` | Renders a server-action error message through the shared `<Alert>` (nothing when there is no message) |
 | `tasks-create-modal.tsx` | Modal with the two "create todo" / "create task" forms used on the tasks page |
+| `use-close-on-success.ts` | `useCloseOnSuccess()` — closes a create modal once its `useActionState` form comes back without an error |
 
 ### `components/mobile/` — the mobile shell
 

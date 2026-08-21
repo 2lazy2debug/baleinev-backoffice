@@ -8,4 +8,6 @@ Every "create X" action in this app follows one pattern. Do not add a new inline
 
 Reference implementation: `components/tasks-create-modal.tsx` used from `app/(app)/tasks/page.tsx`. A new app's create flow should be a client component shaped exactly like `TasksCreateModal` (a `Button` + `Modal` pair reading its own `useActionState`), passed into `PageHeader actions`.
 
-Full rationale and the per-app before/after: see `design_handoff_unified_create_pattern/proposal.md` in the design project.
+Full rationale and the per-app before/after: see `proposal.md` next to this file.
+
+**Landed.** The rule now lives in the repo's root `CLAUDE.md`; this folder is the record of how it got there.

@@ -58,6 +58,35 @@ or a heading, one of these already covers it:
 | Inline message | `<Alert tone>` (`<FormError>` wraps it for server-action errors) |
 | Dialog | `<Modal open onClose title size footer>` |
 
+**Every "create X" is a header button and a modal.** There is one shape for
+creating in this app — do not add an inline create form, a sidebar create column
+or a per-app Create/History tab strip, not even for a brand-new app:
+
+- **Desktop:** the form lives in `<Modal>`, opened by a button in
+  `<PageHeader actions>` (top-right, next to the title). The page body is left
+  with one thing: the list.
+- **Mobile:** the same button and the same modal, unchanged. `PageHeader actions`
+  already renders in the mobile top bar, and `<Modal mobileFullScreen>` already
+  goes edge-to-edge below `sm` — a form with more than a couple of fields asks
+  for it. There is nothing to switch to once creating is a modal, so no screen
+  gets a mobile-only create tab.
+- **Permission gating** is whatever already decides who may create
+  (`WritableEditionOnly`, an `isAdmin` check, `isReadOnly`) wrapped around the
+  button — the same logic in the same place on both breakpoints. Never show a
+  create button on one breakpoint and hide it on the other; permission decides
+  who sees it, never the viewport.
+
+The modal is a client component holding its own `Button` + `Modal` pair and its
+own `useActionState`, passed into `PageHeader actions` by the server page — see
+`components/tasks-create-modal.tsx` or `app/(app)/expense-reports/create-expense-report-modal.tsx`.
+The submit button sits in the modal's `footer` and reaches the form by id
+(`form="…"`), so Cancel/Submit read the same in every dialog, and the form calls
+`useCloseOnSuccess` so the dialog shuts once the action returns without an error.
+When the header belongs to a client component (Calendar, Passwords), the page
+hands the gated trigger down as a prop rather than growing a second header.
+
+Full rationale and the per-app before/after: `docs/plans/done/009_unified_create_pattern/`.
+
 **Control size** is a two-step scale shared by `Button`, `IconButton`, `Input` and
 `Select` (`app/components/ui/control.ts`) — this is what keeps a field and the button
 next to it the same height:
