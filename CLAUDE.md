@@ -78,7 +78,9 @@ above that use Tailwind's `text-xs`/`text-sm`. Headings are `text-3xl` (page, vi
 `rounded-*` utility already resolves to it. Use the utilities — never an arbitrary
 `rounded-[Npx]`:
 - Buttons, inputs, selects and other controls: `rounded-md` (5px)
-- Cards, panels and modals: `rounded-2xl` (10px) — the heaviest rounding in the app
+- Cards, panels and modals: `rounded-2xl` (10px)
+- The mobile bottom sheet: `rounded-t-4xl` (18px) — the heaviest rounding in the app,
+  and the sheet is the only thing that gets it
 - Tables and nested surfaces: `rounded-xl` (8px)
 - Small chips / list rows: `rounded-lg` (8px) or `rounded-sm` (3px)
 - Pills, badges, status dots, count bubbles, avatars: `rounded-full`

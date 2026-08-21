@@ -91,9 +91,17 @@ design system won:
 > mockup rule in `CLAUDE.md`. The list below is what shipped, not a precedent; the first
 > two entries are open questions rather than settled decisions.
 
-- **Sheet corners** are `rounded-t-2xl` (10px), not the mockup's 18px — 10px is the
-  app's heaviest rounding and `rounded-[18px]` is a check-design violation.
+- ~~**Sheet corners**~~ — reconciled 2026-08-21. The sheet is `rounded-t-4xl` (18px),
+  as the mockup asked. 18px went into `@theme` as `--radius-4xl` rather than into
+  `--radius-2xl`, so cards, panels and modals keep their 10px: the mockups give the
+  mobile surfaces a hierarchy (card 10px, modal 14px, sheet 18px), and the sheet is the
+  only thing at the top of it.
 - **Type** is `text-3xs`/`text-sm` from the scale, not the mockup's `10px`/`13.5px`/`15px`.
+  `text-3xs` already *is* 10px; 13.5px and 15px both landed on `text-sm` (14px). Still open.
+- **Modals** are `rounded-2xl` (10px), not the mockup's 14px. Still open — a 14px
+  `--radius-3xl` is the natural slot for it (the token exists, currently 12px and unused).
+- **Fields** are `rounded-md` (5px), the same as buttons; the mockup gives `.field-control`
+  8px and keeps 5px for `.btn`. Still open.
 - **The sheet's close button** is a real `<IconButton>`, not a hand-rolled `h-9 w-9` box.
 - **`SignOutButton`** got a `nav` prop (stacked icon + label) rather than the
   `iconOnly`/`className` passthrough `component-changes.md` guessed at; the shared

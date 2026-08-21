@@ -48,6 +48,12 @@
   --radius-xl: 8px;
   --radius-2xl: 10px;
   --radius-3xl: 12px;
+  /* The bottom sheet, and only it. The mockups give the mobile surfaces a
+     hierarchy — card 10px, modal 14px, sheet 18px — so the sheet is not a card
+     that happens to be rounder; it is the one surface that owns the bottom of
+     the screen, and the corner says so. Kept off `--radius-2xl` because raising
+     that would round every card, panel and modal in the app with it. */
+  --radius-4xl: 18px;
 }
 
 @keyframes sheet-up {

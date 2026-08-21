@@ -40,7 +40,7 @@ export function MobileSheet({ open, onClose, children }: MobileSheetProps) {
       onClick={onClose}
     >
       <div
-        className="max-h-[78vh] animate-sheet-up overflow-y-auto rounded-t-2xl border border-b-0 border-[var(--line)] bg-[var(--panel-strong)] px-4 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-3"
+        className="max-h-[78vh] animate-sheet-up overflow-y-auto rounded-t-4xl border border-b-0 border-[var(--line)] bg-[var(--panel-strong)] px-4 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-3"
         onClick={(event) => event.stopPropagation()}
       >
         {/* Drag handle — it does not drag, it says "this came from the bottom". */}
