@@ -165,8 +165,9 @@ export function ExpenseReportsPageClient({
 
   return (
     <div>
-      {/* Below `sm` the frame and the heading go: the tab strip in the top bar
-          already says "History", and the cardlets are surfaces of their own. */}
+      {/* Below `sm` the frame and the heading go: creating is a modal, so the
+          history is the only thing on the screen and naming it says nothing the
+          title has not — and the cardlets are surfaces of their own. */}
       <Card as="section" flushOnMobile>
         <SectionTitle desktopOnly>{copy.expenseReports.history}</SectionTitle>
 

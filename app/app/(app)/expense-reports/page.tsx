@@ -7,9 +7,8 @@ import { decimalToNumber } from "@/lib/utils";
 import { WritableEditionOnly } from "@/components/edition-read-only";
 
 import { ExpenseReportsPageClient } from "./client";
-import CreateExpenseReportForm from "./create-expense-report-form";
-import { ExpenseReportsTabs } from "./tabs";
-import { EmptyPage } from "@/components/ui";
+import CreateExpenseReportModal from "./create-expense-report-modal";
+import { EmptyPage, PageHeader } from "@/components/ui";
 
 export default async function ExpenseReportsPage() {
   const access = await getCurrentUserAccess();
@@ -52,20 +51,20 @@ export default async function ExpenseReportsPage() {
 
   return (
     <div className="space-y-8">
-      <ExpenseReportsTabs
+      <PageHeader
         eyebrow={copy.expenseReports.title}
         title={<>{copy.expenseReports.title} {activeEdition.name}</>}
         description={copy.expenseReports.subtitle}
-        copy={{ history: copy.expenseReports.history, newReport: copy.expenseReports.newReport }}
-        create={
+        actions={
           <WritableEditionOnly>
-            <CreateExpenseReportForm
+            <CreateExpenseReportModal
               departments={activeEdition.departments
                 .filter((department) => access.role === "ADMIN" || access.departmentRoleNames.includes(department.name))
                 .map((department) => ({ id: department.id, name: department.name }))}
               drivingRatePerKm={decimalToNumber(activeEdition.drivingRatePerKm)}
               copy={{
                 create: copy.expenseReports.create,
+                cancel: copy.shell.cancel,
                 submit: copy.expenseReports.submit,
                 reportType: copy.expenseReports.reportType,
                 standardExpense: copy.expenseReports.standardExpense,
@@ -91,13 +90,12 @@ export default async function ExpenseReportsPage() {
             />
           </WritableEditionOnly>
         }
-        history={
-          <ExpenseReportsPageClient
-            expenseReports={activeEdition.expenseReports}
-            access={{ role: access.role }}
-            copy={copy}
-          />
-        }
+      />
+
+      <ExpenseReportsPageClient
+        expenseReports={activeEdition.expenseReports}
+        access={{ role: access.role }}
+        copy={copy}
       />
     </div>
   );

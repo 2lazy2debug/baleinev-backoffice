@@ -1,9 +1,11 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
+import { Plus } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
-import { Alert, Button, Card, Field, Input, SectionTitle, Select } from "@/components/ui";
+import { useCloseOnSuccess } from "@/components/use-close-on-success";
+import { Alert, Button, Field, Input, Modal, Select } from "@/components/ui";
 import { allowedProofMimeTypes } from "@/lib/proof-upload";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -16,6 +18,7 @@ type DepartmentOption = {
 
 type Copy = {
   create: string;
+  cancel: string;
   submit: string;
   reportType: string;
   standardExpense: string;
@@ -57,10 +60,12 @@ const EXPENSE_PAYMENT_METHOD = {
 
 type ExpenseReportTypeValue = (typeof EXPENSE_REPORT_TYPE)[keyof typeof EXPENSE_REPORT_TYPE];
 
-export default function CreateExpenseReportForm({ departments, drivingRatePerKm, copy }: Props) {
+export default function CreateExpenseReportModal({ departments, drivingRatePerKm, copy }: Props) {
+  const [open, setOpen] = useState(false);
   const [reportType, setReportType] = useState<ExpenseReportTypeValue>(EXPENSE_REPORT_TYPE.STANDARD);
   const [kilometers, setKilometers] = useState("");
   const [createState, createFormAction, isCreating] = useActionState(createExpenseReportAction, initialActionState);
+  const markSubmitted = useCloseOnSuccess(createState, isCreating, () => setOpen(false));
 
   const computedAmount = useMemo(() => {
     const km = Number(kilometers.replace(",", "."));
@@ -72,11 +77,30 @@ export default function CreateExpenseReportForm({ departments, drivingRatePerKm,
   }, [kilometers, drivingRatePerKm]);
 
   return (
-    <div>
-      <Card as="section">
-        <SectionTitle>{copy.create}</SectionTitle>
+    <>
+      <Button type="button" variant="primary" onClick={() => setOpen(true)}>
+        <Plus />
+        {copy.create}
+      </Button>
 
-        <form action={createFormAction} className="mt-6 space-y-4">
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title={copy.create}
+        size="lg"
+        mobileFullScreen
+        footer={
+          <>
+            <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
+              {copy.cancel}
+            </Button>
+            <Button type="submit" form="expense-report-form" variant="primary" disabled={isCreating}>
+              {copy.submit}
+            </Button>
+          </>
+        }
+      >
+        <form id="expense-report-form" action={createFormAction} onSubmit={markSubmitted} className="space-y-4">
           <FormError message={createState.error} />
           <Field label={copy.reportType}>
             <Select
@@ -181,12 +205,8 @@ export default function CreateExpenseReportForm({ departments, drivingRatePerKm,
               ))}
             </Select>
           </Field>
-
-          <Button type="submit" variant="primary" disabled={isCreating} className="w-full lg:w-auto">
-            {copy.submit}
-          </Button>
         </form>
-      </Card>
-    </div>
+      </Modal>
+    </>
   );
 }
