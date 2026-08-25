@@ -68,7 +68,6 @@ type EventItem = {
   endDate: Date | string;
   notes: string | null;
   eventType: { name: string; color: string | null };
-  costCenter: { code: string } | null;
   days: EventDayItem[];
 };
 
@@ -89,7 +88,6 @@ type EventsCopy = {
   toggleOff: string;
   noShifts: string;
   full: string;
-  spotsLeft: string;
   withdraw: string;
   signUp: string;
   assignStaff: string;
@@ -263,7 +261,6 @@ export default function EventsPageClient({
                     </div>
                     <SectionTitle as="h3" className="mt-0.5">{event.name}</SectionTitle>
                     <p className="text-xs text-[var(--muted)]">{formatDate(event.startDate)} → {formatDate(event.endDate)}</p>
-                    {event.costCenter ? <p className="text-xs text-[var(--muted)]">{event.costCenter.code}</p> : null}
                     {event.notes ? <p className="mt-1 text-xs text-[var(--muted)]">{event.notes}</p> : null}
                   </div>
                   <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
@@ -369,14 +366,11 @@ export default function EventsPageClient({
                                       <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:py-2.5">
                                         <div className="space-y-0.5">
                                           <p className="text-sm font-semibold text-[var(--ink)]">{shift.role || "General"}</p>
-                                          <p className="text-xs text-[var(--muted)]">{formatTime(shift.startTime)}–{formatTime(shift.endTime)}</p>
+                                          {/* The one number anyone scans this list for. */}
+                                          <p className="text-xs font-semibold text-[var(--muted)]">{formatTime(shift.startTime)}–{formatTime(shift.endTime)}</p>
                                           <p className="text-xs text-[var(--muted)]">
                                             {spotsFilled}/{shift.capacity}{" "}
-                                            {isFull ? (
-                                              <span className="font-semibold text-rose-400">{copy.full}</span>
-                                            ) : (
-                                              <span>{shift.capacity - spotsFilled} {copy.spotsLeft}</span>
-                                            )}
+                                            {isFull ? <span className="font-semibold text-rose-400">{copy.full}</span> : null}
                                           </p>
                                           {/* Assigned staff names */}
                                           {shift.assignments.length > 0 ? (

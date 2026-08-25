@@ -26,7 +26,6 @@ export default async function EventsPage() {
           orderBy: { startDate: "asc" },
           include: {
             eventType: true,
-            costCenter: true,
             days: {
               orderBy: { date: "asc" },
               include: {
