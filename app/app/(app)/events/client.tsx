@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
@@ -80,6 +80,8 @@ type EventsCopy = {
   eventTypeDescription: string;
   noEvents: string;
   deleteEvent: string;
+  collapseEvent: string;
+  expandEvent: string;
   editShift: string;
   deleteShift: string;
   isOff: string;
@@ -148,6 +150,18 @@ export default function EventsPageClient({
     deleteShiftAction,
     initialActionState
   );
+
+  // Collapsing is a reading aid, not a permission: everyone gets it, and an
+  // event starts open so the page looks the way it always has.
+  const [collapsedEventIds, setCollapsedEventIds] = useState<ReadonlySet<string>>(new Set());
+
+  function toggleEventCollapsed(eventId: string) {
+    setCollapsedEventIds((current) => {
+      const next = new Set(current);
+      if (!next.delete(eventId)) next.add(eventId);
+      return next;
+    });
+  }
 
   // One shift at a time reads as fields instead of labels — the journal table's
   // rule, so a row never turns into an editor while another one is open.
@@ -232,229 +246,245 @@ export default function EventsPageClient({
           <FormError message={deleteShiftState.error} />
           <FormError message={pdfError} />
 
-          {events.map((event) => (
-            <Panel key={event.id}>
-              {/* Event header */}
-              <PanelHeader className="flex-col items-start sm:flex-row">
-                <div className="w-full sm:w-auto">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="inline-block h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: event.eventType.color ?? "var(--accent)" }}
-                    />
-                    <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{event.eventType.name}</span>
-                  </div>
-                  <SectionTitle as="h3" className="mt-0.5">{event.name}</SectionTitle>
-                  <p className="text-xs text-[var(--muted)]">{formatDate(event.startDate)} → {formatDate(event.endDate)}</p>
-                  {event.costCenter ? <p className="text-xs text-[var(--muted)]">{event.costCenter.code}</p> : null}
-                  {event.notes ? <p className="mt-1 text-xs text-[var(--muted)]">{event.notes}</p> : null}
-                </div>
-                <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={downloadingEventId === event.id}
-                    onClick={() => handleDownloadPdf(event)}
-                    className="grow sm:grow-0"
-                  >
-                    {downloadingEventId === event.id ? copy.downloadingPdf : copy.exportPdf}
-                  </Button>
-                  {canManageEvents ? (
-                    <form action={deleteEventFormAction} className="grow sm:grow-0">
-                      <input type="hidden" name="id" value={event.id} />
-                      <Button type="submit" variant="destructive" disabled={isDeletingEvent} className="w-full sm:w-auto">
-                        {copy.deleteEvent}
-                      </Button>
-                    </form>
-                  ) : null}
-                </div>
-              </PanelHeader>
+          {events.map((event) => {
+            const isCollapsed = collapsedEventIds.has(event.id);
 
-              {/* Days */}
-              <div className="divide-y divide-[var(--line)]">
-                {event.days.map((day) => (
-                  <div key={day.id} className={`px-5 py-4 ${day.isOff ? "opacity-50" : ""}`}>
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold">{formatDate(day.date)}</span>
-                        {day.isOff ? <Badge tone="neutral">{copy.isOff}</Badge> : null}
-                      </div>
-                      {canManageEvents ? (
-                        <form action={toggleDayOffFormAction}>
-                          <input type="hidden" name="id" value={day.id} />
-                          <Button type="submit" variant="ghost" size="sm" disabled={isTogglingDayOff}>
-                            {day.isOff ? copy.toggleOn : copy.toggleOff}
-                          </Button>
-                        </form>
-                      ) : null}
+            return (
+              <Panel key={event.id}>
+                {/* Event header */}
+                <PanelHeader className="flex-col items-start sm:flex-row">
+                  <div className="w-full sm:w-auto">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="inline-block h-2.5 w-2.5 rounded-full"
+                        style={{ backgroundColor: event.eventType.color ?? "var(--accent)" }}
+                      />
+                      <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{event.eventType.name}</span>
                     </div>
+                    <SectionTitle as="h3" className="mt-0.5">{event.name}</SectionTitle>
+                    <p className="text-xs text-[var(--muted)]">{formatDate(event.startDate)} → {formatDate(event.endDate)}</p>
+                    {event.costCenter ? <p className="text-xs text-[var(--muted)]">{event.costCenter.code}</p> : null}
+                    {event.notes ? <p className="mt-1 text-xs text-[var(--muted)]">{event.notes}</p> : null}
+                  </div>
+                  <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={downloadingEventId === event.id}
+                      onClick={() => handleDownloadPdf(event)}
+                      className="grow sm:grow-0"
+                    >
+                      {downloadingEventId === event.id ? copy.downloadingPdf : copy.exportPdf}
+                    </Button>
+                    {canManageEvents ? (
+                      <form action={deleteEventFormAction} className="grow sm:grow-0">
+                        <input type="hidden" name="id" value={event.id} />
+                        <Button type="submit" variant="destructive" disabled={isDeletingEvent} className="w-full sm:w-auto">
+                          {copy.deleteEvent}
+                        </Button>
+                      </form>
+                    ) : null}
+                    {/* Last in the row on both breakpoints, whatever sits before it. */}
+                    <IconButton
+                      size="md"
+                      tone="neutral"
+                      label={isCollapsed ? copy.expandEvent : copy.collapseEvent}
+                      aria-expanded={!isCollapsed}
+                      onClick={() => toggleEventCollapsed(event.id)}
+                    >
+                      {isCollapsed ? <ChevronDown /> : <ChevronUp />}
+                    </IconButton>
+                  </div>
+                </PanelHeader>
 
-                    {/* Shifts */}
-                    {!day.isOff ? (
-                      <div className="mt-3 space-y-2">
-                        {day.shifts.length === 0 ? (
-                          <p className="text-xs text-[var(--muted)]">{copy.noShifts}</p>
-                        ) : (
-                          day.shifts.map((shift) => {
-                            const signed = shift.assignments.find((a) => a.userId === accessId);
-                            const spotsFilled = shift.assignments.length;
-                            const isFull = spotsFilled >= shift.capacity;
+                {/* Days — the header is the whole event once collapsed. */}
+                {isCollapsed ? null : (
+                  <div className="divide-y divide-[var(--line)]">
+                    {event.days.map((day) => (
+                      <div key={day.id} className={`px-5 py-4 ${day.isOff ? "opacity-50" : ""}`}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold">{formatDate(day.date)}</span>
+                            {day.isOff ? <Badge tone="neutral">{copy.isOff}</Badge> : null}
+                          </div>
+                          {canManageEvents ? (
+                            <form action={toggleDayOffFormAction}>
+                              <input type="hidden" name="id" value={day.id} />
+                              <Button type="submit" variant="ghost" size="sm" disabled={isTogglingDayOff}>
+                                {day.isOff ? copy.toggleOn : copy.toggleOff}
+                              </Button>
+                            </form>
+                          ) : null}
+                        </div>
 
-                            const isEditingShift = editingShiftId === shift.id;
+                        {/* Shifts */}
+                        {!day.isOff ? (
+                          <div className="mt-3 space-y-2">
+                            {day.shifts.length === 0 ? (
+                              <p className="text-xs text-[var(--muted)]">{copy.noShifts}</p>
+                            ) : (
+                              day.shifts.map((shift) => {
+                                const signed = shift.assignments.find((a) => a.userId === accessId);
+                                const spotsFilled = shift.assignments.length;
+                                const isFull = spotsFilled >= shift.capacity;
 
-                            return (
-                              <div
-                                key={shift.id}
-                                className={cn(
-                                  nestedSurfaceClasses,
-                                  "overflow-hidden",
-                                  isEditingShift ? "bg-[var(--panel-strong)]" : undefined,
-                                )}
-                              >
-                                {isEditingShift ? (
-                                  <div className="px-4 py-3 sm:py-2.5">
-                                    <EditShiftForm
-                                      shift={{
-                                        id: shift.id,
-                                        startTime: shift.startTime,
-                                        endTime: shift.endTime,
-                                        role: shift.role,
-                                        capacity: shift.capacity,
-                                        assignedCount: spotsFilled,
-                                      }}
-                                      otherShifts={day.shifts
-                                        .filter((other) => other.id !== shift.id)
-                                        .map((other) => ({ startTime: other.startTime, endTime: other.endTime }))}
-                                      onDone={() => setEditingShiftId(null)}
-                                      copy={{
-                                        role: copy.role,
-                                        shiftOverlapWarning: copy.shiftOverlapWarning,
-                                        save: shellCopy.save,
-                                        cancel: shellCopy.cancel,
-                                      }}
-                                    />
-                                  </div>
-                                ) : (
-                                  /* On a phone a shift is a full-width card: the info block,
-                                     then its actions stacked underneath. From sm — where the
-                                     row has room again — it is back to one dense line. */
-                                  <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:py-2.5">
-                                    <div className="space-y-0.5">
-                                      <p className="text-sm font-semibold text-[var(--ink)]">{shift.role || "General"}</p>
-                                      <p className="text-xs text-[var(--muted)]">{formatTime(shift.startTime)}–{formatTime(shift.endTime)}</p>
-                                      <p className="text-xs text-[var(--muted)]">
-                                        {spotsFilled}/{shift.capacity}{" "}
-                                        {isFull ? (
-                                          <span className="font-semibold text-rose-400">{copy.full}</span>
-                                        ) : (
-                                          <span>{shift.capacity - spotsFilled} {copy.spotsLeft}</span>
-                                        )}
-                                      </p>
-                                      {/* Assigned staff names */}
-                                      {shift.assignments.length > 0 ? (
-                                        <p className="text-xs text-[var(--muted)]">
-                                          {shift.assignments.map((a) => a.user.name).join(", ")}
-                                        </p>
-                                      ) : null}
-                                    </div>
+                                const isEditingShift = editingShiftId === shift.id;
 
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                                      {isReadOnly ? null : signed ? (
-                                        <form action={withdrawFormAction}>
-                                          <input type="hidden" name="shiftId" value={shift.id} />
-                                          <Button type="submit" variant="destructive" size="sm" disabled={isWithdrawing} className="w-full sm:w-auto">
-                                            {copy.withdraw}
-                                          </Button>
-                                        </form>
-                                      ) : !isFull ? (
-                                        <form action={signUpFormAction}>
-                                          <input type="hidden" name="shiftId" value={shift.id} />
-                                          <Button type="submit" variant="primary" size="sm" disabled={isSigningUp} className="w-full sm:w-auto">
-                                            {copy.signUp}
-                                          </Button>
-                                        </form>
-                                      ) : null}
-
-                                      {/* Admin: assign someone else */}
-                                      {canManageEvents && !isFull ? (
-                                        <form action={adminAssignFormAction} className="flex items-center gap-2">
-                                          <input type="hidden" name="shiftId" value={shift.id} />
-                                          <div className="min-w-0 grow sm:w-40 sm:grow-0">
-                                            <Select name="userId" defaultValue="" size="sm">
-                                              <option value="" disabled>{copy.assignStaff}</option>
-                                              {allUsers
-                                                .filter((u) => !shift.assignments.some((a) => a.userId === u.id))
-                                                .map((u) => (
-                                                  <option key={u.id} value={u.id}>{u.name}</option>
-                                                ))}
-                                            </Select>
-                                          </div>
-                                          <IconButton type="submit" tone="accent" label={copy.assignStaff} disabled={isAdminAssigning}>
-                                            <Plus />
-                                          </IconButton>
-                                        </form>
-                                      ) : null}
-
-                                      {/* Admin: edit the shift in place, then delete it */}
-                                      {canManageEvents ? (
-                                        <div className="flex items-center gap-2 self-end sm:self-auto">
-                                          <IconButton
-                                            tone="accent"
-                                            label={copy.editShift}
-                                            onClick={() => setEditingShiftId(shift.id)}
-                                          >
-                                            <Pencil />
-                                          </IconButton>
-                                          <form action={deleteShiftFormAction}>
-                                            <input type="hidden" name="id" value={shift.id} />
-                                            <IconButton type="submit" tone="delete" label={copy.deleteShift} disabled={isDeletingShift}>
-                                              <Trash2 />
-                                            </IconButton>
-                                          </form>
+                                return (
+                                  <div
+                                    key={shift.id}
+                                    className={cn(
+                                      nestedSurfaceClasses,
+                                      "overflow-hidden",
+                                      isEditingShift ? "bg-[var(--panel-strong)]" : undefined,
+                                    )}
+                                  >
+                                    {isEditingShift ? (
+                                      <div className="px-4 py-3 sm:py-2.5">
+                                        <EditShiftForm
+                                          shift={{
+                                            id: shift.id,
+                                            startTime: shift.startTime,
+                                            endTime: shift.endTime,
+                                            role: shift.role,
+                                            capacity: shift.capacity,
+                                            assignedCount: spotsFilled,
+                                          }}
+                                          otherShifts={day.shifts
+                                            .filter((other) => other.id !== shift.id)
+                                            .map((other) => ({ startTime: other.startTime, endTime: other.endTime }))}
+                                          onDone={() => setEditingShiftId(null)}
+                                          copy={{
+                                            role: copy.role,
+                                            shiftOverlapWarning: copy.shiftOverlapWarning,
+                                            save: shellCopy.save,
+                                            cancel: shellCopy.cancel,
+                                          }}
+                                        />
+                                      </div>
+                                    ) : (
+                                      /* On a phone a shift is a full-width card: the info block,
+                                         then its actions stacked underneath. From sm — where the
+                                         row has room again — it is back to one dense line. */
+                                      <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:py-2.5">
+                                        <div className="space-y-0.5">
+                                          <p className="text-sm font-semibold text-[var(--ink)]">{shift.role || "General"}</p>
+                                          <p className="text-xs text-[var(--muted)]">{formatTime(shift.startTime)}–{formatTime(shift.endTime)}</p>
+                                          <p className="text-xs text-[var(--muted)]">
+                                            {spotsFilled}/{shift.capacity}{" "}
+                                            {isFull ? (
+                                              <span className="font-semibold text-rose-400">{copy.full}</span>
+                                            ) : (
+                                              <span>{shift.capacity - spotsFilled} {copy.spotsLeft}</span>
+                                            )}
+                                          </p>
+                                          {/* Assigned staff names */}
+                                          {shift.assignments.length > 0 ? (
+                                            <p className="text-xs text-[var(--muted)]">
+                                              {shift.assignments.map((a) => a.user.name).join(", ")}
+                                            </p>
+                                          ) : null}
                                         </div>
-                                      ) : null}
-                                    </div>
-                                  </div>
-                                )}
 
-                                {/* Admin: remove individual staff members */}
-                                {canManageEvents && shift.assignments.length > 0 ? (
-                                  <div className="flex flex-wrap gap-1.5 border-t border-[var(--line)] px-4 py-2">
-                                    {shift.assignments.map((a) => (
-                                      <form key={a.id} action={withdrawFormAction} className="inline-flex">
-                                        <input type="hidden" name="shiftId" value={shift.id} />
-                                        <input type="hidden" name="userId" value={a.userId} />
-                                        <Chip action={<ChipRemoveButton label={copy.withdraw} disabled={isWithdrawing} />}>
-                                          {a.user.name}
-                                        </Chip>
-                                      </form>
-                                    ))}
-                                  </div>
-                                ) : null}
-                              </div>
-                            );
-                          })
-                        )}
+                                        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                                          {isReadOnly ? null : signed ? (
+                                            <form action={withdrawFormAction}>
+                                              <input type="hidden" name="shiftId" value={shift.id} />
+                                              <Button type="submit" variant="destructive" size="sm" disabled={isWithdrawing} className="w-full sm:w-auto">
+                                                {copy.withdraw}
+                                              </Button>
+                                            </form>
+                                          ) : !isFull ? (
+                                            <form action={signUpFormAction}>
+                                              <input type="hidden" name="shiftId" value={shift.id} />
+                                              <Button type="submit" variant="primary" size="sm" disabled={isSigningUp} className="w-full sm:w-auto">
+                                                {copy.signUp}
+                                              </Button>
+                                            </form>
+                                          ) : null}
 
-                        {/* Admin: add shift to this day */}
-                        {canManageEvents ? (
-                          <AddShiftForm
-                            eventDayId={day.id}
-                            existingShifts={day.shifts.map((shift) => ({ startTime: shift.startTime, endTime: shift.endTime }))}
-                            copy={{
-                              role: copy.role,
-                              addShift: copy.addShift,
-                              shiftOverlapWarning: copy.shiftOverlapWarning,
-                            }}
-                          />
+                                          {/* Admin: assign someone else */}
+                                          {canManageEvents && !isFull ? (
+                                            <form action={adminAssignFormAction} className="flex items-center gap-2">
+                                              <input type="hidden" name="shiftId" value={shift.id} />
+                                              <div className="min-w-0 grow sm:w-40 sm:grow-0">
+                                                <Select name="userId" defaultValue="" size="sm">
+                                                  <option value="" disabled>{copy.assignStaff}</option>
+                                                  {allUsers
+                                                    .filter((u) => !shift.assignments.some((a) => a.userId === u.id))
+                                                    .map((u) => (
+                                                      <option key={u.id} value={u.id}>{u.name}</option>
+                                                    ))}
+                                                </Select>
+                                              </div>
+                                              <IconButton type="submit" tone="accent" label={copy.assignStaff} disabled={isAdminAssigning}>
+                                                <Plus />
+                                              </IconButton>
+                                            </form>
+                                          ) : null}
+
+                                          {/* Admin: edit the shift in place, then delete it */}
+                                          {canManageEvents ? (
+                                            <div className="flex items-center gap-2 self-end sm:self-auto">
+                                              <IconButton
+                                                tone="accent"
+                                                label={copy.editShift}
+                                                onClick={() => setEditingShiftId(shift.id)}
+                                              >
+                                                <Pencil />
+                                              </IconButton>
+                                              <form action={deleteShiftFormAction}>
+                                                <input type="hidden" name="id" value={shift.id} />
+                                                <IconButton type="submit" tone="delete" label={copy.deleteShift} disabled={isDeletingShift}>
+                                                  <Trash2 />
+                                                </IconButton>
+                                              </form>
+                                            </div>
+                                          ) : null}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Admin: remove individual staff members */}
+                                    {canManageEvents && shift.assignments.length > 0 ? (
+                                      <div className="flex flex-wrap gap-1.5 border-t border-[var(--line)] px-4 py-2">
+                                        {shift.assignments.map((a) => (
+                                          <form key={a.id} action={withdrawFormAction} className="inline-flex">
+                                            <input type="hidden" name="shiftId" value={shift.id} />
+                                            <input type="hidden" name="userId" value={a.userId} />
+                                            <Chip action={<ChipRemoveButton label={copy.withdraw} disabled={isWithdrawing} />}>
+                                              {a.user.name}
+                                            </Chip>
+                                          </form>
+                                        ))}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                );
+                              })
+                            )}
+
+                            {/* Admin: add shift to this day */}
+                            {canManageEvents ? (
+                              <AddShiftForm
+                                eventDayId={day.id}
+                                existingShifts={day.shifts.map((shift) => ({ startTime: shift.startTime, endTime: shift.endTime }))}
+                                copy={{
+                                  role: copy.role,
+                                  addShift: copy.addShift,
+                                  shiftOverlapWarning: copy.shiftOverlapWarning,
+                                }}
+                              />
+                            ) : null}
+                          </div>
                         ) : null}
                       </div>
-                    ) : null}
+                    ))}
                   </div>
-                ))}
-              </div>
-            </Panel>
-          ))}
+                )}
+              </Panel>
+            );
+          })}
         </div>
       )}
     </div>

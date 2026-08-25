@@ -79,8 +79,8 @@ app/
 │   │
 │   ├── events/
 │   │   ├── page.tsx              ← Events + staffing for the active edition (data-fetching only)
-│   │   ├── client.tsx            ← Event types, event panels, days, shift rows (sign up / assign /
-│   │   │                            edit in place / delete)
+│   │   ├── client.tsx            ← Event types, event panels (collapsible by anyone), days, shift
+│   │   │                            rows (sign up / assign / edit in place / delete)
 │   │   ├── create-event-modal.tsx ← Header button + create modal (dates bounded by the edition)
 │   │   ├── shift-fields.tsx      ← The four fields a shift is made of + the overlap check, shared
 │   │   │                            by the add row and the inline editor
