@@ -164,6 +164,15 @@ by a rule. What that means when you build a screen:
   and its frame is `<Card flushOnMobile>` — a cardlet is already a surface.
 - **Copy cannot name desktop furniture.** There is no sidebar below `lg`; "pick an
   edition in the sidebar" is wrong on half the devices that read it.
+- **The bottom bar is apps; the top bar is the person.** Four apps get a bar slot,
+  everything else is behind the bar's "Other" drawer — one flat list, never a
+  submenu. Account, language, edition and sign out are not apps and never take a
+  bar slot: they live in `<MobileAccountMenu>`, which `PageHeader` renders at the
+  top right, level with the screen's name.
+- **An overlay renders into `<body>`.** `PageHeader` is `sticky z-20`, which is a
+  stacking context, and most dialogs are opened from a trigger inside it — an
+  overlay written there paints *under* the `z-30` bottom bar. `<Modal>` and
+  `<MobileSheet>` already portal; anything new that floats above the page must too.
 
 **Making a screen work on a phone is a design-system change, not a screen change.**
 The order to try things in, and it is strict:
