@@ -66,7 +66,7 @@ export default function LoginForm({ copy }: { copy: LoginCopy }) {
     // Send each role straight to its landing page so DEPARTMENT users don't
     // load "/" only to be bounced to "/budget" by the route gating.
     const session = await getSession();
-    window.location.href = session?.user?.role === "DEPARTMENT" ? "/budget" : "/";
+    window.location.href = session?.user?.role === "DEPARTMENT" ? "/events" : "/";
   }
 
   return (
