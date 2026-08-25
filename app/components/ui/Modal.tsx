@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "./cn";
 
@@ -27,6 +28,12 @@ type ModalProps = {
 
 // One modal implementation for the whole app — replaces both the two-div and
 // flex-wrapper patterns found in the audit. Always shadow-lg, always Escape-to-close.
+//
+// It renders into <body> rather than where it is written. A dialog is opened from
+// wherever its trigger lives — most often <PageHeader actions>, and that header is
+// `sticky z-20`, which is a stacking context: a `z-40` overlay inside it still
+// paints below the `z-30` mobile bottom bar. Out at the body there is nothing to
+// be trapped by.
 export function Modal({ open, onClose, title, size = "md", mobileFullScreen = false, children, footer }: ModalProps) {
   useEffect(() => {
     if (!open) {
@@ -41,11 +48,11 @@ export function Modal({ open, onClose, title, size = "md", mobileFullScreen = fa
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  if (!open) {
+  if (!open || typeof document === "undefined") {
     return null;
   }
 
-  return (
+  return createPortal(
     <div
       className={cn(
         "fixed inset-0 z-40 flex items-center justify-center bg-black/50",
@@ -75,6 +82,7 @@ export function Modal({ open, onClose, title, size = "md", mobileFullScreen = fa
         {children}
         {footer ? <div className="mt-6 flex flex-wrap items-center justify-end gap-2">{footer}</div> : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

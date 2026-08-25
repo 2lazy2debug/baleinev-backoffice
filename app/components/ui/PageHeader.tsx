@@ -1,3 +1,5 @@
+import { MobileAccountMenu } from "@/components/mobile/mobile-account-menu";
+
 import { cn } from "./cn";
 
 type PageHeaderProps = {
@@ -38,6 +40,12 @@ type PageHeaderProps = {
  * The bleed (`-mx-4 -mt-4`) cancels the `p-4` gutter that <main> sets below `lg`
  * in `app-shell.tsx`. That gutter and this bleed are one decision — change them
  * together.
+ *
+ * Being the top bar is also why the account control hangs off it below `lg`: the
+ * bottom bar is apps, and the one place that is level with the screen's name is
+ * here. <MobileAccountMenu> reads what it needs from the shell's context, so no
+ * page has to know about it — and it renders nothing above `lg`, where the
+ * sidebar already carries account, language, edition and sign out.
  */
 export function PageHeader({ eyebrow, title, description, actions, controls, className }: PageHeaderProps) {
   return (
@@ -49,16 +57,23 @@ export function PageHeader({ eyebrow, title, description, actions, controls, cla
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-3 lg:gap-4">
-        <div className="min-w-0 space-y-0.5 lg:space-y-2">
-          {eyebrow ? (
-            <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)] lg:text-xs lg:tracking-[0.22em]">
-              {eyebrow}
-            </p>
-          ) : null}
-          <h1 className="text-xl font-semibold tracking-tight lg:text-3xl">{title}</h1>
-          {description ? (
-            <p className="hidden max-w-3xl text-sm leading-7 text-[var(--muted)] lg:block">{description}</p>
-          ) : null}
+        {/* Below `lg` this is the bar's own line — the screen's name at one end,
+            the account at the other — so page actions wrap underneath it instead
+            of pushing the account control onto a second row. `lg:contents`
+            dissolves it above `lg`, where there is no account control to place. */}
+        <div className="flex w-full items-start justify-between gap-3 lg:contents">
+          <div className="min-w-0 space-y-0.5 lg:space-y-2">
+            {eyebrow ? (
+              <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)] lg:text-xs lg:tracking-[0.22em]">
+                {eyebrow}
+              </p>
+            ) : null}
+            <h1 className="text-xl font-semibold tracking-tight lg:text-3xl">{title}</h1>
+            {description ? (
+              <p className="hidden max-w-3xl text-sm leading-7 text-[var(--muted)] lg:block">{description}</p>
+            ) : null}
+          </div>
+          <MobileAccountMenu />
         </div>
         {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
       </div>

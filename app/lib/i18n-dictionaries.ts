@@ -35,12 +35,11 @@ export const dictionaries = {
       saveFailed: "Could not save your language. Check your connection and try again.",
       signOut: "Sign out",
       // The bottom bar gives each slot ~54px: the sidebar's wording does not
-      // always fit next to four others, so the bar gets its own short label.
-      signOutShort: "Sign out",
-      apps: "Apps",
+      // always fit next to four others, so those two slots get their own label.
+      barExpenseReports: "Expenses",
+      barOther: "Other",
       otherApps: "Other apps",
       switchEdition: "Switch edition",
-      back: "Back",
       close: "Close",
     },
     common: {
@@ -634,11 +633,10 @@ export const dictionaries = {
       save: "Enregistrer",
       saveFailed: "Impossible d'enregistrer votre langue. Vérifiez votre connexion et réessayez.",
       signOut: "Se déconnecter",
-      signOutShort: "Quitter",
-      apps: "Applis",
+      barExpenseReports: "NDF",
+      barOther: "Autres",
       otherApps: "Autres applis",
       switchEdition: "Changer d'exercice",
-      back: "Retour",
       close: "Fermer",
     },
     common: {
