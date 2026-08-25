@@ -80,7 +80,11 @@ edited or deleted until set back to unpaid.
 
 **Staffing.** Admins define event types, events, days (which can be toggled "off"), and shifts with
 a capacity. Users sign up for a shift, which creates a `StaffAssignment` and a `STAFF_SHIFT` task;
-withdrawing removes both. Admins can assign users directly.
+withdrawing removes both. Admins can assign users directly. A shift is edited in place — the pencil
+turns the row's labels into the same four fields the add row uses (`updateShiftAction`), so hours, a
+description or a capacity can be corrected without deleting the shift and losing everyone on it. The
+capacity cannot drop under the people already assigned, and because a `STAFF_SHIFT` task quotes the
+shift's hours in its title and due date, moving a shift rewrites the pending tasks that point at it.
 
 **Department access requests.** A user asks to join a department from the Department access card on
 [app/app/(app)/account/client.tsx](../app/app/(app)/account/client.tsx). That files one

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUserAccess, requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { createUserTask } from "@/lib/tasks";
-import { TaskType } from "@prisma/client";
+import { TaskStatus, TaskType } from "@prisma/client";
 import { requireWritableEdition, resolveWritableEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
@@ -61,6 +61,33 @@ async function requireWritableEventDay(eventDayId: string) {
   }
 
   await requireWritableEdition(eventDay.event.editionId);
+}
+
+/**
+ * A STAFF_SHIFT task carries the shift in its title and due date, so the three
+ * places that write one — sign-up, admin assign, and editing the shift itself —
+ * have to spell it the same way.
+ */
+function staffShiftTaskFields({
+  eventName,
+  dayDate,
+  role,
+  startTime,
+  endTime,
+}: {
+  eventName: string;
+  dayDate: Date | string;
+  role: string | null;
+  startTime: string;
+  endTime: string;
+}) {
+  const date = new Date(dayDate).toISOString().slice(0, 10);
+  const dueDate = new Date(`${date}T${startTime}:00`);
+
+  return {
+    title: `Shift: ${eventName} — ${role ?? "General"} (${date} ${startTime}–${endTime})`,
+    dueDate: Number.isNaN(dueDate.getTime()) ? undefined : dueDate,
+  };
 }
 
 async function requireWritableShift(shiftId: string) {
@@ -290,9 +317,49 @@ export async function updateShiftAction(_prevState: ActionState, formData: FormD
     const role = getRequiredString(formData, "role");
     const capacity = Math.max(1, parseInt(String(formData.get("capacity") ?? "1"), 10));
 
+    if (endTime <= startTime) {
+      throw new Error("A shift must end after it starts.");
+    }
+
     await requireWritableShift(id);
 
+    const shift = await prisma.eventShift.findUniqueOrThrow({
+      where: { id },
+      include: {
+        assignments: { select: { id: true } },
+        eventDay: { select: { date: true, event: { select: { name: true } } } },
+      },
+    });
+
+    // Editing must not leave a shift over its own capacity: staff already on it
+    // are removed by hand first, not silently overbooked.
+    if (capacity < shift.assignments.length) {
+      throw new Error(
+        `This shift already has ${shift.assignments.length} people assigned. Remove someone before lowering the capacity.`
+      );
+    }
+
     await prisma.eventShift.update({ where: { id }, data: { startTime, endTime, role, capacity } });
+
+    // The staffing tasks quote the shift's role and hours, so a move has to
+    // carry over to them — a pending task pointing at the old slot is wrong.
+    const assignmentIds = shift.assignments.map((assignment) => assignment.id);
+    if (assignmentIds.length > 0) {
+      const { title, dueDate } = staffShiftTaskFields({
+        eventName: shift.eventDay.event.name,
+        dayDate: shift.eventDay.date,
+        role,
+        startTime,
+        endTime,
+      });
+
+      await prisma.task.updateMany({
+        where: { staffAssignmentId: { in: assignmentIds }, status: TaskStatus.PENDING },
+        data: { title, dueDate: dueDate ?? null },
+      });
+      revalidatePath("/tasks");
+    }
+
     revalidatePath("/events");
     return { error: null };
   } catch (err) {
@@ -343,16 +410,17 @@ export async function signUpForShiftAction(_prevState: ActionState, formData: Fo
       data: { shiftId, userId: access.id },
     });
 
-    const eventName = shift.eventDay.event.name;
-    const dayDate = new Date(shift.eventDay.date).toISOString().slice(0, 10);
-    const dueDate = new Date(`${dayDate}T${shift.startTime}:00`);
-
     await createUserTask({
       type: TaskType.STAFF_SHIFT,
-      title: `Shift: ${eventName} — ${shift.role ?? "General"} (${dayDate} ${shift.startTime}–${shift.endTime})`,
+      ...staffShiftTaskFields({
+        eventName: shift.eventDay.event.name,
+        dayDate: shift.eventDay.date,
+        role: shift.role,
+        startTime: shift.startTime,
+        endTime: shift.endTime,
+      }),
       userId: access.id,
       staffAssignmentId: assignment.id,
-      dueDate: Number.isNaN(dueDate.getTime()) ? undefined : dueDate,
     });
 
     revalidatePath("/events");
@@ -425,16 +493,17 @@ export async function adminAssignUserToShiftAction(_prevState: ActionState, form
 
     const assignment = await prisma.staffAssignment.create({ data: { shiftId, userId } });
 
-    const eventName = shift.eventDay.event.name;
-    const dayDate = new Date(shift.eventDay.date).toISOString().slice(0, 10);
-    const dueDate = new Date(`${dayDate}T${shift.startTime}:00`);
-
     await createUserTask({
       type: TaskType.STAFF_SHIFT,
-      title: `Shift: ${eventName} — ${shift.role ?? "General"} (${dayDate} ${shift.startTime}–${shift.endTime})`,
+      ...staffShiftTaskFields({
+        eventName: shift.eventDay.event.name,
+        dayDate: shift.eventDay.date,
+        role: shift.role,
+        startTime: shift.startTime,
+        endTime: shift.endTime,
+      }),
       userId,
       staffAssignmentId: assignment.id,
-      dueDate: Number.isNaN(dueDate.getTime()) ? undefined : dueDate,
     });
 
     revalidatePath("/events");

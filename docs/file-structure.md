@@ -77,6 +77,18 @@ app/
 │   │   │                            create/edit/delete modals, reveal & 2FA on demand
 │   │   └── actions.ts            ← Server actions: create/update/delete + revealPassword/getTotpCode (see docs/passwords.md)
 │   │
+│   ├── events/
+│   │   ├── page.tsx              ← Events + staffing for the active edition (data-fetching only)
+│   │   ├── client.tsx            ← Event types, event panels, days, shift rows (sign up / assign /
+│   │   │                            edit in place / delete)
+│   │   ├── create-event-modal.tsx ← Header button + create modal (dates bounded by the edition)
+│   │   ├── shift-fields.tsx      ← The four fields a shift is made of + the overlap check, shared
+│   │   │                            by the add row and the inline editor
+│   │   ├── add-shift-form.tsx    ← The add-a-shift row under a day
+│   │   ├── edit-shift-form.tsx   ← The same fields prefilled, in place of the row's labels
+│   │   └── actions.ts            ← Server actions: event type / event / day / shift CRUD, sign-up,
+│   │                                withdraw, admin assign
+│   │
 │   ├── users/
 │   │   ├── page.tsx              ← User management (admin only, data-fetching only)
 │   │   ├── client.tsx            ← One card per user: inline update + delete

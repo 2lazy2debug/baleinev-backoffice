@@ -96,6 +96,7 @@ export default async function EventsPage() {
         events={activeEdition.events}
         allUsers={allUsers}
         copy={copy.events}
+        shellCopy={{ save: copy.shell.save, cancel: copy.shell.cancel }}
       />
     </div>
   );
