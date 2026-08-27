@@ -50,6 +50,8 @@ type PageHeaderProps = {
 export function PageHeader({ eyebrow, title, description, actions, controls, className }: PageHeaderProps) {
   return (
     <header
+      /* What <scrollToBelowTopBar> measures — see scroll.ts. */
+      data-top-bar=""
       className={cn(
         "sticky top-0 z-20 -mx-4 -mt-4 border-b border-[var(--line)] bg-[var(--panel)] px-4 pb-3 pt-5",
         "lg:static lg:mx-0 lg:mt-0 lg:border-0 lg:bg-transparent lg:p-0",

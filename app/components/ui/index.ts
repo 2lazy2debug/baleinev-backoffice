@@ -4,6 +4,7 @@ export * from "./Button";
 export * from "./IconButton";
 export * from "./Card";
 export * from "./PageHeader";
+export * from "./scroll";
 export * from "./EmptyPage";
 export * from "./Panel";
 export * from "./Field";

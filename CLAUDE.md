@@ -49,7 +49,7 @@ or a heading, one of these already covers it:
 | Padded surface | `<Card span dashed>` inside `<CardGrid>` |
 | Frame around flush content (tables, lists) | `<Panel>` + `<PanelHeader>` + `<SectionTitle>` |
 | Surface nested in a Card/Modal | `<Panel nested>` or `nestedSurfaceClasses` |
-| Action | `<Button variant size>` · `buttonClasses()` for links that read as buttons |
+| Action | `<Button variant size icon>` · `buttonClasses()` for links that read as buttons |
 | Icon-only action | `<IconButton tone size label>` · `iconButtonClasses()` for non-buttons |
 | Fields | `<Field>` + `<Input>` / `<Textarea>` / `<Select>` / `<MultiSelect>` / `<Checkbox>` / `<Radio>` |
 | Table | `<Table frame dense desktopOnly>` + `<THead>` `<TR>` `<TH>` `<TD>` `<TFoot>` |
@@ -169,6 +169,15 @@ by a rule. What that means when you build a screen:
   submenu. Account, language, edition and sign out are not apps and never take a
   bar slot: they live in `<MobileAccountMenu>`, which `PageHeader` renders at the
   top right, level with the screen's name.
+- **A row of actions that fits a desktop header rarely fits a phone.**
+  `<Button icon compactOnMobile>` drops the label below `lg` and leaves the icon
+  on the square `<IconButton>` footprint, so four actions read as one tidy
+  cluster instead of overflowing. The label stays the accessible name — but
+  never take it off a destructive action, where the word *is* the safeguard.
+- **Anything the page scrolls to must clear the top bar.** `PageHeader` is
+  `sticky top-0` and exactly as tall as what the screen put in it, so a fixed
+  `scroll-mt-*` guesses wrong for half the screens. Use `scrollToBelowTopBar()`,
+  which measures the bar.
 - **An overlay renders into `<body>`.** `PageHeader` is `sticky z-20`, which is a
   stacking context, and most dialogs are opened from a trigger inside it — an
   overlay written there paints *under* the `z-30` bottom bar. `<Modal>` and

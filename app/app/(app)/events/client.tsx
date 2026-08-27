@@ -1,11 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
+import { useActionState, useEffect, useState } from "react";
+import { Check, ChevronDown, ChevronUp, FileText, Link2, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Chip, ChipRemoveButton, IconButton, Input, Panel, PanelHeader, SectionTitle, Select, cn, nestedSurfaceClasses } from "@/components/ui";
+import { Badge, Button, Chip, ChipRemoveButton, IconButton, Input, Panel, PanelHeader, SectionTitle, Select, cn, nestedSurfaceClasses, scrollToBelowTopBar } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import {
@@ -20,6 +20,17 @@ import {
 } from "./actions";
 import AddShiftForm from "./add-shift-form";
 import EditShiftForm from "./edit-shift-form";
+
+/**
+ * A shared link is `/events#event-<id>`: the whole point is that staff open it
+ * and land on their event instead of scrolling a season's worth of panels. The
+ * prefix keeps the anchor from colliding with any other id on the page.
+ */
+const eventAnchorPrefix = "event-";
+
+function eventAnchorId(eventId: string) {
+  return `${eventAnchorPrefix}${eventId}`;
+}
 
 function formatTime(t: string) {
   return t.slice(0, 5);
@@ -96,6 +107,9 @@ type EventsCopy = {
   shiftOverlapWarning: string;
   exportPdf: string;
   downloadingPdf: string;
+  copyEventLink: string;
+  eventLinkCopied: string;
+  eventLinkCopyFailed: string;
 };
 
 type Props = {
@@ -164,12 +178,64 @@ export default function EventsPageClient({
   // One shift at a time reads as fields instead of labels — the journal table's
   // rule, so a row never turns into an editor while another one is open.
   const [editingShiftId, setEditingShiftId] = useState<string | null>(null);
-  const [pdfError, setPdfError] = useState<string | null>(null);
+  // One line for whatever the header's client-side actions report — the PDF
+  // fetch and the link copy both fail the same way, in the same place.
+  const [actionError, setActionError] = useState<string | null>(null);
   const [downloadingEventId, setDownloadingEventId] = useState<string | null>(null);
+  const [copiedEventId, setCopiedEventId] = useState<string | null>(null);
+  const [highlightedEventId, setHighlightedEventId] = useState<string | null>(null);
+
+  // Landing from a shared link. The browser scrolls to an anchor on its own, but
+  // not once hydration has moved the page under it — and on a column of
+  // near-identical panels nothing would say which one was meant.
+  useEffect(() => {
+    function focusHashedEvent() {
+      const anchorId = window.location.hash.slice(1);
+      if (!anchorId.startsWith(eventAnchorPrefix)) return;
+
+      const target = document.getElementById(anchorId);
+      if (!target) return;
+
+      scrollToBelowTopBar(target);
+      setHighlightedEventId(anchorId.slice(eventAnchorPrefix.length));
+    }
+
+    focusHashedEvent();
+    window.addEventListener("hashchange", focusHashedEvent);
+    return () => window.removeEventListener("hashchange", focusHashedEvent);
+  }, []);
+
+  // The ring says "this one", then gets out of the way — left on, it would read
+  // as selection state.
+  useEffect(() => {
+    if (!highlightedEventId) return;
+    const timer = window.setTimeout(() => setHighlightedEventId(null), 2400);
+    return () => window.clearTimeout(timer);
+  }, [highlightedEventId]);
+
+  useEffect(() => {
+    if (!copiedEventId) return;
+    const timer = window.setTimeout(() => setCopiedEventId(null), 2000);
+    return () => window.clearTimeout(timer);
+  }, [copiedEventId]);
+
+  async function handleCopyLink(event: EventItem) {
+    const anchor = `#${eventAnchorId(event.id)}`;
+    // Put it in the address bar first, so the failure message below is true.
+    window.history.replaceState(null, "", anchor);
+
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}${anchor}`);
+      setActionError(null);
+      setCopiedEventId(event.id);
+    } catch {
+      setActionError(copy.eventLinkCopyFailed);
+    }
+  }
 
   async function handleDownloadPdf(event: EventItem) {
     setDownloadingEventId(event.id);
-    setPdfError(null);
+    setActionError(null);
 
     try {
       const response = await fetch(`/api/events/${event.id}/pdf`);
@@ -189,7 +255,7 @@ export default function EventsPageClient({
       anchor.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      setPdfError(err instanceof Error ? err.message : "Could not generate PDF.");
+      setActionError(err instanceof Error ? err.message : "Could not generate PDF.");
     } finally {
       setDownloadingEventId(null);
     }
@@ -242,13 +308,22 @@ export default function EventsPageClient({
           <FormError message={withdrawState.error} />
           <FormError message={adminAssignState.error} />
           <FormError message={deleteShiftState.error} />
-          <FormError message={pdfError} />
+          <FormError message={actionError} />
 
           {events.map((event) => {
             const isCollapsed = collapsedEventIds.has(event.id);
 
             return (
-              <Panel key={event.id}>
+              <Panel
+                key={event.id}
+                /* The link target. `scroll-mt` is the floor for the browser's own
+                   anchor jump; <scrollToBelowTopBar> then measures the real bar. */
+                id={eventAnchorId(event.id)}
+                className={cn(
+                  "scroll-mt-24 lg:scroll-mt-4",
+                  highlightedEventId === event.id ? "ring-1 ring-[var(--accent)]" : undefined,
+                )}
+              >
                 {/* Event header */}
                 <PanelHeader className="flex-col items-start sm:flex-row">
                   <div className="w-full sm:w-auto">
@@ -263,20 +338,31 @@ export default function EventsPageClient({
                     <p className="text-xs text-[var(--muted)]">{formatDate(event.startDate)} → {formatDate(event.endDate)}</p>
                     {event.notes ? <p className="mt-1 text-xs text-[var(--muted)]">{event.notes}</p> : null}
                   </div>
-                  <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
+                  <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto">
                     <Button
                       type="button"
                       variant="secondary"
+                      icon={<FileText />}
+                      compactOnMobile
                       disabled={downloadingEventId === event.id}
                       onClick={() => handleDownloadPdf(event)}
-                      className="grow sm:grow-0"
                     >
                       {downloadingEventId === event.id ? copy.downloadingPdf : copy.exportPdf}
                     </Button>
+                    {/* Copies `/events#event-<id>` — the same action for everyone,
+                        since reading an event is not a permission. */}
+                    <IconButton
+                      size="md"
+                      tone={copiedEventId === event.id ? "save" : "neutral"}
+                      label={copiedEventId === event.id ? copy.eventLinkCopied : copy.copyEventLink}
+                      onClick={() => handleCopyLink(event)}
+                    >
+                      {copiedEventId === event.id ? <Check /> : <Link2 />}
+                    </IconButton>
                     {canManageEvents ? (
-                      <form action={deleteEventFormAction} className="grow sm:grow-0">
+                      <form action={deleteEventFormAction}>
                         <input type="hidden" name="id" value={event.id} />
-                        <Button type="submit" variant="destructive" disabled={isDeletingEvent} className="w-full sm:w-auto">
+                        <Button type="submit" variant="destructive" disabled={isDeletingEvent}>
                           {copy.deleteEvent}
                         </Button>
                       </form>

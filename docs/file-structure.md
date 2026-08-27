@@ -80,7 +80,9 @@ app/
 │   ├── events/
 │   │   ├── page.tsx              ← Events + staffing for the active edition (data-fetching only)
 │   │   ├── client.tsx            ← Event types, event panels (collapsible by anyone), days, shift
-│   │   │                            rows (sign up / assign / edit in place / delete)
+│   │   │                            rows (sign up / assign / edit in place / delete). Each panel is
+│   │   │                            the anchor `#event-<id>`, copied by the header's link button and
+│   │   │                            scrolled to (below the top bar) on arrival
 │   │   ├── create-event-modal.tsx ← Header button + create modal (dates bounded by the edition)
 │   │   ├── shift-fields.tsx      ← The four fields a shift is made of + the overlap check, shared
 │   │   │                            by the add row and the inline editor
@@ -178,7 +180,7 @@ which. Nothing here should be re-implemented inline in a page.
 | File | Exports |
 |---|---|
 | `control.ts` | `ControlSize` (`md`/`sm`) plus `controlHeight`/`controlSquare` — the one height scale every control resolves to, 44px below `lg` and dense above it |
-| `Button.tsx` | `<Button variant size>` and `buttonClasses()` for links that read as buttons |
+| `Button.tsx` | `<Button variant size icon compactOnMobile>` and `buttonClasses()` for links that read as buttons. `compactOnMobile` drops the label below `lg` and leaves the icon on the square `<IconButton>` footprint, for an action row that fits a desktop header but not a phone |
 | `IconButton.tsx` | `<IconButton tone size label>` and `iconButtonClasses()` for non-button elements that act as one |
 | `Input.tsx` | `<Input size tone bare>`, plus `inputClasses()` / `autoHeightFieldClasses` shared by every field |
 | `Textarea.tsx`, `Select.tsx`, `MultiSelect.tsx` | The other field controls, all on the same recipe |
@@ -192,6 +194,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `Cardlet.tsx` | `<CardletList>` `<Cardlet>` `<CardletHeader>` `<CardletFields>` `<CardletField>` `<CardletActions>` — a wide table's rows as cards below `sm` |
 | `Modal.tsx` | `<Modal open onClose title size mobileFullScreen footer>` — the only dialog implementation. Renders into `<body>`: its trigger usually sits in the `sticky z-20` header, whose stacking context would otherwise pin the dialog under the mobile bottom bar |
 | `Alert.tsx`, `Badge.tsx`, `Chip.tsx` | Inline messages, status pills, removable tokens |
+| `scroll.ts` | `scrollToBelowTopBar(target)` — scrolls an element clear of the sticky mobile top bar, measuring `<PageHeader>` rather than guessing at a `scroll-mt-*`, since the bar's height depends on what the screen put in it |
 | `cn.ts` | Three-line class joiner used by every component |
 
 ---
