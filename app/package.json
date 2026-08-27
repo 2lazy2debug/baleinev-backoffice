@@ -13,7 +13,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:import:workbook": "tsx scripts/import-workbook.ts",
-    "db:import:budget": "tsx scripts/import-budget.ts"
+    "db:import:budget": "tsx scripts/import-budget.ts",
+    "db:import:bank": "tsx scripts/import-bank-statement.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

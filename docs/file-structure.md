@@ -238,8 +238,17 @@ which. Nothing here should be re-implemented inline in a page.
 |---|---|
 | `import-workbook.ts` | One-off: parse an Excel workbook JOURNAL sheet → seed journal entries + departments + money accounts |
 | `import-budget.ts` | One-off: parse budget department sheets from the same workbook → seed budget lines |
+| `import-bank-statement.ts` | Replays a BCV "Extraction transactionnelle" onto one edition: replaces every entry on the bank account, mirrors bank/cash transfers onto the cash box, and refreshes the next edition's carry-over |
 
 Run with `npx tsx scripts/<file>.ts --workbook ../soa/compta_2025-2026.xlsx`.
+
+`import-bank-statement.ts` is the one that is meant to be re-run — the statement is
+the truth for the bank account, so a fresh export replaces what the last one wrote.
+It is a dry run unless given `--apply`, and it refuses to write unless the account
+lands exactly on `--expect`. The BCV export lists third-party movements only and
+carries no fee rows at all, so the gap against `--expect` is booked as one dated,
+named charge rather than being silently absorbed. See
+[business-processes.md](business-processes.md#importing-a-bank-statement).
 
 ---
 

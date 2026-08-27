@@ -131,6 +131,31 @@ Entries with `isOpeningEntry = true` were imported from a previous edition's clo
 ### Journal entry creation
 The journal page reads `?fromExpenseReport=<id>` from the URL. If present, the add-entry modal is pre-filled with the expense report's title, amount, date, and submitter's department — making it easy for an admin to record reimbursement after approving an expense report.
 
+### Importing a bank statement
+`scripts/import-bank-statement.ts` (`npm run db:import:bank`) replays a BCV
+*Extraction transactionnelle* onto an edition. The statement is the truth for the bank
+account, so the import **replaces** every entry on it rather than merging — re-run it
+with a fresher export and the account is rebuilt.
+
+- **Direction decides the side.** `Entrée` is a `PRODUITS` entry whose beneficiary is
+  BLV; `Sortie` is a `CHARGES` entry whose beneficiary is the counterparty the bank
+  names.
+- **A bank/cash transfer is two entries.** The export only sees the bank's leg, so
+  paying cash in is booked as income on the bank *and* a charge on the cash box, and
+  drawing cash the other way round. `VERSEMENT` and `PRELEVEMENT` are what mark them.
+- **Nothing is guessed.** Department and cost centre are left empty for a human to
+  assign; the label is the *Communication* column, blank when there is none and blank
+  for TWINT payouts, whose communication is a machine reference.
+- **The control is the point.** The run refuses to write unless the account lands
+  exactly on `--expect`. The export lists third-party movements only — `FRAIS`, `TAXE`,
+  `COMMISSION` and `INTERET` appear nowhere in it — while BCV debits its charges all
+  year, so the statement alone always lands *above* the real balance. The difference is
+  booked as one dated, named charge (`Frais bancaires BCV (cumul)`), which can be split
+  once the fee advices are at hand. A statement landing *below* `--expect` means
+  movements are missing and the run aborts instead of inventing an entry.
+- **Next year is kept in step.** The following edition's *solde à nouveau* entries are
+  rewritten to the balances the import produced, so the two editions cannot drift apart.
+
 ---
 
 ## 4. Invoices (Swiss QR)

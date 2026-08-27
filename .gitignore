@@ -52,3 +52,6 @@ next-env.d.ts
 .vercel/
 # Claude Code personal overrides
 .claude/settings.local.json
+
+# LibreOffice lock files
+.~lock.*#
