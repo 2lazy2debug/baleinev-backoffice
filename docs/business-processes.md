@@ -128,6 +128,31 @@ Each entry gets an auto-incrementing `sequenceNumber` within the edition. This p
 ### Locked entries
 Entries with `isOpeningEntry = true` were imported from a previous edition's closing balance. They cannot be edited or deleted — they are permanent anchor points for the ledger.
 
+### Editing entries
+Three paths write an existing entry, and they share the same seven fields — date,
+department, type, amount, label, money account, cost centre:
+
+- **Inline, one row** (desktop table) — the pencil turns a row into inputs; the tick
+  saves it on its own.
+- **The full-page form** (`/journal/<id>`, and the phone's pencil) — the same seven
+  fields plus counterparty and reference number.
+- **Bulk edit** (admins only) — the *Bulk edit* button in the entries panel header
+  turns **every** editable row into inputs at once, and *Save all* writes them in a
+  single transaction. Only rows actually changed are sent, so a filter left on the
+  table cannot silently rewrite what is hidden, and the count on the button is how
+  many will be written.
+
+While bulk edit is on, **no row saves on its own**: the per-row save, cancel and
+delete controls are gone until *Save all* or *Cancel* ends the mode. Two ways to write
+the same row at the same time is one too many. Opening entries stay locked and are
+never given a draft — the server refuses them either way
+(`bulkUpdateJournalEntriesAction` in `app/(app)/journal/actions.ts`).
+
+Bulk edit is gated on `isAdmin` in the page and on `requireAdmin()` in the action;
+a closed edition hides the button and `requireWritableEdition` refuses the write.
+Counterparty and reference number are not columns of the grid, so neither the bulk
+save nor the inline row save touches them.
+
 ### Journal entry creation
 The journal page reads `?fromExpenseReport=<id>` from the URL. If present, the add-entry modal is pre-filled with the expense report's title, amount, date, and submitter's department — making it easy for an admin to record reimbursement after approving an expense report.
 

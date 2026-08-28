@@ -160,9 +160,13 @@ export async function updateJournalEntryAction(_prevState: ActionState, formData
     }
 
     const amount = toPositiveAmount(amountRaw);
-    const counterparty = String(formData.get("counterparty") ?? "").trim() || null;
-    const referenceNumber = String(formData.get("referenceNumber") ?? "").trim() || null;
     const costCenterId = String(formData.get("costCenterId") ?? "").trim() || null;
+
+    // Absent is not the same as blank. The edit form posts these two as named
+    // inputs, so clearing one there still clears it; the journal's inline row
+    // editor has no such column and must not null what it cannot show.
+    const optional = (key: "counterparty" | "referenceNumber") =>
+      formData.has(key) ? { [key]: String(formData.get(key) ?? "").trim() || null } : {};
 
     await prisma.journalEntry.update({
       where: { id: journalEntryId },
@@ -173,11 +177,102 @@ export async function updateJournalEntryAction(_prevState: ActionState, formData
         date,
         amount,
         label,
-        counterparty,
-        referenceNumber,
         costCenterId,
+        ...optional("counterparty"),
+        ...optional("referenceNumber"),
       },
     });
+
+    revalidatePath("/journal");
+    revalidatePath("/");
+    revalidatePath("/money-accounts");
+    revalidatePath("/cost-centers");
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+/**
+ * Save every row the journal's bulk-edit mode changed, in one transaction.
+ *
+ * Bulk edit is the same seven fields as the inline row editor, applied to the
+ * whole ledger at once, so it reuses that shape rather than inventing a second
+ * one: the client sends only the rows it actually touched, as JSON, and either
+ * all of them land or none do. `counterparty` and `referenceNumber` are not
+ * part of the grid and are deliberately left alone.
+ */
+export async function bulkUpdateJournalEntriesAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    await requireAdmin();
+
+    // Read outside the try — a missing field is "entries is required.", not the
+    // parse failure below.
+    const payload = getRequiredString(formData, "entries");
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(payload);
+    } catch {
+      throw new Error("Could not read the edited entries.");
+    }
+
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      throw new Error("There is nothing to save.");
+    }
+
+    const updates = parsed.map((raw) => {
+      const item = raw as Record<string, unknown>;
+      const readRequired = (key: string) => {
+        const value = String(item[key] ?? "").trim();
+        if (!value) {
+          throw new Error(`${key} is required.`);
+        }
+        return value;
+      };
+
+      const date = new Date(readRequired("date"));
+      if (Number.isNaN(date.getTime())) {
+        throw new Error("Date is invalid.");
+      }
+
+      return {
+        id: readRequired("journalEntryId"),
+        departmentId: readRequired("departmentId"),
+        moneyAccountId: readRequired("moneyAccountId"),
+        accountType: readRequired("accountType") as AccountType,
+        date,
+        amount: toPositiveAmount(readRequired("amount")),
+        label: readRequired("label"),
+        costCenterId: String(item.costCenterId ?? "").trim() || null,
+      };
+    });
+
+    const stored = await prisma.journalEntry.findMany({
+      where: { id: { in: updates.map((update) => update.id) } },
+      select: { id: true, editionId: true, isOpeningEntry: true },
+    });
+
+    if (stored.length !== updates.length) {
+      throw new Error("Journal entry not found.");
+    }
+
+    if (stored.some((entry) => entry.isOpeningEntry)) {
+      throw new Error("Opening entries are locked and cannot be edited.");
+    }
+
+    // One ledger, one edition — a payload spanning two would need two writability
+    // checks, and the journal screen never produces one.
+    const editionIds = new Set(stored.map((entry) => entry.editionId));
+    if (editionIds.size !== 1) {
+      throw new Error("Journal entries must belong to the same edition.");
+    }
+
+    await requireWritableEdition([...editionIds][0]);
+
+    await prisma.$transaction(
+      updates.map(({ id, ...data }) => prisma.journalEntry.update({ where: { id }, data })),
+    );
 
     revalidatePath("/journal");
     revalidatePath("/");

@@ -334,6 +334,9 @@ export const dictionaries = {
       reference: "Reference #",
       costCenter: "Cost center",
       moneyAccount: "Money account",
+      bulkEdit: "Bulk edit",
+      saveAll: "Save all",
+      bulkEditActive: "Every entry is editable — rows save together.",
     },
     users: {
       title: "Users",
@@ -933,6 +936,9 @@ export const dictionaries = {
       reference: "Référence #",
       costCenter: "Centre de coût",
       moneyAccount: "Compte de trésorerie",
+      bulkEdit: "Édition groupée",
+      saveAll: "Tout enregistrer",
+      bulkEditActive: "Toutes les écritures sont modifiables — l'enregistrement est groupé.",
     },
     users: {
       title: "Utilisateurs",

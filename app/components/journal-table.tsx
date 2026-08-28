@@ -3,13 +3,18 @@
 import { useActionState, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Pencil, Trash2, X } from "lucide-react";
+import { Check, Pencil, PencilLine, Trash2, X } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { deleteJournalEntryAction, updateJournalEntryAction } from "@/app/(app)/journal/actions";
+import {
+  bulkUpdateJournalEntriesAction,
+  deleteJournalEntryAction,
+  updateJournalEntryAction,
+} from "@/app/(app)/journal/actions";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import {
   Badge,
+  Button,
   Cardlet,
   CardletField,
   CardletFields,
@@ -58,6 +63,19 @@ type JournalTableProps = {
   departments: Array<{ id: string; name: string }>;
   moneyAccounts: Array<{ id: string; name: string }>;
   costCenters: Array<{ id: string; code: string }>;
+  /** Admins only — bulk edit rewrites the whole ledger in one go. */
+  canBulkEdit: boolean;
+};
+
+/** The seven fields the journal is edited by, inline or in bulk. */
+type EntryDraft = {
+  date: string;
+  departmentId: string;
+  accountType: string;
+  amount: string;
+  label: string;
+  moneyAccountId: string;
+  costCenterId: string;
 };
 
 function typeLabel(type: string, locale: Locale) {
@@ -65,8 +83,27 @@ function typeLabel(type: string, locale: Locale) {
   return type === "PRODUITS" ? copy.produits : copy.charges;
 }
 
-export function JournalTable({ entries, accountBalances, accountOpeningBalances, locale, departments, moneyAccounts, costCenters }: JournalTableProps) {
+/** An entry as the editor sees it — the baseline both edit modes start from. */
+function draftFromEntry(entry: JournalEntry): EntryDraft {
+  return {
+    date: entry.date.toISOString().slice(0, 10),
+    departmentId: entry.departmentId ?? "",
+    accountType: entry.accountType,
+    amount: Number(entry.amount).toFixed(2),
+    label: entry.label,
+    moneyAccountId: entry.moneyAccountId,
+    costCenterId: entry.costCenterId ?? "",
+  };
+}
+
+function isDirty(entry: JournalEntry, draft: EntryDraft) {
+  const stored = draftFromEntry(entry);
+  return (Object.keys(stored) as Array<keyof EntryDraft>).some((field) => stored[field] !== draft[field]);
+}
+
+export function JournalTable({ entries, accountBalances, accountOpeningBalances, locale, departments, moneyAccounts, costCenters, canBulkEdit }: JournalTableProps) {
   const copy = dictionaries[locale].journal;
+  const shellCopy = dictionaries[locale].shell;
 
   const [filters, setFilters] = useState<Record<string, string>>({
     sequenceNumber: "",
@@ -83,15 +120,13 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
 
   const [sortBy, setSortBy] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState<{
-    date: string;
-    departmentId: string;
-    accountType: string;
-    amount: string;
-    label: string;
-    moneyAccountId: string;
-    costCenterId: string;
-  } | null>(null);
+  const [editDraft, setEditDraft] = useState<EntryDraft | null>(null);
+  // Bulk edit is one draft per editable entry, or null when the mode is off.
+  // Every row is editable at once and nothing saves until the header says so,
+  // which is why the per-row save, cancel and delete controls disappear while
+  // it is on — two ways to write the same row is one too many.
+  const [bulkDrafts, setBulkDrafts] = useState<Record<string, EntryDraft> | null>(null);
+  const isBulkEditing = bulkDrafts !== null;
   const router = useRouter();
   const tableRef = useRef<HTMLTableElement | null>(null);
 
@@ -241,15 +276,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
 
   function handleEditStart(entry: JournalEntry) {
     setEditingId(entry.id);
-    setEditDraft({
-      date: entry.date.toISOString().slice(0, 10),
-      departmentId: entry.departmentId ?? "",
-      accountType: entry.accountType,
-      amount: Number(entry.amount).toFixed(2),
-      label: entry.label,
-      moneyAccountId: entry.moneyAccountId,
-      costCenterId: entry.costCenterId ?? "",
-    });
+    setEditDraft(draftFromEntry(entry));
   }
 
   async function handleSaveEntry(_prevState: ActionState): Promise<ActionState> {
@@ -281,6 +308,57 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   const [deleteState, deleteFormAction, isDeleting] = useActionState(deleteJournalEntryAction, initialActionState);
   const isReadOnly = useEditionReadOnly();
 
+  // Opening entries stay locked in bulk mode too — the server refuses them, so
+  // the grid never offers them.
+  const bulkEditableEntries = entries.filter((entry) => !entry.isOpeningEntry);
+  const changedEntries = bulkDrafts
+    ? bulkEditableEntries.filter((entry) => bulkDrafts[entry.id] && isDirty(entry, bulkDrafts[entry.id]))
+    : [];
+
+  function startBulkEdit() {
+    // A row half-edited inline is discarded rather than merged: the grid is
+    // seeded from what is stored, so what you see is what will be saved.
+    setEditingId(null);
+    setEditDraft(null);
+    setBulkDrafts(Object.fromEntries(bulkEditableEntries.map((entry) => [entry.id, draftFromEntry(entry)])));
+  }
+
+  function cancelBulkEdit() {
+    setBulkDrafts(null);
+  }
+
+  async function handleSaveAll(_prevState: ActionState): Promise<ActionState> {
+    if (changedEntries.length === 0) {
+      return { error: null };
+    }
+
+    const formData = new FormData();
+    formData.set(
+      "entries",
+      JSON.stringify(
+        changedEntries.map((entry) => ({ journalEntryId: entry.id, ...bulkDrafts![entry.id] })),
+      ),
+    );
+    const result = await bulkUpdateJournalEntriesAction(_prevState, formData);
+
+    if (result.error) {
+      return result;
+    }
+
+    setBulkDrafts(null);
+    router.refresh();
+    return result;
+  }
+  const [bulkState, bulkSaveFormAction, isBulkSaving] = useActionState(handleSaveAll, initialActionState);
+
+  function updateDraft(entryId: string, patch: Partial<EntryDraft>) {
+    if (isBulkEditing) {
+      setBulkDrafts((current) => (current ? { ...current, [entryId]: { ...current[entryId], ...patch } } : current));
+      return;
+    }
+    setEditDraft((current) => (current ? { ...current, ...patch } : current));
+  }
+
   const uniqueDepartments = [...new Set(entries.map((e) => e.department?.name).filter(Boolean))];
   const uniqueAccounts = [...new Set(entries.map((e) => e.moneyAccount.name))];
   const uniqueCostCenters = [...new Set(entries.map((e) => e.costCenter?.code).filter(Boolean))];
@@ -306,17 +384,47 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
     // an invoice-linked entry can still be edited but never deleted.
     isLocked: entry.isOpeningEntry || isReadOnly,
     deleteDisabled: Boolean(entry.linkedInvoice),
+    // The row's live draft, whichever mode put it there — null when it is read-only.
+    draft: (isBulkEditing ? bulkDrafts[entry.id] : editingId === entry.id ? editDraft : null) ?? null,
   }));
 
   return (
     <Panel as="div" className="flex h-full flex-col bg-[var(--panel)]">
-      <PanelHeader className="shrink-0">
-        <SectionTitle>{copy.entries}</SectionTitle>
-        <p className="text-xs text-[var(--muted)]">{copy.showing} {sortedEntries.length} {copy.of} {entries.length}</p>
+      <PanelHeader className="shrink-0 flex-wrap">
+        <div className="min-w-0">
+          <SectionTitle>{copy.entries}</SectionTitle>
+          <p className="text-xs text-[var(--muted)]">
+            {isBulkEditing ? copy.bulkEditActive : <>{copy.showing} {sortedEntries.length} {copy.of} {entries.length}</>}
+          </p>
+        </div>
+        {canBulkEdit && !isReadOnly ? (
+          <div className="flex shrink-0 items-center gap-2">
+            {isBulkEditing ? (
+              <>
+                <Button size="sm" variant="ghost" onClick={cancelBulkEdit} disabled={isBulkSaving}>
+                  {shellCopy.cancel}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  icon={<Check />}
+                  onClick={() => bulkSaveFormAction()}
+                  disabled={isBulkSaving || changedEntries.length === 0}
+                >
+                  {copy.saveAll}{changedEntries.length > 0 ? ` (${changedEntries.length})` : ""}
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" icon={<PencilLine />} onClick={startBulkEdit} disabled={bulkEditableEntries.length === 0}>
+                {copy.bulkEdit}
+              </Button>
+            )}
+          </div>
+        ) : null}
       </PanelHeader>
-      {(saveState.error || deleteState.error) ? (
+      {(saveState.error || deleteState.error || bulkState.error) ? (
         <div className="border-b border-[var(--line)] px-4 py-2 shrink-0">
-          <FormError message={saveState.error ?? deleteState.error} />
+          <FormError message={saveState.error ?? deleteState.error ?? bulkState.error} />
         </div>
       ) : null}
 
@@ -449,15 +557,15 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
           <tbody>
             {rows.map((row) => {
               const entry = row.entry;
-              const isEditing = editingId === entry.id;
+              const draft = row.draft;
               return (
-                <TR key={entry.id} className={isEditing ? "bg-[var(--panel-strong)]" : undefined}>
+                <TR key={entry.id} className={draft ? "bg-[var(--panel-strong)]" : undefined}>
                   <TD>
-                    {isEditing ? (
+                    {draft ? (
                       <Input
                         type="date"
-                        value={editDraft!.date}
-                        onChange={(e) => setEditDraft({ ...editDraft!, date: e.target.value })}
+                        value={draft.date}
+                        onChange={(e) => updateDraft(entry.id, { date: e.target.value })}
                         size="sm"
                       />
                     ) : (
@@ -465,10 +573,10 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                     )}
                   </TD>
                   <TD>
-                    {isEditing ? (
+                    {draft ? (
                       <Select
-                        value={editDraft!.departmentId}
-                        onChange={(e) => setEditDraft({ ...editDraft!, departmentId: e.target.value })}
+                        value={draft.departmentId}
+                        onChange={(e) => updateDraft(entry.id, { departmentId: e.target.value })}
                         size="sm"
                       >
                         <option value="">-</option>
@@ -479,10 +587,10 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                     )}
                   </TD>
                   <TD>
-                    {isEditing ? (
+                    {draft ? (
                       <Select
-                        value={editDraft!.accountType}
-                        onChange={(e) => setEditDraft({ ...editDraft!, accountType: e.target.value })}
+                        value={draft.accountType}
+                        onChange={(e) => updateDraft(entry.id, { accountType: e.target.value })}
                         size="sm"
                       >
                         <option value="CHARGES">{dictionaries[locale].common.charges}</option>
@@ -493,13 +601,13 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                     )}
                   </TD>
                   <TD>
-                    {isEditing ? (
+                    {draft ? (
                       <Input
                         type="number"
                         step="0.01"
                         min="0.01"
-                        value={editDraft!.amount}
-                        onChange={(e) => setEditDraft({ ...editDraft!, amount: e.target.value })}
+                        value={draft.amount}
+                        onChange={(e) => updateDraft(entry.id, { amount: e.target.value })}
                         size="sm"
                         className="text-right"
                       />
@@ -508,11 +616,11 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                     )}
                   </TD>
                   <TD>
-                    {isEditing ? (
+                    {draft ? (
                       <Input
                         type="text"
-                        value={editDraft!.label}
-                        onChange={(e) => setEditDraft({ ...editDraft!, label: e.target.value })}
+                        value={draft.label}
+                        onChange={(e) => updateDraft(entry.id, { label: e.target.value })}
                         size="sm"
                       />
                     ) : row.invoiceHref ? (
@@ -531,10 +639,10 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                   </TD>
                   <TD>{row.beneficiary}</TD>
                   <TD>
-                    {isEditing ? (
+                    {draft ? (
                       <Select
-                        value={editDraft!.moneyAccountId}
-                        onChange={(e) => setEditDraft({ ...editDraft!, moneyAccountId: e.target.value })}
+                        value={draft.moneyAccountId}
+                        onChange={(e) => updateDraft(entry.id, { moneyAccountId: e.target.value })}
                         size="sm"
                       >
                         {moneyAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -544,10 +652,10 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                     )}
                   </TD>
                   <TD>
-                    {isEditing ? (
+                    {draft ? (
                       <Select
-                        value={editDraft!.costCenterId}
-                        onChange={(e) => setEditDraft({ ...editDraft!, costCenterId: e.target.value })}
+                        value={draft.costCenterId}
+                        onChange={(e) => updateDraft(entry.id, { costCenterId: e.target.value })}
                         size="sm"
                       >
                         <option value="">-</option>
@@ -559,22 +667,25 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                   </TD>
                   <TD className="font-semibold">{row.balanceLabel}</TD>
                   <TD>
+                    {/* Bulk mode owns saving: a row shows no save, cancel or delete of
+                        its own until the header's Save all or Cancel ends the mode. A
+                        locked row still says so — that is why it has no draft. */}
                     {row.isLocked ? (
                       <span className="text-xs text-[var(--muted)]">{copy.locked}</span>
-                    ) : isEditing ? (
+                    ) : isBulkEditing ? null : draft ? (
                       <div className="flex items-center gap-2">
                         <IconButton
                           onClick={() => saveFormAction()}
                           disabled={isSaving}
                           tone="save"
-                          label={dictionaries[locale].shell.save}
+                          label={shellCopy.save}
                         >
                           <Check />
                         </IconButton>
                         <IconButton
                           onClick={() => { setEditingId(null); setEditDraft(null); }}
                           tone="neutral"
-                          label={dictionaries[locale].shell.cancel}
+                          label={shellCopy.cancel}
                         >
                           <X />
                         </IconButton>
@@ -608,79 +719,159 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
           cards. Filtering and sorting live in the table header and stay desktop-only —
           a phone gets the entries in journal order. */}
       <CardletList className="p-3">
-        {rows.map((row) => (
-          <Cardlet key={row.entry.id}>
-            <CardletHeader
-              title={
-                <>
-                  <p className="text-3xs font-normal text-[var(--muted)]">
-                    #{row.entry.sequenceNumber} · {row.dateLabel}
-                  </p>
-                  {row.invoiceHref ? (
-                    <a
-                      href={row.invoiceHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-0.5 block truncate text-[var(--accent)]"
-                      title={row.invoiceNumber ?? undefined}
+        {rows.map((row) => {
+          const draft = row.draft;
+          return (
+            <Cardlet key={row.entry.id}>
+              <CardletHeader
+                title={
+                  <>
+                    <p className="text-3xs font-normal text-[var(--muted)]">
+                      {draft ? `#${row.entry.sequenceNumber}` : `#${row.entry.sequenceNumber} · ${row.dateLabel}`}
+                    </p>
+                    {draft ? (
+                      <Input
+                        type="text"
+                        value={draft.label}
+                        onChange={(e) => updateDraft(row.entry.id, { label: e.target.value })}
+                        size="sm"
+                        className="mt-1"
+                      />
+                    ) : row.invoiceHref ? (
+                      <a
+                        href={row.invoiceHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-0.5 block truncate text-[var(--accent)]"
+                        title={row.invoiceNumber ?? undefined}
+                      >
+                        {row.entry.label}
+                      </a>
+                    ) : (
+                      <p className="mt-0.5 truncate">{row.entry.label}</p>
+                    )}
+                  </>
+                }
+                action={
+                  draft ? null : (
+                    <div className="shrink-0 text-right">
+                      <Badge tone={row.isProduits ? "success" : "neutral"}>{row.typeText}</Badge>
+                      <p className={cn("mt-1 text-sm font-semibold", row.isProduits ? "text-emerald-300" : null)}>
+                        {row.amountLabel}
+                      </p>
+                    </div>
+                  )
+                }
+              />
+
+              {/* The same seven fields as a table row, stacked — a phone in bulk mode
+                  edits the entry it is looking at, it does not leave for a form page. */}
+              {draft ? (
+                <CardletFields>
+                  <CardletField label={copy.date}>
+                    <Input
+                      type="date"
+                      value={draft.date}
+                      onChange={(e) => updateDraft(row.entry.id, { date: e.target.value })}
+                      size="sm"
+                    />
+                  </CardletField>
+                  <CardletField label={copy.amount}>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      value={draft.amount}
+                      onChange={(e) => updateDraft(row.entry.id, { amount: e.target.value })}
+                      size="sm"
+                      className="text-right"
+                    />
+                  </CardletField>
+                  <CardletField label={copy.type} className="col-span-2">
+                    <Select
+                      value={draft.accountType}
+                      onChange={(e) => updateDraft(row.entry.id, { accountType: e.target.value })}
+                      size="sm"
                     >
-                      {row.entry.label}
-                    </a>
-                  ) : (
-                    <p className="mt-0.5 truncate">{row.entry.label}</p>
-                  )}
-                </>
-              }
-              action={
-                <div className="shrink-0 text-right">
-                  <Badge tone={row.isProduits ? "success" : "neutral"}>{row.typeText}</Badge>
-                  <p className={cn("mt-1 text-sm font-semibold", row.isProduits ? "text-emerald-300" : null)}>
-                    {row.amountLabel}
-                  </p>
-                </div>
-              }
-            />
+                      <option value="CHARGES">{dictionaries[locale].common.charges}</option>
+                      <option value="PRODUITS">{dictionaries[locale].common.produits}</option>
+                    </Select>
+                  </CardletField>
+                  <CardletField label={copy.department} className="col-span-2">
+                    <Select
+                      value={draft.departmentId}
+                      onChange={(e) => updateDraft(row.entry.id, { departmentId: e.target.value })}
+                      size="sm"
+                    >
+                      <option value="">-</option>
+                      {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </Select>
+                  </CardletField>
+                  <CardletField label={copy.account} className="col-span-2">
+                    <Select
+                      value={draft.moneyAccountId}
+                      onChange={(e) => updateDraft(row.entry.id, { moneyAccountId: e.target.value })}
+                      size="sm"
+                    >
+                      {moneyAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                    </Select>
+                  </CardletField>
+                  <CardletField label={copy.costCenter} className="col-span-2">
+                    <Select
+                      value={draft.costCenterId}
+                      onChange={(e) => updateDraft(row.entry.id, { costCenterId: e.target.value })}
+                      size="sm"
+                    >
+                      <option value="">-</option>
+                      {costCenters.map((cc) => <option key={cc.id} value={cc.id}>{cc.code}</option>)}
+                    </Select>
+                  </CardletField>
+                </CardletFields>
+              ) : (
+                <CardletFields>
+                  <CardletField label={copy.department}>{row.departmentName}</CardletField>
+                  <CardletField label={copy.account}>{row.entry.moneyAccount.name}</CardletField>
+                  <CardletField label={copy.costCenter}>{row.costCenterCode}</CardletField>
+                  <CardletField label={copy.beneficiary}>{row.beneficiary}</CardletField>
+                </CardletFields>
+              )}
 
-            <CardletFields>
-              <CardletField label={copy.department}>{row.departmentName}</CardletField>
-              <CardletField label={copy.account}>{row.entry.moneyAccount.name}</CardletField>
-              <CardletField label={copy.costCenter}>{row.costCenterCode}</CardletField>
-              <CardletField label={copy.beneficiary}>{row.beneficiary}</CardletField>
-            </CardletFields>
+              {draft ? null : (
+                <p className="text-xs text-[var(--muted)]">
+                  {copy.balance}: <span className="font-semibold text-[var(--ink)]">{row.balanceLabel}</span>
+                </p>
+              )}
 
-            <p className="text-xs text-[var(--muted)]">
-              {copy.balance}: <span className="font-semibold text-[var(--ink)]">{row.balanceLabel}</span>
-            </p>
-
-            {row.isLocked ? (
-              <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.locked}</p>
-            ) : (
-              <div className="flex gap-2">
-                {/* Editing on a phone is the existing full-page form, not the table's
-                    inline row editor — seven controls do not fit inside a card. */}
-                <Link
-                  href={`/journal/${row.entry.id}`}
-                  title={copy.edit}
-                  aria-label={copy.edit}
-                  className={iconButtonClasses("accent")}
-                >
-                  <Pencil />
-                </Link>
-                <form action={deleteFormAction}>
-                  <input type="hidden" name="journalEntryId" value={row.entry.id} />
-                  <IconButton
-                    type="submit"
-                    tone="delete"
-                    label={row.deleteDisabled ? copy.locked : copy.deleteEntry}
-                    disabled={row.deleteDisabled || isDeleting}
+              {row.isLocked ? (
+                <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.locked}</p>
+              ) : isBulkEditing ? null : (
+                <div className="flex gap-2">
+                  {/* Editing one entry on a phone is the existing full-page form, not the
+                      table's inline row editor — seven controls do not fit inside a card. */}
+                  <Link
+                    href={`/journal/${row.entry.id}`}
+                    title={copy.edit}
+                    aria-label={copy.edit}
+                    className={iconButtonClasses("accent")}
                   >
-                    <Trash2 />
-                  </IconButton>
-                </form>
-              </div>
-            )}
-          </Cardlet>
-        ))}
+                    <Pencil />
+                  </Link>
+                  <form action={deleteFormAction}>
+                    <input type="hidden" name="journalEntryId" value={row.entry.id} />
+                    <IconButton
+                      type="submit"
+                      tone="delete"
+                      label={row.deleteDisabled ? copy.locked : copy.deleteEntry}
+                      disabled={row.deleteDisabled || isDeleting}
+                    >
+                      <Trash2 />
+                    </IconButton>
+                  </form>
+                </div>
+              )}
+            </Cardlet>
+          );
+        })}
       </CardletList>
     </Panel>
   );

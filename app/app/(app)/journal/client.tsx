@@ -37,6 +37,8 @@ type JournalPageClientProps = {
   };
   accountBalances: Record<string, number>;
   locale: Locale;
+  /** Admins only — bulk edit rewrites every entry of the ledger at once. */
+  isAdmin: boolean;
   expensePrefill?: {
     expenseReportId: string;
     departmentId: string;
@@ -47,7 +49,7 @@ type JournalPageClientProps = {
   } | null;
 };
 
-export default function JournalPageClient({ activeEdition, accountBalances, locale, expensePrefill }: JournalPageClientProps) {
+export default function JournalPageClient({ activeEdition, accountBalances, locale, isAdmin, expensePrefill }: JournalPageClientProps) {
   const [isModalOpen, setIsModalOpen] = useState(Boolean(expensePrefill));
   const router = useRouter();
   const copy = dictionaries[locale].journal;
@@ -105,6 +107,7 @@ export default function JournalPageClient({ activeEdition, accountBalances, loca
           departments={activeEdition.departments}
           moneyAccounts={activeEdition.moneyAccounts}
           costCenters={activeEdition.costCenters}
+          canBulkEdit={isAdmin}
         />
       </div>
     </div>

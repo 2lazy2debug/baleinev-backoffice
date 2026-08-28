@@ -1,4 +1,5 @@
 
+import { getCurrentUserAccess, isAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
@@ -19,6 +20,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
     ? resolvedSearchParams.fromExpenseReport
     : null;
 
+  const access = await getCurrentUserAccess();
   const editionId = await resolveEditionIdOrNull();
   const activeEdition = editionId ? await prisma.edition.findUnique({
     where: { id: editionId },
@@ -119,6 +121,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
         }}
         accountBalances={accountBalances}
         locale={locale}
+        isAdmin={isAdmin(access)}
         expensePrefill={prefillExpenseReport ? {
           expenseReportId: prefillExpenseReport.id,
           departmentId: prefillExpenseReport.departmentId,
