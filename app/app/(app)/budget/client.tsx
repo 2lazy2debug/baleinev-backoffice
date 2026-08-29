@@ -557,7 +557,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                     <TH>{copy.journal.date}</TH>
                     <TH>{copy.journal.type}</TH>
                     <TH>{copy.budget.label}</TH>
-                    <TH>{copy.journal.counterparty}</TH>
+                    <TH>{copy.journal.counterpart}</TH>
                     <TH>{copy.journal.reference}</TH>
                     <TH className="text-right">{copy.budget.amount}</TH>
                   </TR>

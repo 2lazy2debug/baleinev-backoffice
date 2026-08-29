@@ -162,12 +162,16 @@ The journal page reads `?fromExpenseReport=<id>` from the URL. If present, the a
 account, so the import **replaces** every entry on it rather than merging — re-run it
 with a fresher export and the account is rebuilt.
 
-- **Direction decides the side.** `Entrée` is a `PRODUITS` entry whose beneficiary is
-  BLV; `Sortie` is a `CHARGES` entry whose beneficiary is the counterparty the bank
-  names.
-- **A bank/cash transfer is two entries.** The export only sees the bank's leg, so
-  paying cash in is booked as income on the bank *and* a charge on the cash box, and
-  drawing cash the other way round. `VERSEMENT` and `PRELEVEMENT` are what mark them.
+- **Direction decides the side, never the counterpart.** `Entrée` is a `PRODUITS`
+  entry, `Sortie` a `CHARGES` one, and both name the party the bank names. Writing
+  BLV on income says nothing — an incoming payment is interesting precisely because
+  of where it came from. Blank stays blank; the export occasionally names nobody (a
+  `RETOUR PAIEMENT`, say), and that is left empty rather than guessed at.
+- **A bank/cash transfer is two entries, and BLV is its counterpart.** The export only
+  sees the bank's leg, so paying cash in is booked as income on the bank *and* a charge
+  on the cash box, and drawing cash the other way round. `VERSEMENT` and `PRELEVEMENT`
+  are what mark them. Both legs face BLV, because a movement between our own accounts
+  has no third party — this is the only place the import writes BLV.
 - **Nothing is guessed.** Department and cost centre are left empty for a human to
   assign; the label is the *Communication* column, blank when there is none and blank
   for TWINT payouts, whose communication is a machine reference.
@@ -180,6 +184,11 @@ with a fresher export and the account is rebuilt.
   movements are missing and the run aborts instead of inventing an entry.
 - **Next year is kept in step.** The following edition's *solde à nouveau* entries are
   rewritten to the balances the import produced, so the two editions cannot drift apart.
+- **Re-running is safe.** The bank account is emptied and rebuilt, and so are the
+  transfer legs the last run left on the cash box — otherwise a second import would
+  double every transfer. Those legs are recognisable because every journal action
+  requires a department, so an entry without one can only have come from this script.
+  The cash box's own entries are never touched.
 
 ---
 

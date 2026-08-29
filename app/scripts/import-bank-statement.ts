@@ -38,7 +38,10 @@ const COL = {
 /** `Texte comptable` values that mean "money moved between the bank and the cash box". */
 const TRANSFER_BOOKING_TEXTS = new Set(["VERSEMENT", "PRELEVEMENT"]);
 
-/** The association itself, used as the beneficiary of every incoming payment. */
+/**
+ * The association itself. Only ever the counterpart of a movement between our
+ * own accounts — an incoming payment faces whoever the bank names, not us.
+ */
 const SELF = "BLV";
 
 /** The bank, as the beneficiary of its own charges. */
@@ -161,14 +164,20 @@ function planEntries(
   const planned: PlannedEntry[] = [];
 
   for (const row of rows) {
+    // Whichever way the money went, the counterpart is the other side of it —
+    // the party the bank names. Naming ourselves there says nothing: an incoming
+    // payment is interesting precisely because of where it came from. The one
+    // exception is money moving between our own accounts, which faces BLV on
+    // both legs because there is no third party in it.
+    const counterparty = row.isTransfer ? SELF : row.counterparty || null;
+
     planned.push({
       accountId: bank.id,
       accountName: bank.name,
       accountType: row.isIncome ? AccountType.PRODUITS : AccountType.CHARGES,
       date: row.date,
       amount: row.amount,
-      // Money in is money to us; money out goes to whoever the bank names.
-      counterparty: row.isIncome ? SELF : row.counterparty || null,
+      counterparty,
       label: row.label,
     });
 
@@ -184,7 +193,7 @@ function planEntries(
       accountType: row.isIncome ? AccountType.CHARGES : AccountType.PRODUITS,
       date: row.date,
       amount: row.amount,
-      counterparty: row.isIncome ? bank.name : SELF,
+      counterparty,
       label: row.label,
     });
   }
@@ -280,7 +289,10 @@ async function refreshCarryOver(
       },
     });
 
-    report.push(`${source.name.padEnd(14)} ${Number(opening.amount).toFixed(2)} → ${closing.toFixed(2)}`);
+    // `amount` is stored unsigned, the side carries the sign — report the signed
+    // figure so an unchanged carry-over does not read as a flip.
+    const previous = opening.accountType === AccountType.PRODUITS ? Number(opening.amount) : -Number(opening.amount);
+    report.push(`${source.name.padEnd(14)} ${previous.toFixed(2)} → ${closing.toFixed(2)}`);
   }
 
   return report;
@@ -408,8 +420,24 @@ async function main() {
 
   await prisma.$transaction(async (tx) => {
     // The statement is the whole truth for this account: replace, do not merge.
+    // The cash box is not ours to replace, except for the transfer legs a
+    // previous run wrote there — without clearing those, re-importing doubles
+    // every transfer. They are recognisable because createJournalEntryAction and
+    // both update actions all require a department, so an entry with none can
+    // only have come from this script.
     const removed = await tx.journalEntry.deleteMany({
-      where: { editionId: edition.id, moneyAccountId: bank.id },
+      where: {
+        editionId: edition.id,
+        OR: [
+          { moneyAccountId: bank.id },
+          {
+            moneyAccountId: cash.id,
+            departmentId: null,
+            costCenterId: null,
+            enteredById: null,
+          },
+        ],
+      },
     });
 
     await tx.moneyAccount.update({

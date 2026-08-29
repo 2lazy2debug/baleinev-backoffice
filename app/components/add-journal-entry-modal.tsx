@@ -152,7 +152,7 @@ export function AddJournalEntryModal({
         </Field>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label={copy.counterparty}>
+          <Field label={copy.counterpart}>
             <Input type="text" name="counterparty" />
           </Field>
 

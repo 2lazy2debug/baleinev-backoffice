@@ -19,7 +19,7 @@ type Copy = {
   amount: string;
   moneyAccount: string;
   label: string;
-  counterparty: string;
+  counterpart: string;
   reference: string;
   costCenter: string;
   none: string;
@@ -122,7 +122,7 @@ export function JournalEntryEditForm({
       </Field>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label={copy.counterparty}>
+        <Field label={copy.counterpart}>
           <Input type="text" name="counterparty" defaultValue={entry.counterparty ?? ""} />
         </Field>
 

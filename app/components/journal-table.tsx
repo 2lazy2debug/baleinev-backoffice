@@ -112,7 +112,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
     type: "",
     amount: "",
     label: "",
-    beneficiary: "",
+    counterpart: "",
     account: "",
     costCenter: "",
   });
@@ -214,7 +214,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
     if (filters.label && !entry.label.toLowerCase().includes(filters.label.toLowerCase())) {
       return false;
     }
-    if (filters.beneficiary && !String(entry.counterparty ?? "").toLowerCase().includes(filters.beneficiary.toLowerCase())) {
+    if (filters.counterpart && !String(entry.counterparty ?? "").toLowerCase().includes(filters.counterpart.toLowerCase())) {
       return false;
     }
     if (filters.account && !entry.moneyAccount.name.toLowerCase().includes(filters.account.toLowerCase())) {
@@ -373,7 +373,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
     typeText: typeLabel(entry.accountType, locale),
     isProduits: entry.accountType === "PRODUITS",
     amountLabel: formatCurrency(Number(entry.amount.toString())),
-    beneficiary: entry.counterparty ?? "-",
+    counterpart: entry.counterparty ?? "-",
     costCenterCode: entry.costCenter?.code ?? "-",
     balanceLabel: formatCurrency(
       runningBalanceByEntryId[entry.id] ?? accountBalances[entry.moneyAccount.name] ?? 0,
@@ -454,7 +454,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                 {copy.amount}
               </TH>
               <TH>{copy.label}</TH>
-              <TH>{copy.beneficiary}</TH>
+              <TH>{copy.counterpart}</TH>
               <TH>{copy.account}</TH>
               <TH>CC</TH>
               <TH>{copy.balance}</TH>
@@ -517,8 +517,8 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                 <Input
                   type="text"
                   placeholder={copy.filter}
-                  value={filters.beneficiary}
-                  onChange={(e) => handleFilterChange("beneficiary", e.target.value)}
+                  value={filters.counterpart}
+                  onChange={(e) => handleFilterChange("counterpart", e.target.value)}
                   size="sm"
                 />
               </TH>
@@ -637,7 +637,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                       <span className="truncate">{entry.label}</span>
                     )}
                   </TD>
-                  <TD>{row.beneficiary}</TD>
+                  <TD>{row.counterpart}</TD>
                   <TD>
                     {draft ? (
                       <Select
@@ -832,7 +832,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                   <CardletField label={copy.department}>{row.departmentName}</CardletField>
                   <CardletField label={copy.account}>{row.entry.moneyAccount.name}</CardletField>
                   <CardletField label={copy.costCenter}>{row.costCenterCode}</CardletField>
-                  <CardletField label={copy.beneficiary}>{row.beneficiary}</CardletField>
+                  <CardletField label={copy.counterpart}>{row.counterpart}</CardletField>
                 </CardletFields>
               )}
 
