@@ -31,9 +31,14 @@ const sizes: Record<ControlSize, string> = {
   sm: cn(controlHeight.sm, "px-3 text-2xs"),
 };
 
-// The compact half of the same scale: the widths mirror `controlSquare`, so a
-// label-less button and the <IconButton> next to it are the same square.
-const compactWidths: Record<ControlSize, string> = {
+/**
+ * The compact half of the same scale: the widths mirror `controlSquare`, so a
+ * label-less button and the <IconButton> next to it are the same square.
+ *
+ * Exported because a <Link> cannot be a <Button> and still needs the rule —
+ * pair it with `buttonClasses()` and wrap the label in `hidden lg:inline`.
+ */
+export const compactOnMobileWidths: Record<ControlSize, string> = {
   md: "w-11 px-0 lg:w-auto lg:px-4",
   sm: "w-11 px-0 lg:w-auto lg:px-3",
 };
@@ -64,7 +69,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       type={type ?? "button"}
       title={label}
       aria-label={label}
-      className={buttonClasses(variant, size, cn(compactOnMobile ? compactWidths[size] : null, className))}
+      className={buttonClasses(variant, size, cn(compactOnMobile ? compactOnMobileWidths[size] : null, className))}
       {...props}
     >
       {icon}

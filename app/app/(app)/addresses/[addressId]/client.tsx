@@ -36,6 +36,7 @@ import {
   TR,
   Table,
   buttonClasses,
+  compactOnMobileWidths,
 } from "@/components/ui";
 import { addressDisplayName, formatPostalLine } from "@/lib/addresses";
 import type { CountryOption } from "@/lib/countries";
@@ -133,7 +134,7 @@ export function AddressDetailClient({ locale, countries, canDelete, address, ban
               href="/addresses"
               title={copy.backToList}
               aria-label={copy.backToList}
-              className={buttonClasses("secondary", "md", "w-11 px-0 lg:w-auto lg:px-4")}
+              className={buttonClasses("secondary", "md", compactOnMobileWidths.md)}
             >
               <ArrowLeft />
               <span className="hidden lg:inline">{copy.backToList}</span>
