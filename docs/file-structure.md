@@ -77,6 +77,27 @@ app/
 │   │   └── actions.ts            ← Server actions: address + bank-account CRUD. Everything is
 │   │                                open to any signed-in user except deleting an address
 │   │
+│   ├── stock/
+│   │   ├── page.tsx              ← Three screens in one route: nothing to work with yet, the
+│   │   │                            one-time stock picker, and the contents of the stock this
+│   │   │                            user last opened (global, any signed-in user)
+│   │   ├── client.tsx            ← The contents: table above `sm`, tight cardlets below, and the
+│   │   │                            quantity controls — +/- straight to the server, or the edit
+│   │   │                            button to unlock the field and save a recount as one movement
+│   │   ├── add-stock-modal.tsx   ← Header button + "new entry" modal; can invent the item it is
+│   │   │                            stocking, in the same submission
+│   │   ├── stock-place-switcher.tsx ← <StockPlacePicker> (the first-visit screen) and
+│   │   │                            <StockPlaceSwitcher> (the box next to "New entry"); both
+│   │   │                            write the choice to the user through the preference route
+│   │   ├── items/                ← The catalogue: list + filters, create/edit in one dialog on
+│   │   │                            both breakpoints, delete admin-only and only when unstocked
+│   │   ├── history/              ← The movement log, newest first, filtered by item/stock/direction
+│   │   ├── settings/             ← Stocks and units (admin only). Deleting a stock asks where its
+│   │   │                            contents go first
+│   │   └── actions.ts            ← Server actions: add/adjust/set/remove stock, element CRUD, and
+│   │                                the place/unit configuration. Every quantity change goes
+│   │                                through one helper that writes the row and its movement together
+│   │
 │   ├── templates/
 │   │   ├── page.tsx              ← Document template manager (admin only, data-fetching only)
 │   │   ├── client.tsx            ← Client-side create/update/delete/set-default forms
@@ -135,7 +156,8 @@ app/
     │
     ├── preferences/
     │   ├── language/route.ts       ← POST: set the locale cookie (nothing else — the Account screen owns the rest)
-    │   └── edition/route.ts        ← POST: switch this user's selected edition
+    │   ├── edition/route.ts        ← POST: switch this user's selected edition
+    │   └── stock-place/route.ts    ← POST: switch this user's selected stock (same shape, same reason)
     │
     ├── documents/
     │   └── invoice/pdf/route.ts    ← POST: render invoice template → Puppeteer → PDF
@@ -196,7 +218,7 @@ which. Nothing here should be re-implemented inline in a page.
 | File | Exports |
 |---|---|
 | `control.ts` | `ControlSize` (`md`/`sm`) plus `controlHeight`/`controlSquare` — the one height scale every control resolves to, 44px below `lg` and dense above it |
-| `Button.tsx` | `<Button variant size icon compactOnMobile>` and `buttonClasses()` for links that read as buttons. `compactOnMobile` drops the label below `lg` and leaves the icon on the square `<IconButton>` footprint, for an action row that fits a desktop header but not a phone |
+| `Button.tsx` | `<Button variant size icon compactOnMobile>` and `buttonClasses()` for links that read as buttons. `compactOnMobile` drops the label below `lg` and leaves the icon on the square `<IconButton>` footprint, for an action row that fits a desktop header but not a phone. `compactOnMobileWidths` is that same recipe as classes, for a `<Link>`, which cannot be a `<Button>` — pair it with a label wrapped in `hidden lg:inline` |
 | `IconButton.tsx` | `<IconButton tone size label>` and `iconButtonClasses()` for non-button elements that act as one |
 | `Input.tsx` | `<Input size tone bare>`, plus `inputClasses()` / `autoHeightFieldClasses` shared by every field |
 | `Suggest.tsx` | `<Suggest value onValueChange options loadOptions onPick>` — a text field that *proposes* values without imposing them (a NPA proposes its localities, a dialling prefix proposes its countries). Its list renders into `<body>`, positioned from the input's own rect, because these fields sit inside frames that clip |
@@ -227,6 +249,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `secret-crypto.ts` | AES-256-GCM seal/open for the Passwords vault (`encryptSecret`/`decryptSecret`/`isVaultConfigured`), keyed by `PASSWORD_VAULT_KEY`. See docs/passwords.md |
 | `totp.ts` | TOTP primitives over `otpauth`: `generateTotpCode`/`assertValidTotpSeed` for the Passwords vault, plus `generateTotpSecret`/`buildTotpUri`/`verifyTotpCode` for account enrolment |
 | `two-factor.ts` | Account 2FA: seals/opens the seed on `User` (`sealTwoFactorSecret`, `verifyUserTwoFactorCode`) and builds the enrolment QR (`buildTwoFactorEnrolment`). Keyed by `PASSWORD_VAULT_KEY` via `secret-crypto.ts` |
+| `stock.ts` | `formatPiece()` / `formatTotal()` / `formatQuantity()` / `formatExpiry()` / `toDateInputValue()` — the two numbers a stock row carries (pieces, and what they add up to) written the same way everywhere. Import-free, like `addresses.ts` |
 | `addresses.ts` | `addressDisplayName()` / `addressNameBlock()` / `addressPersonName()` / `formatPhone()` / `formatPostalLine()` and `DEFAULT_COUNTRY`. Import-free on purpose — the table, the pickers and the actions all read the same rules without dragging Prisma into a browser bundle |
 | `city-book.ts` | `rememberCity()` — files a postal code / locality pair the user actually saved, so the seeded Swiss list grows into whatever the address book turns out to need |
 | `countries.ts` | `countryOptions(locale)` / `countryName()` — countries and international dialling prefixes from libphonenumber-js + `Intl.DisplayNames`. Built on the server and passed down as props; the phone metadata has no business in a browser bundle that only needs "+41" |

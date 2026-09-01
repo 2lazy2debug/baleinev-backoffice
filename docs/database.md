@@ -37,6 +37,10 @@ DocumentTemplate  (global, not Edition-scoped)
 
 Address ─< AddressBankAccount     (global, not Edition-scoped)
 City                              (global lookup table, no relations)
+
+StockUnit ─< StockElement         (global, not Edition-scoped)
+StockPlace ─< StockItem >─ StockElement
+StockMovement ─ StockPlace / StockElement / StockItem? / User?
 ```
 
 ---
@@ -374,6 +378,77 @@ foreign or brand-new one is still writable. Two things follow:
 
 ---
 
+### `StockPlace`
+A place stock is held in — a cellar, a container, a van. Global: a shelf does not empty when an
+edition closes.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `name` | String | Unique |
+
+`User.selectedStockPlaceId` points here (`SetNull`) — which stock a user works in is a preference on
+the user, exactly like `selectedEditionId`.
+
+### `StockUnit`
+The unit an item is measured in. A table rather than an enum, so an admin adds one without shipping
+a migration; the seven starting values (`pce`, `l`, `ml`, `kg`, `g`, `m`, `m2`) are inserted by the
+migration that creates the table, for the same reason the Swiss city list is
+(see [`City`](#city)). `StockElement.unitId` is `Restrict`: a unit in use cannot vanish under the
+items measured in it.
+
+### `StockElement`
+The catalogue entry — what *can* be stocked, not the stock itself.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `name` | String | |
+| `brand` | String? | |
+| `unitId` | String | FK → StockUnit, `Restrict` |
+| `unitQty` | Decimal(12,3) | The size of **one piece**: a 1.5 l bottle is unit `l`, unitQty `1.5` |
+| `expireable` | Boolean | Whether a piece carries an expiry date. False hides the field entirely |
+
+Deleting one is refused while any `StockItem` references it (`Restrict`), and takes its movements
+with it when it is allowed (`Cascade`) — a log of an item that no longer exists has nothing left to
+name it by.
+
+### `StockItem`
+One element, in one place, at one expiry date, counted in **pieces**.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `stockPlaceId` | String | FK → StockPlace, `Cascade` |
+| `elementId` | String | FK → StockElement, `Restrict` |
+| `quantity` | Int | Pieces. The total is `quantity × element.unitQty` |
+| `expireDate` | Date? | NULL when the element does not expire, or the date is unknown |
+
+Unique on `(stockPlaceId, elementId, expireDate)`: two rows of the same item in the same place exist
+precisely when their expiry dates differ. Postgres counts two NULLs as different values, so the
+undated case is merged in the action (`addToPlace()`), not by the index.
+
+### `StockMovement`
+Every quantity change, in the order it happened.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `stockPlaceId` | String | FK → StockPlace, `Cascade` |
+| `elementId` | String | FK → StockElement, `Cascade` |
+| `stockItemId` | String? | FK → StockItem, **`SetNull`** |
+| `expireDate` | Date? | The dated shelf this was against, kept after the row is gone |
+| `delta` | Int | A magnitude, never signed |
+| `isIn` | Boolean | Which way it went |
+| `createdById` | String? | FK → User, `SetNull` |
+
+`delta` + `isIn` rather than a signed number, so a movement reads the same after the row it changed
+is deleted — which is the point of `stockItemId` being `SetNull`. The place is the one thing it
+cannot outlive: deleting a `StockPlace` cascades its movements, because there is no place left for
+them to describe (and a place can only be deleted once its contents have been moved out).
+
+---
+
 ## Key Patterns
 
 ### Edition-scoping
@@ -394,6 +469,8 @@ an edition must not delete the users who were looking at it.
 - Edition delete cascades to all its records.
 - Department delete cascades to its BudgetLine records.
 - User delete cascades to their DepartmentRole records.
+- StockPlace delete cascades to its items and movements; StockElement delete is *refused* while it
+  is stocked anywhere.
 
 ### Decimal precision
 Monetary amounts use `Prisma.Decimal` / PostgreSQL `DECIMAL` to avoid floating-point rounding. The helper `decimalToNumber()` in `lib/utils.ts` converts for display.

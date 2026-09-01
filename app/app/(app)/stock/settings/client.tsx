@@ -120,6 +120,7 @@ export function StockSettingsClient({ locale, places, units }: Props) {
                 <Panel key={place.id} nested as="div" className="flex items-center gap-2 p-2">
                   {editing ? (
                     <Input
+                      type="text"
                       size="sm"
                       value={editing.name}
                       autoFocus
@@ -185,6 +186,7 @@ export function StockSettingsClient({ locale, places, units }: Props) {
                 <Panel key={unit.id} nested as="div" className="flex items-center gap-2 p-2">
                   {editing ? (
                     <Input
+                      type="text"
                       size="sm"
                       value={editing.name}
                       autoFocus

@@ -60,7 +60,7 @@ moves nobody who is already using the app.
 Closing an edition makes it **read-only, not inaccessible**: it stays selectable and browsable,
 exports and invoice PDFs still work, and every write is refused by `requireWritableEdition()`.
 Closing does nothing else — it does not create the next edition, and it is reversible: "Reopen
-year" clears `closedAt` and writes work again. Global data — addresses, passwords, users, templates,
+year" clears `closedAt` and writes work again. Global data — addresses, stock, passwords, users, templates,
 event types — carries no edition and stays writable.
 
 ### 5. Locale / i18n

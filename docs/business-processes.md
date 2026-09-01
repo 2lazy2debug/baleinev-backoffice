@@ -374,3 +374,55 @@ Picking either fills the other. Both are ordinary text fields with a list attach
 brand-new locality is still writable — and whatever *is* saved is filed back into the `City` table,
 so the list grows into what the book actually needs. See
 [database.md](database.md#city).
+
+
+---
+
+## 10. Stock
+
+What the festival owns and where it sits, at `/stock`. Like the address book it is **global**: a
+shelf does not empty when an edition closes, and none of it is refused while a closed edition is
+selected.
+
+### The three things it is made of
+- An **item** is the catalogue entry — a name, an optional brand, and the size of *one piece*
+  (a 1.5 l bottle is unit `l`, one piece = 1.5) plus whether that piece carries an expiry date.
+- A **stock** is a place things sit in: a cellar, a container, a van.
+- An **entry** is one item, in one stock, at one expiry date, counted **in pieces**. Six bottles
+  read as `6 x 1.5 l = 9 l`, which is why the two numbers are never mixed: the count is what you
+  change, the total is what you have.
+
+Two entries of the same item in the same stock exist precisely when their expiry dates differ.
+Adding stock with a date that is already on the shelf tops that entry up instead of making a second
+one; an item that does not expire never shows a date field at all.
+
+### Pick a stock once
+The first visit asks which stock you are in, and writes the answer to the user
+(`User.selectedStockPlaceId`) exactly the way the selected edition is written. Every visit after
+that opens straight onto the contents, and the box icon next to "New entry" is how you change your
+mind. If the stock someone was in is deleted, they are asked again.
+
+### Everything that moves a quantity is logged
+Three gestures, one log:
+- **+ / -** go straight to the server, one movement per click.
+- **The edit button** unlocks the field instead; the buttons then move the number being typed, and
+  locking it again saves the whole correction as a **single** movement — which is what a recount is.
+- **New entry** and **take out of stock** are a movement each, in and out.
+
+Taking out more than is on the shelf lands on zero and logs what actually left: a miscount is not
+worth blocking on. A movement outlives the entry it changed, so taking something out of a stock does
+not erase how it got there. `/stock/history` is the log, newest first, filtered by item, stock or
+direction.
+
+### Who can do what
+Any signed-in user counts, adds, takes out, and keeps the catalogue up to date — including inventing
+an item from inside the "New entry" dialog, because the person in front of an unfamiliar delivery is
+the one who can name it. **Admins only**: deleting a catalogue item (and only once it is in no
+stock), and everything on `/stock/settings` — the stocks themselves and the units.
+
+### Deleting a stock never orphans anything
+An empty stock is deleted outright. A stock with contents asks where they go first, and each entry
+lands in the destination — merged into the entry with the same item and expiry date if there is one.
+The one case with no answer is the last stock still holding something: there is nowhere to move it,
+so the delete is refused until another stock exists. Deleting a stock also takes its own movement
+history with it — there is no place left for those movements to describe.
