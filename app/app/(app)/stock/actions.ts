@@ -93,16 +93,6 @@ function toExpireDate(raw: string | null, expireable: boolean): Date | null {
   return date;
 }
 
-type MovementLeg = {
-  stockPlaceId: string;
-  elementId: string;
-  stockItemId: string | null;
-  expireDate: Date | null;
-  /** A magnitude — which way it went is `isIn`. */
-  delta: number;
-  isIn: boolean;
-};
-
 /**
  * The one place a quantity changes.
  *
