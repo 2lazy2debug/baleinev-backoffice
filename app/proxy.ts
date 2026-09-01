@@ -52,7 +52,9 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // /tasks, /calendar and /events are accessible to all authenticated roles
+  // /tasks, /calendar, /events and /addresses are accessible to all authenticated
+  // roles — the address book is deliberately open to everyone signed in, and only
+  // its delete action is admin-gated (see app/(app)/addresses/actions.ts).
 
   return NextResponse.next();
 }

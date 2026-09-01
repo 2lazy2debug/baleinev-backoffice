@@ -3,8 +3,11 @@
 import { useMemo, useState } from "react";
 import { Check, Copy, Plus, RotateCcw, Trash2 } from "lucide-react";
 
+import { AddressPicker, type PickableAddress } from "@/components/address-picker";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { Button, Card, Field, IconButton, Input, Modal, PageHeader, SectionTitle, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
+import { addressNameBlock } from "@/lib/addresses";
+import type { CountryOption } from "@/lib/countries";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { buildSwissQrPayload } from "@/lib/swiss-qr";
 import { formatCurrency } from "@/lib/utils";
@@ -33,6 +36,9 @@ type Props = {
   accounts: InvoiceAccount[];
   history: HistoryInvoice[];
   earningEntries: EarningJournalEntry[];
+  /** The address book, for the recipient picker. */
+  addresses: PickableAddress[];
+  countries: CountryOption[];
   defaultTemplate: {
     id: string;
     name: string;
@@ -105,7 +111,7 @@ type GeneratedInvoice = {
   payload: string;
 };
 
-export default function InvoicesClient({ locale, editionId, accounts, history, earningEntries, defaultTemplate }: Props) {
+export default function InvoicesClient({ locale, editionId, accounts, history, earningEntries, addresses, countries, defaultTemplate }: Props) {
   const copy = dictionaries[locale];
   const isReadOnly = useEditionReadOnly();
   const firstAccountId = accounts[0]?.id ?? "";
@@ -133,6 +139,19 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
   const [paidModalInvoice, setPaidModalInvoice] = useState<HistoryInvoice | null>(null);
   const [selectedJournalEntryId, setSelectedJournalEntryId] = useState("");
   const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
+  // An address created from inside the invoice form is in the book before the
+  // page next reloads, so the picker keeps its own copy of the list.
+  const [addressBook, setAddressBook] = useState<PickableAddress[]>(addresses);
+
+  function fillRecipientFromAddress(address: PickableAddress) {
+    setAddressBook((current) =>
+      current.some((entry) => entry.id === address.id) ? current : [...current, address],
+    );
+    setSupplierName(addressNameBlock(address));
+    setSupplierAddress(address.street);
+    setSupplierPostalCode(address.postalCode);
+    setSupplierCity(address.city);
+  }
 
   const selectedAccount = useMemo(
     () => accounts.find((account) => account.id === selectedAccountId) ?? null,
@@ -823,6 +842,18 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                 placeholder={copy.invoices.headerPlaceholder}
               />
             </Field>
+
+            {/* The recipient comes from the address book by default — picking a
+                row fills the four fields below, and "New address" writes one
+                without leaving the invoice. Typing over them stays allowed:
+                a one-off recipient does not have to be filed first. */}
+            <AddressPicker
+              locale={locale}
+              countries={countries}
+              addresses={addressBook}
+              onPick={fillRecipientFromAddress}
+              disabled={isEditingPaidInvoice}
+            />
 
             <Field label={copy.invoices.supplierName}>
               <Textarea

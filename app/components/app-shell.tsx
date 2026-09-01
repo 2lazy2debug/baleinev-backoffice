@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   BookText,
   CalendarDays,
+  Contact,
   FileBadge,
   FileStack,
   Home,
@@ -43,7 +44,7 @@ type AppShellProps = {
   pendingTaskCount: number;
 };
 
-const GLOBAL_ROUTES = ["/passwords", "/users", "/templates", "/editions", "/account"];
+const GLOBAL_ROUTES = ["/addresses", "/passwords", "/users", "/templates", "/editions", "/account"];
 
 export function AppShell({ children, userName, editions, selectedEditionId, locale, role, canManageMoneyAccounts, pendingTaskCount }: AppShellProps) {
   const pathname = usePathname();
@@ -56,8 +57,8 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
 
   const selectedEdition = editions.find((edition) => edition.id === selectedEditionId) ?? null;
   const isEditionReadOnly = selectedEdition?.isClosed ?? false;
-  // Passwords, users, templates and editions are global — the selected edition
-  // being closed says nothing about whether they can be edited.
+  // Addresses, passwords, users, templates and editions are global — the selected
+  // edition being closed says nothing about whether they can be edited.
   const isEditionScopedRoute = !GLOBAL_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
@@ -76,6 +77,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
     { type: "item", href: "/invoices", label: copy.invoices, icon: FileBadge },
     { type: "item", href: "/cost-centers", label: copy.costCenters, icon: Target },
     { type: "divider", key: "d2" },
+    { type: "item", href: "/addresses", label: copy.addresses, icon: Contact },
     { type: "item", href: "/templates", label: copy.templates, icon: FileStack },
     { type: "item", href: "/passwords", label: copy.passwords, icon: KeyRound },
     { type: "divider", key: "d3" },
@@ -92,6 +94,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
     { type: "item", href: "/events", label: copy.events, icon: Target },
     ...(canManageMoneyAccounts ? [moneyAccountsItem] : []),
     { type: "divider", key: "dept-d2" },
+    { type: "item", href: "/addresses", label: copy.addresses, icon: Contact },
     { type: "item", href: "/passwords", label: copy.passwords, icon: KeyRound },
   ];
 

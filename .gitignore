@@ -55,3 +55,8 @@ next-env.d.ts
 
 # LibreOffice lock files
 .~lock.*#
+
+# Throwaway scripts (smoke tests, one-off fixtures) — never a release artifact
+*.tmp.ts
+*.tmp.mjs
+*.tmp.js

@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/access";
+import { countryOptions } from "@/lib/countries";
 import { prisma } from "@/lib/db";
 import { ensureDefaultInvoiceTemplate } from "@/lib/document-templates";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
@@ -133,6 +134,22 @@ export default async function InvoicesPage() {
     };
   });
 
+  // The address book, for the recipient picker in the invoice form.
+  const addressBook = await prisma.address.findMany({
+    orderBy: [{ companyName: "asc" }, { lastName: "asc" }, { firstName: "asc" }],
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      companyName: true,
+      street: true,
+      country: true,
+      postalCode: true,
+      city: true,
+      email: true,
+    },
+  });
+
   const payableEntries = earningEntries.map((entry) => ({
     id: entry.id,
     sequenceNumber: entry.sequenceNumber,
@@ -149,6 +166,18 @@ export default async function InvoicesPage() {
       accounts={accounts}
       history={history}
       earningEntries={payableEntries}
+      countries={countryOptions(locale)}
+      addresses={addressBook.map((address) => ({
+        id: address.id,
+        firstName: address.firstName ?? "",
+        lastName: address.lastName ?? "",
+        companyName: address.companyName ?? "",
+        street: address.street ?? "",
+        country: address.country,
+        postalCode: address.postalCode ?? "",
+        city: address.city ?? "",
+        email: address.email ?? "",
+      }))}
       defaultTemplate={{ id: defaultTemplate.id, name: defaultTemplate.name }}
     />
   );

@@ -9,6 +9,7 @@ export * from "./EmptyPage";
 export * from "./Panel";
 export * from "./Field";
 export * from "./Input";
+export * from "./Suggest";
 export * from "./Textarea";
 export * from "./Select";
 export * from "./MultiSelect";
