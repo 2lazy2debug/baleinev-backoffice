@@ -541,3 +541,73 @@ model Todo {
   @@index([editionId, createdById])
   @@index([editionId, assignedToUserId])
 }
+
+// ---------------------------------------------------------------------------
+// Address book
+// ---------------------------------------------------------------------------
+
+/// A person or an organisation the festival deals with. Global, not edition-scoped:
+/// a supplier does not stop existing when an edition closes, and every signed-in
+/// user may read and write one (only an admin may delete).
+model Address {
+  id          String  @id @default(cuid())
+  /// One of `firstName` / `companyName` is required — a row with neither has no
+  /// name to be found by. Enforced in the server action, not by the database,
+  /// because Postgres cannot express "either column" as a NOT NULL.
+  firstName   String?
+  lastName    String?
+  companyName String?
+  street      String?
+  country     String  @default("CH")
+  postalCode  String?
+  city        String?
+  /// International dialling prefix, stored with its "+" ("+41"). Kept apart from
+  /// the number so a list can be filtered by either.
+  phonePrefix String?
+  phoneNumber String?
+  email       String?
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bankAccounts AddressBankAccount[]
+
+  @@index([companyName])
+  @@index([lastName])
+  @@index([postalCode])
+}
+
+/// One IBAN belonging to an address. An address can hold several — the same
+/// supplier invoices from more than one account often enough.
+model AddressBankAccount {
+  id          String   @id @default(cuid())
+  addressId   String
+  displayName String
+  street      String?
+  postalCode  String
+  city        String
+  country     String   @default("CH")
+  iban        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  address Address @relation(fields: [addressId], references: [id], onDelete: Cascade)
+
+  @@index([addressId])
+}
+
+/// Postal code ↔ locality pairs, used to *propose* the other half of the pair
+/// while typing. Never binding: an address keeps whatever was typed, so a
+/// foreign or brand-new locality is still writable. Seeded with the Swiss list
+/// (geonames.org, CC BY 4.0) and topped up from what users actually save.
+model City {
+  id         String   @id @default(cuid())
+  country    String   @default("CH")
+  postalCode String
+  name       String
+  createdAt  DateTime @default(now())
+
+  @@unique([country, postalCode, name])
+  @@index([country, postalCode])
+  @@index([country, name])
+}
