@@ -12,6 +12,7 @@ import {
   Home,
   KeyRound,
   Landmark,
+  Boxes,
   ListTodo,
   ReceiptText,
   Target,
@@ -44,7 +45,7 @@ type AppShellProps = {
   pendingTaskCount: number;
 };
 
-const GLOBAL_ROUTES = ["/addresses", "/passwords", "/users", "/templates", "/editions", "/account"];
+const GLOBAL_ROUTES = ["/addresses", "/passwords", "/stock", "/users", "/templates", "/editions", "/account"];
 
 export function AppShell({ children, userName, editions, selectedEditionId, locale, role, canManageMoneyAccounts, pendingTaskCount }: AppShellProps) {
   const pathname = usePathname();
@@ -78,6 +79,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
     { type: "item", href: "/cost-centers", label: copy.costCenters, icon: Target },
     { type: "divider", key: "d2" },
     { type: "item", href: "/addresses", label: copy.addresses, icon: Contact },
+    { type: "item", href: "/stock", label: copy.stock, icon: Boxes },
     { type: "item", href: "/templates", label: copy.templates, icon: FileStack },
     { type: "item", href: "/passwords", label: copy.passwords, icon: KeyRound },
     { type: "divider", key: "d3" },
@@ -95,6 +97,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
     ...(canManageMoneyAccounts ? [moneyAccountsItem] : []),
     { type: "divider", key: "dept-d2" },
     { type: "item", href: "/addresses", label: copy.addresses, icon: Contact },
+    { type: "item", href: "/stock", label: copy.stock, icon: Boxes },
     { type: "item", href: "/passwords", label: copy.passwords, icon: KeyRound },
   ];
 
