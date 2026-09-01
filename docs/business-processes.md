@@ -203,7 +203,7 @@ Admin opens the invoice builder
         ▼
 Fills in:
   - Invoice number, date, due date
-  - Recipient name and address
+  - Recipient: picked from the address book, or typed — see below
   - Line items (description + amount each)
   - Selects which MoneyAccount (bank account) to use as sender
         │
@@ -227,6 +227,16 @@ Admin clicks "Download PDF"
 Invoice record is saved to the database (POST /api/invoices)
   → Appears in the invoice history table
 ```
+
+### The recipient comes from the address book
+"Use an address" above the recipient fields searches the address book by name, company, locality or
+email; picking a row fills the four recipient fields (the company on the first line of the name
+block, the contact under it). "New address" beside it opens the *same* create dialog the address
+book uses — the new row is written, filed in the book and selected in one step, so nobody abandons a
+half-written invoice to go add a supplier first.
+
+Neither is binding: the recipient fields stay editable afterwards, and a one-off recipient can be
+typed without being filed at all.
 
 ### Invoice line items
 Line items are stored as JSON in `Invoice.lineItems`. Each item has `{ description, quantity, unitPrice }`.
@@ -339,3 +349,28 @@ allowed once it has no journal entries or invoices attached.
 
 ### Cost Centers
 Optional labels that can be attached to journal entries for finer-grained reporting (e.g. a project name or event). They have no budget — they are purely for reporting and filtering.
+
+---
+
+## 9. The Address Book
+
+Everyone the festival writes to, invoices or pays, at `/addresses`. It is **global**: an address
+carries across editions and stays writable when the selected one is closed.
+
+### Who can do what
+Any signed-in user can view, add and edit an address and its bank accounts. **Deleting an address is
+admin-only** — by the time it matters, it is referenced from invoices. There is no department
+scoping: a supplier is not a secret, and a book only half the organisation can file into is a book
+nobody trusts.
+
+### The list
+The journal's shape: a filter row under the headers, sortable columns, edit in place above `sm`, and
+the same rows as cardlets below it. The view icon opens the address in full, where its bank accounts
+live (display name + IBAN, added and edited in a dialog, deleted in place).
+
+### Postal codes propose, they never impose
+Typing a NPA proposes the localities that share it; typing a locality proposes its postal codes.
+Picking either fills the other. Both are ordinary text fields with a list attached, so a foreign or
+brand-new locality is still writable — and whatever *is* saved is filed back into the `City` table,
+so the list grows into what the book actually needs. See
+[database.md](database.md#city).

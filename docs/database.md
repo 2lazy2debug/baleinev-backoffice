@@ -34,6 +34,9 @@ Task ─── User (createdBy / assignedTo / resolvedBy)
 Invoice ─── MoneyAccount (bankAccount)
 
 DocumentTemplate  (global, not Edition-scoped)
+
+Address ─< AddressBankAccount     (global, not Edition-scoped)
+City                              (global lookup table, no relations)
 ```
 
 ---
@@ -303,6 +306,71 @@ and the first to resolve it clears it for all of them.
 `STAFF_SHIFT`, `DEPARTMENT_ACCESS_REQUEST` (a user asked to join a department — see
 [business-processes.md](./business-processes.md)). Resolving a task never performs the underlying
 action: it records that somebody dealt with it.
+
+### `Address`
+One person or organisation the festival deals with. **Global, not edition-scoped:** a supplier does
+not stop existing when an edition closes, so the book carries across years and stays writable in a
+closed one.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `firstName` | String? | One of `firstName` / `companyName` is required — see below |
+| `lastName` | String? | |
+| `companyName` | String? | |
+| `street` | String? | |
+| `country` | String | ISO 3166-1 alpha-2, default `"CH"` |
+| `postalCode` / `city` | String? | Proposed from `City`, never constrained by it |
+| `phonePrefix` | String? | International dialling prefix with its `+` (`"+41"`), kept apart from the number so a list can filter on either |
+| `phoneNumber` | String? | |
+| `email` | String? | |
+| `note` | String? | |
+| `bankAccounts` | `AddressBankAccount[]` | |
+
+**"A first name or a company name" is enforced in the server action, not the database.** Postgres
+cannot express "one of these two columns is NOT NULL" as a constraint, so
+`app/(app)/addresses/actions.ts` is the single place that decides it — a row with neither has no
+name to be found by.
+
+**Access is deliberately wide.** Any signed-in user may add and edit an address, because the book is
+only useful when whoever has the address in front of them can file it. Deleting is the one exception
+and is admin-only (`isAdmin()`), since an address is referenced by invoices by the time it matters.
+
+### `AddressBankAccount`
+One IBAN belonging to an address — an address can hold several, because the same supplier invoices
+from more than one account often enough.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `addressId` | String | FK → Address (onDelete: Cascade) |
+| `displayName` | String | Required |
+| `street` | String? | |
+| `postalCode` / `city` / `country` | String | All required; country defaults to `"CH"` |
+| `iban` | String | Required. Stored normalised — no spaces, upper case — the way `lib/swiss-qr.ts` reads it |
+
+### `City`
+The postal-code ↔ locality lookup that feeds the address fields' proposals.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `country` | String | Default `"CH"` |
+| `postalCode` | String | |
+| `name` | String | |
+
+Unique on `(country, postalCode, name)`, indexed on `(country, postalCode)` and `(country, name)` —
+the two directions the fields query it in.
+
+**Cities are proposals, never constraints.** An address keeps whatever locality was typed, so a
+foreign or brand-new one is still writable. Two things follow:
+
+- The Swiss list (geonames.org, CC BY 4.0 — ~4,300 pairs, distribution-district suffixes like
+  "Lausanne 10" folded into the locality) ships as a **data migration**, not as seed data.
+  `prisma migrate deploy` is the only step the deploy pipeline runs on its own; `npm run db:seed` is
+  a first-install command, so anything left to it would never reach a running box.
+- Every pair a user actually saves is written back by `rememberCity()` (`lib/city-book.ts`), so the
+  second person to write to a foreign supplier gets the proposal the first one had to type out.
 
 ---
 

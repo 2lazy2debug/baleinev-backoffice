@@ -30,8 +30,8 @@ Two roles, stored on `User.role`:
 - **DEPARTMENT** — a department lead (bar, technical, programming, …). Sees only the budget of the
   departments they are attached to, submits expense claims, signs up for event shifts, and manages
   their own todos and calendar. Their navigation is restricted to tasks, calendar, budget,
-  expense reports, and events — except members of the "Comptabilité" department, who also get
-  money accounts.
+  expense reports, events, passwords and the address book — except members of the "Comptabilité"
+  department, who also get money accounts.
 
 A `DepartmentRole` links a user to a department *by name*, so the link survives across editions
 (departments themselves are per-edition rows). `syncDepartmentRolesFromDepartments()` in
@@ -50,6 +50,8 @@ A `DepartmentRole` links a user to a department *by name*, so the link survives 
 | `Invoice` | An outgoing invoice with a Swiss QR-bill payload, renderable to PDF. Can be linked 1:1 to the `PRODUITS` journal entry that settles it. |
 | `ExpenseReport` | A reimbursement claim (standard, with a receipt file; or driving, computed from kilometers × rate). Flows `PENDING → APPROVED / REJECTED`. |
 | `DocumentTemplate` | Admin-authored HTML used to render invoice PDFs, with `[[placeholder]]` substitution. |
+| `Address` / `AddressBankAccount` | The address book: everyone the festival writes to, invoices or pays, with the IBANs each of them bills from. Global, not edition-scoped — a supplier outlives an edition. |
+| `City` | Postal code ↔ locality pairs, seeded with the Swiss list. A *proposal* table only: an address keeps whatever was typed, and every saved pair is filed back into it. |
 | `Event` / `EventDay` / `EventShift` / `StaffAssignment` | Staffing: an event spans days, each day has shifts with a capacity, users sign up or are assigned. |
 | `Appointment` | A calendar meeting, inviting individual users, whole departments, or everyone. |
 | `Todo` / `Task` | `Task` is the unified inbox item. Some are created automatically by workflows; `GENERAL` tasks are user-authored and may hang off a `Todo`. |
@@ -77,6 +79,13 @@ The QR code image is generated as an SVG with the Swiss cross overlay
 ([app/lib/swiss-qr-image.ts](../app/lib/swiss-qr-image.ts)). Marking an invoice `PAID` requires
 linking it to a non-opening `PRODUITS` journal entry in the same edition; paid invoices cannot be
 edited or deleted until set back to unpaid.
+
+**The address book.** `/addresses` is open to every signed-in user — view, add, edit — with deleting
+alone gated to admins ([app/app/(app)/addresses/actions.ts](../app/app/(app)/addresses/actions.ts)).
+The invoice builder reads it: "Use an address" fills the recipient block from a saved row, and "New
+address" opens the same create dialog inline, so an unknown supplier is filed and selected without
+leaving the half-written invoice. In every address field a postal code proposes its localities and a
+locality proposes its codes, without either being binding.
 
 **Staffing.** Admins define event types, events, days (which can be toggled "off"), and shifts with
 a capacity. Users sign up for a shift, which creates a `StaffAssignment` and a `STAFF_SHIFT` task;

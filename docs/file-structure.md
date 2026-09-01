@@ -63,8 +63,19 @@ app/
 │   │   └── actions.ts            ← Server actions: submit, approve, reject
 │   │
 │   ├── invoices/
-│   │   ├── page.tsx              ← Invoice form + history (admin only)
+│   │   ├── page.tsx              ← Invoice form + history (admin only); also loads the address
+│   │   │                            book, so the recipient can be picked instead of typed
 │   │   └── client.tsx            ← Interactive invoice builder + QR preview + PDF download
+│   │
+│   ├── addresses/
+│   │   ├── page.tsx              ← The address book (global, any signed-in user; data-fetching only)
+│   │   ├── client.tsx            ← The list: filter row, sortable headers, edit in place above
+│   │   │                            `sm`, the same rows as cardlets below it
+│   │   ├── create-address-modal.tsx ← Header button for the shared <CreateAddressModal>
+│   │   ├── [addressId]/          ← One address in full — its own fields, then its bank accounts
+│   │   │                            (add/edit in a dialog, delete in place)
+│   │   └── actions.ts            ← Server actions: address + bank-account CRUD. Everything is
+│   │                                open to any signed-in user except deleting an address
 │   │
 │   ├── templates/
 │   │   ├── page.tsx              ← Document template manager (admin only, data-fetching only)
@@ -131,6 +142,8 @@ app/
     │
     ├── invoices/route.ts           ← POST: persist a new Invoice record
     │
+    ├── cities/route.ts             ← GET: postal-code ↔ locality proposals for the address fields
+    │
     ├── expense-reports/
     │   └── [expenseReportId]/
     │       └── proof/route.ts      ← GET: serve stored proof file (authenticated)
@@ -155,6 +168,9 @@ app/
 | `form-error.tsx` | Renders a server-action error message through the shared `<Alert>` (nothing when there is no message) |
 | `tasks-create-modal.tsx` | Modal with the two "create todo" / "create task" forms used on the tasks page |
 | `use-close-on-success.ts` | `useCloseOnSuccess()` — closes a create modal once its `useActionState` form comes back without an error |
+| `address-fields.tsx` | `<AddressFields>` / `<BankAccountFields>` / `<PostalFields>` plus their empty drafts — the fields an address and a bank account are made of, shared by every screen that writes one. Each control carries its own `name`, so the surrounding `<form>` posts straight to a server action |
+| `create-address-modal.tsx` | `<CreateAddressModal open onClose onCreated>` — the one "new address" dialog, controlled by whoever opens it. `onCreated` hands back the written row, not just its id, so a caller can select it without waiting for a refresh |
+| `address-picker.tsx` | `<AddressPicker>` — "use an address": search the book, or create one on the spot and have it selected. What lets the invoice builder fill its recipient from the book |
 
 ### `components/mobile/` — the mobile shell
 
@@ -183,6 +199,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `Button.tsx` | `<Button variant size icon compactOnMobile>` and `buttonClasses()` for links that read as buttons. `compactOnMobile` drops the label below `lg` and leaves the icon on the square `<IconButton>` footprint, for an action row that fits a desktop header but not a phone |
 | `IconButton.tsx` | `<IconButton tone size label>` and `iconButtonClasses()` for non-button elements that act as one |
 | `Input.tsx` | `<Input size tone bare>`, plus `inputClasses()` / `autoHeightFieldClasses` shared by every field |
+| `Suggest.tsx` | `<Suggest value onValueChange options loadOptions onPick>` — a text field that *proposes* values without imposing them (a NPA proposes its localities, a dialling prefix proposes its countries). Its list renders into `<body>`, positioned from the input's own rect, because these fields sit inside frames that clip |
 | `Textarea.tsx`, `Select.tsx`, `MultiSelect.tsx` | The other field controls, all on the same recipe |
 | `Field.tsx`, `Checkbox.tsx`, `Radio.tsx` | Labelled field wrapper and the two boolean/choice controls |
 | `Card.tsx` | `<Card span dashed flushOnMobile>` + `<CardGrid>` — padded surfaces in a 12-column grid; `flushOnMobile` drops the frame below `sm` for a section whose mobile content is a `<CardletList>` |
@@ -210,6 +227,9 @@ which. Nothing here should be re-implemented inline in a page.
 | `secret-crypto.ts` | AES-256-GCM seal/open for the Passwords vault (`encryptSecret`/`decryptSecret`/`isVaultConfigured`), keyed by `PASSWORD_VAULT_KEY`. See docs/passwords.md |
 | `totp.ts` | TOTP primitives over `otpauth`: `generateTotpCode`/`assertValidTotpSeed` for the Passwords vault, plus `generateTotpSecret`/`buildTotpUri`/`verifyTotpCode` for account enrolment |
 | `two-factor.ts` | Account 2FA: seals/opens the seed on `User` (`sealTwoFactorSecret`, `verifyUserTwoFactorCode`) and builds the enrolment QR (`buildTwoFactorEnrolment`). Keyed by `PASSWORD_VAULT_KEY` via `secret-crypto.ts` |
+| `addresses.ts` | `addressDisplayName()` / `addressNameBlock()` / `addressPersonName()` / `formatPhone()` / `formatPostalLine()` and `DEFAULT_COUNTRY`. Import-free on purpose — the table, the pickers and the actions all read the same rules without dragging Prisma into a browser bundle |
+| `city-book.ts` | `rememberCity()` — files a postal code / locality pair the user actually saved, so the seeded Swiss list grows into whatever the address book turns out to need |
+| `countries.ts` | `countryOptions(locale)` / `countryName()` — countries and international dialling prefixes from libphonenumber-js + `Intl.DisplayNames`. Built on the server and passed down as props; the phone metadata has no business in a browser bundle that only needs "+41" |
 | `db.ts` | Singleton Prisma client (re-used across hot reloads in dev) |
 | `i18n-dictionaries.ts` | Complete EN/FR translation dictionary as a `const` object; also defines `Locale` type and cookie name |
 | `i18n.ts` | `getLocale()` (reads cookie server-side) and `getDictionary()` |

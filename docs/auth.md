@@ -108,6 +108,9 @@ The middleware protects the entire `(app)` route group. It checks two things:
      `departmentRoleNames` includes `"Comptabilité"` (the accounting department name is read
      straight off the JWT, no DB round-trip — see `lib/money-account-roles.ts`).
    - Everything else (`/budget`, `/tasks`, `/calendar`, `/events`, `/expense-reports`, etc.) is allowed.
+   - `/addresses` is deliberately in that "everything else": the address book is open to every
+     signed-in user, and only its *delete* action is admin-gated — in the server action, where it
+     belongs, not in the route guard.
 
 The middleware reads the role from the **JWT token** (no database round-trip).
 
