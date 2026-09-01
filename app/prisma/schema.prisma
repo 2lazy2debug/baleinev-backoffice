@@ -61,35 +61,43 @@ enum TaskStatus {
 }
 
 model User {
-  id                String   @id @default(cuid())
-  email             String   @unique
-  passwordHash      String
-  name              String
-  role              UserRole @default(ADMIN)
-  refundFirstName   String?
-  refundLastName    String?
-  refundIban        String?
-  refundZip         String?
-  refundCity        String?
+  id                   String   @id @default(cuid())
+  email                String   @unique
+  passwordHash         String
+  name                 String
+  role                 UserRole @default(ADMIN)
+  refundFirstName      String?
+  refundLastName       String?
+  refundIban           String?
+  refundZip            String?
+  refundCity           String?
   // Two-factor sign-in (TOTP). The seed is sealed with AES-256-GCM under the
   // same server-only master key as the Passwords vault (PASSWORD_VAULT_KEY) and
   // is only ever unsealed to check a code. `twoFactorEnabled` flips to true once
   // the user has proved they can produce a code from it — until then the three
   // columns hold a *pending* enrolment that login ignores.
-  twoFactorEnabled  Boolean  @default(false)
-  twoFactorCipher   String?
-  twoFactorIv       String?
-  twoFactorTag      String?
+  twoFactorEnabled     Boolean  @default(false)
+  twoFactorCipher      String?
+  twoFactorIv          String?
+  twoFactorTag         String?
   // The edition this user is working in. Seeded once from the default edition
   // (see lib/edition-context.ts) and never touched again unless the user picks
   // another one — changing the default moves nobody.
-  selectedEditionId String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  selectedEditionId    String?
+  // The stock place this user is working in. Stock is edition-independent, so
+  // this is remembered on its own: the app asks which place once and then opens
+  // straight onto its contents.
+  selectedStockPlaceId String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   // SetNull, not Cascade: deleting an edition must never delete the users who
   // happened to be looking at it. They re-seed on their next request.
   selectedEdition Edition? @relation("UserSelectedEdition", fields: [selectedEditionId], references: [id], onDelete: SetNull)
+
+  // SetNull for the same reason: deleting a stock place must not delete the
+  // users who happened to be looking at it — they land on the picker again.
+  selectedStockPlace StockPlace? @relation("UserSelectedStockPlace", fields: [selectedStockPlaceId], references: [id], onDelete: SetNull)
 
   departmentRoles         DepartmentRole[]
   journalEntries          JournalEntry[]
@@ -104,8 +112,10 @@ model User {
   createdTodos            Todo[]                  @relation("TodoCreator")
   assignedTodos           Todo[]                  @relation("TodoAssignee")
   createdPasswordEntries  PasswordEntry[]         @relation("PasswordEntryCreatedBy")
+  stockMovements          StockMovement[]         @relation("StockMovementCreatedBy")
 
   @@index([selectedEditionId])
+  @@index([selectedStockPlaceId])
 }
 
 model DepartmentRole {
@@ -162,7 +172,7 @@ model Edition {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  usersSelecting User[]       @relation("UserSelectedEdition")
+  usersSelecting User[]          @relation("UserSelectedEdition")
   departments    Department[]
   moneyAccounts  MoneyAccount[]
   costCenters    CostCenter[]
@@ -550,7 +560,7 @@ model Todo {
 /// a supplier does not stop existing when an edition closes, and every signed-in
 /// user may read and write one (only an admin may delete).
 model Address {
-  id          String  @id @default(cuid())
+  id          String   @id @default(cuid())
   /// One of `firstName` / `companyName` is required — a row with neither has no
   /// name to be found by. Enforced in the server action, not by the database,
   /// because Postgres cannot express "either column" as a NOT NULL.
@@ -558,7 +568,7 @@ model Address {
   lastName    String?
   companyName String?
   street      String?
-  country     String  @default("CH")
+  country     String   @default("CH")
   postalCode  String?
   city        String?
   /// International dialling prefix, stored with its "+" ("+41"). Kept apart from
@@ -610,4 +620,116 @@ model City {
   @@unique([country, postalCode, name])
   @@index([country, postalCode])
   @@index([country, name])
+}
+
+// ---------------------------------------------------------------------------
+// Stock
+// ---------------------------------------------------------------------------
+
+/// A place stock is held in — a container, a cellar, a van. Global, not
+/// edition-scoped: what sits on a shelf does not stop existing when an edition
+/// closes, and the next edition inherits it as it is.
+model StockPlace {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items           StockItem[]
+  movements       StockMovement[]
+  selectedByUsers User[]          @relation("UserSelectedStockPlace")
+}
+
+/// The unit an item is measured in (l, ml, m, pce, m2, g, kg). A table rather
+/// than an enum because admins add one without shipping a migration; the seven
+/// starting values are inserted by the migration that creates this table.
+model StockUnit {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  elements StockElement[]
+}
+
+/// What *can* be stocked — the catalogue entry, not the stock itself.
+///
+/// `unitQty` is the size of one piece: a 1.5 l bottle is unit = l, unitQty = 1.5.
+/// A stock row then counts pieces and multiplies, so six of them read as
+/// "6 x 1.5 l = 9 l" rather than as an ambiguous 6.
+model StockElement {
+  id         String   @id @default(cuid())
+  name       String
+  brand      String?
+  unitId     String
+  unitQty    Decimal  @db.Decimal(12, 3)
+  /// Whether a piece of this carries an expiry date. False hides the date
+  /// everywhere — the field is not left empty, it is not drawn at all.
+  expireable Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  unit      StockUnit       @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  items     StockItem[]
+  movements StockMovement[]
+
+  @@index([name])
+  @@index([unitId])
+}
+
+/// One element, in one place, at one expiry date.
+///
+/// Two rows of the same element in the same place exist precisely when their
+/// expiry dates differ — adding stock with a date that is already on the shelf
+/// tops that row up instead of making a second one. The unique index says so for
+/// dated rows; the undated ones are merged by the action, since Postgres counts
+/// two NULLs as different values.
+model StockItem {
+  id           String    @id @default(cuid())
+  stockPlaceId String
+  elementId    String
+  quantity     Int       @default(0)
+  /// NULL when the element is not expireable, and when it is but the date is
+  /// not known.
+  expireDate   DateTime? @db.Date
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  stockPlace StockPlace      @relation(fields: [stockPlaceId], references: [id], onDelete: Cascade)
+  element    StockElement    @relation(fields: [elementId], references: [id], onDelete: Restrict)
+  movements  StockMovement[]
+
+  @@unique([stockPlaceId, elementId, expireDate])
+  @@index([stockPlaceId])
+  @@index([elementId])
+}
+
+/// Every quantity change, in the order it happened: the +/- buttons, an edited
+/// quantity, a new entry, a removal, and both legs of a move between places.
+///
+/// `delta` is a magnitude and `isIn` says which way it went, so a movement reads
+/// the same whether or not the row it changed still exists — which is why
+/// `stockItemId` is nullable and SetNull. Deleting the *place* does cascade:
+/// the history of a place that is gone has nothing left to describe, and a
+/// place can only be deleted once its items have been moved out.
+model StockMovement {
+  id           String    @id @default(cuid())
+  stockPlaceId String
+  elementId    String
+  stockItemId  String?
+  /// The dated shelf this movement was against, kept even after the row is gone.
+  expireDate   DateTime? @db.Date
+  delta        Int
+  isIn         Boolean
+  createdById  String?
+  createdAt    DateTime  @default(now())
+
+  stockPlace StockPlace   @relation(fields: [stockPlaceId], references: [id], onDelete: Cascade)
+  element    StockElement @relation(fields: [elementId], references: [id], onDelete: Cascade)
+  stockItem  StockItem?   @relation(fields: [stockItemId], references: [id], onDelete: SetNull)
+  createdBy  User?        @relation("StockMovementCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([stockPlaceId, createdAt])
+  @@index([elementId])
+  @@index([createdAt])
 }
