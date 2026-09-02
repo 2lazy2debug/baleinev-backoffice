@@ -36,6 +36,7 @@ Invoice ─── MoneyAccount (bankAccount)
 DocumentTemplate  (global, not Edition-scoped)
 
 Address ─< AddressBankAccount     (global, not Edition-scoped)
+AddressType ─< Address            (global; the FK is optional and SetNull)
 City                              (global lookup table, no relations)
 
 StockUnit ─< StockElement         (global, not Edition-scoped)
@@ -328,7 +329,8 @@ closed one.
 | `phonePrefix` | String? | International dialling prefix with its `+` (`"+41"`), kept apart from the number so a list can filter on either |
 | `phoneNumber` | String? | |
 | `email` | String? | |
-| `note` | String? | |
+| `note` | String? | The contact's description — labelled **Description** on every screen |
+| `addressTypeId` | String? | The contact type. Optional, `onDelete: SetNull` — see `AddressType` |
 | `bankAccounts` | `AddressBankAccount[]` | |
 
 **"A first name or a company name" is enforced in the server action, not the database.** Postgres
@@ -339,6 +341,23 @@ name to be found by.
 **Access is deliberately wide.** Any signed-in user may add and edit an address, because the book is
 only useful when whoever has the address in front of them can file it. Deleting is the one exception
 and is admin-only (`isAdmin()`), since an address is referenced by invoices by the time it matters.
+
+### `AddressType`
+What an address *is* to the festival — the contact type shown on every address:
+sponsor, supplier, partner, artist, staff. A table rather than an enum, so an
+admin adds one from `/addresses/settings` without shipping a migration; the five
+starting rows are inserted by the migration that creates the table, the same way
+the stock units are.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `name` | String | Unique |
+| `addresses` | `Address[]` | |
+
+**Blank is a valid answer**, so the FK on `Address` is nullable and `SetNull`:
+deleting a type leaves its addresses untyped rather than taking them with it. The
+settings screen says how many that is before it happens.
 
 ### `AddressBankAccount`
 One IBAN belonging to an address — an address can hold several, because the same supplier invoices

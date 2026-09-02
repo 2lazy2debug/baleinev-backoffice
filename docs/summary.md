@@ -50,7 +50,7 @@ A `DepartmentRole` links a user to a department *by name*, so the link survives 
 | `Invoice` | An outgoing invoice with a Swiss QR-bill payload, renderable to PDF. Can be linked 1:1 to the `PRODUITS` journal entry that settles it. |
 | `ExpenseReport` | A reimbursement claim (standard, with a receipt file; or driving, computed from kilometers × rate). Flows `PENDING → APPROVED / REJECTED`. |
 | `DocumentTemplate` | Admin-authored HTML used to render invoice PDFs, with `[[placeholder]]` substitution. |
-| `Address` / `AddressBankAccount` | The address book: everyone the festival writes to, invoices or pays, with the IBANs each of them bills from. Global, not edition-scoped — a supplier outlives an edition. |
+| `Address` / `AddressBankAccount` / `AddressType` | The address book: everyone the festival writes to, invoices or pays, with the IBANs each of them bills from and the contact type each is filed under. Global, not edition-scoped — a supplier outlives an edition. |
 | `City` | Postal code ↔ locality pairs, seeded with the Swiss list. A *proposal* table only: an address keeps whatever was typed, and every saved pair is filed back into it. |
 | `Event` / `EventDay` / `EventShift` / `StaffAssignment` | Staffing: an event spans days, each day has shifts with a capacity, users sign up or are assigned. |
 | `Appointment` | A calendar meeting, inviting individual users, whole departments, or everyone. |
@@ -81,14 +81,17 @@ linking it to a non-opening `PRODUITS` journal entry in the same edition; paid i
 edited or deleted until set back to unpaid.
 
 **The address book.** `/addresses` is open to every signed-in user — view, add, edit — with deleting
-alone gated to admins ([app/app/(app)/addresses/actions.ts](../app/app/(app)/addresses/actions.ts)).
+and the contact-type list (`/addresses/settings`) gated to admins
+([app/app/(app)/addresses/actions.ts](../app/app/(app)/addresses/actions.ts)). Every row can be
+filed under a contact type — sponsor, supplier, partner, artist, staff — and blank stays a real
+answer. Opening a row reads it; the pencil is what turns the card into the form.
 The invoice builder reads it: "Use an address" fills the recipient block from a saved row, and "New
 address" opens the same create dialog inline, so an unknown supplier is filed and selected without
 leaving the half-written invoice. In every address field a postal code proposes its localities and a
 locality proposes its codes, without either being binding.
 
-**Staffing.** Admins define event types, events, days (which can be toggled "off"), and shifts with
-a capacity. Users sign up for a shift, which creates a `StaffAssignment` and a `STAFF_SHIFT` task;
+**Staffing.** Admins define event types (on `/events/settings`), events, days (which can be toggled
+"off"), and shifts with a capacity. Users sign up for a shift, which creates a `StaffAssignment` and a `STAFF_SHIFT` task;
 withdrawing removes both. Admins can assign users directly. A shift is edited in place — the pencil
 turns the row's labels into the same four fields the add row uses (`updateShiftAction`), so hours, a
 description or a capacity can be corrected without deleting the shift and losing everyone on it. The

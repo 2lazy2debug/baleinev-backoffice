@@ -315,6 +315,10 @@ Document templates allow the admin to customise the HTML layout used for PDF gen
 
 - All user accounts are created by an **admin** — there is no self-service signup.
 - Admin can: create users, change name/email/password/role, assign departments, delete users.
+- **The screen opens read-only.** `/users` lists accounts — name, address, an admin/department badge
+  and the departments as pills. The pencil turns one card into the update form, and deleting lives
+  inside that form: reading an account is safe, and the state that can change it is the one that can
+  end it.
 - `DEPARTMENT` users are assigned to one or more departments via `DepartmentRole` records.
 - When departments are renamed, `syncDepartmentRolesFromDepartments()` updates `DepartmentRole.name` to keep display names current.
 
@@ -359,14 +363,27 @@ carries across editions and stays writable when the selected one is closed.
 
 ### Who can do what
 Any signed-in user can view, add and edit an address and its bank accounts. **Deleting an address is
-admin-only** — by the time it matters, it is referenced from invoices. There is no department
-scoping: a supplier is not a secret, and a book only half the organisation can file into is a book
-nobody trusts.
+admin-only** — by the time it matters, it is referenced from invoices. The **contact-type list** is
+admin-only too, at `/addresses/settings`. There is no department scoping: a supplier is not a secret,
+and a book only half the organisation can file into is a book nobody trusts.
+
+### Contact types
+Every address can be filed under one — sponsor, supplier, partner, artist, staff — and **blank is a
+real answer**, so nothing has to be mislabelled to be saved. The list is data, not an enum: admins
+add and rename types on the settings screen, and deleting one is allowed even while it is in use.
+The dialog says how many addresses that is; they keep everything else and come back untyped.
 
 ### The list
 The journal's shape: a filter row under the headers, sortable columns, edit in place above `sm`, and
-the same rows as cardlets below it. The view icon opens the address in full, where its bank accounts
-live (display name + IBAN, added and edited in a dialog, deleted in place).
+the same rows as cardlets below it. A search field in the page header filters every column at once —
+it is what a phone has instead of the desktop filter row, and it stays put while the list scrolls.
+Phone numbers and email addresses are `tel:`/`mailto:` links wherever they appear.
+
+### An address is read, then edited
+Opening a row **displays** it: the description first — the one line that says why the row is in the
+book at all — then type, name, company, street, locality, country, phone and email. The pencil at
+the card's top right turns that same card into the form, and cancel throws the draft away. Its bank
+accounts live underneath (display name + IBAN, added and edited in a dialog, deleted in place).
 
 ### Postal codes propose, they never impose
 Typing a NPA proposes the localities that share it; typing a locality proposes its postal codes.

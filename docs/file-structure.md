@@ -68,14 +68,18 @@ app/
 │   │   └── client.tsx            ← Interactive invoice builder + QR preview + PDF download
 │   │
 │   ├── addresses/
-│   │   ├── page.tsx              ← The address book (global, any signed-in user; data-fetching only)
-│   │   ├── client.tsx            ← The list: filter row, sortable headers, edit in place above
+│   │   ├── page.tsx              ← The address book (global, any signed-in user; data-fetching only,
+│   │   │                            and it hands the gated header buttons to the client)
+│   │   ├── client.tsx            ← Owns the page header (search across every column + the count);
+│   │   │                            the list: filter row, sortable headers, edit in place above
 │   │   │                            `sm`, the same rows as cardlets below it
 │   │   ├── create-address-modal.tsx ← Header button for the shared <CreateAddressModal>
-│   │   ├── [addressId]/          ← One address in full — its own fields, then its bank accounts
+│   │   ├── [addressId]/          ← One address, read first: description, then the contact fields,
+│   │   │                            the pencil turns the card into the form. Bank accounts under it
 │   │   │                            (add/edit in a dialog, delete in place)
-│   │   └── actions.ts            ← Server actions: address + bank-account CRUD. Everything is
-│   │                                open to any signed-in user except deleting an address
+│   │   ├── settings/             ← Contact types (admin only): create button + rename/delete rows
+│   │   └── actions.ts            ← Server actions: address + bank-account CRUD (open to any signed-in
+│   │                                user except deleting), plus contact-type CRUD (admin only)
 │   │
 │   ├── stock/
 │   │   ├── page.tsx              ← Three screens in one route: nothing to work with yet, the
@@ -111,7 +115,7 @@ app/
 │   │
 │   ├── events/
 │   │   ├── page.tsx              ← Events + staffing for the active edition (data-fetching only)
-│   │   ├── client.tsx            ← Event types, event panels (collapsible by anyone), days, shift
+│   │   ├── client.tsx            ← Event panels (collapsible by anyone), days, shift
 │   │   │                            rows (sign up / assign / edit in place / delete). Each panel is
 │   │   │                            the anchor `#event-<id>`, copied by the header's link button and
 │   │   │                            scrolled to (below the top bar) on arrival
@@ -120,12 +124,15 @@ app/
 │   │   │                            by the add row and the inline editor
 │   │   ├── add-shift-form.tsx    ← The add-a-shift row under a day
 │   │   ├── edit-shift-form.tsx   ← The same fields prefilled, in place of the row's labels
+│   │   ├── settings/             ← Event types (admin only): create button + edit dialog; delete is
+│   │   │                            refused while a type is in use
 │   │   └── actions.ts            ← Server actions: event type / event / day / shift CRUD, sign-up,
 │   │                                withdraw, admin assign
 │   │
 │   ├── users/
 │   │   ├── page.tsx              ← User management (admin only, data-fetching only)
-│   │   ├── client.tsx            ← One card per user: inline update + delete
+│   │   ├── client.tsx            ← One card per user, read-only (badge + department pills); the
+│   │   │                            pencil opens the update form, which is also where delete lives
 │   │   ├── create-user-modal.tsx ← Header button + create modal
 │   │   └── actions.ts            ← Server actions: create/update/delete users
 │   │
