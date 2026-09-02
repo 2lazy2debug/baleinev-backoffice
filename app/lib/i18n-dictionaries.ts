@@ -513,6 +513,8 @@ export const dictionaries = {
       cannotDeleteSelf: "You cannot delete your own account.",
       cannotRemoveLastAdmin: "At least one admin account must remain.",
       passwordRules: "Use a real password; there is no signup flow for end users.",
+      editUser: "Edit user",
+      noDepartments: "No department",
     },
     tasks: {
       title: "Tasks",
@@ -1280,6 +1282,8 @@ export const dictionaries = {
       cannotDeleteSelf: "Vous ne pouvez pas supprimer votre propre compte.",
       cannotRemoveLastAdmin: "Au moins un compte admin doit rester.",
       passwordRules: "Utilisez un vrai mot de passe ; il n'y a pas d'inscription libre-service pour les utilisateurs finaux.",
+      editUser: "Modifier l'utilisateur",
+      noDepartments: "Aucun département",
     },
     tasks: {
       title: "Tâches",
