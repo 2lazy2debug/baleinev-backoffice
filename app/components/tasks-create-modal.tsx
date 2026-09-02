@@ -65,7 +65,7 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
         <div className="grid gap-4 md:grid-cols-2">
           <form
             action={createTodoFormAction}
-            className={cn(nestedSurfaceClasses, "space-y-3 p-4")}
+            className={cn(nestedSurfaceClasses, "space-y-3 p-3 sm:p-4")}
           >
             <h4 className="font-semibold">{copy.createTodo}</h4>
             <FormError message={createTodoState.error} />
@@ -94,7 +94,7 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
 
           <form
             action={createTaskFormAction}
-            className={cn(nestedSurfaceClasses, "space-y-3 p-4")}
+            className={cn(nestedSurfaceClasses, "space-y-3 p-3 sm:p-4")}
           >
             <h4 className="font-semibold">{copy.createStandaloneTask}</h4>
             <FormError message={createTaskState.error} />

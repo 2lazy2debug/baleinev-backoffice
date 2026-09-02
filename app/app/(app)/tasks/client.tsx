@@ -164,7 +164,7 @@ export function TasksPageClient({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {todos.map((todo) => (
         <TodoCard
           key={todo.id}
@@ -193,7 +193,7 @@ export function TasksPageClient({
             const canManageTask = task.createdById === access.id && !isReadOnly;
 
             return (
-              <div key={task.id} className={cn(nestedSurfaceClasses, "p-3")}>
+              <div key={task.id} className={cn(nestedSurfaceClasses, "p-2 sm:p-3")}>
                 <TaskTypeLabel type={task.type} copy={copy.tasks} />
 
                 {isGeneral ? (
@@ -380,7 +380,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
   );
 
   return (
-    <Card as="article" className="space-y-3">
+    <Card as="article" className="space-y-2 sm:space-y-3">
       {isEditing ? (
         <form action={updateTodoFormAction} className="grid gap-3 md:grid-cols-2">
           <FormError message={updateTodoState.error} className="md:col-span-2" />
@@ -461,7 +461,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
         </form>
       ) : null}
 
-      <div className={cn(nestedSurfaceClasses, "space-y-2 p-3")}>
+      <div className={cn(nestedSurfaceClasses, "space-y-2 p-2 sm:p-3")}>
         <p className="text-sm font-semibold">{copy.tasks.todoTasks}</p>
 
         {canManageTodoTasks ? (
@@ -507,7 +507,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
             {todo.tasks.map((task) => (
               <li
                 key={task.id}
-                className="flex items-center justify-between gap-3 rounded-lg border border-[var(--line)] bg-[var(--panel-strong)] p-3"
+                className="flex items-center justify-between gap-2 rounded-lg border border-[var(--line)] bg-[var(--panel-strong)] p-2 sm:gap-3 sm:p-3"
               >
                 <div className="min-w-0 flex-1">
                   <p className="font-medium break-words">{task.title}</p>

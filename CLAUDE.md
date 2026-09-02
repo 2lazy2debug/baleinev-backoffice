@@ -142,6 +142,7 @@ figures above are what it grows back to at `sm`/`lg`:
 | `<Card>` | `p-3` | `sm:p-5` |
 | `<PanelHeader>` | `px-3 py-2.5` | `sm:px-5 sm:py-4` |
 | `<Cardlet>` / `<CardletList>` | `p-2.5`, `gap-2` | (mobile-only) |
+| A surface nested in a Card (`nestedSurfaceClasses`) | `p-2` | `sm:p-3` |
 | `<Modal>` | `p-4` | `sm:p-6` |
 | The page's own stack | `space-y-4` | `lg:space-y-8` |
 

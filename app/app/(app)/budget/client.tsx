@@ -136,7 +136,7 @@ function BudgetRollup({ budgetedLabel, actualLabel, budgeted, actual, gap, tone 
     : actual > 0 ? 100 : 0;
 
   return (
-    <div className={cn(nestedSurfaceClasses, "space-y-2 p-3")}>
+    <div className={cn(nestedSurfaceClasses, "space-y-2 p-2 sm:p-3")}>
       <CardletFields>
         <CardletField label={budgetedLabel}>
           <span className="text-sm font-semibold">{formatCurrency(budgeted)}</span>

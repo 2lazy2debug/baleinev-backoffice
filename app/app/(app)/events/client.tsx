@@ -339,7 +339,7 @@ export default function EventsPageClient({
                 {isCollapsed ? null : (
                   <div className="divide-y divide-[var(--line)]">
                     {event.days.map((day) => (
-                      <div key={day.id} className={`px-5 py-4 ${day.isOff ? "opacity-50" : ""}`}>
+                      <div key={day.id} className={`px-3 py-3 sm:px-5 sm:py-4 ${day.isOff ? "opacity-50" : ""}`}>
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-semibold">{formatDate(day.date)}</span>
@@ -378,7 +378,7 @@ export default function EventsPageClient({
                                     )}
                                   >
                                     {isEditingShift ? (
-                                      <div className="px-4 py-3 sm:py-2.5">
+                                      <div className="px-2.5 py-2.5 sm:px-4 sm:py-2.5">
                                         <EditShiftForm
                                           shift={{
                                             id: shift.id,
@@ -404,7 +404,7 @@ export default function EventsPageClient({
                                       /* On a phone a shift is a full-width card: the info block,
                                          then its actions stacked underneath. From sm — where the
                                          row has room again — it is back to one dense line. */
-                                      <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:py-2.5">
+                                      <div className="flex flex-col gap-3 px-2.5 py-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-4 sm:py-2.5">
                                         <div className="space-y-0.5">
                                           <p className="text-sm font-semibold text-[var(--ink)]">{shift.role || "General"}</p>
                                           {/* The one number anyone scans this list for. */}
@@ -482,7 +482,7 @@ export default function EventsPageClient({
 
                                     {/* Admin: remove individual staff members */}
                                     {canManageEvents && shift.assignments.length > 0 ? (
-                                      <div className="flex flex-wrap gap-1.5 border-t border-[var(--line)] px-4 py-2">
+                                      <div className="flex flex-wrap gap-1.5 border-t border-[var(--line)] px-2.5 py-2 sm:px-4">
                                         {shift.assignments.map((a) => (
                                           <form key={a.id} action={withdrawFormAction} className="inline-flex">
                                             <input type="hidden" name="shiftId" value={shift.id} />
