@@ -116,6 +116,7 @@ export async function createEventTypeAction(_prevState: ActionState, formData: F
 
     await prisma.eventType.create({ data: { name, description, color } });
     revalidatePath("/events");
+    revalidatePath("/events/settings");
     return { error: null };
   } catch (err) {
     return { error: toActionErrorMessage(err) };
@@ -132,6 +133,7 @@ export async function updateEventTypeAction(_prevState: ActionState, formData: F
 
     await prisma.eventType.update({ where: { id }, data: { name, description, color } });
     revalidatePath("/events");
+    revalidatePath("/events/settings");
     return { error: null };
   } catch (err) {
     return { error: toActionErrorMessage(err) };
@@ -148,6 +150,7 @@ export async function deleteEventTypeAction(_prevState: ActionState, formData: F
 
     await prisma.eventType.delete({ where: { id } });
     revalidatePath("/events");
+    revalidatePath("/events/settings");
     return { error: null };
   } catch (err) {
     return { error: toActionErrorMessage(err) };

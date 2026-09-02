@@ -5,14 +5,12 @@ import { Check, ChevronDown, ChevronUp, FileText, Link2, Pencil, Plus, Trash2 } 
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Chip, ChipRemoveButton, IconButton, Input, Panel, PanelHeader, SectionTitle, Select, cn, nestedSurfaceClasses, scrollToBelowTopBar } from "@/components/ui";
+import { Badge, Button, Chip, ChipRemoveButton, IconButton, Panel, PanelHeader, SectionTitle, Select, cn, nestedSurfaceClasses, scrollToBelowTopBar } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import {
   adminAssignUserToShiftAction,
-  createEventTypeAction,
   deleteEventAction,
-  deleteEventTypeAction,
   deleteShiftAction,
   signUpForShiftAction,
   toggleEventDayOffAction,
@@ -39,11 +37,6 @@ function formatTime(t: string) {
 function formatDate(d: Date | string) {
   return new Date(d).toISOString().slice(0, 10);
 }
-
-type EventTypeItem = {
-  id: string;
-  name: string;
-};
 
 type UserItem = {
   id: string;
@@ -83,11 +76,6 @@ type EventItem = {
 };
 
 type EventsCopy = {
-  eventTypes: string;
-  deleteEventType: string;
-  createEventType: string;
-  eventTypeName: string;
-  eventTypeDescription: string;
   noEvents: string;
   deleteEvent: string;
   collapseEvent: string;
@@ -115,7 +103,6 @@ type EventsCopy = {
 type Props = {
   isAdmin: boolean;
   accessId: string;
-  eventTypes: EventTypeItem[];
   events: EventItem[];
   allUsers: UserItem[];
   copy: EventsCopy;
@@ -125,20 +112,11 @@ type Props = {
 export default function EventsPageClient({
   isAdmin,
   accessId,
-  eventTypes,
   events,
   allUsers,
   copy,
   shellCopy,
 }: Props) {
-  const [deleteEventTypeState, deleteEventTypeFormAction, isDeletingEventType] = useActionState(
-    deleteEventTypeAction,
-    initialActionState
-  );
-  const [createEventTypeState, createEventTypeFormAction, isCreatingEventType] = useActionState(
-    createEventTypeAction,
-    initialActionState
-  );
   const [deleteEventState, deleteEventFormAction, isDeletingEvent] = useActionState(
     deleteEventAction,
     initialActionState
@@ -263,40 +241,6 @@ export default function EventsPageClient({
 
   return (
     <div className="space-y-4 lg:space-y-8">
-      {/* Event types are global, so they stay editable in a closed edition.
-          Everything below them belongs to the edition and does not. */}
-      {/* ── Admin: Event types ────────────────────────────────────────────── */}
-      {isAdmin ? (
-        <section className="space-y-4">
-          <SectionTitle>{copy.eventTypes}</SectionTitle>
-          <FormError message={deleteEventTypeState.error} />
-          <div className="flex flex-wrap gap-2">
-            {eventTypes.map((et) => (
-              <form key={et.id} action={deleteEventTypeFormAction} className="inline-flex">
-                <input type="hidden" name="id" value={et.id} />
-                <Chip
-                  action={<ChipRemoveButton label={copy.deleteEventType} disabled={isDeletingEventType} />}
-                >
-                  {et.name}
-                </Chip>
-              </form>
-            ))}
-          </div>
-          <FormError message={createEventTypeState.error} />
-          <form action={createEventTypeFormAction} className="flex flex-wrap items-end gap-2">
-            <div className="w-full sm:w-48">
-              <Input type="text" name="name" required placeholder={copy.eventTypeName} />
-            </div>
-            <div className="w-full sm:w-56">
-              <Input type="text" name="description" placeholder={copy.eventTypeDescription} />
-            </div>
-            <Button type="submit" variant="primary" disabled={isCreatingEventType} className="w-full sm:w-auto">
-              {copy.createEventType}
-            </Button>
-          </form>
-        </section>
-      ) : null}
-
       {/* ── Events list ──────────────────────────────────────────────────── */}
       {events.length === 0 ? (
         <p className="text-sm text-[var(--muted)]">{copy.noEvents}</p>
@@ -312,6 +256,21 @@ export default function EventsPageClient({
 
           {events.map((event) => {
             const isCollapsed = collapsedEventIds.has(event.id);
+            // One button, drawn where the breakpoint puts it: level with the
+            // event's name on a phone — where the actions wrap to a second row
+            // and burying "collapse" at the end of them defeats the point of
+            // collapsing — and last in the action row once there is a row.
+            const collapseButton = (
+              <IconButton
+                size="md"
+                tone="neutral"
+                label={isCollapsed ? copy.expandEvent : copy.collapseEvent}
+                aria-expanded={!isCollapsed}
+                onClick={() => toggleEventCollapsed(event.id)}
+              >
+                {isCollapsed ? <ChevronDown /> : <ChevronUp />}
+              </IconButton>
+            );
 
             return (
               <Panel
@@ -326,17 +285,20 @@ export default function EventsPageClient({
               >
                 {/* Event header */}
                 <PanelHeader className="flex-col items-start sm:flex-row">
-                  <div className="w-full sm:w-auto">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="inline-block h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: event.eventType.color ?? "var(--accent)" }}
-                      />
-                      <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{event.eventType.name}</span>
+                  <div className="flex w-full items-start justify-between gap-2 sm:w-auto sm:justify-start">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="inline-block h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: event.eventType.color ?? "var(--accent)" }}
+                        />
+                        <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{event.eventType.name}</span>
+                      </div>
+                      <SectionTitle as="h3" className="mt-0.5">{event.name}</SectionTitle>
+                      <p className="text-xs text-[var(--muted)]">{formatDate(event.startDate)} → {formatDate(event.endDate)}</p>
+                      {event.notes ? <p className="mt-1 text-xs text-[var(--muted)]">{event.notes}</p> : null}
                     </div>
-                    <SectionTitle as="h3" className="mt-0.5">{event.name}</SectionTitle>
-                    <p className="text-xs text-[var(--muted)]">{formatDate(event.startDate)} → {formatDate(event.endDate)}</p>
-                    {event.notes ? <p className="mt-1 text-xs text-[var(--muted)]">{event.notes}</p> : null}
+                    <div className="shrink-0 sm:hidden">{collapseButton}</div>
                   </div>
                   <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto">
                     <Button
@@ -367,16 +329,9 @@ export default function EventsPageClient({
                         </Button>
                       </form>
                     ) : null}
-                    {/* Last in the row on both breakpoints, whatever sits before it. */}
-                    <IconButton
-                      size="md"
-                      tone="neutral"
-                      label={isCollapsed ? copy.expandEvent : copy.collapseEvent}
-                      aria-expanded={!isCollapsed}
-                      onClick={() => toggleEventCollapsed(event.id)}
-                    >
-                      {isCollapsed ? <ChevronDown /> : <ChevronUp />}
-                    </IconButton>
+                    {/* Last in the row from `sm` up; on a phone it is already up
+                        beside the title. */}
+                    <div className="hidden sm:block">{collapseButton}</div>
                   </div>
                 </PanelHeader>
 

@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { Settings } from "lucide-react";
+
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
@@ -7,7 +10,7 @@ import { WritableEditionOnly } from "@/components/edition-read-only";
 
 import EventsPageClient from "./client";
 import CreateEventModal from "./create-event-modal";
-import { EmptyPage, PageHeader } from "@/components/ui";
+import { EmptyPage, PageHeader, iconButtonClasses } from "@/components/ui";
 
 export default async function EventsPage() {
   const access = await getCurrentUserAccess();
@@ -63,6 +66,7 @@ export default async function EventsPage() {
         description={copy.events.subtitle}
         actions={
           isAdmin ? (
+            <>
             <WritableEditionOnly>
               <CreateEventModal
                 eventTypes={eventTypes}
@@ -84,6 +88,17 @@ export default async function EventsPage() {
                 }}
               />
             </WritableEditionOnly>
+            {/* Event types are global, so this stays reachable in a closed
+                edition — which is also why it sits outside WritableEditionOnly. */}
+            <Link
+              href="/events/settings"
+              title={copy.events.settingsTitle}
+              aria-label={copy.events.settingsTitle}
+              className={iconButtonClasses("neutral", "md")}
+            >
+              <Settings />
+            </Link>
+            </>
           ) : null
         }
       />
@@ -91,7 +106,6 @@ export default async function EventsPage() {
       <EventsPageClient
         isAdmin={isAdmin}
         accessId={access.id}
-        eventTypes={eventTypes}
         events={activeEdition.events}
         allUsers={allUsers}
         copy={copy.events}
