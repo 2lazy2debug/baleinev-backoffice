@@ -62,13 +62,13 @@ export function Modal({ open, onClose, title, size = "md", mobileFullScreen = fa
     >
       <div
         className={cn(
-          "w-full overflow-y-auto border border-[var(--line)] bg-[var(--panel)] p-6 shadow-lg",
+          "w-full overflow-y-auto border border-[var(--line)] bg-[var(--panel)] p-4 shadow-lg sm:p-6",
           mobileFullScreen ? "h-full rounded-none sm:h-auto sm:rounded-3xl" : "rounded-3xl",
           sizeClasses[size],
         )}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
           <h2 className="text-xl font-semibold">{title}</h2>
           <button
             type="button"
@@ -80,7 +80,7 @@ export function Modal({ open, onClose, title, size = "md", mobileFullScreen = fa
           </button>
         </div>
         {children}
-        {footer ? <div className="mt-6 flex flex-wrap items-center justify-end gap-2">{footer}</div> : null}
+        {footer ? <div className="mt-4 flex flex-wrap items-center justify-end gap-2 sm:mt-6">{footer}</div> : null}
       </div>
     </div>,
     document.body,

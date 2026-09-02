@@ -226,8 +226,8 @@ export function StockClient({ locale, rows }: Props) {
   const error = adjustState.error ?? saveState.error ?? removeState.error;
 
   return (
-    <Panel as="div" className="bg-[var(--panel)]">
-      <PanelHeader>
+    <Panel flushOnMobile as="div" className="bg-[var(--panel)]">
+      <PanelHeader flushOnMobile>
         <p className="text-xs text-[var(--muted)]">
           {copy.showing} {visible.length} {copy.of} {rows.length}
         </p>
@@ -293,7 +293,7 @@ export function StockClient({ locale, rows }: Props) {
       {/* Below `sm` the same rows, kept tight: what it is and when it goes off on
           one line, the piece and the total on the next, and the controls that
           are the whole point of the screen on the last. */}
-      <CardletList className="p-3">
+      <CardletList>
         {visible.map((row) => (
           <Cardlet key={row.id}>
             <CardletHeader

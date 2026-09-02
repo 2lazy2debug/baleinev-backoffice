@@ -41,7 +41,7 @@ export default async function StockHistoryPage() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.stock.title}
         title={copy.stock.historyTitle}

@@ -176,8 +176,8 @@ export function AddressesClient({ locale, addresses, canDelete }: Props) {
   }
 
   return (
-    <Panel as="div" className="bg-[var(--panel)]">
-      <PanelHeader>
+    <Panel flushOnMobile as="div" className="bg-[var(--panel)]">
+      <PanelHeader flushOnMobile>
         <p className="text-xs text-[var(--muted)]">
           {copy.showing} {rows.length} {copy.of} {addresses.length}
         </p>
@@ -402,7 +402,7 @@ export function AddressesClient({ locale, addresses, canDelete }: Props) {
       {/* Below `sm` the eight columns are unreadable, so the same rows render as
           cards. Filtering, sorting and the inline editor stay in the table header;
           a phone opens the address instead — where the fields have room. */}
-      <CardletList className="p-3">
+      <CardletList>
         {rows.map(({ address, text }) => (
           <Cardlet key={address.id}>
             <CardletHeader

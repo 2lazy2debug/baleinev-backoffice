@@ -29,7 +29,7 @@ export default async function DepartmentsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow="Departments"
         title={<>Budget departments for {activeEdition.name}</>}

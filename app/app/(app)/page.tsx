@@ -96,7 +96,7 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.dashboard.title}
         title={<>{copy.dashboard.editionPrefix} {activeEdition.name}</>}

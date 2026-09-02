@@ -262,7 +262,7 @@ export default function EventsPageClient({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       {/* Event types are global, so they stay editable in a closed edition.
           Everything below them belongs to the edition and does not. */}
       {/* ── Admin: Event types ────────────────────────────────────────────── */}
@@ -301,7 +301,7 @@ export default function EventsPageClient({
       {events.length === 0 ? (
         <p className="text-sm text-[var(--muted)]">{copy.noEvents}</p>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-4 lg:space-y-8">
           <FormError message={deleteEventState.error} />
           <FormError message={toggleDayOffState.error} />
           <FormError message={signUpState.error} />

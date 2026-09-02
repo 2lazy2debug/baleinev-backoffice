@@ -130,6 +130,33 @@ scale, there are no `--space-*` tokens (never write `var(--space-…)`). Dense e
 use `p-2`–`p-3`; cards use `p-4`–`p-5`. Vertical rhythm is `space-y-*` / `gap-*`. Keep
 it functional — no gratuitous padding.
 
+**A phone pays for padding twice.** By the time a screen has drilled down to one
+item, the gutter, the panel frame, the card and the row each take a bite, and a
+quarter of a 390px viewport is chrome before a single value is drawn. So every
+surface in `components/ui/` is *deliberately tighter below `sm`* and the desktop
+figures above are what it grows back to at `sm`/`lg`:
+
+| Surface | Phone | Desktop |
+|---|---|---|
+| `<main>` gutter · `PageHeader` bleed | `p-3` / `-mx-3 -mt-3` | `lg:p-8`, header in flow |
+| `<Card>` | `p-3` | `sm:p-5` |
+| `<PanelHeader>` | `px-3 py-2.5` | `sm:px-5 sm:py-4` |
+| `<Cardlet>` / `<CardletList>` | `p-2.5`, `gap-2` | (mobile-only) |
+| `<Modal>` | `p-4` | `sm:p-6` |
+| The page's own stack | `space-y-4` | `lg:space-y-8` |
+
+Two rules follow, and they are the whole point of putting the numbers here:
+
+- **Tighten the primitive, never the screen.** A screen that writes its own
+  `max-sm:p-2` is a component that needs the change. This is the same ladder as
+  every other mobile fix (reuse → prop → layout class), and padding almost never
+  gets past the first rung.
+- **A frame around cards is not free.** A `<Card flushOnMobile>` or a
+  `<Panel flushOnMobile>` drops its border, fill and gutter below `sm`, because a
+  cardlet is already a surface and the frame around it is a second border plus
+  24px of width that buy nothing. Any panel whose mobile body is a `<CardletList>`
+  takes it, and its `<PanelHeader flushOnMobile>` with it.
+
 **Responsive** — `lg` (1024px) is the one structural breakpoint: above it the sidebar
 shell and the dense control heights, below it the mobile bottom bar
 (`components/mobile/`), the sticky top bar and 44px touch targets. Wide tables switch

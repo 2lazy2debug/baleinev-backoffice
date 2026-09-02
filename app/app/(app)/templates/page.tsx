@@ -20,7 +20,7 @@ export default async function TemplatesPage() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.templates.title}
         title={copy.templates.manage}

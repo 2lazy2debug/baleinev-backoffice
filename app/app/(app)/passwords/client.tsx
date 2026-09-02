@@ -80,7 +80,7 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
   }, [entries, query]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.title}
         title={copy.heading}

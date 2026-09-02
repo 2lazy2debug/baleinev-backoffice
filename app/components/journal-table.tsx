@@ -389,8 +389,8 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   }));
 
   return (
-    <Panel as="div" className="flex h-full flex-col bg-[var(--panel)]">
-      <PanelHeader className="shrink-0 flex-wrap">
+    <Panel flushOnMobile as="div" className="flex h-full flex-col bg-[var(--panel)]">
+      <PanelHeader flushOnMobile className="shrink-0 flex-wrap">
         <div className="min-w-0">
           <SectionTitle>{copy.entries}</SectionTitle>
           <p className="text-xs text-[var(--muted)]">
@@ -718,7 +718,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
       {/* Below `sm` the 10-column table is unreadable, so the same rows render as
           cards. Filtering and sorting live in the table header and stay desktop-only —
           a phone gets the entries in journal order. */}
-      <CardletList className="p-3">
+      <CardletList>
         {rows.map((row) => {
           const draft = row.draft;
           return (

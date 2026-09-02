@@ -55,7 +55,7 @@ export function StockPlacePicker({ locale, places }: PickerProps) {
   const { select, pending } = useStockPlaceSelection();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader eyebrow={copy.title} title={copy.pickPlace} description={copy.pickPlaceHint} />
 
       <CardGrid>

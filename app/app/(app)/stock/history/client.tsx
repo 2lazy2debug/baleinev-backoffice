@@ -92,8 +92,8 @@ export function StockHistoryClient({ locale, places, movements }: Props) {
   }
 
   return (
-    <Panel as="div" className="bg-[var(--panel)]">
-      <PanelHeader>
+    <Panel flushOnMobile as="div" className="bg-[var(--panel)]">
+      <PanelHeader flushOnMobile>
         <p className="text-xs text-[var(--muted)]">
           {copy.showing} {visible.length} {copy.of} {movements.length}
         </p>
@@ -176,7 +176,7 @@ export function StockHistoryClient({ locale, places, movements }: Props) {
         </tbody>
       </Table>
 
-      <CardletList className="p-3">
+      <CardletList>
         {visible.map((movement) => (
           <Cardlet key={movement.id}>
             <CardletHeader

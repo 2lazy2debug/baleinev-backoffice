@@ -11,6 +11,13 @@ type PanelProps = React.HTMLAttributes<HTMLElement> & {
   as?: "section" | "div" | "article" | "ul";
   /** Nested inside another surface — lighter frame, no page-level rounding. */
   nested?: boolean;
+  /**
+   * Below `sm` the frame collapses — no border, no rounding, no background —
+   * the same rule as `<Card flushOnMobile>`. For a panel whose mobile content is
+   * a <CardletList>: each cardlet is already a surface, so the frame around them
+   * is a second border and 24px of width that buy nothing on a 390px screen.
+   */
+  flushOnMobile?: boolean;
 };
 
 /**
@@ -18,12 +25,20 @@ type PanelProps = React.HTMLAttributes<HTMLElement> & {
  * grouped rows. Where <Card> is a padded surface, <Panel> is the frame around
  * content that brings its own padding.
  */
-export function Panel({ as: As = "section", nested = false, className, children, ...props }: PanelProps) {
+export function Panel({
+  as: As = "section",
+  nested = false,
+  flushOnMobile = false,
+  className,
+  children,
+  ...props
+}: PanelProps) {
   return (
     <As
       className={cn(
         "overflow-hidden",
         nested ? nestedSurfaceClasses : "rounded-2xl border border-[var(--line)]",
+        flushOnMobile ? "max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent" : null,
         className,
       )}
       {...props}
@@ -33,12 +48,19 @@ export function Panel({ as: As = "section", nested = false, className, children,
   );
 }
 
+type PanelHeaderProps = React.HTMLAttributes<HTMLDivElement> & {
+  /** Matches `<Panel flushOnMobile>` — the strip loses its rule, fill and gutter below `sm`. */
+  flushOnMobile?: boolean;
+};
+
 /** The header strip of a Panel — one background, one padding, everywhere. */
-export function PanelHeader({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function PanelHeader({ flushOnMobile = false, className, children, ...props }: PanelHeaderProps) {
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-4 border-b border-[var(--line)] bg-[var(--panel-strong)] px-5 py-4",
+        "flex items-center justify-between gap-4 border-b border-[var(--line)] bg-[var(--panel-strong)]",
+        "px-3 py-2.5 sm:px-5 sm:py-4",
+        flushOnMobile ? "max-sm:border-0 max-sm:bg-transparent max-sm:px-0 max-sm:pb-2 max-sm:pt-0" : null,
         className,
       )}
       {...props}

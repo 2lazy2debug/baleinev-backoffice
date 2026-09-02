@@ -23,7 +23,7 @@ export default async function AddressesPage() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.addresses.title}
         title={copy.addresses.title}

@@ -37,7 +37,7 @@ type PageHeaderProps = {
  * over a paragraph over 32px of air would cost a quarter of the viewport before
  * the first row of data.
  *
- * The bleed (`-mx-4 -mt-4`) cancels the `p-4` gutter that <main> sets below `lg`
+ * The bleed (`-mx-3 -mt-3`) cancels the `p-3` gutter that <main> sets below `lg`
  * in `app-shell.tsx`. That gutter and this bleed are one decision — change them
  * together.
  *
@@ -53,7 +53,7 @@ export function PageHeader({ eyebrow, title, description, actions, controls, cla
       /* What <scrollToBelowTopBar> measures — see scroll.ts. */
       data-top-bar=""
       className={cn(
-        "sticky top-0 z-20 -mx-4 -mt-4 border-b border-[var(--line)] bg-[var(--panel)] px-4 pb-3 pt-5",
+        "sticky top-0 z-20 -mx-3 -mt-3 border-b border-[var(--line)] bg-[var(--panel)] px-3 pb-2.5 pt-3",
         "lg:static lg:mx-0 lg:mt-0 lg:border-0 lg:bg-transparent lg:p-0",
         className,
       )}

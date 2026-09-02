@@ -36,7 +36,9 @@ export function Card({
   return (
     <As
       className={cn(
-        "rounded-2xl border p-5",
+        // A phone spends 5% of its width on each side of a p-5 card. p-3 below
+        // `sm` is the same surface with the air a 390px viewport can afford.
+        "rounded-2xl border p-3 sm:p-5",
         dashed
           ? "border-dashed border-[var(--line)] bg-[var(--panel-strong)] text-sm text-[var(--muted)]"
           : "border-[var(--line)] bg-[var(--panel-strong)]",

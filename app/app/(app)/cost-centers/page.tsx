@@ -61,7 +61,7 @@ export default async function CostCentersPage() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.costCenters.title}
         title={<>{copy.costCenters.forEdition} {activeEdition.name}</>}

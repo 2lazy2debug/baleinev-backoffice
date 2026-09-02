@@ -75,7 +75,7 @@ export default async function StockPage() {
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.stock.title}
         title={selected.name}

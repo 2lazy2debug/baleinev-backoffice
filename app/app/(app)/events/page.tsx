@@ -56,7 +56,7 @@ export default async function EventsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.events.title}
         title={<>{copy.events.title} — {activeEdition.name}</>}

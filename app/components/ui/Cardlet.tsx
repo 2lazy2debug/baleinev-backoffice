@@ -24,7 +24,7 @@ import { cn } from "./cn";
  */
 export function CardletList({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("flex flex-col gap-3 sm:hidden", className)} {...props}>
+    <div className={cn("flex flex-col gap-2 sm:hidden", className)} {...props}>
       {children}
     </div>
   );
@@ -35,7 +35,7 @@ export function Cardlet({ className, children, ...props }: React.HTMLAttributes<
   return (
     <article
       className={cn(
-        "flex flex-col gap-3 rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] p-3",
+        "flex flex-col gap-2 rounded-xl border border-[var(--line)] bg-[var(--panel-strong)] p-2.5",
         className,
       )}
       {...props}

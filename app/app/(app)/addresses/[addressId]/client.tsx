@@ -122,7 +122,7 @@ export function AddressDetailClient({ locale, countries, canDelete, address, ban
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.title}
         title={addressDisplayName(draft)}
@@ -190,8 +190,8 @@ export function AddressDetailClient({ locale, countries, canDelete, address, ban
         </Card>
       </CardGrid>
 
-      <Panel as="section" className="bg-[var(--panel)]">
-        <PanelHeader>
+      <Panel flushOnMobile as="section" className="bg-[var(--panel)]">
+        <PanelHeader flushOnMobile>
           <SectionTitle>{copy.bankAccounts}</SectionTitle>
         </PanelHeader>
 
@@ -250,7 +250,7 @@ export function AddressDetailClient({ locale, countries, canDelete, address, ban
               </tbody>
             </Table>
 
-            <CardletList className="p-3">
+            <CardletList>
               {bankAccounts.map((bankAccount) => (
                 <Cardlet key={bankAccount.id}>
                   <CardletHeader title={bankAccount.displayName} />

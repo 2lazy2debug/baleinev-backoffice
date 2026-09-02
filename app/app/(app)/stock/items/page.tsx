@@ -33,7 +33,7 @@ export default async function StockItemsPage() {
   const unitOptions = units.map((unit) => ({ id: unit.id, name: unit.name }));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.stock.title}
         title={copy.stock.itemsTitle}

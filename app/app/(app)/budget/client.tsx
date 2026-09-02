@@ -260,7 +260,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
   const detailsSummary = summaries.find((summary) => summary.department.id === detailsDepartmentId) ?? null;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.budget.title}
         title={<>{copy.budget.entriesFor} {editionName}</>}

@@ -289,8 +289,11 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
 
           <MobileShell navigation={navigation} locale={locale} pendingTaskCount={pendingTaskCount} />
 
-          {/* `pb-24` clears the fixed bottom bar; `lg:pb-8` gives the padding back once it is gone. */}
-          <main className="min-w-0 flex-1 p-4 pb-24 lg:p-8">
+          {/* The phone gutter is 12px — every point of it is width a list row does
+              not get — and <PageHeader> bleeds by exactly this much. Change the two
+              together. `pb-24` clears the fixed bottom bar; `lg:p-8` gives the
+              desktop padding back once that bar is gone. */}
+          <main className="min-w-0 flex-1 p-3 pb-24 lg:p-8">
             <EditionReadOnlyProvider isReadOnly={isEditionReadOnly}>
               {isEditionReadOnly && isEditionScopedRoute && selectedEdition ? (
                 <EditionClosedBanner locale={locale} editionName={selectedEdition.name} />

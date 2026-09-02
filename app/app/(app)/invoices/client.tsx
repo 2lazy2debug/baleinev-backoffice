@@ -636,7 +636,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.invoices.title}
         title={copy.invoices.title}

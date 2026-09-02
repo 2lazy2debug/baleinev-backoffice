@@ -37,7 +37,7 @@ export default async function AccountPage() {
   const pendingRequestIds = new Set(pendingRequests.map((request) => request.id));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.account.title}
         title={copy.account.heading}
