@@ -2,7 +2,12 @@
 
 import { useActionState, useState } from "react";
 
-import { AddressFields, type AddressDraft, emptyAddressDraft } from "@/components/address-fields";
+import {
+  AddressFields,
+  type AddressDraft,
+  type AddressTypeOption,
+  emptyAddressDraft,
+} from "@/components/address-fields";
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
 import { Button, Modal } from "@/components/ui";
@@ -14,6 +19,7 @@ import { initialActionState } from "@/lib/server-action-helpers";
 type Props = {
   locale: Locale;
   countries: CountryOption[];
+  addressTypes: AddressTypeOption[];
   open: boolean;
   onClose: () => void;
   /**
@@ -33,7 +39,7 @@ const FORM_ID = "create-address-form";
  * mid-invoice, from beside the recipient fields. Same fields, same action, same
  * validation — the only thing that differs is who owns the trigger.
  */
-export function CreateAddressModal({ locale, countries, open, onClose, onCreated }: Props) {
+export function CreateAddressModal({ locale, countries, addressTypes, open, onClose, onCreated }: Props) {
   const copy = dictionaries[locale];
   const [draft, setDraft] = useState<AddressDraft>(() => emptyAddressDraft(countries));
   const [createState, createFormAction, isCreating] = useActionState<AddressActionState, FormData>(
@@ -72,6 +78,7 @@ export function CreateAddressModal({ locale, countries, open, onClose, onCreated
         <AddressFields
           locale={locale}
           countries={countries}
+          addressTypes={addressTypes}
           value={draft}
           onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
         />

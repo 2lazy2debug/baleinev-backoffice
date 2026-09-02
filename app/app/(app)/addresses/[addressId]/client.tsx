@@ -9,6 +9,7 @@ import {
   AddressFields,
   BankAccountFields,
   type AddressDraft,
+  type AddressTypeOption,
   type BankAccountDraft,
   emptyBankAccountDraft,
 } from "@/components/address-fields";
@@ -56,6 +57,7 @@ type BankAccountRow = BankAccountDraft & { id: string };
 type Props = {
   locale: Locale;
   countries: CountryOption[];
+  addressTypes: AddressTypeOption[];
   canDelete: boolean;
   address: AddressDraft & { id: string };
   bankAccounts: BankAccountRow[];
@@ -72,7 +74,7 @@ const DELETE_FORM_ID = "delete-address-form";
  * header's action is the bank-account dialog's trigger, and that dialog owns
  * its own open state — the same reason Passwords and Calendar own their headers.
  */
-export function AddressDetailClient({ locale, countries, canDelete, address, bankAccounts }: Props) {
+export function AddressDetailClient({ locale, countries, addressTypes, canDelete, address, bankAccounts }: Props) {
   const copy = dictionaries[locale].addresses;
   const shellCopy = dictionaries[locale].shell;
   const router = useRouter();
@@ -155,6 +157,7 @@ export function AddressDetailClient({ locale, countries, canDelete, address, ban
             <AddressFields
               locale={locale}
               countries={countries}
+              addressTypes={addressTypes}
               value={draft}
               onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
             />

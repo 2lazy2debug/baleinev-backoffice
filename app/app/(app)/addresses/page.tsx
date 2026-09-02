@@ -1,16 +1,19 @@
+import Link from "next/link";
+import { Settings } from "lucide-react";
+
 import { getCurrentUserAccess, isAdmin } from "@/lib/access";
 import { countryOptions } from "@/lib/countries";
 import { prisma } from "@/lib/db";
 import { getDictionary, getLocale } from "@/lib/i18n";
 
-import { PageHeader } from "@/components/ui";
+import { PageHeader, iconButtonClasses } from "@/components/ui";
 
 import { AddressesClient } from "./client";
 import CreateAddressModal from "./create-address-modal";
 
 /**
  * The address book. Global, not edition-scoped, and open to everyone signed in
- * — the only gated action is deleting, which is admins only.
+ * — the gated parts are deleting and the contact-type list, both admins only.
  */
 export default async function AddressesPage() {
   const access = await getCurrentUserAccess();
@@ -18,9 +21,15 @@ export default async function AddressesPage() {
   const copy = getDictionary(locale);
   const countries = countryOptions(locale);
 
-  const addresses = await prisma.address.findMany({
-    orderBy: [{ companyName: "asc" }, { lastName: "asc" }, { firstName: "asc" }],
-  });
+  const [addresses, addressTypes] = await Promise.all([
+    prisma.address.findMany({
+      orderBy: [{ companyName: "asc" }, { lastName: "asc" }, { firstName: "asc" }],
+      include: { addressType: { select: { name: true } } },
+    }),
+    prisma.addressType.findMany({ orderBy: { name: "asc" } }),
+  ]);
+
+  const typeOptions = addressTypes.map((addressType) => ({ id: addressType.id, name: addressType.name }));
 
   return (
     <div className="space-y-4 lg:space-y-8">
@@ -28,12 +37,27 @@ export default async function AddressesPage() {
         eyebrow={copy.addresses.title}
         title={copy.addresses.title}
         description={copy.addresses.subtitle}
-        actions={<CreateAddressModal locale={locale} countries={countries} />}
+        actions={
+          <>
+            <CreateAddressModal locale={locale} countries={countries} addressTypes={typeOptions} />
+            {isAdmin(access) ? (
+              <Link
+                href="/addresses/settings"
+                title={copy.addresses.settingsTitle}
+                aria-label={copy.addresses.settingsTitle}
+                className={iconButtonClasses("neutral", "md")}
+              >
+                <Settings />
+              </Link>
+            ) : null}
+          </>
+        }
       />
 
       <AddressesClient
         locale={locale}
         canDelete={isAdmin(access)}
+        addressTypes={typeOptions}
         addresses={addresses.map((address) => ({
           id: address.id,
           firstName: address.firstName ?? "",
@@ -47,6 +71,8 @@ export default async function AddressesPage() {
           phoneNumber: address.phoneNumber ?? "",
           email: address.email ?? "",
           note: address.note ?? "",
+          addressTypeId: address.addressTypeId ?? "",
+          addressTypeName: address.addressType?.name ?? "",
         }))}
       />
     </div>

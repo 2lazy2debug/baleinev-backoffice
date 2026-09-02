@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 
+import type { AddressTypeOption } from "@/components/address-fields";
 import { CreateAddressModal } from "@/components/create-address-modal";
 import { Button, Field, Suggest, type SuggestOption } from "@/components/ui";
 import type { CreatedAddress } from "@/app/(app)/addresses/actions";
@@ -16,6 +17,7 @@ export type PickableAddress = CreatedAddress;
 type Props = {
   locale: Locale;
   countries: CountryOption[];
+  addressTypes: AddressTypeOption[];
   addresses: PickableAddress[];
   /** Called with the chosen row — picked from the book, or created on the spot. */
   onPick: (address: PickableAddress) => void;
@@ -31,7 +33,7 @@ type Props = {
  * not send anyone to another screen mid-invoice: the new row is written, filed
  * in the book, and selected here in one step.
  */
-export function AddressPicker({ locale, countries, addresses, onPick, disabled = false }: Props) {
+export function AddressPicker({ locale, countries, addressTypes, addresses, onPick, disabled = false }: Props) {
   const copy = dictionaries[locale].addresses;
   const [query, setQuery] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -88,6 +90,7 @@ export function AddressPicker({ locale, countries, addresses, onPick, disabled =
       <CreateAddressModal
         locale={locale}
         countries={countries}
+        addressTypes={addressTypes}
         open={isCreating}
         onClose={() => setIsCreating(false)}
         onCreated={selectCreated}

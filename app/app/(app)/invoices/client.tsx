@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Check, Copy, Plus, RotateCcw, Trash2 } from "lucide-react";
 
+import type { AddressTypeOption } from "@/components/address-fields";
 import { AddressPicker, type PickableAddress } from "@/components/address-picker";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { Button, Card, Field, IconButton, Input, Modal, PageHeader, SectionTitle, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
@@ -39,6 +40,7 @@ type Props = {
   /** The address book, for the recipient picker. */
   addresses: PickableAddress[];
   countries: CountryOption[];
+  addressTypes: AddressTypeOption[];
   defaultTemplate: {
     id: string;
     name: string;
@@ -111,7 +113,7 @@ type GeneratedInvoice = {
   payload: string;
 };
 
-export default function InvoicesClient({ locale, editionId, accounts, history, earningEntries, addresses, countries, defaultTemplate }: Props) {
+export default function InvoicesClient({ locale, editionId, accounts, history, earningEntries, addresses, countries, addressTypes, defaultTemplate }: Props) {
   const copy = dictionaries[locale];
   const isReadOnly = useEditionReadOnly();
   const firstAccountId = accounts[0]?.id ?? "";
@@ -850,6 +852,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
             <AddressPicker
               locale={locale}
               countries={countries}
+              addressTypes={addressTypes}
               addresses={addressBook}
               onPick={fillRecipientFromAddress}
               disabled={isEditingPaidInvoice}

@@ -134,7 +134,9 @@ export default async function InvoicesPage() {
     };
   });
 
-  // The address book, for the recipient picker in the invoice form.
+  // The address book, for the recipient picker in the invoice form, and the
+  // contact types the create dialog behind it files a new row under.
+  const addressTypes = await prisma.addressType.findMany({ orderBy: { name: "asc" } });
   const addressBook = await prisma.address.findMany({
     orderBy: [{ companyName: "asc" }, { lastName: "asc" }, { firstName: "asc" }],
     select: {
@@ -167,6 +169,7 @@ export default async function InvoicesPage() {
       history={history}
       earningEntries={payableEntries}
       countries={countryOptions(locale)}
+      addressTypes={addressTypes.map((addressType) => ({ id: addressType.id, name: addressType.name }))}
       addresses={addressBook.map((address) => ({
         id: address.id,
         firstName: address.firstName ?? "",

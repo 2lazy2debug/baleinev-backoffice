@@ -114,6 +114,9 @@ export function PostalFields({ locale, countries, value, onChange, required = fa
   );
 }
 
+/** One row of the contact-type table, as a form needs it. */
+export type AddressTypeOption = { id: string; name: string };
+
 export type AddressDraft = {
   firstName: string;
   lastName: string;
@@ -126,6 +129,8 @@ export type AddressDraft = {
   phoneNumber: string;
   email: string;
   note: string;
+  /** "" is "no type" — the blank option every contact-type dropdown carries. */
+  addressTypeId: string;
 };
 
 /** A blank row, with the dialling prefix already matching the default country. */
@@ -142,17 +147,20 @@ export function emptyAddressDraft(countries: CountryOption[]): AddressDraft {
     phoneNumber: "",
     email: "",
     note: "",
+    addressTypeId: "",
   };
 }
 
 type AddressFieldsProps = {
   locale: Locale;
   countries: CountryOption[];
+  /** What an address can be filed under. Admins edit the list in address settings. */
+  addressTypes: AddressTypeOption[];
   value: AddressDraft;
   onChange: (patch: Partial<AddressDraft>) => void;
 };
 
-export function AddressFields({ locale, countries, value, onChange }: AddressFieldsProps) {
+export function AddressFields({ locale, countries, addressTypes, value, onChange }: AddressFieldsProps) {
   const copy = dictionaries[locale].addresses;
 
   // One row per country, not one per prefix: several countries share "+1", and
@@ -164,6 +172,23 @@ export function AddressFields({ locale, countries, value, onChange }: AddressFie
 
   return (
     <div className="space-y-4">
+      <Field label={copy.contactType}>
+        <Select
+          name="addressTypeId"
+          value={value.addressTypeId}
+          onChange={(event) => onChange({ addressTypeId: event.target.value })}
+        >
+          {/* Blank is an answer, not a prompt: plenty of the book is neither
+              sponsor nor supplier. */}
+          <option value="">{copy.noContactType}</option>
+          {addressTypes.map((addressType) => (
+            <option key={addressType.id} value={addressType.id}>
+              {addressType.name}
+            </option>
+          ))}
+        </Select>
+      </Field>
+
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label={copy.firstName}>
           <Input

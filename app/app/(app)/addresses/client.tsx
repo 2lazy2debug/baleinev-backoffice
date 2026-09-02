@@ -7,6 +7,7 @@ import { Check, Eye, Pencil, Trash2, X } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import {
+  Badge,
   Button,
   Cardlet,
   CardletActions,
@@ -18,6 +19,7 @@ import {
   Input,
   Panel,
   PanelHeader,
+  Select,
   Suggest,
   type SuggestOption,
   TD,
@@ -47,6 +49,9 @@ export type AddressRow = {
   phoneNumber: string;
   email: string;
   note: string;
+  addressTypeId: string;
+  /** Denormalised for the list: the column filters and sorts on the name, not the id. */
+  addressTypeName: string;
 };
 
 type Props = {
@@ -54,10 +59,12 @@ type Props = {
   addresses: AddressRow[];
   /** Deleting is the one thing the address book keeps to admins. */
   canDelete: boolean;
+  /** What a row can be filed under — the admin-managed list from address settings. */
+  addressTypes: Array<{ id: string; name: string }>;
 };
 
 /** Every column the table filters and sorts by, in table order. */
-const FILTER_COLUMNS = ["name", "company", "postalCode", "city", "email", "phone", "note"] as const;
+const FILTER_COLUMNS = ["name", "company", "type", "postalCode", "city", "email", "phone", "note"] as const;
 type FilterColumn = (typeof FILTER_COLUMNS)[number];
 
 /** The row as one searchable string per column — filtering and sorting read this, not the record. */
@@ -65,6 +72,7 @@ function searchable(address: AddressRow): Record<FilterColumn, string> {
   return {
     name: addressPersonName(address),
     company: address.companyName,
+    type: address.addressTypeName,
     postalCode: address.postalCode,
     city: address.city,
     email: address.email,
@@ -87,7 +95,7 @@ async function fetchCities(country: string, params: { postalCode?: string; name?
   return data.cities ?? [];
 }
 
-export function AddressesClient({ locale, addresses, canDelete }: Props) {
+export function AddressesClient({ locale, addresses, canDelete, addressTypes }: Props) {
   const copy = dictionaries[locale].addresses;
   const shellCopy = dictionaries[locale].shell;
   const router = useRouter();
@@ -95,6 +103,7 @@ export function AddressesClient({ locale, addresses, canDelete }: Props) {
   const [filters, setFilters] = useState<Record<FilterColumn, string>>({
     name: "",
     company: "",
+    type: "",
     postalCode: "",
     city: "",
     email: "",
@@ -115,7 +124,8 @@ export function AddressesClient({ locale, addresses, canDelete }: Props) {
     const formData = new FormData();
     formData.set("addressId", draft.id);
     for (const [field, value] of Object.entries(draft)) {
-      if (field !== "id") {
+      // `addressTypeName` is the list's own denormalisation — the write takes the id.
+      if (field !== "id" && field !== "addressTypeName") {
         formData.set(field, String(value));
       }
     }
@@ -162,7 +172,18 @@ export function AddressesClient({ locale, addresses, canDelete }: Props) {
     });
 
   function updateDraft(patch: Partial<AddressRow>) {
-    setDraft((current) => (current ? { ...current, ...patch } : current));
+    setDraft((current) => {
+      if (!current) {
+        return current;
+      }
+      const next = { ...current, ...patch };
+      // The row carries the type twice — id for the write, name for the cell.
+      // Keep them in step so the badge does not lie until the next refresh.
+      if (patch.addressTypeId !== undefined) {
+        next.addressTypeName = addressTypes.find((type) => type.id === patch.addressTypeId)?.name ?? "";
+      }
+      return next;
+    });
   }
 
   async function loadPostalCodes(query: string): Promise<SuggestOption[]> {
@@ -198,6 +219,7 @@ export function AddressesClient({ locale, addresses, canDelete }: Props) {
         <colgroup>
           <col className="w-44" />
           <col className="w-40" />
+          <col className="w-28" />
           <col className="w-20" />
           <col className="w-32" />
           <col />
@@ -212,6 +234,9 @@ export function AddressesClient({ locale, addresses, canDelete }: Props) {
             </TH>
             <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => toggleSort("company")}>
               {copy.company}
+            </TH>
+            <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => toggleSort("type")}>
+              {copy.type}
             </TH>
             <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => toggleSort("postalCode")}>
               {copy.postalCode}
@@ -274,6 +299,26 @@ export function AddressesClient({ locale, addresses, canDelete }: Props) {
                     />
                   ) : (
                     <span className="block truncate">{address.companyName || "-"}</span>
+                  )}
+                </TD>
+                <TD>
+                  {editing ? (
+                    <Select
+                      size="sm"
+                      value={editing.addressTypeId}
+                      onChange={(event) => updateDraft({ addressTypeId: event.target.value })}
+                    >
+                      <option value="">{copy.noContactType}</option>
+                      {addressTypes.map((addressType) => (
+                        <option key={addressType.id} value={addressType.id}>
+                          {addressType.name}
+                        </option>
+                      ))}
+                    </Select>
+                  ) : address.addressTypeName ? (
+                    <Badge>{address.addressTypeName}</Badge>
+                  ) : (
+                    <span className="text-[var(--muted)]">-</span>
                   )}
                 </TD>
                 <TD>
@@ -414,6 +459,7 @@ export function AddressesClient({ locale, addresses, canDelete }: Props) {
                   ) : null}
                 </>
               }
+              action={address.addressTypeName ? <Badge>{address.addressTypeName}</Badge> : null}
             />
             <CardletFields>
               <CardletField label={copy.city}>{[address.postalCode, address.city].filter(Boolean).join(" ") || "-"}</CardletField>

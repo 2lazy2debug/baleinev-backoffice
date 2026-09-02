@@ -559,6 +559,20 @@ model Todo {
 /// A person or an organisation the festival deals with. Global, not edition-scoped:
 /// a supplier does not stop existing when an edition closes, and every signed-in
 /// user may read and write one (only an admin may delete).
+/// What an address *is* to the festival — sponsor, supplier, partner, artist,
+/// staff. Shown as "contact type" in the address book. A table rather than an
+/// enum because admins add one from the book's settings without shipping a
+/// migration; the five starting values are inserted by the migration that
+/// creates this table. Blank stays a valid answer: not every contact has a role.
+model AddressType {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  addresses Address[]
+}
+
 model Address {
   id          String   @id @default(cuid())
   /// One of `firstName` / `companyName` is required — a row with neither has no
@@ -577,14 +591,19 @@ model Address {
   phoneNumber String?
   email       String?
   note        String?
+  /// Optional on purpose — deleting a type leaves its addresses untyped rather
+  /// than taking them with it.
+  addressTypeId String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  addressType  AddressType?         @relation(fields: [addressTypeId], references: [id], onDelete: SetNull)
   bankAccounts AddressBankAccount[]
 
   @@index([companyName])
   @@index([lastName])
   @@index([postalCode])
+  @@index([addressTypeId])
 }
 
 /// One IBAN belonging to an address. An address can hold several — the same

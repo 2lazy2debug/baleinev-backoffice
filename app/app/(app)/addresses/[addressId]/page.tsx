@@ -17,10 +17,13 @@ export default async function AddressDetailPage({
   const locale = await getLocale();
   const countries = countryOptions(locale);
 
-  const address = await prisma.address.findUnique({
-    where: { id: addressId },
-    include: { bankAccounts: { orderBy: { displayName: "asc" } } },
-  });
+  const [address, addressTypes] = await Promise.all([
+    prisma.address.findUnique({
+      where: { id: addressId },
+      include: { bankAccounts: { orderBy: { displayName: "asc" } } },
+    }),
+    prisma.addressType.findMany({ orderBy: { name: "asc" } }),
+  ]);
 
   if (!address) {
     notFound();
@@ -30,6 +33,7 @@ export default async function AddressDetailPage({
     <AddressDetailClient
       locale={locale}
       countries={countries}
+      addressTypes={addressTypes.map((addressType) => ({ id: addressType.id, name: addressType.name }))}
       canDelete={isAdmin(access)}
       address={{
         id: address.id,
@@ -44,6 +48,7 @@ export default async function AddressDetailPage({
         phoneNumber: address.phoneNumber ?? "",
         email: address.email ?? "",
         note: address.note ?? "",
+        addressTypeId: address.addressTypeId ?? "",
       }}
       bankAccounts={address.bankAccounts.map((bankAccount) => ({
         id: bankAccount.id,

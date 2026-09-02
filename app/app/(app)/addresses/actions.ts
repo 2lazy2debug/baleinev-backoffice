@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { getCurrentUserAccess, isAdmin } from "@/lib/access";
+import { getCurrentUserAccess, isAdmin, requireAdmin } from "@/lib/access";
 import { rememberCity } from "@/lib/city-book";
 import { prisma } from "@/lib/db";
 import { DEFAULT_COUNTRY } from "@/lib/addresses";
@@ -75,6 +75,9 @@ function addressFieldsFrom(formData: FormData) {
     phoneNumber: optionalString(formData, "phoneNumber"),
     email: optionalString(formData, "email"),
     note: optionalString(formData, "note"),
+    // Blank is a real answer — "" from an unselected dropdown means "no type",
+    // not "leave it alone".
+    addressTypeId: optionalString(formData, "addressTypeId"),
   };
 }
 
@@ -219,6 +222,64 @@ export async function deleteAddressBankAccountAction(
     });
 
     revalidateAddress(bankAccount.addressId);
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Contact types (admin only, global)
+//
+// The book's one piece of configuration, and the same shape stock settings has:
+// admins add and rename them, everyone files an address under one. Deleting is
+// deliberately non-destructive — the FK is `SetNull`, so the addresses survive
+// the type and merely lose it.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** Everything that shows a type, refreshed together. */
+function revalidateAddressTypes() {
+  revalidatePath("/addresses");
+  revalidatePath("/addresses/settings");
+}
+
+export async function createAddressTypeAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    const name = getRequiredString(formData, "name");
+
+    await prisma.addressType.create({ data: { name } });
+
+    revalidateAddressTypes();
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+export async function renameAddressTypeAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    const addressTypeId = getRequiredString(formData, "addressTypeId");
+    const name = getRequiredString(formData, "name");
+
+    await prisma.addressType.update({ where: { id: addressTypeId }, data: { name } });
+
+    revalidateAddressTypes();
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+export async function deleteAddressTypeAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    const addressTypeId = getRequiredString(formData, "addressTypeId");
+
+    await prisma.addressType.delete({ where: { id: addressTypeId } });
+
+    revalidateAddressTypes();
     return { error: null };
   } catch (err) {
     return { error: toActionErrorMessage(err) };
