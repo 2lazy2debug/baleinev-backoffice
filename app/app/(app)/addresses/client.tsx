@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
-import { Check, Eye, Pencil, Trash2, X } from "lucide-react";
+import { Check, Eye, Pencil, Search, Trash2, X } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import {
@@ -17,8 +17,8 @@ import {
   CardletList,
   IconButton,
   Input,
+  PageHeader,
   Panel,
-  PanelHeader,
   Select,
   Suggest,
   type SuggestOption,
@@ -61,6 +61,12 @@ type Props = {
   canDelete: boolean;
   /** What a row can be filed under — the admin-managed list from address settings. */
   addressTypes: Array<{ id: string; name: string }>;
+  /**
+   * The header's buttons, already permission-gated by the server page. The
+   * header belongs to this component because the search filters the list under
+   * it — the same arrangement Passwords and Calendar use.
+   */
+  actions: React.ReactNode;
 };
 
 /** Every column the table filters and sorts by, in table order. */
@@ -95,7 +101,7 @@ async function fetchCities(country: string, params: { postalCode?: string; name?
   return data.cities ?? [];
 }
 
-export function AddressesClient({ locale, addresses, canDelete, addressTypes }: Props) {
+export function AddressesClient({ locale, addresses, canDelete, addressTypes, actions }: Props) {
   const copy = dictionaries[locale].addresses;
   const shellCopy = dictionaries[locale].shell;
   const router = useRouter();
@@ -110,6 +116,10 @@ export function AddressesClient({ locale, addresses, canDelete, addressTypes }: 
     phone: "",
     note: "",
   });
+  // The per-column filters are the desktop table's, and they live in its header
+  // row — a phone never sees them. This one searches every column at once and
+  // rides in the page header, where it stays put while the list scrolls under it.
+  const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<{ column: FilterColumn; direction: "asc" | "desc" } | null>(null);
   // The row being edited in place, as a full record: the table shows seven of
   // the eleven columns, and the four it does not show still have to be sent
@@ -155,14 +165,16 @@ export function AddressesClient({ locale, addresses, canDelete, addressTypes }: 
 
   // Derived once: the table above `sm` and the cardlets below it render this
   // same array, so neither can drift into a second name or phone rendering.
+  const needle = query.trim().toLowerCase();
   const rows = addresses
     .map((address) => ({ address, text: searchable(address) }))
     .filter(({ text }) =>
       FILTER_COLUMNS.every((column) => {
-        const needle = filters[column].trim().toLowerCase();
-        return !needle || text[column].toLowerCase().includes(needle);
+        const columnNeedle = filters[column].trim().toLowerCase();
+        return !columnNeedle || text[column].toLowerCase().includes(columnNeedle);
       }),
     )
+    .filter(({ text }) => !needle || FILTER_COLUMNS.some((column) => text[column].toLowerCase().includes(needle)))
     .sort((a, b) => {
       if (!sortBy) {
         return 0;
@@ -197,305 +209,349 @@ export function AddressesClient({ locale, addresses, canDelete, addressTypes }: 
   }
 
   return (
-    <Panel flushOnMobile as="div" className="bg-[var(--panel)]">
-      <PanelHeader flushOnMobile>
-        <p className="text-xs text-[var(--muted)]">
-          {copy.showing} {rows.length} {copy.of} {addresses.length}
-        </p>
-      </PanelHeader>
+    <div className="space-y-4 lg:space-y-8">
+      <PageHeader
+        eyebrow={copy.title}
+        title={copy.title}
+        description={copy.subtitle}
+        actions={actions}
+        controls={
+          <div className="flex items-center gap-3 lg:mt-4">
+            <div className="relative min-w-0 flex-1 sm:max-w-sm">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
+              <Input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={copy.search}
+                aria-label={copy.search}
+                className="pl-9"
+              />
+            </div>
+            {/* The count that used to be a full-width strip of its own above the list. */}
+            <p className="shrink-0 text-xs text-[var(--muted)]">
+              {copy.showing} {rows.length} {copy.of} {addresses.length}
+            </p>
+          </div>
+        }
+      />
 
-      {saveState.error || deleteState.error ? (
-        <div className="border-b border-[var(--line)] px-4 py-2">
-          <FormError message={saveState.error ?? deleteState.error} />
-        </div>
-      ) : null}
+      <Panel flushOnMobile as="div" className="bg-[var(--panel)]">
+        {saveState.error || deleteState.error ? (
+          <div className="border-b border-[var(--line)] px-4 py-2">
+            <FormError message={saveState.error ?? deleteState.error} />
+          </div>
+        ) : null}
 
-      <Table frame={false} desktopOnly className="table-fixed">
-        {/* Fixed widths everywhere but the note, which takes what is left: the
-            actions column has to hold three 32px buttons plus the cell's own
-            padding, and a column that shrinks under them clips the last one.
-            The email is the one that takes the slack — it is the column whose
-            content varies most in length. */}
-        <colgroup>
-          <col className="w-44" />
-          <col className="w-40" />
-          <col className="w-28" />
-          <col className="w-20" />
-          <col className="w-32" />
-          <col />
-          <col className="w-40" />
-          <col className="w-40" />
-          <col className="w-36" />
-        </colgroup>
-        <THead className="sticky top-0">
-          <TR>
-            <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => toggleSort("name")}>
-              {copy.name}
-            </TH>
-            <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => toggleSort("company")}>
-              {copy.company}
-            </TH>
-            <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => toggleSort("type")}>
-              {copy.type}
-            </TH>
-            <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => toggleSort("postalCode")}>
-              {copy.postalCode}
-            </TH>
-            <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => toggleSort("city")}>
-              {copy.city}
-            </TH>
-            <TH>{copy.email}</TH>
-            <TH>{copy.phone}</TH>
-            <TH>{copy.note}</TH>
-            <TH>{copy.actions}</TH>
-          </TR>
-          <TR className="bg-[var(--panel)] normal-case">
-            {FILTER_COLUMNS.map((column) => (
-              <TH key={column}>
-                <Input
-                  type="text"
-                  size="sm"
-                  placeholder={copy.filter}
-                  value={filters[column]}
-                  onChange={(event) => setFilters({ ...filters, [column]: event.target.value })}
-                />
+        <Table frame={false} desktopOnly className="table-fixed">
+          {/* Fixed widths everywhere but the note, which takes what is left: the
+              actions column has to hold three 32px buttons plus the cell's own
+              padding, and a column that shrinks under them clips the last one.
+              The email is the one that takes the slack — it is the column whose
+              content varies most in length. */}
+          <colgroup>
+            <col className="w-44" />
+            <col className="w-40" />
+            <col className="w-28" />
+            <col className="w-20" />
+            <col className="w-32" />
+            <col />
+            <col className="w-40" />
+            <col className="w-40" />
+            <col className="w-36" />
+          </colgroup>
+          <THead className="sticky top-0">
+            <TR>
+              <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => toggleSort("name")}>
+                {copy.name}
               </TH>
-            ))}
-            <TH />
-          </TR>
-        </THead>
-        <tbody>
-          {rows.map(({ address, text }) => {
-            const editing = draft?.id === address.id ? draft : null;
+              <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => toggleSort("company")}>
+                {copy.company}
+              </TH>
+              <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => toggleSort("type")}>
+                {copy.type}
+              </TH>
+              <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => toggleSort("postalCode")}>
+                {copy.postalCode}
+              </TH>
+              <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => toggleSort("city")}>
+                {copy.city}
+              </TH>
+              <TH>{copy.email}</TH>
+              <TH>{copy.phone}</TH>
+              <TH>{copy.description}</TH>
+              <TH>{copy.actions}</TH>
+            </TR>
+            <TR className="bg-[var(--panel)] normal-case">
+              {FILTER_COLUMNS.map((column) => (
+                <TH key={column}>
+                  <Input
+                    type="text"
+                    size="sm"
+                    placeholder={copy.filter}
+                    value={filters[column]}
+                    onChange={(event) => setFilters({ ...filters, [column]: event.target.value })}
+                  />
+                </TH>
+              ))}
+              <TH />
+            </TR>
+          </THead>
+          <tbody>
+            {rows.map(({ address, text }) => {
+              const editing = draft?.id === address.id ? draft : null;
 
-            return (
-              <TR key={address.id} className={editing ? "bg-[var(--panel-strong)]" : undefined}>
-                <TD>
-                  {editing ? (
-                    <div className="flex gap-1">
+              return (
+                <TR key={address.id} className={editing ? "bg-[var(--panel-strong)]" : undefined}>
+                  <TD>
+                    {editing ? (
+                      <div className="flex gap-1">
+                        <Input
+                          size="sm"
+                          value={editing.firstName}
+                          onChange={(event) => updateDraft({ firstName: event.target.value })}
+                          placeholder={copy.firstName}
+                        />
+                        <Input
+                          size="sm"
+                          value={editing.lastName}
+                          onChange={(event) => updateDraft({ lastName: event.target.value })}
+                          placeholder={copy.lastName}
+                        />
+                      </div>
+                    ) : (
+                      <span className="block truncate">{text.name || "-"}</span>
+                    )}
+                  </TD>
+                  <TD>
+                    {editing ? (
                       <Input
                         size="sm"
-                        value={editing.firstName}
-                        onChange={(event) => updateDraft({ firstName: event.target.value })}
-                        placeholder={copy.firstName}
+                        value={editing.companyName}
+                        onChange={(event) => updateDraft({ companyName: event.target.value })}
                       />
+                    ) : (
+                      <span className="block truncate">{address.companyName || "-"}</span>
+                    )}
+                  </TD>
+                  <TD>
+                    {editing ? (
+                      <Select
+                        size="sm"
+                        value={editing.addressTypeId}
+                        onChange={(event) => updateDraft({ addressTypeId: event.target.value })}
+                      >
+                        <option value="">{copy.noContactType}</option>
+                        {addressTypes.map((addressType) => (
+                          <option key={addressType.id} value={addressType.id}>
+                            {addressType.name}
+                          </option>
+                        ))}
+                      </Select>
+                    ) : address.addressTypeName ? (
+                      <Badge>{address.addressTypeName}</Badge>
+                    ) : (
+                      <span className="text-[var(--muted)]">-</span>
+                    )}
+                  </TD>
+                  <TD>
+                    {editing ? (
+                      <Suggest
+                        size="sm"
+                        value={editing.postalCode}
+                        onValueChange={(postalCode) => updateDraft({ postalCode })}
+                        loadOptions={loadPostalCodes}
+                        onPick={(option) => updateDraft({ postalCode: option.value, city: option.hint ?? "" })}
+                      />
+                    ) : (
+                      address.postalCode || "-"
+                    )}
+                  </TD>
+                  <TD>
+                    {editing ? (
+                      <Suggest
+                        size="sm"
+                        value={editing.city}
+                        onValueChange={(city) => updateDraft({ city })}
+                        loadOptions={loadCityNames}
+                        onPick={(option) => updateDraft({ city: option.value, postalCode: option.hint ?? "" })}
+                      />
+                    ) : (
+                      <span className="block truncate">{address.city || "-"}</span>
+                    )}
+                  </TD>
+                  <TD>
+                    {editing ? (
+                      <Input
+                        type="email"
+                        size="sm"
+                        value={editing.email}
+                        onChange={(event) => updateDraft({ email: event.target.value })}
+                      />
+                    ) : address.email ? (
+                      <a
+                        href={`mailto:${address.email}`}
+                        title={address.email}
+                        className="block truncate text-[var(--accent)] hover:underline"
+                      >
+                        {address.email}
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </TD>
+                  <TD>
+                    {editing ? (
+                      <div className="flex gap-1">
+                        <Input
+                          size="sm"
+                          className="w-14"
+                          value={editing.phonePrefix}
+                          onChange={(event) => updateDraft({ phonePrefix: event.target.value })}
+                        />
+                        <Input
+                          size="sm"
+                          value={editing.phoneNumber}
+                          onChange={(event) => updateDraft({ phoneNumber: event.target.value })}
+                        />
+                      </div>
+                    ) : text.phone ? (
+                      <a
+                        href={`tel:${text.phone.replace(/\s+/g, "")}`}
+                        title={text.phone}
+                        className="block truncate text-[var(--accent)] hover:underline"
+                      >
+                        {text.phone}
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </TD>
+                  <TD>
+                    {editing ? (
                       <Input
                         size="sm"
-                        value={editing.lastName}
-                        onChange={(event) => updateDraft({ lastName: event.target.value })}
-                        placeholder={copy.lastName}
+                        value={editing.note}
+                        onChange={(event) => updateDraft({ note: event.target.value })}
                       />
-                    </div>
+                    ) : (
+                      <span className="block truncate" title={address.note || undefined}>
+                        {address.note || "-"}
+                      </span>
+                    )}
+                  </TD>
+                  <TD>
+                    {editing ? (
+                      <div className="flex items-center gap-2">
+                        <IconButton onClick={() => saveFormAction()} disabled={isSaving} tone="save" label={shellCopy.save}>
+                          <Check />
+                        </IconButton>
+                        <IconButton onClick={() => setDraft(null)} tone="neutral" label={shellCopy.cancel}>
+                          <X />
+                        </IconButton>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/addresses/${address.id}`}
+                          title={copy.view}
+                          aria-label={copy.view}
+                          className={iconButtonClasses("neutral")}
+                        >
+                          <Eye />
+                        </Link>
+                        <IconButton onClick={() => setDraft(address)} tone="accent" label={copy.edit}>
+                          <Pencil />
+                        </IconButton>
+                        {canDelete ? (
+                          <form action={deleteFormAction}>
+                            <input type="hidden" name="addressId" value={address.id} />
+                            <IconButton
+                              type="submit"
+                              tone="delete"
+                              label={copy.deleteAddress}
+                              disabled={isDeleting}
+                            >
+                              <Trash2 />
+                            </IconButton>
+                          </form>
+                        ) : null}
+                      </div>
+                    )}
+                  </TD>
+                </TR>
+              );
+            })}
+          </tbody>
+        </Table>
+
+        {/* Below `sm` the eight columns are unreadable, so the same rows render as
+            cards. Filtering, sorting and the inline editor stay in the table header;
+            a phone opens the address instead — where the fields have room. */}
+        <CardletList>
+          {rows.map(({ address, text }) => (
+            <Cardlet key={address.id}>
+              <CardletHeader
+                title={
+                  <>
+                    <p className="truncate">{text.name || address.companyName}</p>
+                    {text.name && address.companyName ? (
+                      <p className="truncate text-3xs font-normal text-[var(--muted)]">{address.companyName}</p>
+                    ) : null}
+                  </>
+                }
+                action={address.addressTypeName ? <Badge>{address.addressTypeName}</Badge> : null}
+              />
+              <CardletFields>
+                <CardletField label={copy.city}>{[address.postalCode, address.city].filter(Boolean).join(" ") || "-"}</CardletField>
+                <CardletField label={copy.phone}>
+                  {text.phone ? (
+                    <a href={`tel:${text.phone.replace(/\s+/g, "")}`} className="text-[var(--accent)]">
+                      {text.phone}
+                    </a>
                   ) : (
-                    <span className="block truncate">{text.name || "-"}</span>
+                    "-"
                   )}
-                </TD>
-                <TD>
-                  {editing ? (
-                    <Input
-                      size="sm"
-                      value={editing.companyName}
-                      onChange={(event) => updateDraft({ companyName: event.target.value })}
-                    />
-                  ) : (
-                    <span className="block truncate">{address.companyName || "-"}</span>
-                  )}
-                </TD>
-                <TD>
-                  {editing ? (
-                    <Select
-                      size="sm"
-                      value={editing.addressTypeId}
-                      onChange={(event) => updateDraft({ addressTypeId: event.target.value })}
-                    >
-                      <option value="">{copy.noContactType}</option>
-                      {addressTypes.map((addressType) => (
-                        <option key={addressType.id} value={addressType.id}>
-                          {addressType.name}
-                        </option>
-                      ))}
-                    </Select>
-                  ) : address.addressTypeName ? (
-                    <Badge>{address.addressTypeName}</Badge>
-                  ) : (
-                    <span className="text-[var(--muted)]">-</span>
-                  )}
-                </TD>
-                <TD>
-                  {editing ? (
-                    <Suggest
-                      size="sm"
-                      value={editing.postalCode}
-                      onValueChange={(postalCode) => updateDraft({ postalCode })}
-                      loadOptions={loadPostalCodes}
-                      onPick={(option) => updateDraft({ postalCode: option.value, city: option.hint ?? "" })}
-                    />
-                  ) : (
-                    address.postalCode || "-"
-                  )}
-                </TD>
-                <TD>
-                  {editing ? (
-                    <Suggest
-                      size="sm"
-                      value={editing.city}
-                      onValueChange={(city) => updateDraft({ city })}
-                      loadOptions={loadCityNames}
-                      onPick={(option) => updateDraft({ city: option.value, postalCode: option.hint ?? "" })}
-                    />
-                  ) : (
-                    <span className="block truncate">{address.city || "-"}</span>
-                  )}
-                </TD>
-                <TD>
-                  {editing ? (
-                    <Input
-                      type="email"
-                      size="sm"
-                      value={editing.email}
-                      onChange={(event) => updateDraft({ email: event.target.value })}
-                    />
-                  ) : address.email ? (
-                    <a
-                      href={`mailto:${address.email}`}
-                      title={address.email}
-                      className="block truncate text-[var(--accent)] hover:underline"
-                    >
+                </CardletField>
+                <CardletField label={copy.email} className="col-span-2">
+                  {address.email ? (
+                    <a href={`mailto:${address.email}`} className="text-[var(--accent)]">
                       {address.email}
                     </a>
                   ) : (
                     "-"
                   )}
-                </TD>
-                <TD>
-                  {editing ? (
-                    <div className="flex gap-1">
-                      <Input
-                        size="sm"
-                        className="w-14"
-                        value={editing.phonePrefix}
-                        onChange={(event) => updateDraft({ phonePrefix: event.target.value })}
-                      />
-                      <Input
-                        size="sm"
-                        value={editing.phoneNumber}
-                        onChange={(event) => updateDraft({ phoneNumber: event.target.value })}
-                      />
-                    </div>
-                  ) : (
-                    <span className="block truncate">{text.phone || "-"}</span>
-                  )}
-                </TD>
-                <TD>
-                  {editing ? (
-                    <Input
-                      size="sm"
-                      value={editing.note}
-                      onChange={(event) => updateDraft({ note: event.target.value })}
-                    />
-                  ) : (
-                    <span className="block truncate" title={address.note || undefined}>
-                      {address.note || "-"}
-                    </span>
-                  )}
-                </TD>
-                <TD>
-                  {editing ? (
-                    <div className="flex items-center gap-2">
-                      <IconButton onClick={() => saveFormAction()} disabled={isSaving} tone="save" label={shellCopy.save}>
-                        <Check />
-                      </IconButton>
-                      <IconButton onClick={() => setDraft(null)} tone="neutral" label={shellCopy.cancel}>
-                        <X />
-                      </IconButton>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Link
-                        href={`/addresses/${address.id}`}
-                        title={copy.view}
-                        aria-label={copy.view}
-                        className={iconButtonClasses("neutral")}
-                      >
-                        <Eye />
-                      </Link>
-                      <IconButton onClick={() => setDraft(address)} tone="accent" label={copy.edit}>
-                        <Pencil />
-                      </IconButton>
-                      {canDelete ? (
-                        <form action={deleteFormAction}>
-                          <input type="hidden" name="addressId" value={address.id} />
-                          <IconButton
-                            type="submit"
-                            tone="delete"
-                            label={copy.deleteAddress}
-                            disabled={isDeleting}
-                          >
-                            <Trash2 />
-                          </IconButton>
-                        </form>
-                      ) : null}
-                    </div>
-                  )}
-                </TD>
-              </TR>
-            );
-          })}
-        </tbody>
-      </Table>
-
-      {/* Below `sm` the eight columns are unreadable, so the same rows render as
-          cards. Filtering, sorting and the inline editor stay in the table header;
-          a phone opens the address instead — where the fields have room. */}
-      <CardletList>
-        {rows.map(({ address, text }) => (
-          <Cardlet key={address.id}>
-            <CardletHeader
-              title={
-                <>
-                  <p className="truncate">{text.name || address.companyName}</p>
-                  {text.name && address.companyName ? (
-                    <p className="truncate text-3xs font-normal text-[var(--muted)]">{address.companyName}</p>
-                  ) : null}
-                </>
-              }
-              action={address.addressTypeName ? <Badge>{address.addressTypeName}</Badge> : null}
-            />
-            <CardletFields>
-              <CardletField label={copy.city}>{[address.postalCode, address.city].filter(Boolean).join(" ") || "-"}</CardletField>
-              <CardletField label={copy.phone}>{text.phone || "-"}</CardletField>
-              <CardletField label={copy.email} className="col-span-2">
-                {address.email || "-"}
-              </CardletField>
-              {address.note ? (
-                <CardletField label={copy.note} className="col-span-2">
-                  {address.note}
                 </CardletField>
-              ) : null}
-            </CardletFields>
-            <CardletActions>
-              <Link href={`/addresses/${address.id}`} className={buttonClasses("secondary", "sm")}>
-                <Eye />
-                {copy.view}
-              </Link>
-              {canDelete ? (
-                <form action={deleteFormAction}>
-                  <input type="hidden" name="addressId" value={address.id} />
-                  <Button type="submit" variant="destructive" size="sm" icon={<Trash2 />} disabled={isDeleting}>
-                    {copy.deleteAddress}
-                  </Button>
-                </form>
-              ) : null}
-            </CardletActions>
-          </Cardlet>
-        ))}
-      </CardletList>
+                {address.note ? (
+                  <CardletField label={copy.description} className="col-span-2">
+                    {address.note}
+                  </CardletField>
+                ) : null}
+              </CardletFields>
+              <CardletActions>
+                <Link href={`/addresses/${address.id}`} className={buttonClasses("secondary", "sm")}>
+                  <Eye />
+                  {copy.view}
+                </Link>
+                {canDelete ? (
+                  <form action={deleteFormAction}>
+                    <input type="hidden" name="addressId" value={address.id} />
+                    <Button type="submit" variant="destructive" size="sm" icon={<Trash2 />} disabled={isDeleting}>
+                      {copy.deleteAddress}
+                    </Button>
+                  </form>
+                ) : null}
+              </CardletActions>
+            </Cardlet>
+          ))}
+        </CardletList>
 
-      {rows.length === 0 ? (
-        <p className="px-5 py-6 text-sm text-[var(--muted)]">
-          {addresses.length === 0 ? copy.empty : copy.noMatch}
-        </p>
-      ) : null}
-    </Panel>
+        {rows.length === 0 ? (
+          <p className="py-6 text-sm text-[var(--muted)] sm:px-5">
+            {addresses.length === 0 ? copy.empty : copy.noMatch}
+          </p>
+        ) : null}
+      </Panel>
+    </div>
   );
 }

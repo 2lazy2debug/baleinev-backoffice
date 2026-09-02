@@ -263,7 +263,7 @@ export function AddressFields({ locale, countries, addressTypes, value, onChange
         />
       </Field>
 
-      <Field label={copy.note}>
+      <Field label={copy.description}>
         <Textarea
           name="note"
           rows={3}

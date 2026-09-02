@@ -6,7 +6,7 @@ import { countryOptions } from "@/lib/countries";
 import { prisma } from "@/lib/db";
 import { getDictionary, getLocale } from "@/lib/i18n";
 
-import { PageHeader, iconButtonClasses } from "@/components/ui";
+import { iconButtonClasses } from "@/components/ui";
 
 import { AddressesClient } from "./client";
 import CreateAddressModal from "./create-address-modal";
@@ -32,49 +32,44 @@ export default async function AddressesPage() {
   const typeOptions = addressTypes.map((addressType) => ({ id: addressType.id, name: addressType.name }));
 
   return (
-    <div className="space-y-4 lg:space-y-8">
-      <PageHeader
-        eyebrow={copy.addresses.title}
-        title={copy.addresses.title}
-        description={copy.addresses.subtitle}
-        actions={
-          <>
-            <CreateAddressModal locale={locale} countries={countries} addressTypes={typeOptions} />
-            {isAdmin(access) ? (
-              <Link
-                href="/addresses/settings"
-                title={copy.addresses.settingsTitle}
-                aria-label={copy.addresses.settingsTitle}
-                className={iconButtonClasses("neutral", "md")}
-              >
-                <Settings />
-              </Link>
-            ) : null}
-          </>
-        }
-      />
-
-      <AddressesClient
-        locale={locale}
-        canDelete={isAdmin(access)}
-        addressTypes={typeOptions}
-        addresses={addresses.map((address) => ({
-          id: address.id,
-          firstName: address.firstName ?? "",
-          lastName: address.lastName ?? "",
-          companyName: address.companyName ?? "",
-          street: address.street ?? "",
-          country: address.country,
-          postalCode: address.postalCode ?? "",
-          city: address.city ?? "",
-          phonePrefix: address.phonePrefix ?? "",
-          phoneNumber: address.phoneNumber ?? "",
-          email: address.email ?? "",
-          note: address.note ?? "",
-          addressTypeId: address.addressTypeId ?? "",
-          addressTypeName: address.addressType?.name ?? "",
-        }))}
-      />
-    </div>
+    /* The header belongs to the client: the search that filters this list has to
+       sit in it, and a control that scrolls away from what it filters is a
+       control in the wrong place. The buttons are gated here and handed down. */
+    <AddressesClient
+      locale={locale}
+      canDelete={isAdmin(access)}
+      addressTypes={typeOptions}
+      actions={
+        <>
+          <CreateAddressModal locale={locale} countries={countries} addressTypes={typeOptions} />
+          {isAdmin(access) ? (
+            <Link
+              href="/addresses/settings"
+              title={copy.addresses.settingsTitle}
+              aria-label={copy.addresses.settingsTitle}
+              className={iconButtonClasses("neutral", "md")}
+            >
+              <Settings />
+            </Link>
+          ) : null}
+        </>
+      }
+      addresses={addresses.map((address) => ({
+        id: address.id,
+        firstName: address.firstName ?? "",
+        lastName: address.lastName ?? "",
+        companyName: address.companyName ?? "",
+        street: address.street ?? "",
+        country: address.country,
+        postalCode: address.postalCode ?? "",
+        city: address.city ?? "",
+        phonePrefix: address.phonePrefix ?? "",
+        phoneNumber: address.phoneNumber ?? "",
+        email: address.email ?? "",
+        note: address.note ?? "",
+        addressTypeId: address.addressTypeId ?? "",
+        addressTypeName: address.addressType?.name ?? "",
+      }))}
+    />
   );
 }

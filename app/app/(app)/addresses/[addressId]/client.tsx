@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
-import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Trash2, X } from "lucide-react";
 
 import {
   AddressFields,
@@ -16,6 +16,7 @@ import {
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
 import {
+  Badge,
   Button,
   Card,
   CardGrid,
@@ -39,8 +40,8 @@ import {
   buttonClasses,
   compactOnMobileWidths,
 } from "@/components/ui";
-import { addressDisplayName, formatPostalLine } from "@/lib/addresses";
-import type { CountryOption } from "@/lib/countries";
+import { addressDisplayName, addressPersonName, formatPhone, formatPostalLine } from "@/lib/addresses";
+import { countryName, type CountryOption } from "@/lib/countries";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
@@ -53,6 +54,26 @@ import {
 } from "../actions";
 
 type BankAccountRow = BankAccountDraft & { id: string };
+
+type ReadFieldProps = {
+  label: string;
+  children?: React.ReactNode;
+};
+
+/**
+ * One label and its value in the read view. Same shape as a <CardletField>,
+ * because that is what a read-only row is — the difference is only that this
+ * one wraps instead of truncating: an address is what the screen is *for*, so
+ * nothing on it may be cut off.
+ */
+function ReadField({ label, children }: ReadFieldProps) {
+  return (
+    <div className="min-w-0">
+      <p className="text-3xs font-medium uppercase tracking-[0.08em] text-[var(--muted)]">{label}</p>
+      <div className="break-words text-sm">{children || <span className="text-[var(--muted)]">-</span>}</div>
+    </div>
+  );
+}
 
 type Props = {
   locale: Locale;
@@ -79,8 +100,27 @@ export function AddressDetailClient({ locale, countries, addressTypes, canDelete
   const shellCopy = dictionaries[locale].shell;
   const router = useRouter();
 
+  // Opening an address reads it. The pencil is what turns the same card into
+  // the form — nothing here is editable by having been arrived at.
+  const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<AddressDraft>(address);
   const [saveState, saveFormAction, isSaving] = useActionState(updateAddressAction, initialActionState);
+
+  // Cancel throws the draft away, so a half-typed edit does not survive as the
+  // page's idea of what this address says.
+  function cancelEdit() {
+    setDraft(address);
+    setIsEditing(false);
+  }
+
+  // A save that went through has nothing left to edit — back to reading. Same
+  // hook every dialog in the app closes with, because it is the same question:
+  // did *this* submission come back clean.
+  const markSaveSubmitted = useCloseOnSuccess(saveState, isSaving, () => setIsEditing(false));
+
+  const typeName = addressTypes.find((addressType) => addressType.id === draft.addressTypeId)?.name ?? "";
+  const personName = addressPersonName(draft);
+  const phone = formatPhone(draft.phonePrefix, draft.phoneNumber);
 
   // One dialog for both writes: `editingId` is what makes it an edit rather
   // than a create, and it is also what the submit handler branches on.
@@ -150,46 +190,99 @@ export function AddressDetailClient({ locale, countries, addressTypes, canDelete
 
       <CardGrid>
         <Card span="full" as="section">
-          <SectionTitle>{copy.details}</SectionTitle>
-          <form id={ADDRESS_FORM_ID} action={saveFormAction} className="mt-4 space-y-4">
-            <FormError message={saveState.error} />
-            <input type="hidden" name="addressId" value={address.id} />
-            <AddressFields
-              locale={locale}
-              countries={countries}
-              addressTypes={addressTypes}
-              value={draft}
-              onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
-            />
-          </form>
-
-          {/* Delete is a form of its own — a form inside a form is not a thing —
-              and reaches it by id, the same way every modal footer does. */}
-          {canDelete ? (
-            <form id={DELETE_FORM_ID} action={deleteFormAction}>
-              <input type="hidden" name="addressId" value={address.id} />
-            </form>
-          ) : null}
-
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Button type="submit" form={ADDRESS_FORM_ID} variant="primary" disabled={isSaving}>
-              {copy.save}
-            </Button>
-            {saveState.saved ? <span className="text-xs font-medium text-emerald-300">{copy.saved}</span> : null}
-            {canDelete ? (
-              <Button
-                type="submit"
-                form={DELETE_FORM_ID}
-                variant="destructive"
-                icon={<Trash2 />}
-                disabled={isDeleting}
-                className="ml-auto"
-              >
-                {copy.deleteAddress}
-              </Button>
-            ) : null}
+          <div className="flex items-start justify-between gap-3">
+            <SectionTitle>{isEditing ? copy.details : copy.description}</SectionTitle>
+            {isEditing ? (
+              <IconButton tone="neutral" label={shellCopy.cancel} onClick={() => cancelEdit()}>
+                <X />
+              </IconButton>
+            ) : (
+              <IconButton tone="accent" label={copy.edit} onClick={() => setIsEditing(true)}>
+                <Pencil />
+              </IconButton>
+            )}
           </div>
-          <FormError message={deleteState.error} />
+
+          {isEditing ? (
+            <>
+              <form id={ADDRESS_FORM_ID} action={saveFormAction} onSubmit={markSaveSubmitted} className="mt-4 space-y-4">
+                <FormError message={saveState.error} />
+                <input type="hidden" name="addressId" value={address.id} />
+                <AddressFields
+                  locale={locale}
+                  countries={countries}
+                  addressTypes={addressTypes}
+                  value={draft}
+                  onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+                />
+              </form>
+
+              {/* Delete is a form of its own — a form inside a form is not a thing —
+                  and reaches it by id, the same way every modal footer does. */}
+              {canDelete ? (
+                <form id={DELETE_FORM_ID} action={deleteFormAction}>
+                  <input type="hidden" name="addressId" value={address.id} />
+                </form>
+              ) : null}
+
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <Button type="submit" form={ADDRESS_FORM_ID} variant="primary" disabled={isSaving}>
+                  {copy.save}
+                </Button>
+                {saveState.saved ? <span className="text-xs font-medium text-emerald-300">{copy.saved}</span> : null}
+                {canDelete ? (
+                  <Button
+                    type="submit"
+                    form={DELETE_FORM_ID}
+                    variant="destructive"
+                    icon={<Trash2 />}
+                    disabled={isDeleting}
+                    className="ml-auto"
+                  >
+                    {copy.deleteAddress}
+                  </Button>
+                ) : null}
+              </div>
+              <FormError message={deleteState.error} />
+            </>
+          ) : (
+            <div className="mt-3 space-y-4">
+              {/* The description leads: it is the one line that says why this row
+                  is in the book at all, and every field under it is contact detail. */}
+              <p className="whitespace-pre-wrap break-words text-sm">
+                {draft.note || <span className="text-[var(--muted)]">-</span>}
+              </p>
+
+              <div className="border-t border-[var(--line)] pt-4">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  <ReadField label={copy.contactType}>
+                    {typeName ? <Badge>{typeName}</Badge> : null}
+                  </ReadField>
+                  <ReadField label={copy.name}>{personName}</ReadField>
+                  <ReadField label={copy.company}>{draft.companyName}</ReadField>
+                  <ReadField label={copy.street}>{draft.street}</ReadField>
+                  <ReadField label={copy.city}>{formatPostalLine(draft.postalCode, draft.city)}</ReadField>
+                  <ReadField label={copy.country}>{countryName(draft.country, locale)}</ReadField>
+                  {/* Tap to call, tap to write — on the device most likely to be
+                      holding this screen, that is the whole point of the row. */}
+                  <ReadField label={copy.phone}>
+                    {phone ? (
+                      <a href={`tel:${phone.replace(/\s+/g, "")}`} className="text-[var(--accent)] hover:underline">
+                        {phone}
+                      </a>
+                    ) : null}
+                  </ReadField>
+                  <ReadField label={copy.email}>
+                    {draft.email ? (
+                      <a href={`mailto:${draft.email}`} className="text-[var(--accent)] hover:underline">
+                        {draft.email}
+                      </a>
+                    ) : null}
+                  </ReadField>
+                </div>
+              </div>
+            </div>
+          )}
         </Card>
       </CardGrid>
 
@@ -205,7 +298,7 @@ export function AddressDetailClient({ locale, countries, addressTypes, canDelete
         ) : null}
 
         {bankAccounts.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-[var(--muted)]">{copy.noBankAccounts}</p>
+          <p className="py-6 text-sm text-[var(--muted)] sm:px-5">{copy.noBankAccounts}</p>
         ) : (
           <>
             <Table frame={false} desktopOnly>

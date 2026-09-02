@@ -203,7 +203,7 @@ export function StockHistoryClient({ locale, places, movements }: Props) {
       </CardletList>
 
       {visible.length === 0 ? (
-        <p className="px-5 py-6 text-sm text-[var(--muted)]">
+        <p className="py-6 text-sm text-[var(--muted)] sm:px-5">
           {movements.length === 0 ? copy.historyEmpty : copy.historyNoMatch}
         </p>
       ) : null}

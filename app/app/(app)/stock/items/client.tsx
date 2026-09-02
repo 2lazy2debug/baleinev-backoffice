@@ -197,7 +197,7 @@ export function StockItemsClient({ locale, units, items, canDelete }: Props) {
         </CardletList>
 
         {visible.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-[var(--muted)]">
+          <p className="py-6 text-sm text-[var(--muted)] sm:px-5">
             {items.length === 0 ? copy.itemsEmpty : copy.itemsNoMatch}
           </p>
         ) : null}

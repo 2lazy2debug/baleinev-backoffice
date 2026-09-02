@@ -318,7 +318,7 @@ export function StockClient({ locale, rows }: Props) {
       </CardletList>
 
       {visible.length === 0 ? (
-        <p className="px-5 py-6 text-sm text-[var(--muted)]">{rows.length === 0 ? copy.empty : copy.noMatch}</p>
+        <p className="py-6 text-sm text-[var(--muted)] sm:px-5">{rows.length === 0 ? copy.empty : copy.noMatch}</p>
       ) : null}
     </Panel>
   );
