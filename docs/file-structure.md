@@ -31,11 +31,11 @@ app/
 │   ├── page.tsx                  ← Dashboard (budget vs actuals + money account balances)
 │   │
 │   ├── budget/
-│   │   ├── page.tsx              ← Budget overview, department CRUD
+│   │   ├── page.tsx              ← One row per budgeting department, plus this edition's entries
 │   │   ├── client.tsx            ← Department cards: budget tables above `sm`, a read-only
 │   │   │                            planned-vs-actual roll-up and cardlets below (management
 │   │   │                            and the details modal are desktop-only)
-│   │   └── actions.ts            ← Server actions: create/edit/delete budget lines & departments
+│   │   └── actions.ts            ← Server actions: create/edit/delete budget lines
 │   │
 │   ├── journal/
 │   │   ├── page.tsx              ← Journal entry list, reads ?fromExpenseReport for prefill
@@ -142,9 +142,11 @@ app/
 │   │   └── actions.ts            ← Server actions: create/set-active/delete/close edition, update driving rate
 │   │
 │   ├── departments/
-│   │   ├── page.tsx              ← Department list (admin only, data-fetching only)
-│   │   ├── client.tsx            ← Client-side create/delete forms
-│   │   └── actions.ts            ← Server actions: create/delete department
+│   │   ├── page.tsx              ← The association's departments (admin only, global — no edition)
+│   │   ├── client.tsx            ← Table above `sm`, cardlets below; edit and delete dialogs
+│   │   ├── create-department-modal.tsx ← The header button and its dialog
+│   │   ├── department-form-fields.tsx  ← The three fields create and edit share
+│   │   └── actions.ts            ← Server actions: create/update/delete; the update guards `hasBudget`
 │   │
 │   └── account/
 │       ├── page.tsx              ← The signed-in user's own account (global, not edition-scoped)
@@ -251,7 +253,7 @@ which. Nothing here should be re-implemented inline in a page.
 |---|---|
 | `auth.ts` | NextAuth config: credentials provider, bcrypt verify, TOTP second factor, JWT/session callbacks |
 | `auth-signals.ts` | The two sign-in outcome strings (`2FA_REQUIRED`, `2FA_INVALID`) `authorize()` throws and the login form reads back off `signIn(...).error`. Import-free so a client component can use it without pulling bcrypt/Prisma into the browser bundle |
-| `access.ts` | `getCurrentUserAccess()`, `requireAdmin()`, plus department helpers (`isAdmin`, `accessibleDepartmentRoleIds`, `canAccessDepartments`, `canManageMoneyAccounts`/`requireMoneyAccountManager`) used by every protected page/action |
+| `access.ts` | `getCurrentUserAccess()`, `requireAdmin()`, plus department helpers (`isAdmin`, `accessibleDepartmentIds`, `canAccessDepartments`, `canManageMoneyAccounts`/`requireMoneyAccountManager`) used by every protected page/action |
 | `money-account-roles.ts` | Just the `"Comptabilité"` department-name constant, kept import-free so `proxy.ts` (edge) and `access.ts` (server) can both use it without pulling Prisma/bcrypt into the edge bundle |
 | `secret-crypto.ts` | AES-256-GCM seal/open for the Passwords vault (`encryptSecret`/`decryptSecret`/`isVaultConfigured`), keyed by `PASSWORD_VAULT_KEY`. See docs/passwords.md |
 | `totp.ts` | TOTP primitives over `otpauth`: `generateTotpCode`/`assertValidTotpSeed` for the Passwords vault, plus `generateTotpSecret`/`buildTotpUri`/`verifyTotpCode` for account enrolment |
@@ -265,8 +267,8 @@ which. Nothing here should be re-implemented inline in a page.
 | `i18n.ts` | `getLocale()` (reads cookie server-side) and `getDictionary()` |
 | `document-templates.ts` | `[[field]]` renderer, `InvoiceDocumentPayload` type, default invoice HTML template, `ensureDefaultInvoiceTemplate()` |
 | `swiss-qr.ts` | `buildSwissQrPayload()` — builds a SPC-format QR string for Swiss ISO 20022 QR invoices |
-| `department-roles.ts` | `syncDepartmentRolesFromDepartments()` — keeps `DepartmentRole` names in sync with active departments |
-| `edition-carry-over.ts` | `carryOverEdition(tx, source, target)` — copies departments with their budget lines, cost centers and money accounts into another edition and writes each account's closing balance as a locked opening entry |
+| `departments.ts` | `budgetingDepartments()`, `assertDepartmentsBudget()`, `resolveDepartmentBudgetId()` (opens a `DepartmentBudget` on first use) and `departmentBudgetUsage()` (what stands in the way of turning a budget off) |
+| `edition-carry-over.ts` | `carryOverEdition(tx, source, target)` — copies department budgets with their lines, cost centers and money accounts into another edition and writes each account's closing balance as a locked opening entry |
 | `edition-context.ts` | The single answer to "which edition is this request in", read from `User.selectedEditionId`: `resolveEditionIdOrNull()` (pages), `resolveEditionId()` (write paths, throws), `resolveWritableEditionId()` (write paths, also refuses a closed edition), `requireWritableEdition(id)` (guards a write against a named edition), `resolveEdition()` (the record), `ensureUserEdition()` (the only writer of the seed) |
 | `server-action-helpers.ts` | Shared helpers for server actions: `getRequiredString()`, plus the `ActionState` type (`{ error: string \| null }`), `initialActionState`, and `toActionErrorMessage()` used by every action to report validation failures instead of throwing. Kept free of server-only imports — client components import `initialActionState` from here |
 | `utils.ts` | `formatCurrency()`, `decimalToNumber()`, `incrementEditionName()` |
@@ -286,7 +288,7 @@ which. Nothing here should be re-implemented inline in a page.
 
 | File | Purpose |
 |---|---|
-| `import-workbook.ts` | One-off: parse an Excel workbook JOURNAL sheet → seed journal entries + departments + money accounts |
+| `import-workbook.ts` | One-off: parse an Excel workbook JOURNAL sheet → seed journal entries + departments (global, `hasBudget` on) + money accounts |
 | `import-budget.ts` | One-off: parse budget department sheets from the same workbook → seed budget lines |
 | `import-bank-statement.ts` | Replays a BCV "Extraction transactionnelle" onto one edition: replaces every entry on the bank account, mirrors bank/cash transfers onto the cash box, and refreshes the next edition's carry-over |
 
@@ -306,4 +308,4 @@ named charge rather than being silently absorbed. See
 
 | File | Purpose |
 |---|---|
-| `next-auth.d.ts` | Module augmentation that adds `role`, `departmentRoleIds`, `departmentRoleNames`, and `id` to the NextAuth `User`, `Session`, and `JWT` types |
+| `next-auth.d.ts` | Module augmentation that adds `role`, `departmentIds`, `departmentNames`, and `id` to the NextAuth `User`, `Session`, and `JWT` types |

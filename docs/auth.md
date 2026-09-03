@@ -23,11 +23,11 @@ NextAuth CredentialsProvider.authorize()     ← lib/auth.ts
   5. ensureUserEdition(user.id)             ← lib/edition-context.ts
        Seeds User.selectedEditionId from the default edition on first login.
        No-op once the account has an edition; no-op if no default exists.
-  6. return { id, email, name, role, departmentRoleIds, departmentRoleNames }
+  6. return { id, email, name, role, departmentIds, departmentNames }
         │
         ▼
 jwt() callback                               ← lib/auth.ts
-  Encodes id, role, departmentRoleIds, departmentRoleNames into the JWT token
+  Encodes id, role, departmentIds, departmentNames into the JWT token
         │
         ▼
 session() callback                           ← lib/auth.ts
@@ -45,8 +45,8 @@ After login, `session.user` contains:
   email: string
   name: string
   role: "ADMIN" | "DEPARTMENT"
-  departmentRoleIds: string[]    // DepartmentRole IDs this user belongs to
-  departmentRoleNames: string[]  // corresponding department names
+  departmentIds: string[]    // Department IDs this user belongs to
+  departmentNames: string[]  // corresponding department names
 }
 ```
 
@@ -105,7 +105,7 @@ The middleware protects the entire `(app)` route group. It checks two things:
    - Blocked routes for `DEPARTMENT`: `/`, `/editions`, `/journal`, `/cost-centers`,
      `/invoices`, `/templates`, `/departments`, `/users` — these redirect to `/budget`.
    - `/money-accounts` is a special case: blocked for `DEPARTMENT` users **unless** their
-     `departmentRoleNames` includes `"Comptabilité"` (the accounting department name is read
+     `departmentNames` includes `"Comptabilité"` (the accounting department name is read
      straight off the JWT, no DB round-trip — see `lib/money-account-roles.ts`).
    - Everything else (`/budget`, `/tasks`, `/calendar`, `/events`, `/expense-reports`, etc.) is allowed.
    - `/addresses` is deliberately in that "everything else": the address book is open to every
@@ -120,7 +120,7 @@ const token = await getToken({ req })
 if (!token) return redirect("/login")
 if (token.role === "DEPARTMENT") {
   if (pathname.startsWith("/money-accounts")) {
-    if (!token.departmentRoleNames?.includes(MONEY_ACCOUNT_MANAGER_DEPARTMENT)) return redirect("/budget")
+    if (!token.departmentNames?.includes(MONEY_ACCOUNT_MANAGER_DEPARTMENT)) return redirect("/budget")
   } else if (BLOCKED_DEPARTMENT_PATHS.some((p) => pathname.startsWith(p))) {
     return redirect("/budget")
   }
@@ -138,14 +138,15 @@ Every protected page and server action calls one of these two helpers:
 ### `getCurrentUserAccess()`
 Fetches the full `AccessContext` for the authenticated user:
 - Reads the NextAuth session (server-side via `getServerSession`).
-- Queries the database for the user record including `departmentRoles`.
+- Queries the database for the user record including `departments`.
 - Returns an `AccessContext` object (or `null` if unauthenticated).
 
 ```ts
 type AccessContext = {
   userId: string
   role: "ADMIN" | "DEPARTMENT"
-  departmentRoles: { id: string; departmentId: string; name: string }[]
+  departmentIds: string[]
+  departmentNames: string[]
   // + all refund profile fields
 }
 ```
@@ -186,7 +187,7 @@ When a `DEPARTMENT` user views the budget or expense reports, data is filtered t
 ```ts
 // Example from budget/page.tsx
 const access = await getCurrentUserAccess()
-const myDeptIds = access.departmentRoles.map(r => r.departmentId)
+const myDeptIds = access.departmentIds
 const departments = await prisma.department.findMany({
   where: {
     id: { in: myDeptIds },

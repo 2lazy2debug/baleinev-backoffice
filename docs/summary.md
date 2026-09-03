@@ -33,16 +33,18 @@ Two roles, stored on `User.role`:
   expense reports, events, passwords and the address book — except members of the "Comptabilité"
   department, who also get money accounts.
 
-A `DepartmentRole` links a user to a department *by name*, so the link survives across editions
-(departments themselves are per-edition rows). `syncDepartmentRolesFromDepartments()` in
-[app/lib/department-roles.ts](../app/lib/department-roles.ts) keeps the two in sync.
+A user belongs to `Department` records directly (a many-to-many). Departments are
+edition-independent, so a membership survives an edition change; what is per-edition is the
+`DepartmentBudget` a department opens when it plans something. Admins manage the list at
+`/departments`, where `hasBudget` decides whether a department budgets at all.
 
 ## Core domain
 
 | Concept | What it is |
 | --- | --- |
 | `Edition` | One festival year. Owns everything else. Users select one each; the one flagged `isDefault` seeds accounts that have none. Carries the per-km driving reimbursement rate. |
-| `Department` | A team within an edition (unique per edition by name). |
+| `Department` | A team of the association — global, not per edition. Carries a name, an optional abbreviation and `hasBudget`. |
+| `DepartmentBudget` | One department's budget inside one edition; holds the budget lines and nothing else. |
 | `MoneyAccount` | A bank, cash, or other account, with opening balance and (bank only) beneficiary/IBAN details. Managed by admins and the "Comptabilité" department. |
 | `CostCenter` | An analytic code used to group spending across departments. |
 | `BudgetLine` | A planned income or expense line attached to a department, typed `CHARGES` or `PRODUITS`. |

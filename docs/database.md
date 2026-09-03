@@ -9,26 +9,28 @@ Dev workflow: `npm run db:generate` (regenerate the Prisma client) then `npm run
 ## Entity-Relationship Overview
 
 ```
-User
- └─< DepartmentRole >─ Department
-                            └─< BudgetLine
+Department                        (global, not Edition-scoped)
+ ├─> User          (many-to-many)
+ ├─> PasswordEntry (many-to-many)
+ └─< DepartmentBudget ─< BudgetLine
 
 Edition
- ├─< Department
+ ├─< DepartmentBudget
  ├─< MoneyAccount
  ├─< CostCenter
  ├─< JournalEntry
  ├─< Invoice
  └─< ExpenseReport
 
-JournalEntry ─── Department
+JournalEntry ─── Department (optional)
              ─── MoneyAccount
              ─── CostCenter (optional)
 
 ExpenseReport ─── User (submittedBy)
+              ─── Department
 
 Task ─── User (createdBy / assignedTo / resolvedBy)
-     ─── DepartmentRole (DEPARTMENT_ACCESS_REQUEST)
+     ─── Department (DEPARTMENT_ACCESS_REQUEST)
      ─── ExpenseReport | StaffAssignment | Todo
 
 Invoice ─── MoneyAccount (bankAccount)
@@ -68,7 +70,7 @@ Represents an authenticated application user.
 | `twoFactorIv` | String? | Base64 nonce |
 | `twoFactorTag` | String? | Base64 GCM auth tag |
 | `selectedEditionId` | String? | FK → Edition (`onDelete: SetNull`). The edition this user works in — see below |
-| `departmentRoles` | `DepartmentRole[]` | Which departments this user belongs to |
+| `departments` | `Department[]` | Many-to-many: which departments this user belongs to |
 
 **`selectedEditionId` is how edition scoping works.** There is no global active edition; every
 request resolves the edition from the signed-in user (`app/lib/edition-context.ts`). The column is
@@ -92,18 +94,6 @@ department can access and manage them like an `ADMIN` would — see [`auth.md`](
 
 ---
 
-### `DepartmentRole`
-Join model linking a User to a Department. A user may belong to multiple departments. Only meaningful for `DEPARTMENT` role users.
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | String (cuid) | |
-| `userId` | String | FK → User |
-| `departmentId` | String | FK → Department |
-| `name` | String | Snapshot of the department name at assignment time |
-
----
-
 ### `PasswordEntry`
 Shared, department-scoped credential store (the Passwords tab). **Not** edition-scoped — entries persist across editions. Secret fields are encrypted at rest with AES-256-GCM; see [passwords.md](passwords.md).
 
@@ -116,9 +106,9 @@ Shared, department-scoped credential store (the Passwords tab). **Not** edition-
 | `passwordCipher` / `passwordIv` / `passwordTag` | String | AES-256-GCM sealed password (base64) |
 | `totpCipher` / `totpIv` / `totpTag` | String? | AES-256-GCM sealed 2FA seed (base32 or `otpauth://` URI); null when no 2FA |
 | `createdById` | String? | FK → User (`onDelete: SetNull`) |
-| `departmentRoles` | `DepartmentRole[]` | Many-to-many: which departments can see this entry |
+| `departments` | `Department[]` | Many-to-many: which departments can see this entry |
 
-Visibility: a user sees an entry if they share at least one `DepartmentRole` with it; admins see all. Secret columns never leave the server except through the authorized reveal actions.
+Visibility: a user sees an entry if they share at least one `Department` with it; admins see all. Secret columns never leave the server except through the authorized reveal actions.
 
 ---
 
@@ -142,7 +132,7 @@ The global `isActive` flag this model used to carry was replaced by `isDefault` 
 `20260817230613_user_selected_edition` and dropped in `20260818071444_drop_edition_is_active` —
 additive first, destructive second, one release apart, as `production.md` requires.
 
-All transactional data (journal entries, invoices, expense reports, budget lines, departments, money accounts, cost centers) is tied to one Edition.
+All transactional data (journal entries, invoices, expense reports, budget lines, department budgets, money accounts, cost centers) is tied to one Edition. Departments themselves are not — see `Department` below.
 
 Flipping `isDefault` moves nobody — every existing user keeps the edition already written to their
 `selectedEditionId`. That is deliberate: it is a seed for new accounts, not a switch for everyone.
@@ -150,17 +140,50 @@ Flipping `isDefault` moves nobody — every existing user keeps the edition alre
 ---
 
 ### `Department`
-Represents an organisational unit (committee, section, team).
+An organisational unit of the association (committee, section, team). **Not** edition-scoped: the
+same PROGRAMMATION carries from one edition to the next, and it is what a user belongs to, what a
+password entry is shared with, and what an appointment invites. Managed at `/departments` by
+`ADMIN` users only.
 
 | Field | Type | Notes |
 |---|---|---|
 | `id` | String (cuid) | |
-| `name` | String | |
-| `editionId` | String | FK → Edition (onDelete: Cascade) |
-| `budgetLines` | `BudgetLine[]` | Budget allocations for this department |
-| `journalEntries` | `JournalEntry[]` | Charges attributed to this department |
+| `name` | String | Unique |
+| `abbreviation` | String? | Short code for dense rows; optional |
+| `hasBudget` | Boolean | Default `false`. Whether the department budgets at all |
+| `budgets` | `DepartmentBudget[]` | One per edition it has planned anything in |
+| `users` / `passwordEntries` | many-to-many | Membership, and vault visibility |
+| `journalEntries` | `JournalEntry[]` | Entries attributed to this department, across editions |
+| `expenseReports` | `ExpenseReport[]` | Expenses filed under it |
+| `appointmentInvites` | `AppointmentInviteDepartment[]` | Calendar invitations addressed to it |
 
-`(name, editionId)` has a unique constraint — no duplicate department names within an edition.
+**`hasBudget` is the guarded field.** Turning it on costs nothing — no `DepartmentBudget` row is
+written until a line is actually planned. Turning it off is refused while any edition's budget
+still holds budget lines, or while any journal entry points at the department
+(`lib/departments.ts#departmentBudgetUsage`); empty budgets are deleted with it.
+
+Deleting a department is refused while people, budget lines, journal entries, expense reports,
+password entries or appointment invitations still point at it.
+
+---
+
+### `DepartmentBudget`
+One department's budget inside one edition. It exists so a budget can be per-edition while the
+department is not; it carries no name and no settings of its own, only the lines. Journal entries
+do **not** hang off it — they carry their own `editionId` and point straight at the department,
+which is what lets a department be compared to its budget without going through this row.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `editionId` | String | FK → Edition (onDelete: Cascade) |
+| `departmentId` | String | FK → Department (onDelete: Cascade) |
+| `budgetLines` | `BudgetLine[]` | |
+
+`(editionId, departmentId)` is unique. Rows are created on first use
+(`lib/departments.ts#resolveDepartmentBudgetId`) or by `carryOverEdition`, never in bulk when an
+edition is created: an edition a department took no part in should not carry an empty budget for it
+forever.
 
 ---
 
@@ -199,15 +222,14 @@ Optional free-form label that can be attached to a journal entry for sub-categor
 ---
 
 ### `BudgetLine`
-A budget allocation for a department within an edition.
+One planned spending or earning inside a department's budget for an edition.
 
 | Field | Type | Notes |
 |---|---|---|
 | `id` | String (cuid) | |
-| `name` | String | Description of the allocation |
+| `label` | String | Description of the allocation |
 | `amount` | Decimal | Budgeted amount |
-| `departmentId` | String | FK → Department (onDelete: Cascade) |
-| `editionId` | String | FK → Edition (onDelete: Cascade) |
+| `departmentBudgetId` | String | FK → DepartmentBudget (onDelete: Cascade) |
 
 ---
 
@@ -223,7 +245,7 @@ A single accounting entry (debit or credit) in the general ledger.
 | `debit` | Decimal | Amount debited (can be 0) |
 | `credit` | Decimal | Amount credited (can be 0) |
 | `isOpeningEntry` | Boolean | If true, the entry is locked (opening balance import, cannot be edited or deleted) |
-| `departmentId` | String | FK → Department |
+| `departmentId` | String? | FK → Department (onDelete: SetNull); the department must have `hasBudget` |
 | `moneyAccountId` | String | FK → MoneyAccount |
 | `costCenterId` | String? | FK → CostCenter (optional) |
 | `editionId` | String | FK → Edition (onDelete: Cascade) |
@@ -303,7 +325,7 @@ and the first to resolve it clears it for all of them.
 | `resolvedById` / `resolvedAt` | String? / DateTime? | Who marked it done, and when |
 | `expenseReportId` | String? | `REVIEW_EXPENSE_REPORT` / `RECORD_JOURNAL` |
 | `staffAssignmentId` | String? | `STAFF_SHIFT`, unique |
-| `departmentRoleId` | String? | `DEPARTMENT_ACCESS_REQUEST`: the department asked for (onDelete: Cascade) |
+| `departmentId` | String? | `DEPARTMENT_ACCESS_REQUEST`: the department asked for (onDelete: Cascade) |
 | `todoId` | String? | `GENERAL` tasks grouped under a `Todo` |
 | `dueDate` | DateTime? | |
 
@@ -486,8 +508,8 @@ an edition must not delete the users who were looking at it.
 
 ### Cascade vs Restrict
 - Edition delete cascades to all its records.
-- Department delete cascades to its BudgetLine records.
-- User delete cascades to their DepartmentRole records.
+- Department delete cascades to its DepartmentBudget records, and those to their BudgetLine
+  records — but a department with any of them is refused deletion before it gets there.
 - StockPlace delete cascades to its items and movements; StockElement delete is *refused* while it
   is stocked anywhere.
 

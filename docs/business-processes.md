@@ -68,7 +68,7 @@ Reopening it clears closedAt and writes work again
 - Creating a new edition does NOT delete old data — historical editions remain fully readable.
 - **Bringing data into a new edition is an explicit choice.** The new-edition dialog has an
   optional "Bring over from" select; leaving it empty creates a blank edition.
-  `carryOverEdition()` in `app/lib/edition-carry-over.ts` copies **departments with their budget
+  `carryOverEdition()` in `app/lib/edition-carry-over.ts` copies **department budgets with their
   lines**, **cost centers** and **money accounts** (bank identity included, so a carried account can
   still produce a Swiss QR invoice), then writes one locked `isOpeningEntry = true` journal entry per
   account that does not close at zero, labelled `Report édition précédente`. Each opening entry takes
@@ -85,30 +85,41 @@ Reopening it clears closedAt and writes work again
 ## 2. Budget Management
 
 ### Who does what
-- **Admin:** creates Departments and BudgetLines, sets amounts.
+- **Admin:** turns a department's budget on at `/departments`, then creates BudgetLines and sets
+  amounts at `/budget`. Departments themselves are never created from the budget screen — they are
+  global, and `/budget` only shows the ones with `hasBudget` for the selected edition.
 - **Department user:** views their own department's budget vs. actual spending (read-only).
 
 Create, update, and delete of budget lines (`app/(app)/budget/actions.ts`) are all scoped to the
-user's selected edition: the mutation first confirms the target line's department belongs to the
-edition `resolveEditionId()` returns, so a stale page from another edition cannot mutate its data.
+user's selected edition: the mutation first confirms the target line's `DepartmentBudget` belongs to
+the edition `resolveEditionId()` returns, so a stale page from another edition cannot mutate its
+data. Writing the first line of a department's budget is also what opens that `DepartmentBudget`
+row — see `resolveDepartmentBudgetId()` in `app/lib/departments.ts`.
 
 ### Setup flow
 ```
-Admin creates Departments (e.g. "Communication", "Events")
+Admin creates Departments at /departments, with "Has a budget" on
+  (e.g. "Communication", "Events")
         │
         ▼
-Admin creates BudgetLines under each department
+Admin creates BudgetLines under each department, per edition
   (e.g. "Printing: 500 CHF", "Venue rental: 2000 CHF")
         │
         ▼
-Department users are assigned to departments via DepartmentRoles
+Department users are assigned to departments in /users
         │
         ▼
 As journal entries accumulate, the dashboard shows budget vs. actuals
 ```
 
+### Turning a budget off
+`hasBudget` is a department-level flag, so it is refused whenever any edition's budget still holds
+budget lines or any journal entry names the department — that data would have nowhere left to go.
+Empty budgets are deleted with the flag. Turning a budget *on* writes nothing until a line is
+planned.
+
 ### Budget vs. actuals calculation
-The dashboard (`app/(app)/page.tsx`) sums `JournalEntry.debit` for entries belonging to each department and compares to the sum of `BudgetLine.amount` for that department. The difference is the remaining (or overspent) budget.
+The dashboard (`app/(app)/page.tsx`) reads the edition's `DepartmentBudget` rows for the planned side, and its own `JournalEntry` rows — matched on `departmentId`, since an entry carries its edition itself — for the actual one. The difference is the remaining (or overspent) budget.
 
 ---
 
@@ -319,14 +330,15 @@ Document templates allow the admin to customise the HTML layout used for PDF gen
   and the departments as pills. The pencil turns one card into the update form, and deleting lives
   inside that form: reading an account is safe, and the state that can change it is the one that can
   end it.
-- `DEPARTMENT` users are assigned to one or more departments via `DepartmentRole` records.
-- When departments are renamed, `syncDepartmentRolesFromDepartments()` updates `DepartmentRole.name` to keep display names current.
+- `DEPARTMENT` users are assigned to one or more `Department` records (a many-to-many). Departments
+  are edition-independent, so a membership survives an edition change and needs no syncing — the
+  list itself is managed at `/departments` (admins only).
 
 ### Asking to join a department
 Users cannot grant themselves access. From the **Department access** card on `/account` a user picks
 a department and requests it; `requestDepartmentAccessAction` files a `DEPARTMENT_ACCESS_REQUEST`
 task assigned to the `ADMIN` role, titled "&lt;user&gt; asked to join &lt;department&gt;" and carrying
-`Task.departmentRoleId`.
+`Task.departmentId`.
 
 - Every admin sees the task on `/tasks` and on the dashboard, with a link to `/users`.
 - The first admin to **Mark done** clears it for all of them (role-assigned tasks are shared).
@@ -334,7 +346,7 @@ task assigned to the `ADMIN` role, titled "&lt;user&gt; asked to join &lt;depart
   two are deliberately independent — an admin can refuse a request by simply clearing the task.
 - One pending request per user per department: the card shows the ones waiting and leaves them out
   of the picker, and the action refuses a duplicate. Once a request is cleared the user may ask again.
-- Deleting the `DepartmentRole` cascades the request away; deleting the requesting user deletes their
+- Deleting the `Department` cascades the request away; deleting the requesting user deletes their
   pending requests (`deleteUserAction`), since nobody is left to grant them to.
 
 ### Refund profile

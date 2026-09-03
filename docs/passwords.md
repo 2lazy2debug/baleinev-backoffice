@@ -9,7 +9,7 @@ in plaintext so the database can filter by department without decrypting.
 
 ## Visibility Model
 
-Visibility is keyed on `DepartmentRole` (what users are actually members of), as a
+Visibility is keyed on `Department` (what users are actually members of), as a
 many-to-many relation on `PasswordEntry`.
 
 ```
@@ -24,7 +24,7 @@ Create / edit / delete follow the same rule, with one extra guard on writes:
   department) is **preserved**, never silently dropped.
 - Admins have full control over an entry's department set.
 
-Enforced in `lib/access.ts` (`isAdmin`, `accessibleDepartmentRoleIds`,
+Enforced in `lib/access.ts` (`isAdmin`, `accessibleDepartmentIds`,
 `canAccessDepartments`) and re-checked inside every server action.
 
 ---
