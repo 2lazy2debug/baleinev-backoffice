@@ -24,7 +24,7 @@ type PasswordEntryItem = {
   login: string;
   website: string | null;
   has2fa: boolean;
-  departmentRoles: DepartmentOption[];
+  departments: DepartmentOption[];
 };
 
 type Props = {
@@ -310,9 +310,9 @@ function EntryRow({
               {entry.website.replace(/^https?:\/\//, "")}
             </a>
           ) : null}
-          {entry.departmentRoles.map((role) => (
-            <Badge key={role.id} tone="neutral">
-              {role.name}
+          {entry.departments.map((department) => (
+            <Badge key={department.id} tone="neutral">
+              {department.name}
             </Badge>
           ))}
         </div>
@@ -418,11 +418,11 @@ function EntryDialog({
 
         <Field label={copy.fieldDepartments}>
           <MultiSelect
-            name="departmentRoleIds"
+            name="departmentIds"
             required
-            defaultValue={(entry?.departmentRoles ?? [])
-              .filter((role) => assignableDepartments.some((d) => d.id === role.id))
-              .map((role) => role.id)}
+            defaultValue={(entry?.departments ?? [])
+              .filter((department) => assignableDepartments.some((d) => d.id === department.id))
+              .map((department) => department.id)}
             rows={assignableDepartments.length}
           >
             {assignableDepartments.map((department) => (
@@ -434,7 +434,7 @@ function EntryDialog({
           <span className="block text-xs text-[var(--muted)]">
             {isAdmin ? copy.departmentsHelpAdmin : copy.departmentsHelp}
           </span>
-          {entry && !isAdmin && (entry.departmentRoles ?? []).some((role) => !assignableDepartments.some((d) => d.id === role.id)) ? (
+          {entry && !isAdmin && (entry.departments ?? []).some((department) => !assignableDepartments.some((d) => d.id === department.id)) ? (
             <span className="block text-xs text-[var(--muted)]">{copy.departmentsForeignNote}</span>
           ) : null}
         </Field>

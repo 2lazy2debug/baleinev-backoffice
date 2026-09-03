@@ -7,7 +7,7 @@ export const CARRY_OVER_LABEL = "Report édition précédente";
 
 /**
  * Brings an edition's structure, budget and closing balances into another
- * edition: departments with their budget lines, cost centers and money
+ * edition: department budgets with their lines, cost centers and money
  * accounts, plus one locked opening entry per account that does not close at
  * zero.
  *
@@ -30,7 +30,7 @@ export async function carryOverEdition(
   const source = await tx.edition.findUnique({
     where: { id: sourceEditionId },
     include: {
-      departments: { include: { budgetLines: true } },
+      departmentBudgets: { include: { budgetLines: true } },
       costCenters: true,
       moneyAccounts: { include: { journalEntries: true } },
     },
@@ -40,18 +40,20 @@ export async function carryOverEdition(
     throw new Error("The edition to bring data over from was not found.");
   }
 
-  for (const department of source.departments) {
-    const carried = await tx.department.create({
-      data: { editionId: targetEditionId, name: department.name },
-    });
-
-    if (department.budgetLines.length === 0) {
+  for (const budget of source.departmentBudgets) {
+    if (budget.budgetLines.length === 0) {
       continue;
     }
 
+    // The department itself is edition-independent and already exists — what
+    // carries over is its budget for the new edition.
+    const carried = await tx.departmentBudget.create({
+      data: { editionId: targetEditionId, departmentId: budget.departmentId },
+    });
+
     await tx.budgetLine.createMany({
-      data: department.budgetLines.map((line) => ({
-        departmentId: carried.id,
+      data: budget.budgetLines.map((line) => ({
+        departmentBudgetId: carried.id,
         accountType: line.accountType,
         // Free text from the workbook ("Septembre", …), not a dated value, so
         // it stays true in the new edition.

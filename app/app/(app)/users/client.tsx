@@ -12,7 +12,7 @@ import { initialActionState } from "@/lib/server-action-helpers";
 
 import { deleteUserAction, updateUserAction } from "./actions";
 
-type DepartmentRoleItem = {
+type DepartmentItem = {
   id: string;
   name: string;
 };
@@ -22,19 +22,19 @@ type UserItem = {
   name: string;
   email: string;
   role: UserRole;
-  departmentRoles: DepartmentRoleItem[];
+  departments: DepartmentItem[];
 };
 
 type Dictionary = ReturnType<typeof getDictionary>;
 
 export function UsersPageClient({
   users,
-  departmentRoles,
+  departments,
   currentUserId,
   copy,
 }: {
   users: UserItem[];
-  departmentRoles: DepartmentRoleItem[];
+  departments: DepartmentItem[];
   currentUserId: string;
   copy: Dictionary;
 }) {
@@ -100,13 +100,13 @@ export function UsersPageClient({
                   </Field>
                   <Field label={copy.users.departments}>
                     <MultiSelect
-                      name="departmentRoleIds"
-                      defaultValue={user.departmentRoles.map((departmentRole) => departmentRole.id)}
-                      rows={departmentRoles.length}
+                      name="departmentIds"
+                      defaultValue={user.departments.map((department) => department.id)}
+                      rows={departments.length}
                     >
-                      {departmentRoles.map((departmentRole) => (
-                        <option key={departmentRole.id} value={departmentRole.id}>
-                          {departmentRole.name}
+                      {departments.map((department) => (
+                        <option key={department.id} value={department.id}>
+                          {department.name}
                         </option>
                       ))}
                     </MultiSelect>
@@ -153,11 +153,11 @@ export function UsersPageClient({
               /* Departments read as what they are — a list this account belongs
                  to — rather than as a multi-select nobody is about to touch. */
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {user.departmentRoles.length === 0 ? (
+                {user.departments.length === 0 ? (
                   <span className="text-xs text-[var(--muted)]">{copy.users.noDepartments}</span>
                 ) : (
-                  user.departmentRoles.map((departmentRole) => (
-                    <Badge key={departmentRole.id}>{departmentRole.name}</Badge>
+                  user.departments.map((department) => (
+                    <Badge key={department.id}>{department.name}</Badge>
                   ))
                 )}
               </div>

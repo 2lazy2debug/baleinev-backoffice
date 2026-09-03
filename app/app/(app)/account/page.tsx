@@ -1,7 +1,6 @@
 import { PageHeader } from "@/components/ui";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
-import { syncDepartmentRolesFromDepartments } from "@/lib/department-roles";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { getPendingDepartmentAccessRequests } from "@/lib/tasks";
 import { isTwoFactorConfigured } from "@/lib/two-factor";
@@ -20,11 +19,8 @@ export default async function AccountPage() {
   const copy = getDictionary(locale);
   const access = await getCurrentUserAccess();
 
-  // Same call `/users` makes: department roles exist only once a department of
-  // that name has been created in some edition.
-  await syncDepartmentRolesFromDepartments();
   const [departments, pendingRequests, twoFactor] = await Promise.all([
-    prisma.departmentRole.findMany({
+    prisma.department.findMany({
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
@@ -50,7 +46,7 @@ export default async function AccountPage() {
           name: access.userName,
           email: access.email,
           role: access.role,
-          departmentRoleNames: access.departmentRoleNames,
+          departmentNames: access.departmentNames,
         }}
         bankDetails={{
           firstName: access.refundFirstName,
@@ -61,7 +57,7 @@ export default async function AccountPage() {
         }}
         joinableDepartments={departments.filter(
           (department) =>
-            !access.departmentRoleNames.includes(department.name) && !pendingRequestIds.has(department.id),
+            !access.departmentIds.includes(department.id) && !pendingRequestIds.has(department.id),
         )}
         pendingDepartmentRequests={pendingRequests}
         twoFactor={{

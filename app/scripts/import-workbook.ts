@@ -215,8 +215,10 @@ async function main() {
 
     if (force) {
       await tx.journalEntry.deleteMany({ where: { editionId: edition.id } });
-      await tx.budgetLine.deleteMany({ where: { department: { editionId: edition.id } } });
-      await tx.department.deleteMany({ where: { editionId: edition.id } });
+      await tx.budgetLine.deleteMany({ where: { departmentBudget: { editionId: edition.id } } });
+      // The departments themselves are global and survive a re-import; only
+      // their budget for this edition is thrown away with the entries.
+      await tx.departmentBudget.deleteMany({ where: { editionId: edition.id } });
       await tx.costCenter.deleteMany({ where: { editionId: edition.id } });
       await tx.moneyAccount.deleteMany({ where: { editionId: edition.id } });
     }
@@ -226,9 +228,9 @@ async function main() {
 
     for (const departmentName of uniqueDepartmentNames) {
       await tx.department.upsert({
-        where: { editionId_name: { editionId: edition.id, name: departmentName } },
-        update: {},
-        create: { editionId: edition.id, name: departmentName },
+        where: { name: departmentName },
+        update: { hasBudget: true },
+        create: { name: departmentName, hasBudget: true },
       });
     }
 
@@ -248,7 +250,7 @@ async function main() {
       });
     }
 
-    const departments = await tx.department.findMany({ where: { editionId: edition.id } });
+    const departments = await tx.department.findMany({ where: { name: { in: uniqueDepartmentNames } } });
     const moneyAccounts = await tx.moneyAccount.findMany({ where: { editionId: edition.id } });
     const costCenters = await tx.costCenter.findMany({ where: { editionId: edition.id } });
 

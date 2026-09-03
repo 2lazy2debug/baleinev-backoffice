@@ -168,31 +168,42 @@ async function main() {
     }
 
     for (const departmentName of uniqueDepartments) {
-      await tx.department.upsert({
-        where: { editionId_name: { editionId: edition.id, name: departmentName } },
+      // The department itself is global and outlives the workbook; only its
+      // budget for this edition is (re)built here.
+      const department = await tx.department.upsert({
+        where: { name: departmentName },
+        update: { hasBudget: true },
+        create: { name: departmentName, hasBudget: true },
+      });
+
+      await tx.departmentBudget.upsert({
+        where: { editionId_departmentId: { editionId: edition.id, departmentId: department.id } },
         update: {},
-        create: { editionId: edition.id, name: departmentName },
+        create: { editionId: edition.id, departmentId: department.id },
       });
     }
 
     if (replaceExisting) {
-      await tx.budgetLine.deleteMany({ where: { department: { editionId: edition.id } } });
+      await tx.budgetLine.deleteMany({ where: { departmentBudget: { editionId: edition.id } } });
     }
 
-    const departments = await tx.department.findMany({ where: { editionId: edition.id } });
-    const departmentByName = new Map(departments.map((department) => [department.name, department.id]));
+    const budgets = await tx.departmentBudget.findMany({
+      where: { editionId: edition.id },
+      include: { department: { select: { name: true } } },
+    });
+    const budgetByDepartmentName = new Map(budgets.map((budget) => [budget.department.name, budget.id]));
 
     let inserted = 0;
 
     for (const line of parsedLines) {
-      const departmentId = departmentByName.get(line.departmentName);
-      if (!departmentId) {
+      const departmentBudgetId = budgetByDepartmentName.get(line.departmentName);
+      if (!departmentBudgetId) {
         continue;
       }
 
       await tx.budgetLine.create({
         data: {
-          departmentId,
+          departmentBudgetId,
           accountType: line.accountType,
           billingMonth: line.billingMonth,
           label: line.label,

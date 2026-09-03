@@ -35,7 +35,7 @@ type Props = {
     name: string;
     email: string;
     role: "ADMIN" | "DEPARTMENT";
-    departmentRoleNames: string[];
+    departmentNames: string[];
   };
   bankDetails: {
     firstName: string | null;
@@ -103,9 +103,9 @@ export function AccountPageClient({
             {profile.role === "ADMIN" ? copy.roleAdmin : copy.roleDepartment}
           </ReadOnlyRow>
           <ReadOnlyRow label={copy.departments}>
-            {profile.departmentRoleNames.length > 0 ? (
+            {profile.departmentNames.length > 0 ? (
               <span className="flex flex-wrap gap-1.5">
-                {profile.departmentRoleNames.map((name) => (
+                {profile.departmentNames.map((name) => (
                   <Chip key={name}>{name}</Chip>
                 ))}
               </span>
@@ -248,7 +248,7 @@ export function AccountPageClient({
             className="mt-4 space-y-3"
           >
             {/* No field label: the card title already says what this picks. */}
-            <Select aria-label={copy.departmentAccess} name="departmentRoleId" defaultValue="" required>
+            <Select aria-label={copy.departmentAccess} name="departmentId" defaultValue="" required>
               <option value="">{copy.pickDepartment}</option>
               {joinableDepartments.map((department) => (
                 <option key={department.id} value={department.id}>

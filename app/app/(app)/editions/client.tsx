@@ -26,7 +26,7 @@ interface EditionItem {
   isDefault: boolean;
   closedAt: Date | null;
   drivingRatePerKm: Prisma.Decimal | number;
-  _count: { departments: number; moneyAccounts: number; costCenters: number; journalEntries: number };
+  _count: { departmentBudgets: number; moneyAccounts: number; costCenters: number; journalEntries: number };
 }
 
 export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]; copy: Copy }) {
@@ -61,7 +61,7 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
                   {edition.closedAt ? <Badge tone="neutral">{copy.editions.closed}</Badge> : null}
                 </div>
                 <p className="mt-3 text-sm text-[var(--muted)]">
-                  {edition._count.departments} {copy.editions.departments}, {edition._count.moneyAccounts} {copy.editions.moneyAccounts}, {edition._count.costCenters} {copy.editions.costCenters}, {edition._count.journalEntries} {copy.editions.journalEntries}.
+                  {edition._count.departmentBudgets} {copy.editions.departments}, {edition._count.moneyAccounts} {copy.editions.moneyAccounts}, {edition._count.costCenters} {copy.editions.costCenters}, {edition._count.journalEntries} {copy.editions.journalEntries}.
                 </p>
                 {edition.closedAt ? null : (
                 <form action={updateRateFormAction} className="mt-3 flex items-center gap-2">

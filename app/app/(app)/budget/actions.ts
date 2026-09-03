@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { resolveDepartmentBudgetId } from "@/lib/departments";
 import { resolveWritableEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
@@ -40,18 +41,13 @@ export async function createBudgetLineAction(_prevState: ActionState, formData: 
 
     const amount = toPositiveAmount(amountRaw);
 
-    const department = await prisma.department.findFirst({
-      where: { id: departmentId, editionId },
-      select: { id: true },
-    });
-
-    if (!department) {
-      throw new Error("Selected department does not belong to the active edition.");
-    }
+    // The department is edition-independent; its budget for this edition is
+    // opened here, on the first line written into it.
+    const departmentBudgetId = await resolveDepartmentBudgetId(editionId, departmentId);
 
     await prisma.budgetLine.create({
       data: {
-        departmentId,
+        departmentBudgetId,
         accountType: accountTypeRaw,
         label,
         amount,
@@ -69,7 +65,7 @@ export async function createBudgetLineAction(_prevState: ActionState, formData: 
 
 async function requireEditionBudgetLine(budgetLineId: string, editionId: string) {
   const budgetLine = await prisma.budgetLine.findFirst({
-    where: { id: budgetLineId, department: { editionId } },
+    where: { id: budgetLineId, departmentBudget: { editionId } },
     select: { id: true },
   });
 

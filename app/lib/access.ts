@@ -10,8 +10,8 @@ export type AccessContext = {
   userName: string;
   email: string;
   role: "ADMIN" | "DEPARTMENT";
-  departmentRoleIds: string[];
-  departmentRoleNames: string[];
+  departmentIds: string[];
+  departmentNames: string[];
   refundFirstName: string | null;
   refundLastName: string | null;
   refundIban: string | null;
@@ -38,7 +38,7 @@ export async function getCurrentUserAccess(): Promise<AccessContext> {
       refundIban: true,
       refundZip: true,
       refundCity: true,
-      departmentRoles: { select: { id: true, name: true }, orderBy: { name: "asc" } },
+      departments: { select: { id: true, name: true }, orderBy: { name: "asc" } },
     },
   });
 
@@ -51,8 +51,8 @@ export async function getCurrentUserAccess(): Promise<AccessContext> {
     userName: user.name,
     email: user.email,
     role: user.role,
-    departmentRoleIds: user.departmentRoles.map((departmentRole) => departmentRole.id),
-    departmentRoleNames: user.departmentRoles.map((departmentRole) => departmentRole.name),
+    departmentIds: user.departments.map((department) => department.id),
+    departmentNames: user.departments.map((department) => department.name),
     refundFirstName: user.refundFirstName,
     refundLastName: user.refundLastName,
     refundIban: user.refundIban,
@@ -75,7 +75,7 @@ export async function requireAdmin() {
 // them everywhere, and members of the accounting department additionally
 // manage them for editions they're part of.
 export function canManageMoneyAccounts(access: AccessContext): boolean {
-  return access.role === "ADMIN" || access.departmentRoleNames.includes(MONEY_ACCOUNT_MANAGER_DEPARTMENT);
+  return access.role === "ADMIN" || access.departmentNames.includes(MONEY_ACCOUNT_MANAGER_DEPARTMENT);
 }
 
 export async function requireMoneyAccountManager() {
@@ -93,19 +93,19 @@ export function isAdmin(access: AccessContext): boolean {
 }
 
 /**
- * Department-role ids a user is allowed to see, or `null` for admins (who see
+ * Department ids a user is allowed to see, or `null` for admins (who see
  * everything). Use to build a Prisma `where` filter for department-scoped data.
  */
-export function accessibleDepartmentRoleIds(access: AccessContext): string[] | null {
-  return access.role === "ADMIN" ? null : access.departmentRoleIds;
+export function accessibleDepartmentIds(access: AccessContext): string[] | null {
+  return access.role === "ADMIN" ? null : access.departmentIds;
 }
 
 /** True when the user shares at least one department with the given entry (admins always). */
-export function canAccessDepartments(access: AccessContext, departmentRoleIds: string[]): boolean {
+export function canAccessDepartments(access: AccessContext, departmentIds: string[]): boolean {
   if (access.role === "ADMIN") {
     return true;
   }
 
-  const allowed = new Set(access.departmentRoleIds);
-  return departmentRoleIds.some((id) => allowed.has(id));
+  const allowed = new Set(access.departmentIds);
+  return departmentIds.some((id) => allowed.has(id));
 }

@@ -99,7 +99,7 @@ model User {
   // users who happened to be looking at it — they land on the picker again.
   selectedStockPlace StockPlace? @relation("UserSelectedStockPlace", fields: [selectedStockPlaceId], references: [id], onDelete: SetNull)
 
-  departmentRoles         DepartmentRole[]
+  departments             Department[]
   journalEntries          JournalEntry[]
   submittedExpenseReports ExpenseReport[]         @relation("ExpenseReportSubmittedBy")
   reviewedExpenseReports  ExpenseReport[]         @relation("ExpenseReportReviewedBy")
@@ -118,16 +118,32 @@ model User {
   @@index([selectedStockPlaceId])
 }
 
-model DepartmentRole {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// A department of the association — the team, not its money. Edition-independent
+// on purpose: the same PROGRAMMATION carries from one edition to the next, and
+// it is what a user belongs to, what a password is shared with and what an
+// appointment invites. What it plans and spends is per-edition and lives in
+// `DepartmentBudget`, one row per edition, created and removed by `hasBudget`.
+model Department {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  // A short code for dense rows. Optional: the departments that predate this
+  // screen have none until an admin fills them in.
+  abbreviation String?
+  // Whether this department budgets at all. Flipping it on opens a
+  // `DepartmentBudget` in every edition; flipping it off closes them, and is
+  // refused once any of them holds budget lines or journal entries.
+  hasBudget    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  users           User[]
-  passwordEntries PasswordEntry[]
+  budgets            DepartmentBudget[]
+  users              User[]
+  passwordEntries    PasswordEntry[]
   // Pending DEPARTMENT_ACCESS_REQUEST tasks pointing at this department.
-  tasks           Task[]
+  tasks              Task[]
+  journalEntries     JournalEntry[]
+  expenseReports     ExpenseReport[]
+  appointmentInvites AppointmentInviteDepartment[]
 }
 
 // Shared, department-scoped credential store. Secret fields (password, TOTP
@@ -154,7 +170,7 @@ model PasswordEntry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  departmentRoles DepartmentRole[]
+  departments Department[]
 
   @@index([name])
 }
@@ -172,33 +188,37 @@ model Edition {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  usersSelecting User[]          @relation("UserSelectedEdition")
-  departments    Department[]
-  moneyAccounts  MoneyAccount[]
-  costCenters    CostCenter[]
-  invoices       Invoice[]
-  expenseReports ExpenseReport[]
-  journalEntries JournalEntry[]
-  events         Event[]
-  appointments   Appointment[]
-  todos          Todo[]
-  tasks          Task[]
+  usersSelecting    User[]             @relation("UserSelectedEdition")
+  departmentBudgets DepartmentBudget[]
+  moneyAccounts     MoneyAccount[]
+  costCenters       CostCenter[]
+  invoices          Invoice[]
+  expenseReports    ExpenseReport[]
+  journalEntries    JournalEntry[]
+  events            Event[]
+  appointments      Appointment[]
+  todos             Todo[]
+  tasks             Task[]
 }
 
-model Department {
-  id        String   @id @default(cuid())
-  editionId String
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// One department's budget inside one edition. It exists so a budget can be
+// per-edition while the department is not — it carries no name and no settings
+// of its own, only the lines. Journal entries do *not* hang off it: they carry
+// their own `editionId` and point straight at the department, which is what
+// lets a department be compared to its budget without going through this row.
+model DepartmentBudget {
+  id           String   @id @default(cuid())
+  editionId    String
+  departmentId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  edition            Edition                       @relation(fields: [editionId], references: [id], onDelete: Cascade)
-  budgetLines        BudgetLine[]
-  expenseReports     ExpenseReport[]
-  journalEntries     JournalEntry[]
-  appointmentInvites AppointmentInviteDepartment[]
+  edition     Edition      @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  department  Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  budgetLines BudgetLine[]
 
-  @@unique([editionId, name])
+  @@unique([editionId, departmentId])
+  @@index([departmentId])
 }
 
 model MoneyAccount {
@@ -239,19 +259,19 @@ model CostCenter {
 }
 
 model BudgetLine {
-  id           String      @id @default(cuid())
-  departmentId String
-  accountType  AccountType
-  billingMonth String?
-  label        String
-  unitPrice    Decimal?    @db.Decimal(10, 2)
-  quantity     Decimal?    @db.Decimal(10, 2)
-  amount       Decimal     @db.Decimal(10, 2)
-  notes        String?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id                 String      @id @default(cuid())
+  departmentBudgetId String
+  accountType        AccountType
+  billingMonth       String?
+  label              String
+  unitPrice          Decimal?    @db.Decimal(10, 2)
+  quantity           Decimal?    @db.Decimal(10, 2)
+  amount             Decimal     @db.Decimal(10, 2)
+  notes              String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
-  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  departmentBudget DepartmentBudget @relation(fields: [departmentBudgetId], references: [id], onDelete: Cascade)
 }
 
 model JournalEntry {
@@ -511,7 +531,7 @@ model Task {
   staffAssignmentId String?    @unique
   // DEPARTMENT_ACCESS_REQUEST only: the department the creator asked to join.
   // The task is a *request*, never a grant — resolving it changes no membership.
-  departmentRoleId  String?
+  departmentId      String?
   dueDate           DateTime?
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @default(now()) @updatedAt
@@ -523,14 +543,14 @@ model Task {
   resolvedBy      User?            @relation("TaskResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
   expenseReport   ExpenseReport?   @relation(fields: [expenseReportId], references: [id], onDelete: Cascade)
   staffAssignment StaffAssignment? @relation(fields: [staffAssignmentId], references: [id], onDelete: Cascade)
-  departmentRole  DepartmentRole?  @relation(fields: [departmentRoleId], references: [id], onDelete: Cascade)
+  department      Department?      @relation(fields: [departmentId], references: [id], onDelete: Cascade)
 
   @@index([createdById])
   @@index([editionId])
   @@index([todoId])
   @@index([status, assignedToUserId])
   @@index([status, assignedToRole])
-  @@index([status, departmentRoleId])
+  @@index([status, departmentId])
 }
 
 model Todo {
@@ -574,28 +594,28 @@ model AddressType {
 }
 
 model Address {
-  id          String   @id @default(cuid())
+  id            String   @id @default(cuid())
   /// One of `firstName` / `companyName` is required — a row with neither has no
   /// name to be found by. Enforced in the server action, not by the database,
   /// because Postgres cannot express "either column" as a NOT NULL.
-  firstName   String?
-  lastName    String?
-  companyName String?
-  street      String?
-  country     String   @default("CH")
-  postalCode  String?
-  city        String?
+  firstName     String?
+  lastName      String?
+  companyName   String?
+  street        String?
+  country       String   @default("CH")
+  postalCode    String?
+  city          String?
   /// International dialling prefix, stored with its "+" ("+41"). Kept apart from
   /// the number so a list can be filtered by either.
-  phonePrefix String?
-  phoneNumber String?
-  email       String?
-  note        String?
+  phonePrefix   String?
+  phoneNumber   String?
+  email         String?
+  note          String?
   /// Optional on purpose — deleting a type leaves its addresses untyped rather
   /// than taking them with it.
   addressTypeId String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   addressType  AddressType?         @relation(fields: [addressTypeId], references: [id], onDelete: SetNull)
   bankAccounts AddressBankAccount[]

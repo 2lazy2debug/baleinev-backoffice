@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email },
-          include: { departmentRoles: { select: { id: true, name: true }, orderBy: { name: "asc" } } },
+          include: { departments: { select: { id: true, name: true }, orderBy: { name: "asc" } } },
         });
 
         if (!user) {
@@ -68,8 +68,8 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
-          departmentRoleIds: user.departmentRoles.map((departmentRole) => departmentRole.id),
-          departmentRoleNames: user.departmentRoles.map((departmentRole) => departmentRole.name),
+          departmentIds: user.departments.map((department) => department.id),
+          departmentNames: user.departments.map((department) => department.name),
         };
       },
     }),
@@ -79,8 +79,8 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.sub = user.id;
         token.role = user.role;
-        token.departmentRoleIds = user.departmentRoleIds;
-        token.departmentRoleNames = user.departmentRoleNames;
+        token.departmentIds = user.departmentIds;
+        token.departmentNames = user.departmentNames;
       }
 
       return token;
@@ -89,8 +89,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user && token.sub) {
         session.user.id = token.sub;
         session.user.role = (token.role as "ADMIN" | "DEPARTMENT") ?? "ADMIN";
-        session.user.departmentRoleIds = (token.departmentRoleIds as string[] | undefined) ?? [];
-        session.user.departmentRoleNames = (token.departmentRoleNames as string[] | undefined) ?? [];
+        session.user.departmentIds = (token.departmentIds as string[] | undefined) ?? [];
+        session.user.departmentNames = (token.departmentNames as string[] | undefined) ?? [];
       }
 
       return session;

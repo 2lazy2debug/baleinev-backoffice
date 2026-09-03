@@ -35,7 +35,6 @@ import {
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
-import { createDepartmentAction, deleteDepartmentAction } from "@/app/(app)/departments/actions";
 
 import { createBudgetLineAction, deleteBudgetLineAction, updateBudgetLineAction } from "./actions";
 
@@ -60,7 +59,6 @@ type JournalEntryItem = {
 type DepartmentItem = {
   id: string;
   name: string;
-  journalEntriesCount: number;
   budgetLines: BudgetLineItem[];
   journalEntries: JournalEntryItem[];
 };
@@ -101,7 +99,6 @@ type DepartmentSummary = {
   budgetResult: number;
   actualResult: number;
   chargesAvailability: number;
-  canDelete: boolean;
 };
 
 function sumAmounts(rows: Array<{ amount: number }>) {
@@ -167,24 +164,10 @@ export default function BudgetPageClient({ locale, editionName, departments, can
   const copy = dictionaries[locale];
   const router = useRouter();
 
-  const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false);
   const [entryModalDepartment, setEntryModalDepartment] = useState<{ id: string; name: string } | null>(null);
   const [editingBudgetLineId, setEditingBudgetLineId] = useState<string | null>(null);
   const [editBudgetDraft, setEditBudgetDraft] = useState<{ label: string; amount: string; notes: string } | null>(null);
   const [detailsDepartmentId, setDetailsDepartmentId] = useState<string | null>(null);
-
-  async function handleCreateDepartment(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-    const result = await createDepartmentAction(_prevState, formData);
-    if (!result.error) {
-      setIsDepartmentModalOpen(false);
-      router.refresh();
-    }
-    return result;
-  }
-  const [createDeptState, createDeptFormAction, isSavingDepartment] = useActionState(
-    handleCreateDepartment,
-    initialActionState
-  );
 
   async function handleCreateBudgetLine(_prevState: ActionState, formData: FormData): Promise<ActionState> {
     const result = await createBudgetLineAction(_prevState, formData);
@@ -199,10 +182,6 @@ export default function BudgetPageClient({ locale, editionName, departments, can
     initialActionState
   );
 
-  const [deleteDeptState, deleteDeptFormAction, isDeletingDept] = useActionState(
-    deleteDepartmentAction,
-    initialActionState
-  );
   const [deleteLineState, deleteLineFormAction, isDeletingLine] = useActionState(
     deleteBudgetLineAction,
     initialActionState
@@ -253,7 +232,6 @@ export default function BudgetPageClient({ locale, editionName, departments, can
       budgetResult: produits.budgetTotal - charges.budgetTotal,
       actualResult: produits.actualTotal - charges.actualTotal,
       chargesAvailability: charges.budgetTotal - charges.actualTotal,
-      canDelete: department.budgetLines.length === 0 && department.journalEntriesCount === 0,
     };
   }), [departments, copy]);
 
@@ -265,16 +243,9 @@ export default function BudgetPageClient({ locale, editionName, departments, can
         eyebrow={copy.budget.title}
         title={<>{copy.budget.entriesFor} {editionName}</>}
         description={copy.budget.subtitle}
-        actions={canManage ? (
-          <Button variant="secondary" onClick={() => setIsDepartmentModalOpen(true)}>
-            <Plus />
-            {copy.budget.addDepartment}
-          </Button>
-        ) : null}
       />
 
       <div className="space-y-4">
-        <FormError message={deleteDeptState.error} />
         <FormError message={deleteLineState.error} />
         <FormError message={saveLineState.error} />
         {departments.length === 0 ? (
@@ -319,17 +290,6 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                           >
                             <Plus />
                           </IconButton>
-                          <form action={deleteDeptFormAction}>
-                            <input type="hidden" name="departmentId" value={department.id} />
-                            <IconButton
-                              type="submit"
-                              tone="delete"
-                              label={summary.canDelete ? copy.budget.deleteDepartment : copy.budget.cannotDeleteDepartment}
-                              disabled={!summary.canDelete || isDeletingDept}
-                            >
-                              <Trash2 />
-                            </IconButton>
-                          </form>
                         </>
                       ) : null}
                     </div>
@@ -585,32 +545,6 @@ export default function BudgetPageClient({ locale, editionName, departments, can
               </Table>
             </div>
           </div>
-        </Modal>
-      ) : null}
-
-      {canManage ? (
-        <Modal
-          open={isDepartmentModalOpen}
-          onClose={() => setIsDepartmentModalOpen(false)}
-          title={copy.budget.addDepartment}
-          size="sm"
-          footer={
-            <>
-              <Button variant="secondary" onClick={() => setIsDepartmentModalOpen(false)}>
-                {copy.shell.cancel}
-              </Button>
-              <Button type="submit" form="create-department-form" variant="primary" disabled={isSavingDepartment}>
-                {isSavingDepartment ? copy.journal.saving : copy.budget.addDepartment}
-              </Button>
-            </>
-          }
-        >
-          <form id="create-department-form" action={createDeptFormAction} className="space-y-4">
-            <FormError message={createDeptState.error} />
-            <Field label={copy.budget.departmentName}>
-              <Input type="text" name="name" required />
-            </Field>
-          </form>
         </Modal>
       ) : null}
 

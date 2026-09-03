@@ -19,7 +19,6 @@ export default async function ExpenseReportsPage() {
   const activeEdition = editionId ? await prisma.edition.findUnique({
     where: { id: editionId },
     include: {
-      departments: { orderBy: { name: "asc" } },
       expenseReports: {
         where: access.role === "ADMIN" ? undefined : { submittedById: access.id },
         include: {
@@ -41,6 +40,16 @@ export default async function ExpenseReportsPage() {
     },
   }) : null;
 
+  // An expense is filed by a team, so the picker is the departments themselves —
+  // global, and for a department user, the ones they belong to.
+  const departments = activeEdition
+    ? await prisma.department.findMany({
+        where: access.role === "ADMIN" ? {} : { id: { in: access.departmentIds } },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true },
+      })
+    : [];
+
   if (!activeEdition) {
     return (
       <EmptyPage eyebrow={copy.expenseReports.title} title={copy.common.noEditionSelected}>
@@ -58,9 +67,7 @@ export default async function ExpenseReportsPage() {
         actions={
           <WritableEditionOnly>
             <CreateExpenseReportModal
-              departments={activeEdition.departments
-                .filter((department) => access.role === "ADMIN" || access.departmentRoleNames.includes(department.name))
-                .map((department) => ({ id: department.id, name: department.name }))}
+              departments={departments}
               drivingRatePerKm={decimalToNumber(activeEdition.drivingRatePerKm)}
               copy={{
                 create: copy.expenseReports.create,

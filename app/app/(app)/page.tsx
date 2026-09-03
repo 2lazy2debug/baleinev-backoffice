@@ -24,9 +24,9 @@ export default async function DashboardPage() {
   const activeEdition = editionId ? await prisma.edition.findUnique({
     where: { id: editionId },
     include: {
-      departments: {
-        orderBy: { name: "asc" },
-        include: { budgetLines: true },
+      departmentBudgets: {
+        orderBy: { department: { name: "asc" } },
+        include: { department: { select: { id: true, name: true } }, budgetLines: true },
       },
       moneyAccounts: {
         orderBy: { name: "asc" },
@@ -44,26 +44,26 @@ export default async function DashboardPage() {
     );
   }
 
-  const departmentRows = activeEdition.departments.map((department) => {
+  const departmentRows = activeEdition.departmentBudgets.map((budget) => {
     const budgetCharges = sumAmounts(
-      department.budgetLines.filter((line) => line.accountType === AccountType.CHARGES),
+      budget.budgetLines.filter((line) => line.accountType === AccountType.CHARGES),
     );
     const budgetProduits = sumAmounts(
-      department.budgetLines.filter((line) => line.accountType === AccountType.PRODUITS),
+      budget.budgetLines.filter((line) => line.accountType === AccountType.PRODUITS),
     );
     const actualCharges = sumAmounts(
       activeEdition.journalEntries.filter(
-        (entry) => entry.departmentId === department.id && entry.accountType === AccountType.CHARGES,
+        (entry) => entry.departmentId === budget.departmentId && entry.accountType === AccountType.CHARGES,
       ),
     );
     const actualProduits = sumAmounts(
       activeEdition.journalEntries.filter(
-        (entry) => entry.departmentId === department.id && entry.accountType === AccountType.PRODUITS,
+        (entry) => entry.departmentId === budget.departmentId && entry.accountType === AccountType.PRODUITS,
       ),
     );
 
     return {
-      name: department.name,
+      name: budget.department.name,
       budgetCharges,
       budgetProduits,
       budgetResult: budgetProduits - budgetCharges,

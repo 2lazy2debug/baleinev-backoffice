@@ -1,4 +1,4 @@
-import { accessibleDepartmentRoleIds, getCurrentUserAccess, isAdmin } from "@/lib/access";
+import { accessibleDepartmentIds, getCurrentUserAccess, isAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { isVaultConfigured } from "@/lib/secret-crypto";
@@ -19,14 +19,14 @@ export default async function PasswordsPage() {
     );
   }
 
-  const visibleDepartmentIds = accessibleDepartmentRoleIds(access);
+  const visibleDepartmentIds = accessibleDepartmentIds(access);
 
   const [entries, assignableDepartments] = await Promise.all([
     prisma.passwordEntry.findMany({
       where:
         visibleDepartmentIds === null
           ? {}
-          : { departmentRoles: { some: { id: { in: visibleDepartmentIds } } } },
+          : { departments: { some: { id: { in: visibleDepartmentIds } } } },
       orderBy: { name: "asc" },
       select: {
         id: true,
@@ -34,13 +34,13 @@ export default async function PasswordsPage() {
         login: true,
         website: true,
         totpCipher: true,
-        departmentRoles: { select: { id: true, name: true }, orderBy: { name: "asc" } },
+        departments: { select: { id: true, name: true }, orderBy: { name: "asc" } },
       },
     }),
     isAdmin(access)
-      ? prisma.departmentRole.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } })
-      : prisma.departmentRole.findMany({
-          where: { id: { in: access.departmentRoleIds } },
+      ? prisma.department.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } })
+      : prisma.department.findMany({
+          where: { id: { in: access.departmentIds } },
           orderBy: { name: "asc" },
           select: { id: true, name: true },
         }),
@@ -54,7 +54,7 @@ export default async function PasswordsPage() {
     login: entry.login,
     website: entry.website,
     has2fa: entry.totpCipher !== null,
-    departmentRoles: entry.departmentRoles,
+    departments: entry.departments,
   }));
 
   return (

@@ -5,6 +5,7 @@ import { AccountType, TaskType } from "@prisma/client";
 
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { assertDepartmentsBudget } from "@/lib/departments";
 import { requireWritableEdition, resolveWritableEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
@@ -42,6 +43,8 @@ export async function createJournalEntryAction(_prevState: ActionState, formData
     }
 
     const amount = toPositiveAmount(amountRaw);
+
+    await assertDepartmentsBudget([departmentId]);
 
     const counterparty = String(formData.get("counterparty") ?? "").trim() || null;
     const referenceNumber = String(formData.get("referenceNumber") ?? "").trim() || null;
@@ -162,6 +165,8 @@ export async function updateJournalEntryAction(_prevState: ActionState, formData
     const amount = toPositiveAmount(amountRaw);
     const costCenterId = String(formData.get("costCenterId") ?? "").trim() || null;
 
+    await assertDepartmentsBudget([departmentId]);
+
     // Absent is not the same as blank. The edit form posts these two as named
     // inputs, so clearing one there still clears it; the journal's inline row
     // editor has no such column and must not null what it cannot show.
@@ -247,6 +252,8 @@ export async function bulkUpdateJournalEntriesAction(_prevState: ActionState, fo
         costCenterId: String(item.costCenterId ?? "").trim() || null,
       };
     });
+
+    await assertDepartmentsBudget(updates.map((update) => update.departmentId));
 
     const stored = await prisma.journalEntry.findMany({
       where: { id: { in: updates.map((update) => update.id) } },

@@ -6,7 +6,6 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
-import { syncDepartmentRolesFromDepartments } from "@/lib/department-roles";
 import { ensureUserEdition } from "@/lib/edition-context";
 import { type ActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
 
@@ -20,10 +19,10 @@ function getRequiredString(formData: FormData, key: string) {
   return value;
 }
 
-function getRoleAndDepartmentRoleIds(formData: FormData) {
+function getRoleAndDepartmentIds(formData: FormData) {
   const role = getRequiredString(formData, "role") as UserRole;
-  const departmentRoleIds = formData
-    .getAll("departmentRoleIds")
+  const departmentIds = formData
+    .getAll("departmentIds")
     .map((value) => String(value).trim())
     .filter(Boolean);
 
@@ -31,28 +30,28 @@ function getRoleAndDepartmentRoleIds(formData: FormData) {
     throw new Error("Invalid role.");
   }
 
-  if (role === UserRole.DEPARTMENT && departmentRoleIds.length === 0) {
-    throw new Error("At least one department role is required for department users.");
+  if (role === UserRole.DEPARTMENT && departmentIds.length === 0) {
+    throw new Error("At least one department is required for department users.");
   }
 
   return {
     role,
-    departmentRoleIds: role === UserRole.DEPARTMENT ? [...new Set(departmentRoleIds)] : [],
+    departmentIds: role === UserRole.DEPARTMENT ? [...new Set(departmentIds)] : [],
   };
 }
 
-async function ensureDepartmentRolesExist(departmentRoleIds: string[]) {
-  if (departmentRoleIds.length === 0) {
+async function ensureDepartmentsExist(departmentIds: string[]) {
+  if (departmentIds.length === 0) {
     return;
   }
 
-  const departmentRoles = await prisma.departmentRole.findMany({
-    where: { id: { in: departmentRoleIds } },
+  const departments = await prisma.department.findMany({
+    where: { id: { in: departmentIds } },
     select: { id: true },
   });
 
-  if (departmentRoles.length !== departmentRoleIds.length) {
-    throw new Error("One or more selected department roles do not exist.");
+  if (departments.length !== departmentIds.length) {
+    throw new Error("One or more selected departments do not exist.");
   }
 }
 
@@ -82,14 +81,13 @@ async function assertAdminCanBeRemoved(userId: string, nextRole?: UserRole) {
 export async function createUserAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
-    await syncDepartmentRolesFromDepartments();
 
     const name = getRequiredString(formData, "name");
     const email = getRequiredString(formData, "email").toLowerCase();
     const password = getRequiredString(formData, "password");
-    const { role, departmentRoleIds } = getRoleAndDepartmentRoleIds(formData);
+    const { role, departmentIds } = getRoleAndDepartmentIds(formData);
 
-    await ensureDepartmentRolesExist(departmentRoleIds);
+    await ensureDepartmentsExist(departmentIds);
 
     const user = await prisma.user.create({
       data: {
@@ -97,8 +95,8 @@ export async function createUserAction(_prevState: ActionState, formData: FormDa
         email,
         passwordHash: await hash(password, 12),
         role,
-        departmentRoles: {
-          connect: departmentRoleIds.map((id) => ({ id })),
+        departments: {
+          connect: departmentIds.map((id) => ({ id })),
         },
       },
       select: { id: true },
@@ -118,15 +116,14 @@ export async function createUserAction(_prevState: ActionState, formData: FormDa
 export async function updateUserAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
-    await syncDepartmentRolesFromDepartments();
 
     const userId = getRequiredString(formData, "userId");
     const name = getRequiredString(formData, "name");
     const email = getRequiredString(formData, "email").toLowerCase();
     const newPassword = String(formData.get("newPassword") ?? "").trim();
-    const { role, departmentRoleIds } = getRoleAndDepartmentRoleIds(formData);
+    const { role, departmentIds } = getRoleAndDepartmentIds(formData);
 
-    await ensureDepartmentRolesExist(departmentRoleIds);
+    await ensureDepartmentsExist(departmentIds);
     await assertAdminCanBeRemoved(userId, role);
 
     await prisma.user.update({
@@ -135,8 +132,8 @@ export async function updateUserAction(_prevState: ActionState, formData: FormDa
         name,
         email,
         role,
-        departmentRoles: {
-          set: departmentRoleIds.map((id) => ({ id })),
+        departments: {
+          set: departmentIds.map((id) => ({ id })),
         },
         ...(newPassword ? { passwordHash: await hash(newPassword, 12) } : {}),
       },

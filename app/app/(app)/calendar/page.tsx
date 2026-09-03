@@ -17,12 +17,9 @@ export default async function CalendarPage() {
   const copy = getDictionary(locale);
 
   const editionId = await resolveEditionIdOrNull();
-  const activeEdition = editionId ? await prisma.edition.findUnique({
-    where: { id: editionId },
-    include: {
-      departments: { orderBy: { name: "asc" } },
-    },
-  }) : null;
+  const activeEdition = editionId
+    ? await prisma.edition.findUnique({ where: { id: editionId }, select: { id: true, name: true } })
+    : null;
 
   if (!activeEdition) {
     return (
@@ -32,11 +29,9 @@ export default async function CalendarPage() {
     );
   }
 
-  const departmentIdsForUser = activeEdition.departments
-    .filter((department) => access.departmentRoleNames.includes(department.name))
-    .map((department) => department.id);
-
-  const [pendingTasks, appointments, users] = await Promise.all([
+  // An invite names a department, and a department is what the user belongs to —
+  // no name matching between an edition's list and the user's own.
+  const [pendingTasks, appointments, users, departments] = await Promise.all([
     getPendingTasksForUser(access),
     prisma.appointment.findMany({
       where: {
@@ -47,7 +42,7 @@ export default async function CalendarPage() {
             OR: [
               { inviteAll: true },
               { inviteUsers: { some: { userId: access.id } } },
-              { inviteDepartments: { some: { departmentId: { in: departmentIdsForUser } } } },
+              { inviteDepartments: { some: { departmentId: { in: access.departmentIds } } } },
             ],
           }),
       },
@@ -64,6 +59,7 @@ export default async function CalendarPage() {
     access.role === "ADMIN"
       ? prisma.user.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } })
       : Promise.resolve([]),
+    prisma.department.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
 
   return (
@@ -75,7 +71,7 @@ export default async function CalendarPage() {
             <CreateAppointmentModal
               copy={{ ...copy.calendar, cancel: copy.shell.cancel }}
               users={users}
-              departments={activeEdition.departments}
+              departments={departments}
             />
           </WritableEditionOnly>
         ) : null

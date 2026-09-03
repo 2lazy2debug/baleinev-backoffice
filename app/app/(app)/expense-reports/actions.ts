@@ -78,16 +78,16 @@ export async function createExpenseReportAction(
       select: { drivingRatePerKm: true },
     });
 
-    const department = await prisma.department.findFirst({
-      where: { id: departmentId, editionId },
-      select: { name: true },
+    const department = await prisma.department.findUnique({
+      where: { id: departmentId },
+      select: { id: true },
     });
 
     if (!department) {
-      throw new Error("Selected department does not belong to the active edition.");
+      throw new Error("That department no longer exists.");
     }
 
-    if (access.role !== "ADMIN" && !access.departmentRoleNames.includes(department.name)) {
+    if (access.role !== "ADMIN" && !access.departmentIds.includes(department.id)) {
       throw new Error("You can only file expenses for a department you belong to.");
     }
 

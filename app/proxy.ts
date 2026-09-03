@@ -32,7 +32,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (token.role === "DEPARTMENT") {
-    const isMoneyAccountManager = (token.departmentRoleNames ?? []).includes(MONEY_ACCOUNT_MANAGER_DEPARTMENT);
+    const isMoneyAccountManager = (token.departmentNames ?? []).includes(MONEY_ACCOUNT_MANAGER_DEPARTMENT);
 
     if (pathname.startsWith("/money-accounts")) {
       if (!isMoneyAccountManager) {

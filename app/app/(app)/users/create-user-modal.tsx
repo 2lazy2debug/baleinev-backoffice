@@ -11,7 +11,7 @@ import { initialActionState } from "@/lib/server-action-helpers";
 
 import { createUserAction } from "./actions";
 
-type DepartmentRoleItem = {
+type DepartmentItem = {
   id: string;
   name: string;
 };
@@ -31,11 +31,11 @@ type Copy = {
 };
 
 type Props = {
-  departmentRoles: DepartmentRoleItem[];
+  departments: DepartmentItem[];
   copy: Copy;
 };
 
-export function CreateUserModal({ departmentRoles, copy }: Props) {
+export function CreateUserModal({ departments, copy }: Props) {
   const [open, setOpen] = useState(false);
   const [createState, createFormAction, isCreating] = useActionState(createUserAction, initialActionState);
   const markSubmitted = useCloseOnSuccess(createState, isCreating, () => setOpen(false));
@@ -88,10 +88,10 @@ export function CreateUserModal({ departmentRoles, copy }: Props) {
           </Field>
 
           <Field label={copy.departments}>
-            <MultiSelect name="departmentRoleIds" defaultValue={[]} rows={departmentRoles.length}>
-              {departmentRoles.map((departmentRole) => (
-                <option key={departmentRole.id} value={departmentRole.id}>
-                  {departmentRole.name}
+            <MultiSelect name="departmentIds" defaultValue={[]} rows={departments.length}>
+              {departments.map((department) => (
+                <option key={department.id} value={department.id}>
+                  {department.name}
                 </option>
               ))}
             </MultiSelect>

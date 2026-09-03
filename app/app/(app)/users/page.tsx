@@ -1,6 +1,5 @@
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
-import { syncDepartmentRolesFromDepartments } from "@/lib/department-roles";
 import { getDictionary, getLocale } from "@/lib/i18n";
 
 import { UsersPageClient } from "./client";
@@ -11,14 +10,13 @@ export default async function UsersPage() {
   const locale = await getLocale();
   const copy = getDictionary(locale);
   const access = await requireAdmin();
-  await syncDepartmentRolesFromDepartments();
 
-  const [users, departmentRoles] = await Promise.all([
+  const [users, departments] = await Promise.all([
     prisma.user.findMany({
       orderBy: [{ role: "asc" }, { name: "asc" }],
-      include: { departmentRoles: { select: { id: true, name: true }, orderBy: { name: "asc" } } },
+      include: { departments: { select: { id: true, name: true }, orderBy: { name: "asc" } } },
     }),
-    prisma.departmentRole.findMany({ orderBy: { name: "asc" } }),
+    prisma.department.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
 
   return (
@@ -29,7 +27,7 @@ export default async function UsersPage() {
         description={copy.users.subtitle}
         actions={
           <CreateUserModal
-            departmentRoles={departmentRoles}
+            departments={departments}
             copy={{
               create: copy.users.create,
               cancel: copy.shell.cancel,
@@ -47,7 +45,7 @@ export default async function UsersPage() {
         }
       />
 
-      <UsersPageClient users={users} departmentRoles={departmentRoles} currentUserId={access.id} copy={copy} />
+      <UsersPageClient users={users} departments={departments} currentUserId={access.id} copy={copy} />
     </div>
   );
 }

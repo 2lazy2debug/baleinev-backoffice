@@ -13,32 +13,9 @@ export default async function BudgetPage() {
   const access = await getCurrentUserAccess();
 
   const editionId = await resolveEditionIdOrNull();
-  const activeEdition = editionId ? await prisma.edition.findUnique({
-    where: { id: editionId },
-    include: {
-      departments: {
-        orderBy: { name: "asc" },
-        include: {
-          _count: { select: { journalEntries: true } },
-          budgetLines: {
-            orderBy: [{ accountType: "asc" }, { createdAt: "desc" }],
-          },
-          journalEntries: {
-            orderBy: [{ date: "desc" }, { sequenceNumber: "desc" }],
-            select: {
-              id: true,
-              accountType: true,
-              label: true,
-              amount: true,
-              date: true,
-              referenceNumber: true,
-              counterparty: true,
-            },
-          },
-        },
-      },
-    },
-  }) : null;
+  const activeEdition = editionId
+    ? await prisma.edition.findUnique({ where: { id: editionId }, select: { id: true, name: true } })
+    : null;
 
   if (!activeEdition) {
     return (
@@ -48,9 +25,48 @@ export default async function BudgetPage() {
     );
   }
 
-  const visibleDepartments = access.role === "ADMIN"
-    ? activeEdition.departments
-    : activeEdition.departments.filter((department) => access.departmentRoleNames.includes(department.name));
+  // The screen is one row per *department that budgets*, not per budget row: a
+  // department turns its budget on in /departments and starts with an empty one,
+  // and the `DepartmentBudget` appears only once a line is written into it.
+  const [departments, journalEntries] = await Promise.all([
+    prisma.department.findMany({
+      where: {
+        hasBudget: true,
+        ...(access.role === "ADMIN" ? {} : { id: { in: access.departmentIds } }),
+      },
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        budgets: {
+          where: { editionId: activeEdition.id },
+          select: {
+            budgetLines: {
+              orderBy: [{ accountType: "asc" }, { createdAt: "desc" }],
+              select: { id: true, accountType: true, label: true, amount: true, notes: true },
+            },
+          },
+        },
+      },
+    }),
+    // Journal entries carry the edition themselves and point straight at the
+    // department, so the actuals come from one query rather than from each
+    // department's budget row.
+    prisma.journalEntry.findMany({
+      where: { editionId: activeEdition.id, departmentId: { not: null } },
+      orderBy: [{ date: "desc" }, { sequenceNumber: "desc" }],
+      select: {
+        id: true,
+        departmentId: true,
+        accountType: true,
+        label: true,
+        amount: true,
+        date: true,
+        referenceNumber: true,
+        counterparty: true,
+      },
+    }),
+  ]);
 
   return (
     <BudgetPageClient
@@ -58,26 +74,27 @@ export default async function BudgetPage() {
       editionName={activeEdition.name}
       canManage={access.role === "ADMIN"}
       emptyStateMessage={access.role === "ADMIN" ? copy.budget.noDepartments : copy.budget.noAssignedDepartment}
-      departments={visibleDepartments.map((department) => ({
+      departments={departments.map((department) => ({
         id: department.id,
         name: department.name,
-        journalEntriesCount: department._count.journalEntries,
-        budgetLines: department.budgetLines.map((line) => ({
+        budgetLines: (department.budgets[0]?.budgetLines ?? []).map((line) => ({
           id: line.id,
           accountType: line.accountType,
           label: line.label,
           amount: decimalToNumber(line.amount),
           notes: line.notes,
         })),
-        journalEntries: department.journalEntries.map((entry) => ({
-          id: entry.id,
-          accountType: entry.accountType,
-          label: entry.label,
-          amount: decimalToNumber(entry.amount),
-          date: entry.date.toISOString(),
-          referenceNumber: entry.referenceNumber,
-          counterparty: entry.counterparty,
-        })),
+        journalEntries: journalEntries
+          .filter((entry) => entry.departmentId === department.id)
+          .map((entry) => ({
+            id: entry.id,
+            accountType: entry.accountType,
+            label: entry.label,
+            amount: decimalToNumber(entry.amount),
+            date: entry.date.toISOString(),
+            referenceNumber: entry.referenceNumber,
+            counterparty: entry.counterparty,
+          })),
       }))}
     />
   );

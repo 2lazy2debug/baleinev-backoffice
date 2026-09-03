@@ -27,11 +27,11 @@ export type TotpResult =
   | { ok: true; code: string; secondsRemaining: number; period: number }
   | { ok: false; error: string };
 
-function parseDepartmentRoleIds(formData: FormData): string[] {
+function parseDepartmentIds(formData: FormData): string[] {
   return [
     ...new Set(
       formData
-        .getAll("departmentRoleIds")
+        .getAll("departmentIds")
         .map((value) => String(value).trim())
         .filter(Boolean),
     ),
@@ -47,7 +47,7 @@ async function resolveAssignableDepartments(
     throw new Error("Pick at least one department for this entry.");
   }
 
-  const existing = await prisma.departmentRole.findMany({
+  const existing = await prisma.department.findMany({
     where: { id: { in: submittedIds } },
     select: { id: true },
   });
@@ -56,7 +56,7 @@ async function resolveAssignableDepartments(
   }
 
   if (!isAdmin(access)) {
-    const allowed = new Set(access.departmentRoleIds);
+    const allowed = new Set(access.departmentIds);
     if (submittedIds.some((id) => !allowed.has(id))) {
       throw new Error("You can only share entries with your own departments.");
     }
@@ -69,14 +69,14 @@ async function resolveAssignableDepartments(
 async function requireEntryAccess(access: AccessContext, entryId: string) {
   const entry = await prisma.passwordEntry.findUnique({
     where: { id: entryId },
-    include: { departmentRoles: { select: { id: true } } },
+    include: { departments: { select: { id: true } } },
   });
 
   if (!entry) {
     throw new Error("Entry not found.");
   }
 
-  const entryDepartmentIds = entry.departmentRoles.map((role) => role.id);
+  const entryDepartmentIds = entry.departments.map((department) => department.id);
   if (!canAccessDepartments(access, entryDepartmentIds)) {
     throw new Error("You don't have access to this entry.");
   }
@@ -96,7 +96,7 @@ export async function createPasswordEntryAction(
     const password = getRequiredString(formData, "password");
     const website = String(formData.get("website") ?? "").trim();
     const totpSeed = String(formData.get("totp") ?? "").trim();
-    const departmentRoleIds = await resolveAssignableDepartments(access, parseDepartmentRoleIds(formData));
+    const departmentIds = await resolveAssignableDepartments(access, parseDepartmentIds(formData));
 
     if (totpSeed) {
       assertValidTotpSeed(totpSeed);
@@ -117,7 +117,7 @@ export async function createPasswordEntryAction(
         totpIv: totpSealed?.iv ?? null,
         totpTag: totpSealed?.tag ?? null,
         createdById: access.id,
-        departmentRoles: { connect: departmentRoleIds.map((id) => ({ id })) },
+        departments: { connect: departmentIds.map((id) => ({ id })) },
       },
     });
 
@@ -144,7 +144,7 @@ export async function updatePasswordEntryAction(
     const totpSeed = String(formData.get("totp") ?? "").trim();
     const clearTotp = String(formData.get("clearTotp") ?? "") === "on";
 
-    const submittedDepartments = await resolveAssignableDepartments(access, parseDepartmentRoleIds(formData));
+    const submittedDepartments = await resolveAssignableDepartments(access, parseDepartmentIds(formData));
 
     // Non-admins can't manage sharing to departments they don't belong to, so
     // preserve any such existing links rather than silently dropping them.
@@ -153,7 +153,7 @@ export async function updatePasswordEntryAction(
       : [
           ...new Set([
             ...submittedDepartments,
-            ...entryDepartmentIds.filter((id) => !access.departmentRoleIds.includes(id)),
+            ...entryDepartmentIds.filter((id) => !access.departmentIds.includes(id)),
           ]),
         ];
 
@@ -182,7 +182,7 @@ export async function updatePasswordEntryAction(
           : clearTotp
             ? { totpCipher: null, totpIv: null, totpTag: null }
             : {}),
-        departmentRoles: { set: finalDepartmentIds.map((id) => ({ id })) },
+        departments: { set: finalDepartmentIds.map((id) => ({ id })) },
       },
     });
 

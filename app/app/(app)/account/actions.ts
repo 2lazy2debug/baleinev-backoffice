@@ -115,19 +115,19 @@ export async function requestDepartmentAccessAction(
 ): Promise<ActionState> {
   try {
     const access = await getCurrentUserAccess();
-    const departmentRoleId = getRequiredString(formData, "departmentRoleId");
+    const departmentId = getRequiredString(formData, "departmentId");
 
-    const departmentRole = await prisma.departmentRole.findUnique({
-      where: { id: departmentRoleId },
+    const department = await prisma.department.findUnique({
+      where: { id: departmentId },
       select: { id: true, name: true },
     });
 
-    if (!departmentRole) {
+    if (!department) {
       throw new Error("That department no longer exists.");
     }
 
-    if (access.departmentRoleIds.includes(departmentRole.id)) {
-      throw new Error(`You are already in ${departmentRole.name}.`);
+    if (access.departmentIds.includes(department.id)) {
+      throw new Error(`You are already in ${department.name}.`);
     }
 
     const pending = await prisma.task.findFirst({
@@ -135,20 +135,20 @@ export async function requestDepartmentAccessAction(
         type: TaskType.DEPARTMENT_ACCESS_REQUEST,
         status: TaskStatus.PENDING,
         createdById: access.id,
-        departmentRoleId: departmentRole.id,
+        departmentId: department.id,
       },
       select: { id: true },
     });
 
     if (pending) {
-      throw new Error(`Your request to join ${departmentRole.name} is still with the admins.`);
+      throw new Error(`Your request to join ${department.name} is still with the admins.`);
     }
 
     await createDepartmentAccessRequestTask({
       userId: access.id,
       userName: access.userName,
-      departmentRoleId: departmentRole.id,
-      departmentRoleName: departmentRole.name,
+      departmentId: department.id,
+      departmentName: department.name,
     });
 
     revalidatePath("/account");

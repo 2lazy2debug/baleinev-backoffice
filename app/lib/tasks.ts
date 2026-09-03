@@ -37,26 +37,26 @@ export async function createUserTask({
  * all of them. Nothing here grants anything — the membership is still assigned
  * by hand in `/users`, and resolving the task never touches it.
  *
- * Global rather than edition-scoped, like the department roles it points at.
+ * Global rather than edition-scoped, like the departments it points at.
  */
 export async function createDepartmentAccessRequestTask({
   userId,
   userName,
-  departmentRoleId,
-  departmentRoleName,
+  departmentId,
+  departmentName,
 }: {
   userId: string;
   userName: string;
-  departmentRoleId: string;
-  departmentRoleName: string;
+  departmentId: string;
+  departmentName: string;
 }) {
   await prisma.task.create({
     data: {
       type: TaskType.DEPARTMENT_ACCESS_REQUEST,
-      title: `${userName} asked to join ${departmentRoleName}`,
+      title: `${userName} asked to join ${departmentName}`,
       assignedToRole: UserRole.ADMIN,
       createdById: userId,
-      departmentRoleId,
+      departmentId,
     },
   });
 }
@@ -68,13 +68,13 @@ export async function getPendingDepartmentAccessRequests(userId: string) {
       type: TaskType.DEPARTMENT_ACCESS_REQUEST,
       status: TaskStatus.PENDING,
       createdById: userId,
-      departmentRoleId: { not: null },
+      departmentId: { not: null },
     },
-    select: { departmentRole: { select: { id: true, name: true } } },
+    select: { department: { select: { id: true, name: true } } },
     orderBy: { createdAt: "asc" },
   });
 
-  return requests.flatMap((request) => (request.departmentRole ? [request.departmentRole] : []));
+  return requests.flatMap((request) => (request.department ? [request.department] : []));
 }
 
 export async function resolvePendingTask({

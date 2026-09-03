@@ -1,6 +1,7 @@
 
 import { getCurrentUserAccess, isAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { budgetingDepartments } from "@/lib/departments";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
@@ -25,7 +26,6 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
   const activeEdition = editionId ? await prisma.edition.findUnique({
     where: { id: editionId },
     include: {
-      departments: { orderBy: { name: "asc" } },
       moneyAccounts: { orderBy: { name: "asc" } },
       costCenters: { orderBy: { code: "asc" } },
       journalEntries: {
@@ -39,6 +39,9 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
       },
     },
   }) : null;
+
+  // Departments are global; the journal offers the ones that budget.
+  const departments = activeEdition ? await budgetingDepartments() : [];
 
   if (!activeEdition) {
     return (
@@ -94,7 +97,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
         activeEdition={{
           id: activeEdition.id,
           name: activeEdition.name,
-          departments: activeEdition.departments,
+          departments,
             moneyAccounts: activeEdition.moneyAccounts.map((account) => ({
               id: account.id,
               name: account.name,

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { Card, PageHeader } from "@/components/ui";
 import { prisma } from "@/lib/db";
+import { budgetingDepartments } from "@/lib/departments";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
@@ -21,7 +22,6 @@ export default async function JournalEntryEditPage({ params }: JournalEntryEditP
   const activeEdition = editionId ? await prisma.edition.findUnique({
     where: { id: editionId },
     include: {
-      departments: { orderBy: { name: "asc" } },
       moneyAccounts: { orderBy: { name: "asc" } },
       costCenters: { orderBy: { code: "asc" } },
     },
@@ -30,6 +30,8 @@ export default async function JournalEntryEditPage({ params }: JournalEntryEditP
   if (!activeEdition) {
     notFound();
   }
+
+  const departments = await budgetingDepartments();
 
   const entry = await prisma.journalEntry.findFirst({
     where: {
@@ -67,7 +69,7 @@ export default async function JournalEntryEditPage({ params }: JournalEntryEditP
             referenceNumber: entry.referenceNumber,
             costCenterId: entry.costCenterId,
           }}
-          departments={activeEdition.departments}
+          departments={departments}
           moneyAccounts={activeEdition.moneyAccounts}
           costCenters={activeEdition.costCenters}
         />
