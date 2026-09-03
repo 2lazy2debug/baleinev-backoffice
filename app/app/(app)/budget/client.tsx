@@ -364,7 +364,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                                             </IconButton>
                                             <form action={deleteLineFormAction}>
                                               <input type="hidden" name="budgetLineId" value={line.id} />
-                                              <IconButton type="submit" tone="delete" label={copy.budget.deleteDepartment} disabled={isDeletingLine}>
+                                              <IconButton type="submit" tone="delete" label={copy.budget.deleteEntry} disabled={isDeletingLine}>
                                                 <Trash2 />
                                               </IconButton>
                                             </form>

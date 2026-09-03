@@ -95,7 +95,7 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
                         <IconButton
                           type="submit"
                           tone="delete"
-                          label={costCenter.canDelete ? copy.budget.deleteDepartment : copy.costCenters.cannotDelete}
+                          label={costCenter.canDelete ? copy.costCenters.delete : copy.costCenters.cannotDelete}
                           disabled={!costCenter.canDelete || isDeletingCostCenter}
                         >
                           <Trash2 />

@@ -14,6 +14,7 @@ import {
   Landmark,
   Boxes,
   ListTodo,
+  Network,
   ReceiptText,
   Target,
   Users,
@@ -45,7 +46,7 @@ type AppShellProps = {
   pendingTaskCount: number;
 };
 
-const GLOBAL_ROUTES = ["/addresses", "/passwords", "/stock", "/users", "/templates", "/editions", "/account"];
+const GLOBAL_ROUTES = ["/addresses", "/passwords", "/stock", "/users", "/departments", "/templates", "/editions", "/account"];
 
 export function AppShell({ children, userName, editions, selectedEditionId, locale, role, canManageMoneyAccounts, pendingTaskCount }: AppShellProps) {
   const pathname = usePathname();
@@ -85,6 +86,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
     { type: "divider", key: "d3" },
     { type: "item", href: "/editions", label: copy.editions, icon: FileStack },
     moneyAccountsItem,
+    { type: "item", href: "/departments", label: copy.departments, icon: Network },
     { type: "item", href: "/users", label: copy.users, icon: Users },
   ];
   const departmentNavigation: NavigationItem[] = [

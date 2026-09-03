@@ -85,10 +85,26 @@ export function CardletField({ label, className, children, ...props }: CardletFi
   );
 }
 
+type CardletActionsProps = React.HTMLAttributes<HTMLDivElement> & {
+  /**
+   * A trailing row of icon-only actions instead of the full-width stack. Two
+   * <IconButton>s are already a 44px target each, and stacking them turns a
+   * list of twenty rows into a page of buttons — a phone reads such a list to
+   * find one row, not to act on every one.
+   */
+  inline?: boolean;
+};
+
 /** Row actions, stacked full-width — a phone has no room for a trailing actions column. */
-export function CardletActions({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function CardletActions({ inline = false, className, children, ...props }: CardletActionsProps) {
   return (
-    <div className={cn("flex flex-col gap-2 [&>*]:w-full [&_button]:w-full", className)} {...props}>
+    <div
+      className={cn(
+        inline ? "flex items-center justify-end gap-2" : "flex flex-col gap-2 [&>*]:w-full [&_button]:w-full",
+        className,
+      )}
+      {...props}
+    >
       {children}
     </div>
   );
