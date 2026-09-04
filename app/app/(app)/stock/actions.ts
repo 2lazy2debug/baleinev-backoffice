@@ -115,6 +115,27 @@ function toExpireDate(raw: string | null, expireable: boolean): Date | null {
 }
 
 /**
+ * A barcode belongs to one item. Checked before the write so the person gets a
+ * sentence rather than the unique index's own words — and checked *inside* the
+ * transaction that creates the item, where there is one.
+ */
+async function assertBarcodeFree(
+  client: Prisma.TransactionClient,
+  barcode: string | null,
+  elementId?: string,
+) {
+  if (!barcode) {
+    return;
+  }
+
+  const owner = await client.stockElement.findUnique({ where: { barcode }, select: { id: true } });
+
+  if (owner && owner.id !== elementId) {
+    throw new Error("Another item already carries this barcode. Edit that item instead.");
+  }
+}
+
+/**
  * The one place a quantity changes.
  *
  * `delta` is signed here (the caller knows whether it is adding or taking out);
@@ -211,9 +232,15 @@ export async function addStockAction(_prevState: ActionState, formData: FormData
     const isNewElement = String(formData.get("createElement") ?? "") === "on";
 
     await prisma.$transaction(async (tx) => {
-      const elementId = isNewElement
-        ? (await tx.stockElement.create({ data: elementFieldsFrom(formData) })).id
-        : getRequiredString(formData, "elementId");
+      let elementId: string;
+
+      if (isNewElement) {
+        const fields = elementFieldsFrom(formData);
+        await assertBarcodeFree(tx, fields.barcode);
+        elementId = (await tx.stockElement.create({ data: fields })).id;
+      } else {
+        elementId = getRequiredString(formData, "elementId");
+      }
 
       const element = await tx.stockElement.findUnique({
         where: { id: elementId },
@@ -405,7 +432,9 @@ function elementFieldsFrom(formData: FormData) {
 export async function createStockElementAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await getCurrentUserAccess();
-    await prisma.stockElement.create({ data: elementFieldsFrom(formData) });
+    const data = elementFieldsFrom(formData);
+    await assertBarcodeFree(prisma, data.barcode);
+    await prisma.stockElement.create({ data });
 
     revalidateStock();
     return { error: null };
@@ -424,6 +453,8 @@ export async function updateStockElementAction(_prevState: ActionState, formData
     await getCurrentUserAccess();
     const elementId = getRequiredString(formData, "elementId");
     const data = elementFieldsFrom(formData);
+
+    await assertBarcodeFree(prisma, data.barcode, elementId);
 
     if (!data.expireable) {
       const dated = await prisma.stockItem.count({ where: { elementId, expireDate: { not: null } } });
