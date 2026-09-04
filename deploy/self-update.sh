@@ -161,24 +161,47 @@ wait_healthy() {
 }
 
 # --- Build and activate a tag -------------------------------------------------
+# Names the step that failed, for the journal and for last-deploy.json.
+FAILED_STEP=""
+
+# step <name> <command…> — run one build step and report it if it fails.
+#
+# Every step below MUST be checked by hand. `set -e` does NOT apply inside
+# build_and_start: bash suspends it for the entire call chain of a function
+# invoked in an `if` condition, and build_and_start is only ever called that
+# way. Before this, a failing `npx prisma migrate deploy` printed its error,
+# the function stepped straight over it to `npm run build`, the restart went
+# ahead, wait_healthy passed — /api/health touches no table a migration would
+# have added — and the tag was recorded "deployed … ok (migrated)". v0.27.0 and
+# v0.28.0 both shipped that way onto a schema two migrations behind.
+step() {
+  local what="$1"; shift
+  if ! "$@"; then
+    FAILED_STEP="$what"
+    fail "step failed: $what"
+    return 1
+  fi
+}
+
 # build_and_start <tag> <migrate:true|false>. Returns non-zero on the first
 # failing step, which is what triggers the rollback in main().
 build_and_start() {
   local tag="$1" migrate="$2"
+  FAILED_STEP=""
   # The checkout is the repo root; the build is in app/. Never conflate them.
-  git -C "$CHECKOUT_ROOT" checkout -q --detach "tags/$tag"
-  cd "$PROJECT_ROOT"
+  step "git checkout $tag" git -C "$CHECKOUT_ROOT" checkout -q --detach "tags/$tag" || return 1
+  step "cd $PROJECT_ROOT" cd "$PROJECT_ROOT" || return 1
   # --omit=dev: everything `next build` touches is a real dependency, which is
   # what moving typescript/tailwind/prisma/tsx into `dependencies` bought us.
-  npm ci --omit=dev
+  step "npm ci" npm ci --omit=dev || return 1
   # The generated client is gitignored, so a fresh checkout has none.
-  npx prisma generate
+  step "prisma generate" npx prisma generate || return 1
   if [[ "$migrate" == "true" ]]; then
-    npx prisma migrate deploy
+    step "prisma migrate deploy" npx prisma migrate deploy || return 1
   fi
-  npm run build
-  sudo systemctl restart "$SERVICE_NAME"
-  wait_healthy
+  step "next build" npm run build || return 1
+  step "systemctl restart $SERVICE_NAME" sudo systemctl restart "$SERVICE_NAME" || return 1
+  step "health check" wait_healthy || return 1
 }
 
 # =============================================================================
@@ -304,13 +327,16 @@ main() {
   fi
 
   # --- Rollback ---------------------------------------------------------------
-  fail "deploy of $latest_tag failed; rolling back."
+  # Which step broke is the first thing an operator needs and the last thing the
+  # journal makes easy to find, so it travels in the record too.
+  local failed_at="${FAILED_STEP:-unknown step}"
+  fail "deploy of $latest_tag failed at: $failed_at; rolling back."
   touch "$STATE_DIR/failed-$latest_tag"
 
   if [[ -z "$deployed_tag" ]]; then
     fail "no previous tag on record — cannot auto-roll-back. Manual recovery needed."
     fail "pre-deploy snapshot: $backup_path"
-    record failed "$latest_tag" "deploy failed; no previous tag to roll back to"
+    record failed "$latest_tag" "failed at $failed_at; no previous tag to roll back to"
     exit 1
   fi
 
@@ -326,12 +352,13 @@ main() {
 
   if build_and_start "$deployed_tag" false; then
     fail "rolled back to $deployed_tag."
-    record rolled-back "$latest_tag" "deploy failed; rolled back to $deployed_tag"
+    record rolled-back "$latest_tag" "failed at $failed_at; rolled back to $deployed_tag"
     exit 1
   fi
 
   fail "ROLLBACK ALSO FAILED. The service may be down. Snapshot: $backup_path"
-  record failed "$latest_tag" "deploy AND rollback failed; manual recovery needed"
+  record failed "$latest_tag" \
+    "failed at $failed_at; rollback to $deployed_tag also failed (${FAILED_STEP:-unknown step}); manual recovery needed"
   exit 1
 }
 

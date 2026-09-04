@@ -151,6 +151,17 @@ the old schema and the app starts throwing at runtime, not at build time.
 - **A health gate, not a "did it start" check.** `http://127.0.0.1:3100/api/health` does a
   real `SELECT 1` through Prisma, so a green check proves the app reached Postgres. It is
   in `proxy.ts`'s early-return list, so it answers 200 rather than a 307 to `/login`.
+  It proves connectivity and nothing about the *schema*: it touches no table a migration
+  would have added, so it stays green on a database several migrations behind. The gate is
+  the last line of defence, never the first — the step checks above are what catch that.
+- **Every build step is checked.** `git checkout`, `npm ci`, `prisma generate`,
+  `prisma migrate deploy`, `next build`, the restart and the health gate each abort the
+  deploy on a non-zero exit, and the step's name lands in the journal and in
+  `last-deploy.json`. This is written out by hand, per step, and must stay that way:
+  `set -e` does **not** reach inside `build_and_start`, because bash suspends it for the
+  whole call chain of a function called in an `if` condition — which is the only way that
+  function is ever called. A step added without its own `|| return 1` is a step whose
+  failure the pipeline will step over and report as a successful deploy.
 - **Automatic rollback.** A failed deploy rebuilds the previously deployed tag. The
   snapshot is restored **only when a migration ran** — restoring otherwise would discard
   every write made during the build window to fix a problem that was never in the database.
@@ -311,6 +322,29 @@ Each of these is here because the symptom does not name the cause.
   predates it is baselined once by hand with `prisma migrate resolve --applied 0_init`.
   From there on, schema changes ship as real migrations and the tag says
   `requires-migration`.
+- **A failed migration blocks every later one, and says so only in the database.** Prisma
+  leaves the failed row in `_prisma_migrations` with `finished_at` NULL, and from then on
+  `migrate deploy` refuses everything with `P3009` — a *later*, perfectly good release then
+  deploys its code onto the old schema. The symptom is the app throwing `P2021` "table does
+  not exist" while the health check stays green. To recover: fix the migration file, then
+  on the box, as `blv`, from `/opt/blv/checkout/app`
+
+  ```bash
+  docker compose exec -T db psql -U blv -d baleinev_comptes \
+    -c "select migration_name, finished_at from _prisma_migrations order by started_at;"
+  npx prisma migrate resolve --rolled-back <migration_name>   # only if it truly rolled back
+  ```
+
+  `--rolled-back` is correct only when the migration left *nothing* behind. Prisma runs each
+  migration in one transaction, so a plain SQL failure rolls the whole file back and this is
+  the normal case — but check the schema before trusting it, and use `--applied` instead if
+  the migration was in fact completed by hand. Then tag a release to redeploy.
+- **Test a data migration against a snapshot, not against dev.** The `departments_expansion`
+  migration passed here and failed in production on the first of seventeen journal entries
+  carrying a department, because the dev database had none. Restore the newest
+  `backups/pre-*.zip` into a scratch database and run the migration there; `prisma migrate
+  diff --from-url <scratch> --to-schema-datamodel prisma/schema.prisma --exit-code` then
+  says whether the result actually matches the schema.
 - **Re-run both installers after any Node upgrade.** The units pin an absolute node path.
 - **One Caddy, two sites, one config.** Validate offline before every reload, and keep a
   copy of the last known-good Caddyfile.
