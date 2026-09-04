@@ -20,10 +20,14 @@ const API = "https://world.openfoodfacts.org/api/v2/product";
 // documents; `product_quantity`/`product_quantity_unit` is what it actually
 // fills in today, and `quantity` is the free text both are derived from — we
 // read all three, best first.
+//
+// The name is asked for in four languages for the same reason: see NAME_FIELDS.
 const USER_AGENT = "Baleinev Backoffice - stock scanner - https://baleinev.ch";
 const FIELDS = [
   "product_name",
+  "product_name_fr",
   "product_name_en",
+  "product_name_de",
   "brands",
   "quantity",
   "quantity_value",
@@ -88,6 +92,32 @@ function fromQuantityText(raw: unknown): { unitQty: string; unitName: string } {
   return { unitQty: toNumberText(last[1]), unitName: normalizeUnit(last[2]) };
 }
 
+/**
+ * The name, in the order this festival reads: French, then English, then German,
+ * then whatever the product is filed under.
+ *
+ * Not the viewer's locale — the item this fills in is written *once*, into a
+ * catalogue everyone shares, so it has to be the same name whoever scanned it.
+ * French leads because that is the language of the shelves it will sit on.
+ *
+ * Chained on `||` rather than `??` on purpose: Open Food Facts stores plenty of
+ * localized names as `""`, and an empty name has to fall through like a missing
+ * one.
+ */
+const NAME_FIELDS = ["product_name_fr", "product_name_en", "product_name_de", "product_name"] as const;
+
+function pickName(product: Record<string, unknown>): string {
+  for (const field of NAME_FIELDS) {
+    const name = String(product[field] ?? "").trim();
+
+    if (name) {
+      return name;
+    }
+  }
+
+  return "";
+}
+
 type ProductPayload = {
   status?: number;
   product?: Record<string, unknown>;
@@ -130,7 +160,7 @@ export async function fetchProductByBarcode(barcode: string): Promise<ProductDra
   const size = parsed.unitQty && parsed.unitName ? parsed : fromQuantityText(product.quantity);
 
   return {
-    name: String(product.product_name_en || product.product_name || "").trim(),
+    name: pickName(product),
     // Brands are one comma-separated string, most specific first.
     brand: String(product.brands ?? "").split(",")[0]?.trim() ?? "",
     unitQty: size.unitQty,

@@ -445,7 +445,9 @@ one of three things happens:
   field — the entry is finished exactly as a hand-picked one is.
 - **Nobody has filed it.** The same dialog switches to its "new item" half with the code attached,
   and whatever [Open Food Facts](https://world.openfoodfacts.org) knows about the product — name,
-  brand, and the size of one piece with its unit — already typed in for checking. A product the
+  brand, and the size of one piece with its unit — already typed in for checking. The name is taken
+  in one fixed order, French then English then German then whatever the product is filed under —
+  not the viewer's language, because the item is written once into a catalogue everyone shares. A product the
   service does not have, or cannot be reached about in six seconds, simply leaves the form empty:
   the lookup is a convenience, never a gate.
 - **The digits are not a GTIN.** Nothing is looked up and the dialog says so.
