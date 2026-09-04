@@ -414,8 +414,9 @@ shelf does not empty when an edition closes, and none of it is refused while a c
 selected.
 
 ### The three things it is made of
-- An **item** is the catalogue entry — a name, an optional brand, and the size of *one piece*
-  (a 1.5 l bottle is unit `l`, one piece = 1.5) plus whether that piece carries an expiry date.
+- An **item** is the catalogue entry — a name, an optional brand, the barcode printed on it when it
+  has one, and the size of *one piece* (a 1.5 l bottle is unit `l`, one piece = 1.5) plus whether
+  that piece carries an expiry date.
 - A **stock** is a place things sit in: a cellar, a container, a van.
 - An **entry** is one item, in one stock, at one expiry date, counted **in pieces**. Six bottles
   read as `6 x 1.5 l = 9 l`, which is why the two numbers are never mixed: the count is what you
@@ -430,6 +431,28 @@ The first visit asks which stock you are in, and writes the answer to the user
 (`User.selectedStockPlaceId`) exactly the way the selected edition is written. Every visit after
 that opens straight onto the contents, and the box icon next to "New entry" is how you change your
 mind. If the stock someone was in is deleted, they are asked again.
+
+### Scanning a barcode
+The square scan button in the "New entry" dialog opens the camera **in place of that dialog's
+form** — there is no second window, and the flow is the one that was already open. The typed field
+under the video is the other way in, for a cellar with no working camera and for a hardware scanner,
+which types the digits and an Enter like a keyboard.
+
+Either way the code is checked against its GTIN check digit before anything is looked up, and then
+one of three things happens:
+
+- **The catalogue knows it.** Its item is selected and the person is left in front of the quantity
+  field — the entry is finished exactly as a hand-picked one is.
+- **Nobody has filed it.** The same dialog switches to its "new item" half with the code attached,
+  and whatever [Open Food Facts](https://world.openfoodfacts.org) knows about the product — name,
+  brand, and the size of one piece with its unit — already typed in for checking. A product the
+  service does not have, or cannot be reached about in six seconds, simply leaves the form empty:
+  the lookup is a convenience, never a gate.
+- **The digits are not a GTIN.** Nothing is looked up and the dialog says so.
+
+The same button sits next to the barcode field on the catalogue's own item dialog, which is where a
+code is filed on an item that already exists. A barcode belongs to exactly one item — the second
+item to claim one is refused by name, before the write.
 
 ### Everything that moves a quantity is logged
 Three gestures, one log:

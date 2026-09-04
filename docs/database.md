@@ -446,6 +446,7 @@ The catalogue entry — what *can* be stocked, not the stock itself.
 | `id` | String (cuid) | |
 | `name` | String | |
 | `brand` | String? | |
+| `barcode` | String? | Unique. The EAN/GTIN printed on the packaging, digits only — what the scanner looks an item up by |
 | `unitId` | String | FK → StockUnit, `Restrict` |
 | `unitQty` | Decimal(12,3) | The size of **one piece**: a 1.5 l bottle is unit `l`, unitQty `1.5` |
 | `expireable` | Boolean | Whether a piece carries an expiry date. False hides the field entirely |

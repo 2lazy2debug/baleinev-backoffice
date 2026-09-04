@@ -89,7 +89,9 @@ app/
 │   │   │                            quantity controls — +/- straight to the server, or the edit
 │   │   │                            button to unlock the field and save a recount as one movement
 │   │   ├── add-stock-modal.tsx   ← Header button + "new entry" modal; can invent the item it is
-│   │   │                            stocking, in the same submission
+│   │   │                            stocking, in the same submission. The scan button opens the
+│   │   │                            camera in place of this form: a known code selects its item,
+│   │   │                            an unknown one opens the "new item" half, prefilled
 │   │   ├── stock-place-switcher.tsx ← <StockPlacePicker> (the first-visit screen) and
 │   │   │                            <StockPlaceSwitcher> (the box next to "New entry"); both
 │   │   │                            write the choice to the user through the preference route
@@ -98,9 +100,10 @@ app/
 │   │   ├── history/              ← The movement log, newest first, filtered by item/stock/direction
 │   │   ├── settings/             ← Stocks and units (admin only). Deleting a stock asks where its
 │   │   │                            contents go first
-│   │   └── actions.ts            ← Server actions: add/adjust/set/remove stock, element CRUD, and
-│   │                                the place/unit configuration. Every quantity change goes
-│   │                                through one helper that writes the row and its movement together
+│   │   └── actions.ts            ← Server actions: add/adjust/set/remove stock, element CRUD, the
+│   │                                place/unit configuration, and `lookupBarcodeAction()` — the
+│   │                                read behind a scan. Every quantity change goes through one
+│   │                                helper that writes the row and its movement together
 │   │
 │   ├── templates/
 │   │   ├── page.tsx              ← Document template manager (admin only, data-fetching only)
@@ -197,6 +200,7 @@ app/
 | `add-journal-entry-modal.tsx` | Modal for creating/prefilling journal entries; used on journal page and from expense-report approval |
 | `sign-out-button.tsx` | Sign-out action for the app shell — a labelled `<Button>` when expanded, an icon `<IconButton>` when the sidebar is collapsed, a `<MobileSheetRow>` (`row`) in the mobile account menu |
 | `form-error.tsx` | Renders a server-action error message through the shared `<Alert>` (nothing when there is no message) |
+| `barcode-scanner.tsx` | `<BarcodeScanner locale onDetected onCancel>` — the camera reading an EAN, plus the typed field a hardware scanner types into. **Not a dialog**: it renders inside the one that asked, in place of that dialog's form. The decoder (`@zxing/browser`) is imported on first use so no screen pays for it until someone taps scan |
 | `tasks-create-modal.tsx` | Modal with the two "create todo" / "create task" forms used on the tasks page |
 | `use-close-on-success.ts` | `useCloseOnSuccess()` — closes a create modal once its `useActionState` form comes back without an error |
 | `address-fields.tsx` | `<AddressFields>` / `<BankAccountFields>` / `<PostalFields>` plus their empty drafts — the fields an address and a bank account are made of, shared by every screen that writes one. Each control carries its own `name`, so the surrounding `<form>` posts straight to a server action |
@@ -258,7 +262,8 @@ which. Nothing here should be re-implemented inline in a page.
 | `secret-crypto.ts` | AES-256-GCM seal/open for the Passwords vault (`encryptSecret`/`decryptSecret`/`isVaultConfigured`), keyed by `PASSWORD_VAULT_KEY`. See docs/passwords.md |
 | `totp.ts` | TOTP primitives over `otpauth`: `generateTotpCode`/`assertValidTotpSeed` for the Passwords vault, plus `generateTotpSecret`/`buildTotpUri`/`verifyTotpCode` for account enrolment |
 | `two-factor.ts` | Account 2FA: seals/opens the seed on `User` (`sealTwoFactorSecret`, `verifyUserTwoFactorCode`) and builds the enrolment QR (`buildTwoFactorEnrolment`). Keyed by `PASSWORD_VAULT_KEY` via `secret-crypto.ts` |
-| `stock.ts` | `formatPiece()` / `formatTotal()` / `formatQuantity()` / `formatExpiry()` / `toDateInputValue()` — the two numbers a stock row carries (pieces, and what they add up to) written the same way everywhere. Import-free, like `addresses.ts` |
+| `stock.ts` | `formatPiece()` / `formatTotal()` / `formatQuantity()` / `formatExpiry()` / `toDateInputValue()` — the two numbers a stock row carries (pieces, and what they add up to) written the same way everywhere — plus `normalizeBarcode()` / `isValidBarcode()`, so a camera and a typed field are checked by the same GTIN rule. Import-free, like `addresses.ts` |
+| `open-food-facts.ts` | `fetchProductByBarcode()` — what a scanned EAN says about a product (name, brand, size of one piece), from the open catalogue keyed by that code. Server-only, best-effort: a miss, a timeout or a half-empty product all mean "type the rest yourself" |
 | `addresses.ts` | `addressDisplayName()` / `addressNameBlock()` / `addressPersonName()` / `formatPhone()` / `formatPostalLine()` and `DEFAULT_COUNTRY`. Import-free on purpose — the table, the pickers and the actions all read the same rules without dragging Prisma into a browser bundle |
 | `city-book.ts` | `rememberCity()` — files a postal code / locality pair the user actually saved, so the seeded Swiss list grows into whatever the address book turns out to need |
 | `countries.ts` | `countryOptions(locale)` / `countryName()` — countries and international dialling prefixes from libphonenumber-js + `Intl.DisplayNames`. Built on the server and passed down as props; the phone metadata has no business in a browser bundle that only needs "+41" |
