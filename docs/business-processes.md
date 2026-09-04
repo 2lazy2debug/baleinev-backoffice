@@ -416,7 +416,8 @@ selected.
 ### The three things it is made of
 - An **item** is the catalogue entry — a name, an optional brand, the barcode printed on it when it
   has one, and the size of *one piece* (a 1.5 l bottle is unit `l`, one piece = 1.5) plus whether
-  that piece carries an expiry date.
+  that piece carries an expiry date. The unit can be swapped for one it converts to: see
+  [the conversion table](#the-conversion-table).
 - A **stock** is a place things sit in: a cellar, a container, a van.
 - An **entry** is one item, in one stock, at one expiry date, counted **in pieces**. Six bottles
   read as `6 x 1.5 l = 9 l`, which is why the two numbers are never mixed: the count is what you
@@ -456,12 +457,33 @@ The same button sits next to the barcode field on the catalogue's own item dialo
 code is filed on an item that already exists. A barcode belongs to exactly one item — the second
 item to claim one is refused by name, before the write.
 
+### The conversion table
+Admins keep a table of "one `from` is `factor` `to`" on `/stock/settings` — one row per *direction*,
+so ml → l and l → ml are two rows and an admin who only ever reads bottles in litres keeps the
+first. The metric pairs among the seven units the app ships with (ml/l and g/kg, both ways) are
+already there; the rest is theirs to add, correct and delete.
+
+What it is for: a scan hands back a bottle as **1500 ml** when every shelf in the building calls it
+**1.5 l**. Correcting that by hand means retyping the number *and* changing the unit, in that order,
+without slipping a zero — so wherever an item is written (the catalogue dialog, and the "new item"
+half of the new-entry dialog) a convert button sits beside the unit. It lists what this unit can
+become and the number each choice would leave behind, and picking one rewrites both fields at once.
+
+The table never converts anything on its own. It fills in a field a person is looking at, *before*
+they save — nothing on a shelf moves when a factor is corrected, and an item saved last week keeps
+the numbers it was saved with.
+
 ### Everything that moves a quantity is logged
 Three gestures, one log:
 - **+ / -** go straight to the server, one movement per click.
-- **The edit button** unlocks the field instead; the buttons then move the number being typed, and
-  locking it again saves the whole correction as a **single** movement — which is what a recount is.
+- **The edit button** unlocks the whole entry instead — the count *and* the expiry date. The +/-
+  buttons then move the number being typed, and locking it again saves the correction as a
+  **single** movement, which is what a recount is.
 - **New entry** and **take out of stock** are a movement each, in and out.
+
+A date is not a quantity and logs nothing on its own. The exception is the one that matters: a shelf
+is an item *at a date*, so typing a date the shelf already carries makes the two lots one — that is
+a real move, both legs are logged, and the emptied row goes.
 
 Taking out more than is on the shelf lands on zero and logs what actually left: a miscount is not
 worth blocking on. A movement outlives the entry it changed, so taking something out of a stock does
@@ -472,7 +494,8 @@ direction.
 Any signed-in user counts, adds, takes out, and keeps the catalogue up to date — including inventing
 an item from inside the "New entry" dialog, because the person in front of an unfamiliar delivery is
 the one who can name it. **Admins only**: deleting a catalogue item (and only once it is in no
-stock), and everything on `/stock/settings` — the stocks themselves and the units.
+stock), and everything on `/stock/settings` — the stocks themselves, the units, and the conversions
+between them.
 
 ### Deleting a stock never orphans anything
 An empty stock is deleted outright. A stock with contents asks where they go first, and each entry

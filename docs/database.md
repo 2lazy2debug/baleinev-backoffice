@@ -438,6 +438,23 @@ migration that creates the table, for the same reason the Swiss city list is
 (see [`City`](#city)). `StockElement.unitId` is `Restrict`: a unit in use cannot vanish under the
 items measured in it.
 
+### `StockUnitConversion`
+"One `from` is `factor` `to`" — the table the item dialogs offer a unit swap from.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `fromUnitId` | String | FK → StockUnit, `Cascade` |
+| `toUnitId` | String | FK → StockUnit, `Cascade` |
+| `factor` | Decimal(18,9) | How many `to` one `from` is: one ml is `0.001` l |
+
+Unique on `(fromUnitId, toUnitId)`, and one row is one **direction** — ml → l and l → ml are two
+rows, so an admin keeps only the direction the shelves use. `Cascade` both ways: a conversion whose
+unit is gone has nothing left to describe.
+
+Nothing here converts stored data. A factor fills in a form field before it is saved, so correcting
+one never moves stock, and items saved earlier keep the numbers they were saved with.
+
 ### `StockElement`
 The catalogue entry — what *can* be stocked, not the stock itself.
 
@@ -469,6 +486,11 @@ One element, in one place, at one expiry date, counted in **pieces**.
 Unique on `(stockPlaceId, elementId, expireDate)`: two rows of the same item in the same place exist
 precisely when their expiry dates differ. Postgres counts two NULLs as different values, so the
 undated case is merged in the action (`addToPlace()`), not by the index.
+
+`expireDate` is editable on a row that already exists (`setStockItemQuantityAction()` saves it
+alongside the recount). Re-dating a row onto a date the place already holds for that item would
+break the unique index, so the action merges instead: everything leaves the corrected row, lands on
+the row that was already there — both legs logged — and the empty row is deleted.
 
 ### `StockMovement`
 Every quantity change, in the order it happened.

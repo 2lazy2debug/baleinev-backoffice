@@ -86,20 +86,24 @@ app/
 │   │   │                            one-time stock picker, and the contents of the stock this
 │   │   │                            user last opened (global, any signed-in user)
 │   │   ├── client.tsx            ← The contents: table above `sm`, tight cardlets below, and the
-│   │   │                            quantity controls — +/- straight to the server, or the edit
-│   │   │                            button to unlock the field and save a recount as one movement
+│   │   │                            entry controls — +/- straight to the server, or the edit button
+│   │   │                            to unlock the count *and* the expiry date and save the recount
+│   │   │                            as one movement
 │   │   ├── add-stock-modal.tsx   ← Header button + "new entry" modal; can invent the item it is
 │   │   │                            stocking, in the same submission. The scan button opens the
 │   │   │                            camera in place of this form: a known code selects its item,
 │   │   │                            an unknown one opens the "new item" half, prefilled
+│   │   ├── unit-size-fields.tsx  ← "One piece is" — the size and the unit as one control, plus the
+│   │   │                            convert button that rewrites both from the conversion table.
+│   │   │                            Shared by the two dialogs that write an item
 │   │   ├── stock-place-switcher.tsx ← <StockPlacePicker> (the first-visit screen) and
 │   │   │                            <StockPlaceSwitcher> (the box next to "New entry"); both
 │   │   │                            write the choice to the user through the preference route
 │   │   ├── items/                ← The catalogue: list + filters, create/edit in one dialog on
 │   │   │                            both breakpoints, delete admin-only and only when unstocked
 │   │   ├── history/              ← The movement log, newest first, filtered by item/stock/direction
-│   │   ├── settings/             ← Stocks and units (admin only). Deleting a stock asks where its
-│   │   │                            contents go first
+│   │   ├── settings/             ← Stocks, units and the conversions between them (admin only).
+│   │   │                            Deleting a stock asks where its contents go first
 │   │   └── actions.ts            ← Server actions: add/adjust/set/remove stock, element CRUD, the
 │   │                                place/unit configuration, and `lookupBarcodeAction()` — the
 │   │                                read behind a scan. Every quantity change goes through one
@@ -244,6 +248,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `SegmentedControl.tsx` | `<SegmentedControl options value onChange>` — one row of mutually exclusive choices, for a screen that shows one of two panels on a phone |
 | `Table.tsx` | `<Table frame dense desktopOnly>` + `<THead>` `<TFoot>` `<TR>` `<TH>` `<TD>` |
 | `Cardlet.tsx` | `<CardletList>` `<Cardlet>` `<CardletHeader>` `<CardletFields>` `<CardletField>` `<CardletActions>` — a wide table's rows as cards below `sm` |
+| `Menu.tsx` | `<Menu label icon options onSelect>` — a short list of *actions* hanging off one icon button (the unit conversions, today). Not a `<Select>`: nothing is being held, picking a row does something and the menu is gone. Portals from the trigger's rect, like `<Suggest>` |
 | `Modal.tsx` | `<Modal open onClose title size mobileFullScreen footer>` — the only dialog implementation. Renders into `<body>`: its trigger usually sits in the `sticky z-20` header, whose stacking context would otherwise pin the dialog under the mobile bottom bar |
 | `Alert.tsx`, `Badge.tsx`, `Chip.tsx` | Inline messages, status pills, removable tokens |
 | `scroll.ts` | `scrollToBelowTopBar(target)` — scrolls an element clear of the sticky mobile top bar, measuring `<PageHeader>` rather than guessing at a `scroll-mt-*`, since the bar's height depends on what the screen put in it |
@@ -262,7 +267,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `secret-crypto.ts` | AES-256-GCM seal/open for the Passwords vault (`encryptSecret`/`decryptSecret`/`isVaultConfigured`), keyed by `PASSWORD_VAULT_KEY`. See docs/passwords.md |
 | `totp.ts` | TOTP primitives over `otpauth`: `generateTotpCode`/`assertValidTotpSeed` for the Passwords vault, plus `generateTotpSecret`/`buildTotpUri`/`verifyTotpCode` for account enrolment |
 | `two-factor.ts` | Account 2FA: seals/opens the seed on `User` (`sealTwoFactorSecret`, `verifyUserTwoFactorCode`) and builds the enrolment QR (`buildTwoFactorEnrolment`). Keyed by `PASSWORD_VAULT_KEY` via `secret-crypto.ts` |
-| `stock.ts` | `formatPiece()` / `formatTotal()` / `formatQuantity()` / `formatExpiry()` / `toDateInputValue()` — the two numbers a stock row carries (pieces, and what they add up to) written the same way everywhere — plus `normalizeBarcode()` / `isValidBarcode()`, so a camera and a typed field are checked by the same GTIN rule. Import-free, like `addresses.ts` |
+| `stock.ts` | `formatPiece()` / `formatTotal()` / `formatQuantity()` / `formatExpiry()` / `toDateInputValue()` — the two numbers a stock row carries (pieces, and what they add up to) written the same way everywhere — plus `normalizeBarcode()` / `isValidBarcode()`, so a camera and a typed field are checked by the same GTIN rule, and `convertQuantity()` / `formatFactor()` for the unit conversions. Import-free, like `addresses.ts` |
 | `open-food-facts.ts` | `fetchProductByBarcode()` — what a scanned EAN says about a product (name, brand, size of one piece), from the open catalogue keyed by that code. The name is read `fr` → `en` → `de` → generic, one fixed order for everyone, since the item it fills in is shared. Server-only, best-effort: a miss, a timeout or a half-empty product all mean "type the rest yourself" |
 | `addresses.ts` | `addressDisplayName()` / `addressNameBlock()` / `addressPersonName()` / `formatPhone()` / `formatPostalLine()` and `DEFAULT_COUNTRY`. Import-free on purpose — the table, the pickers and the actions all read the same rules without dragging Prisma into a browser bundle |
 | `city-book.ts` | `rememberCity()` — files a postal code / locality pair the user actually saved, so the seeded Swiss list grows into whatever the address book turns out to need |
