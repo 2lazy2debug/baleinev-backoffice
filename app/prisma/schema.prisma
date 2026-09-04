@@ -688,7 +688,36 @@ model StockUnit {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  elements StockElement[]
+  elements      StockElement[]
+  convertsTo    StockUnitConversion[] @relation("StockUnitConversionFrom")
+  convertedFrom StockUnitConversion[] @relation("StockUnitConversionTo")
+}
+
+/// "One `from` is `factor` `to`" — 1 ml is 0.001 l.
+///
+/// One row is one *direction*, because that is what the button offers: an item
+/// filed as 1500 ml proposes "1.5 l", and the row that says so is ml → l. The
+/// reverse is a second row, and admins are free to keep only the direction they
+/// actually use.
+///
+/// This never converts anything on its own. It fills in a field a person is
+/// looking at, before they save — stock already on a shelf is untouched by an
+/// admin editing this table.
+model StockUnitConversion {
+  id         String   @id @default(cuid())
+  fromUnitId String
+  toUnitId   String
+  /// How many `to` units one `from` unit is. Nine decimals so a factor like
+  /// 0.001 survives, and so does one nobody has thought of yet.
+  factor     Decimal  @db.Decimal(18, 9)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  fromUnit StockUnit @relation("StockUnitConversionFrom", fields: [fromUnitId], references: [id], onDelete: Cascade)
+  toUnit   StockUnit @relation("StockUnitConversionTo", fields: [toUnitId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUnitId, toUnitId])
+  @@index([fromUnitId])
 }
 
 /// What *can* be stocked — the catalogue entry, not the stock itself.
