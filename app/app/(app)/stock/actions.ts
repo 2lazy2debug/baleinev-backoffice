@@ -135,6 +135,15 @@ async function assertBarcodeFree(
   }
 }
 
+/** Two date-only values, or two absences of one, are the same shelf. */
+function sameDate(left: Date | null, right: Date | null): boolean {
+  if (!left || !right) {
+    return left === right;
+  }
+
+  return left.getTime() === right.getTime();
+}
+
 /**
  * The one place a quantity changes.
  *
@@ -298,7 +307,16 @@ export async function adjustStockItemAction(_prevState: ActionState, formData: F
   }
 }
 
-/** The unlocked quantity field, locked again: the difference is the movement. */
+/**
+ * The unlocked row, locked again: the recount *and* the expiry date it turns out
+ * to carry.
+ *
+ * The quantity difference is one movement, as it always was. The date is not a
+ * quantity and writes none on its own — but changing it can still move stock,
+ * because a shelf is an element *at a date*: if the date being typed is already
+ * on the shelf, the two rows are one row, and the correction becomes the move
+ * that merges them. Only a row nothing else collides with is simply relabelled.
+ */
 export async function setStockItemQuantityAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const access = await getCurrentUserAccess();
@@ -306,13 +324,47 @@ export async function setStockItemQuantityAction(_prevState: ActionState, formDa
     const quantity = toCountedQuantity(getRequiredString(formData, "quantity"));
 
     await prisma.$transaction(async (tx) => {
-      const item = await tx.stockItem.findUnique({ where: { id: stockItemId } });
+      const item = await tx.stockItem.findUnique({
+        where: { id: stockItemId },
+        include: { element: { select: { expireable: true } } },
+      });
 
       if (!item) {
         throw new Error("That entry no longer exists. Refresh and try again.");
       }
 
-      await applyMovement(tx, item, quantity - item.quantity, access.id);
+      const counted = await applyMovement(tx, item, quantity - item.quantity, access.id);
+      const expireDate = toExpireDate(optionalString(formData, "expireDate"), item.element.expireable);
+
+      if (sameDate(expireDate, item.expireDate)) {
+        return;
+      }
+
+      const collision = await tx.stockItem.findFirst({
+        where: { stockPlaceId: item.stockPlaceId, elementId: item.elementId, expireDate, id: { not: item.id } },
+      });
+
+      if (!collision) {
+        await tx.stockItem.update({ where: { id: item.id }, data: { expireDate } });
+        return;
+      }
+
+      // Two shelves that turn out to be one. Everything leaves the row being
+      // corrected and lands on the row that was already there, both legs logged
+      // — the row is then empty and goes, exactly as "take out of stock" leaves
+      // its movements behind. A row recounted to zero has nothing to move and
+      // simply goes: a movement of nothing is noise in a log that is read.
+      if (counted > 0) {
+        await applyMovement(tx, { ...item, quantity: counted }, -counted, access.id);
+        await addToPlace(
+          tx,
+          { stockPlaceId: item.stockPlaceId, elementId: item.elementId, expireDate },
+          counted,
+          access.id,
+        );
+      }
+
+      await tx.stockItem.delete({ where: { id: item.id } });
     });
 
     revalidateStock();
@@ -590,6 +642,103 @@ export async function createStockUnitAction(_prevState: ActionState, formData: F
   try {
     await requireAdmin();
     await prisma.stockUnit.create({ data: { name: getRequiredString(formData, "name") } });
+
+    revalidateStock();
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+/**
+ * A factor is a positive number, and one that is not 1: "one l is 1 l" is a row
+ * that offers nothing.
+ */
+function toFactor(raw: string): number {
+  const factor = Number(raw.replace(",", ".").trim());
+
+  if (!Number.isFinite(factor) || factor <= 0) {
+    throw new Error("A factor is a number above zero.");
+  }
+
+  if (factor === 1) {
+    throw new Error("A factor of 1 converts nothing. Use two different units, or a different factor.");
+  }
+
+  return factor;
+}
+
+/**
+ * Files "one `from` is `factor` `to`".
+ *
+ * The pair is unique and one-way: ml → l and l → ml are two rows, and an admin
+ * who only ever reads bottles in litres files only the first.
+ */
+export async function createStockUnitConversionAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    const fromUnitId = getRequiredString(formData, "fromUnitId");
+    const toUnitId = getRequiredString(formData, "toUnitId");
+
+    if (fromUnitId === toUnitId) {
+      throw new Error("Pick two different units.");
+    }
+
+    const existing = await prisma.stockUnitConversion.findUnique({
+      where: { fromUnitId_toUnitId: { fromUnitId, toUnitId } },
+      select: { id: true },
+    });
+
+    if (existing) {
+      throw new Error("Those two units already convert. Edit that row instead.");
+    }
+
+    await prisma.stockUnitConversion.create({
+      data: { fromUnitId, toUnitId, factor: toFactor(getRequiredString(formData, "factor")) },
+    });
+
+    revalidateStock();
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+/**
+ * A corrected factor. Nothing already on a shelf moves: this table only ever
+ * fills in a field someone is looking at, so the items converted last week keep
+ * the numbers they were saved with.
+ */
+export async function updateStockUnitConversionAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await requireAdmin();
+
+    await prisma.stockUnitConversion.update({
+      where: { id: getRequiredString(formData, "conversionId") },
+      data: { factor: toFactor(getRequiredString(formData, "factor")) },
+    });
+
+    revalidateStock();
+    return { error: null, saved: true };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+/** Removes one direction. The item dialog stops offering it; nothing else moves. */
+export async function deleteStockUnitConversionAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    await prisma.stockUnitConversion.delete({ where: { id: getRequiredString(formData, "conversionId") } });
 
     revalidateStock();
     return { error: null };

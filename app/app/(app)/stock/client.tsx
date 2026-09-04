@@ -76,8 +76,9 @@ export function StockClient({ locale, rows }: Props) {
   const router = useRouter();
 
   const [filter, setFilter] = useState("");
-  // The row whose quantity is unlocked, and the number being typed into it.
-  const [editing, setEditing] = useState<{ id: string; quantity: string } | null>(null);
+  // The row that is unlocked, and what is being typed into it: the count, and
+  // the expiry date, which is as much a part of a lot as the number of pieces.
+  const [editing, setEditing] = useState<{ id: string; quantity: string; expireDate: string } | null>(null);
 
   async function saveQuantity(previous: ActionState): Promise<ActionState> {
     if (!editing) {
@@ -87,6 +88,7 @@ export function StockClient({ locale, rows }: Props) {
     const formData = new FormData();
     formData.set("stockItemId", editing.id);
     formData.set("quantity", editing.quantity.trim() || "0");
+    formData.set("expireDate", editing.expireDate);
 
     const result = await setStockItemQuantityAction(previous, formData);
     if (result.error) {
@@ -114,6 +116,28 @@ export function StockClient({ locale, rows }: Props) {
       current && current.id === row.id
         ? { ...current, quantity: String(Math.max(0, (Number(current.quantity) || 0) + step)) }
         : current,
+    );
+  }
+
+  function unlock(row: StockRow) {
+    setEditing({ id: row.id, quantity: String(row.quantity), expireDate: row.expireDate ?? "" });
+  }
+
+  /** The unlocked expiry, wherever the row is drawn. */
+  function expiryInput() {
+    return (
+      <Input
+        size="sm"
+        type="date"
+        value={editing?.expireDate ?? ""}
+        onChange={(event) => setEditing((current) => (current ? { ...current, expireDate: event.target.value } : current))}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            saveFormAction();
+          }
+        }}
+      />
     );
   }
 
@@ -146,7 +170,9 @@ export function StockClient({ locale, rows }: Props) {
             autoFocus
             className="w-16 text-center"
             value={draft.quantity}
-            onChange={(event) => setEditing({ id: row.id, quantity: event.target.value })}
+            onChange={(event) =>
+              setEditing((current) => (current ? { ...current, quantity: event.target.value } : current))
+            }
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault();
@@ -182,15 +208,11 @@ export function StockClient({ locale, rows }: Props) {
     return (
       <div className="flex items-center gap-2">
         {draft ? (
-          <IconButton tone="save" label={copy.saveQuantity} disabled={isSaving} onClick={() => saveFormAction()}>
+          <IconButton tone="save" label={copy.saveEntry} disabled={isSaving} onClick={() => saveFormAction()}>
             <Check />
           </IconButton>
         ) : (
-          <IconButton
-            tone="accent"
-            label={copy.editQuantity}
-            onClick={() => setEditing({ id: row.id, quantity: String(row.quantity) })}
-          >
+          <IconButton tone="accent" label={copy.editExpiry} onClick={() => unlock(row)}>
             <Pencil />
           </IconButton>
         )}
@@ -204,7 +226,8 @@ export function StockClient({ locale, rows }: Props) {
     );
   }
 
-  function expiryCell(row: StockRow) {
+  /** The date as it reads on a locked row. */
+  function expiryBadge(row: StockRow) {
     if (!row.expireable) {
       return null;
     }
@@ -221,6 +244,19 @@ export function StockClient({ locale, rows }: Props) {
     ) : (
       <Badge tone={tone}>{label}</Badge>
     );
+  }
+
+  /**
+   * The expiry column: a date is corrected exactly like a count — unlock the
+   * row, type, lock it again. Typing a date the shelf already carries merges the
+   * two lots, which is the server's business; here it is one field.
+   */
+  function expiryCell(row: StockRow) {
+    if (!row.expireable) {
+      return null;
+    }
+
+    return editing?.id === row.id ? expiryInput() : expiryBadge(row);
   }
 
   const error = adjustState.error ?? saveState.error ?? removeState.error;
@@ -303,11 +339,18 @@ export function StockClient({ locale, rows }: Props) {
                   {row.brand ? <p className="truncate text-3xs font-normal text-[var(--muted)]">{row.brand}</p> : null}
                 </>
               }
-              action={expiryCell(row)}
+              action={expiryBadge(row)}
             />
             <CardletFields>
               <CardletField label={copy.piece}>{formatPiece(row.unitQty, row.unitName)}</CardletField>
               <CardletField label={copy.total}>{formatTotal(row.quantity, row.unitQty, row.unitName)}</CardletField>
+              {/* The date takes the whole width while it is being typed: the
+                  header slot next to the name is a badge's worth of room. */}
+              {editing?.id === row.id && row.expireable ? (
+                <CardletField label={copy.expiry} className="col-span-2">
+                  {expiryInput()}
+                </CardletField>
+              ) : null}
             </CardletFields>
             <div className="flex items-center justify-between gap-2">
               {stepper(row)}
