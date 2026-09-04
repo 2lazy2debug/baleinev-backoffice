@@ -38,8 +38,9 @@ type MenuProps = {
 export function Menu({ label, icon, options, onSelect, size = "md", disabled = false }: MenuProps) {
   const listId = useId();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const listRef = useRef<HTMLUListElement | null>(null);
   const [open, setOpen] = useState(false);
-  const [rect, setRect] = useState<{ top: number; left: number; below: boolean } | null>(null);
+  const [rect, setRect] = useState<{ top: number; right: number; below: boolean } | null>(null);
 
   const measure = useCallback(() => {
     const trigger = triggerRef.current;
@@ -52,7 +53,13 @@ export function Menu({ label, icon, options, onSelect, size = "md", disabled = f
     const spaceBelow = window.innerHeight - box.bottom;
     const below = spaceBelow > 220 || spaceBelow > box.top;
 
-    setRect({ top: below ? box.bottom + 4 : box.top - 4, left: box.left, below });
+    // Anchored by its right edge: the trigger is the last control in its row, so
+    // a list hung from the left would run off the dialog it was opened in.
+    setRect({
+      top: below ? box.bottom + 4 : box.top - 4,
+      right: window.innerWidth - box.right,
+      below,
+    });
   }, []);
 
   useEffect(() => {
@@ -68,8 +75,13 @@ export function Menu({ label, icon, options, onSelect, size = "md", disabled = f
       }
     }
 
+    // The list is a portal, so "outside" has to mean outside *both* it and the
+    // trigger. Closing on a mousedown that landed on a row would unmount that
+    // row before its click could fire — the menu would shut having done nothing.
     function onPointerDown(event: MouseEvent) {
-      if (!triggerRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node;
+
+      if (!triggerRef.current?.contains(target) && !listRef.current?.contains(target)) {
         setOpen(false);
       }
     }
@@ -107,11 +119,12 @@ export function Menu({ label, icon, options, onSelect, size = "md", disabled = f
       {open && rect && typeof document !== "undefined"
         ? createPortal(
             <ul
+              ref={listRef}
               id={listId}
               role="menu"
               className="fixed z-50 max-h-64 min-w-48 overflow-y-auto rounded-lg border border-[var(--line)] bg-[var(--panel-strong)] py-1 shadow-lg"
               style={{
-                left: rect.left,
+                right: rect.right,
                 ...(rect.below ? { top: rect.top } : { bottom: window.innerHeight - rect.top }),
               }}
             >
