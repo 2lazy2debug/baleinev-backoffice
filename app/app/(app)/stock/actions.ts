@@ -5,6 +5,8 @@ import type { Prisma } from "@prisma/client";
 
 import { getCurrentUserAccess, isAdmin, requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { fetchProductByBarcode } from "@/lib/open-food-facts";
+import { isValidBarcode, normalizeBarcode } from "@/lib/stock";
 import {
   type ActionState,
   getRequiredString,
@@ -40,6 +42,25 @@ function revalidateStock() {
 function optionalString(formData: FormData, key: string): string | null {
   const value = String(formData.get(key) ?? "").trim();
   return value || null;
+}
+
+/**
+ * A barcode as it is stored: digits only, or NULL. A code that is not a real
+ * GTIN is refused rather than saved — an item filed under a mistyped number is
+ * an item the scanner will never find again.
+ */
+function toBarcode(raw: string | null): string | null {
+  if (!raw) {
+    return null;
+  }
+
+  const barcode = normalizeBarcode(raw);
+
+  if (!isValidBarcode(barcode)) {
+    throw new Error("That barcode is not a valid EAN. Check the digits, or leave it empty.");
+  }
+
+  return barcode;
 }
 
 function toPositiveQuantity(raw: string): number {
@@ -304,10 +325,77 @@ export async function removeStockItemAction(_prevState: ActionState, formData: F
 // The catalogue
 // ---------------------------------------------------------------------------
 
+/**
+ * What a scanned code turns out to be. One of three answers, and the dialog that
+ * asked has a different next step for each:
+ *
+ * - `known` — the catalogue already has it, so the entry is picked and the
+ *   person is left in front of the quantity field.
+ * - `unknown` — nothing is filed under this code, so the same dialog switches to
+ *   its "new item" half with whatever Open Food Facts knows already typed in.
+ *   `prefilled` says whether that lookup found anything, because a form that
+ *   filled itself and a form that stayed empty need different words.
+ * - `invalid` — the digits are not a GTIN at all. Nothing was looked up.
+ */
+export type BarcodeLookup =
+  | { status: "known"; barcode: string; elementId: string }
+  | {
+      status: "unknown";
+      barcode: string;
+      prefilled: boolean;
+      name: string;
+      brand: string;
+      unitQty: string;
+      unitId: string;
+    }
+  | { status: "invalid" };
+
+/**
+ * The one thing a scan does: says whether this code is already in the catalogue,
+ * and fills in what it can when it is not.
+ *
+ * It reads and looks up, it never writes — the item is still created by the
+ * form the person then submits, through the same action as any other item.
+ */
+export async function lookupBarcodeAction(raw: string): Promise<BarcodeLookup> {
+  await getCurrentUserAccess();
+
+  const barcode = normalizeBarcode(raw);
+
+  if (!isValidBarcode(barcode)) {
+    return { status: "invalid" };
+  }
+
+  const existing = await prisma.stockElement.findUnique({ where: { barcode }, select: { id: true } });
+
+  if (existing) {
+    return { status: "known", barcode, elementId: existing.id };
+  }
+
+  const product = await fetchProductByBarcode(barcode);
+
+  // The unit only counts as known when the catalogue actually has one by that
+  // name: a draft pointing at a unit nobody defined would not survive the form.
+  const unit = product?.unitName
+    ? await prisma.stockUnit.findUnique({ where: { name: product.unitName }, select: { id: true } })
+    : null;
+
+  return {
+    status: "unknown",
+    barcode,
+    prefilled: Boolean(product?.name || product?.brand || product?.unitQty),
+    name: product?.name ?? "",
+    brand: product?.brand ?? "",
+    unitQty: product?.unitQty ?? "",
+    unitId: unit?.id ?? "",
+  };
+}
+
 function elementFieldsFrom(formData: FormData) {
   return {
     name: getRequiredString(formData, "name"),
     brand: optionalString(formData, "brand"),
+    barcode: toBarcode(optionalString(formData, "barcode")),
     unitId: getRequiredString(formData, "unitId"),
     unitQty: toUnitQty(getRequiredString(formData, "unitQty")),
     expireable: String(formData.get("expireable") ?? "") === "on",

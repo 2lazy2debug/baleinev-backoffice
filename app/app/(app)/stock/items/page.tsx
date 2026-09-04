@@ -62,6 +62,7 @@ export default async function StockItemsPage() {
           id: element.id,
           name: element.name,
           brand: element.brand ?? "",
+          barcode: element.barcode ?? "",
           unitId: element.unitId,
           unitName: element.unit.name,
           unitQty: formatQuantity(decimalToNumber(element.unitQty)),

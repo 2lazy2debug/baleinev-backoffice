@@ -46,3 +46,30 @@ export function formatExpiry(date: string | null, locale: string): string {
     timeZone: "UTC",
   });
 }
+
+/** A scanned or typed code as digits only — spaces, dashes and stray keys out. */
+export function normalizeBarcode(raw: string): string {
+  return raw.replace(/\D/g, "");
+}
+
+/**
+ * Whether a code is a real GTIN: 8, 12, 13 or 14 digits whose last one is the
+ * check digit the other digits add up to.
+ *
+ * Worth checking before a lookup, because both ways a code arrives here can be
+ * wrong in the same way — a camera reads half a barcode at an angle, and a
+ * typed EAN drops a digit — and either produces a plausible-looking number that
+ * would file a new item under a code nothing will ever scan again.
+ */
+export function isValidBarcode(code: string): boolean {
+  if (!/^\d+$/.test(code) || ![8, 12, 13, 14].includes(code.length)) {
+    return false;
+  }
+
+  const digits = [...code].map(Number);
+  const check = digits.pop() as number;
+  // Weights run 3,1,3,1... from the right of the payload, whatever its length.
+  const sum = digits.reverse().reduce((total, digit, index) => total + digit * (index % 2 === 0 ? 3 : 1), 0);
+
+  return (10 - (sum % 10)) % 10 === check;
+}
