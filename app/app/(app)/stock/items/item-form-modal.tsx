@@ -6,16 +6,14 @@ import { ScanBarcode } from "lucide-react";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import { Alert, Button, Checkbox, Field, IconButton, Input, Modal, Select } from "@/components/ui";
+import { Alert, Button, Checkbox, Field, IconButton, Input, Modal } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
 import { createStockElementAction, lookupBarcodeAction, updateStockElementAction } from "../actions";
+import { UnitSizeFields, type ConversionOption, type UnitOption } from "../unit-size-fields";
 
-export type UnitOption = {
-  id: string;
-  name: string;
-};
+export type { ConversionOption, UnitOption };
 
 export type ItemDraft = {
   id: string;
@@ -30,6 +28,7 @@ export type ItemDraft = {
 type Props = {
   locale: Locale;
   units: UnitOption[];
+  conversions: ConversionOption[];
   open: boolean;
   onClose: () => void;
   /** The item being edited, or null to create one. */
@@ -60,7 +59,7 @@ type Scanned = {
  * and on a new item it brings the name, brand and size along with it when Open
  * Food Facts knows the product.
  */
-export function ItemFormModal({ locale, units, open, onClose, item }: Props) {
+export function ItemFormModal({ locale, units, conversions, open, onClose, item }: Props) {
   const copy = dictionaries[locale].stock;
   const shellCopy = dictionaries[locale].shell;
 
@@ -124,6 +123,16 @@ export function ItemFormModal({ locale, units, open, onClose, item }: Props) {
     unitQty: scanned?.unitQty || item?.unitQty || "1",
     unitId: scanned?.unitId || item?.unitId || "",
   };
+
+  // The size is the one pair of fields the convert button rewrites, so it is
+  // held here rather than left to the DOM. It follows the form's identity: a
+  // different row, or a fresh scan, is a different size to start from.
+  const formKey = `${item?.id ?? "new"}-${scanned?.barcode ?? ""}`;
+  const [size, setSize] = useState({ key: formKey, unitQty: values.unitQty, unitId: values.unitId });
+
+  if (size.key !== formKey) {
+    setSize({ key: formKey, unitQty: values.unitQty, unitId: values.unitId });
+  }
 
   return (
     <Modal
@@ -192,23 +201,14 @@ export function ItemFormModal({ locale, units, open, onClose, item }: Props) {
             <ScanBarcode />
           </IconButton>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={copy.unitQty}>
-            <Input type="text" inputMode="decimal" name="unitQty" defaultValue={values.unitQty} required />
-          </Field>
-          <Field label={copy.unit}>
-            <Select name="unitId" defaultValue={values.unitId} required>
-              <option value="" disabled>
-                {copy.unit}
-              </option>
-              {units.map((unit) => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        </div>
+        <UnitSizeFields
+          locale={locale}
+          units={units}
+          conversions={conversions}
+          unitQty={size.unitQty}
+          unitId={size.unitId}
+          onChange={(next) => setSize({ key: formKey, ...next })}
+        />
         <div className="space-y-1">
           <Checkbox
             id="stock-item-expireable"

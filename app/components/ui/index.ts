@@ -16,6 +16,7 @@ export * from "./MultiSelect";
 export * from "./Checkbox";
 export * from "./Chip";
 export * from "./Radio";
+export * from "./Menu";
 export * from "./Modal";
 export * from "./Alert";
 export * from "./Badge";

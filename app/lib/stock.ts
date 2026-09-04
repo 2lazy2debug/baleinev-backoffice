@@ -73,3 +73,25 @@ export function isValidBarcode(code: string): boolean {
 
   return (10 - (sum % 10)) % 10 === check;
 }
+
+/**
+ * One piece in another unit: 1500 ml at a factor of 0.001 is 1.5 l.
+ *
+ * Rounded to the three decimals the column stores, so the number offered in the
+ * convert menu is exactly the number that ends up on the item — a conversion
+ * that looked like 0.0005 and saved as 0.001 would be a quiet lie.
+ */
+export function convertQuantity(unitQty: number, factor: number): number {
+  return Number((unitQty * factor).toFixed(3));
+}
+
+/**
+ * A conversion factor as it reads: "0.001", "1000".
+ *
+ * Not `formatQuantity()` — that rounds to the three decimals a *stock* quantity
+ * is stored with, and a factor is stored with nine. A factor of 0.0005 must not
+ * come back from the settings screen as 0.001.
+ */
+export function formatFactor(value: number): string {
+  return String(Number(value.toFixed(9)));
+}

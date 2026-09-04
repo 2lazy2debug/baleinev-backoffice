@@ -12,6 +12,9 @@ import { formatPiece } from "@/lib/stock";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import { addStockAction, lookupBarcodeAction } from "./actions";
+import { UnitSizeFields, type ConversionOption, type UnitOption } from "./unit-size-fields";
+
+export type { ConversionOption, UnitOption };
 
 export type ElementOption = {
   id: string;
@@ -22,16 +25,12 @@ export type ElementOption = {
   expireable: boolean;
 };
 
-export type UnitOption = {
-  id: string;
-  name: string;
-};
-
 type Props = {
   locale: Locale;
   stockPlaceId: string;
   elements: ElementOption[];
   units: UnitOption[];
+  conversions: ConversionOption[];
 };
 
 /** What a scan filled the "new item" half of the form with. */
@@ -63,7 +62,7 @@ const emptyPrefill: Prefill = { barcode: "", name: "", brand: "", unitQty: "", u
  * nobody has filed opens the "new item" half with whatever Open Food Facts knows
  * about it already typed in.
  */
-export function AddStockModal({ locale, stockPlaceId, elements, units }: Props) {
+export function AddStockModal({ locale, stockPlaceId, elements, units, conversions }: Props) {
   const copy = dictionaries[locale].stock;
   const shellCopy = dictionaries[locale].shell;
 
@@ -74,6 +73,9 @@ export function AddStockModal({ locale, stockPlaceId, elements, units }: Props) 
   const [scanning, setScanning] = useState(false);
   const [prefill, setPrefill] = useState<Prefill>(emptyPrefill);
   const [scanNote, setScanNote] = useState<string | null>(null);
+  // The size of one piece is held here, not in the DOM: the convert button
+  // rewrites the number and the unit together.
+  const [size, setSize] = useState({ unitQty: "1", unitId: "" });
   const [looking, startLookup] = useTransition();
 
   const [state, formAction, pending] = useActionState(addStockAction, initialActionState);
@@ -88,6 +90,7 @@ export function AddStockModal({ locale, stockPlaceId, elements, units }: Props) 
     setScanning(false);
     setPrefill(emptyPrefill);
     setScanNote(null);
+    setSize({ unitQty: "1", unitId: "" });
   }, []);
 
   const markSubmitted = useCloseOnSuccess(state, pending, close);
@@ -122,6 +125,7 @@ export function AddStockModal({ locale, stockPlaceId, elements, units }: Props) 
           unitQty: result.unitQty,
           unitId: result.unitId,
         });
+        setSize({ unitQty: result.unitQty || "1", unitId: result.unitId });
         setScanNote(result.prefilled ? copy.scanPrefilled : copy.scanUnknown);
       });
     },
@@ -203,29 +207,14 @@ export function AddStockModal({ locale, stockPlaceId, elements, units }: Props) 
               <Field label={copy.brand}>
                 <Input type="text" name="brand" defaultValue={prefill.brand} />
               </Field>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label={copy.unitQty}>
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    name="unitQty"
-                    defaultValue={prefill.unitQty || "1"}
-                    required
-                  />
-                </Field>
-                <Field label={copy.unit}>
-                  <Select name="unitId" required defaultValue={prefill.unitId}>
-                    <option value="" disabled>
-                      {copy.unit}
-                    </option>
-                    {units.map((unit) => (
-                      <option key={unit.id} value={unit.id}>
-                        {unit.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-              </div>
+              <UnitSizeFields
+                locale={locale}
+                units={units}
+                conversions={conversions}
+                unitQty={size.unitQty}
+                unitId={size.unitId}
+                onChange={setSize}
+              />
               <Checkbox
                 id="add-stock-expireable"
                 name="expireable"

@@ -64,7 +64,7 @@ export default async function StockPage() {
     return <StockPlacePicker locale={locale} places={options} />;
   }
 
-  const [items, elements, units] = await Promise.all([
+  const [items, elements, units, conversions] = await Promise.all([
     prisma.stockItem.findMany({
       where: { stockPlaceId: selected.id },
       include: { element: { include: { unit: true } } },
@@ -72,6 +72,7 @@ export default async function StockPage() {
     }),
     prisma.stockElement.findMany({ include: { unit: true }, orderBy: { name: "asc" } }),
     prisma.stockUnit.findMany({ orderBy: { name: "asc" } }),
+    prisma.stockUnitConversion.findMany({ include: { toUnit: true }, orderBy: { toUnit: { name: "asc" } } }),
   ]);
 
   return (
@@ -94,6 +95,12 @@ export default async function StockPage() {
                 expireable: element.expireable,
               }))}
               units={units.map((unit) => ({ id: unit.id, name: unit.name }))}
+              conversions={conversions.map((conversion) => ({
+                fromUnitId: conversion.fromUnitId,
+                toUnitId: conversion.toUnitId,
+                toUnitName: conversion.toUnit.name,
+                factor: decimalToNumber(conversion.factor),
+              }))}
             />
             <StockPlaceSwitcher locale={locale} places={options} selectedId={selected.id} />
             <Link

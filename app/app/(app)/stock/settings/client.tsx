@@ -21,7 +21,13 @@ import {
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
-import { deleteStockPlaceAction, renameStockPlaceAction, renameStockUnitAction } from "../actions";
+import {
+  deleteStockPlaceAction,
+  deleteStockUnitConversionAction,
+  renameStockPlaceAction,
+  renameStockUnitAction,
+  updateStockUnitConversionAction,
+} from "../actions";
 
 export type PlaceRow = {
   id: string;
@@ -36,23 +42,32 @@ export type UnitRow = {
   inUse: boolean;
 };
 
+/** One direction of the conversion table: "one ml is 0.001 l". */
+export type ConversionRow = {
+  id: string;
+  fromUnitName: string;
+  toUnitName: string;
+  factor: string;
+};
+
 type Props = {
   locale: Locale;
   places: PlaceRow[];
   units: UnitRow[];
+  conversions: ConversionRow[];
 };
 
 const DELETE_FORM_ID = "delete-stock-place-form";
 
 /**
- * The two lists behind the stock app: the places things sit in, and the units
- * they are measured in.
+ * The three lists behind the stock app: the places things sit in, the units they
+ * are measured in, and what those units convert to.
  *
  * Deleting a place is the only complicated one, and it is complicated on
  * purpose: nothing may be left without a stock, so a place with contents asks
  * where they go before it will go itself.
  */
-export function StockSettingsClient({ locale, places, units }: Props) {
+export function StockSettingsClient({ locale, places, units, conversions }: Props) {
   const copy = dictionaries[locale].stock;
   const shellCopy = dictionaries[locale].shell;
 
@@ -60,6 +75,7 @@ export function StockSettingsClient({ locale, places, units }: Props) {
   // the quantity edit on the stock screen: unlock, type, lock.
   const [editingPlace, setEditingPlace] = useState<{ id: string; name: string } | null>(null);
   const [editingUnit, setEditingUnit] = useState<{ id: string; name: string } | null>(null);
+  const [editingConversion, setEditingConversion] = useState<{ id: string; factor: string } | null>(null);
   const [deleting, setDeleting] = useState<PlaceRow | null>(null);
 
   async function savePlace(previous: ActionState): Promise<ActionState> {
@@ -94,8 +110,32 @@ export function StockSettingsClient({ locale, places, units }: Props) {
     return result;
   }
 
+  async function saveConversion(previous: ActionState): Promise<ActionState> {
+    if (!editingConversion) {
+      return { error: null };
+    }
+
+    const formData = new FormData();
+    formData.set("conversionId", editingConversion.id);
+    formData.set("factor", editingConversion.factor);
+
+    const result = await updateStockUnitConversionAction(previous, formData);
+    if (!result.error) {
+      setEditingConversion(null);
+    }
+    return result;
+  }
+
   const [placeState, placeFormAction, isSavingPlace] = useActionState(savePlace, initialActionState);
   const [unitState, unitFormAction, isSavingUnit] = useActionState(saveUnit, initialActionState);
+  const [conversionState, conversionFormAction, isSavingConversion] = useActionState(
+    saveConversion,
+    initialActionState,
+  );
+  const [conversionDeleteState, conversionDeleteFormAction, isDeletingConversion] = useActionState(
+    deleteStockUnitConversionAction,
+    initialActionState,
+  );
   const [deleteState, deleteFormAction, isDeleting] = useActionState(deleteStockPlaceAction, initialActionState);
   const markDeleteSubmitted = useCloseOnSuccess(deleteState, isDeleting, () => setDeleting(null));
 
@@ -229,6 +269,84 @@ export function StockSettingsClient({ locale, places, units }: Props) {
             })}
 
             {units.length === 0 ? <p className="text-sm text-[var(--muted)]">{copy.unitsEmpty}</p> : null}
+          </div>
+        </Card>
+
+        <Card span="full" className="space-y-4">
+          <SectionTitle>{copy.conversions}</SectionTitle>
+          <p className="text-sm text-[var(--muted)]">{copy.conversionsHint}</p>
+          <FormError message={conversionState.error ?? conversionDeleteState.error} />
+
+          <div className="flex flex-col gap-2">
+            {conversions.map((conversion) => {
+              const editing = editingConversion?.id === conversion.id ? editingConversion : null;
+
+              return (
+                <Panel key={conversion.id} nested as="div" className="flex items-center gap-2 p-2">
+                  <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
+                    <span className="shrink-0 font-medium">1 {conversion.fromUnitName}</span>
+                    <span className="shrink-0 text-[var(--muted)]">=</span>
+                    {editing ? (
+                      <Input
+                        type="text"
+                        size="sm"
+                        inputMode="decimal"
+                        className="w-28"
+                        value={editing.factor}
+                        autoFocus
+                        onChange={(event) => setEditingConversion({ id: conversion.id, factor: event.target.value })}
+                      />
+                    ) : (
+                      <span className="truncate font-medium tabular-nums">{conversion.factor}</span>
+                    )}
+                    <span className="shrink-0 font-medium">{conversion.toUnitName}</span>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-2">
+                    {editing ? (
+                      <>
+                        <IconButton
+                          tone="save"
+                          label={shellCopy.save}
+                          disabled={isSavingConversion}
+                          onClick={() => conversionFormAction()}
+                        >
+                          <Check />
+                        </IconButton>
+                        <IconButton tone="neutral" label={shellCopy.cancel} onClick={() => setEditingConversion(null)}>
+                          <X />
+                        </IconButton>
+                      </>
+                    ) : (
+                      <>
+                        <IconButton
+                          tone="accent"
+                          label={copy.rename}
+                          onClick={() => setEditingConversion({ id: conversion.id, factor: conversion.factor })}
+                        >
+                          <Pencil />
+                        </IconButton>
+                        <form action={conversionDeleteFormAction}>
+                          <input type="hidden" name="conversionId" value={conversion.id} />
+                          <IconButton
+                            type="submit"
+                            tone="delete"
+                            label={copy.deleteConversion}
+                            disabled={isDeletingConversion}
+                          >
+                            <Trash2 />
+                          </IconButton>
+                        </form>
+                      </>
+                    )}
+                  </div>
+                </Panel>
+              );
+            })}
+
+            {conversions.length === 0 ? (
+              <p className="text-sm text-[var(--muted)]">{copy.conversionsEmpty}</p>
+            ) : null}
           </div>
         </Card>
       </CardGrid>

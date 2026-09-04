@@ -21,9 +21,10 @@ export default async function StockItemsPage() {
   const locale = await getLocale();
   const copy = getDictionary(locale);
 
-  const [elements, units, stocked] = await Promise.all([
+  const [elements, units, conversions, stocked] = await Promise.all([
     prisma.stockElement.findMany({ include: { unit: true }, orderBy: { name: "asc" } }),
     prisma.stockUnit.findMany({ orderBy: { name: "asc" } }),
+    prisma.stockUnitConversion.findMany({ include: { toUnit: true }, orderBy: { toUnit: { name: "asc" } } }),
     // One roll-up for the whole list rather than a count per row: what makes an
     // item undeletable is the pieces sitting in *any* stock.
     prisma.stockItem.groupBy({ by: ["elementId"], _sum: { quantity: true } }),
@@ -31,6 +32,12 @@ export default async function StockItemsPage() {
 
   const inStock = new Map(stocked.map((row) => [row.elementId, row._sum.quantity ?? 0]));
   const unitOptions = units.map((unit) => ({ id: unit.id, name: unit.name }));
+  const conversionOptions = conversions.map((conversion) => ({
+    fromUnitId: conversion.fromUnitId,
+    toUnitId: conversion.toUnitId,
+    toUnitName: conversion.toUnit.name,
+    factor: decimalToNumber(conversion.factor),
+  }));
 
   return (
     <div className="space-y-4 lg:space-y-8">
@@ -49,7 +56,7 @@ export default async function StockItemsPage() {
               <ArrowLeft />
               <span className="hidden lg:inline">{copy.stock.backToStock}</span>
             </Link>
-            <CreateItemButton locale={locale} units={unitOptions} />
+            <CreateItemButton locale={locale} units={unitOptions} conversions={conversionOptions} />
           </>
         }
       />
@@ -57,6 +64,7 @@ export default async function StockItemsPage() {
       <StockItemsClient
         locale={locale}
         units={unitOptions}
+        conversions={conversionOptions}
         canDelete={isAdmin(access)}
         items={elements.map((element) => ({
           id: element.id,

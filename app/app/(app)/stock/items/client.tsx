@@ -28,7 +28,7 @@ import { initialActionState } from "@/lib/server-action-helpers";
 import { formatPiece } from "@/lib/stock";
 
 import { deleteStockElementAction } from "../actions";
-import { ItemFormModal, type ItemDraft, type UnitOption } from "./item-form-modal";
+import { ItemFormModal, type ConversionOption, type ItemDraft, type UnitOption } from "./item-form-modal";
 
 export type ItemRow = ItemDraft & {
   unitName: string;
@@ -39,13 +39,14 @@ export type ItemRow = ItemDraft & {
 type Props = {
   locale: Locale;
   units: UnitOption[];
+  conversions: ConversionOption[];
   items: ItemRow[];
   /** Deleting a catalogue entry is the one thing the app keeps to admins. */
   canDelete: boolean;
 };
 
 /** The catalogue: what a thing is called, what one piece of it is, and whether it expires. */
-export function StockItemsClient({ locale, units, items, canDelete }: Props) {
+export function StockItemsClient({ locale, units, conversions, items, canDelete }: Props) {
   const copy = dictionaries[locale].stock;
 
   const [filters, setFilters] = useState({ name: "", brand: "" });
@@ -206,6 +207,7 @@ export function StockItemsClient({ locale, units, items, canDelete }: Props) {
       <ItemFormModal
         locale={locale}
         units={units}
+        conversions={conversions}
         open={editing !== null}
         onClose={() => setEditing(null)}
         item={editing}
