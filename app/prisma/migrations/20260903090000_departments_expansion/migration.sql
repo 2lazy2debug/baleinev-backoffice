@@ -41,6 +41,16 @@ ALTER TABLE "DepartmentBudget" ADD COLUMN "departmentId" TEXT;
 UPDATE "DepartmentBudget" b SET "departmentId" = d."id" FROM "Department" d WHERE d."name" = b."name";
 ALTER TABLE "DepartmentBudget" ALTER COLUMN "departmentId" SET NOT NULL;
 
+-- These three foreign keys followed "Department" through its rename and now
+-- point at "DepartmentBudget". They have to go BEFORE the rows are repointed,
+-- not after: the updates below write a *department* id into a column still
+-- constrained to the budget, and Postgres checks that per statement, not at
+-- commit. Dropping them afterwards is the bug that failed this migration in
+-- production (23503 on JournalEntry_departmentId_fkey).
+ALTER TABLE "JournalEntry" DROP CONSTRAINT "JournalEntry_departmentId_fkey";
+ALTER TABLE "ExpenseReport" DROP CONSTRAINT "ExpenseReport_departmentId_fkey";
+ALTER TABLE "AppointmentInviteDepartment" DROP CONSTRAINT "AppointmentInviteDepartment_departmentId_fkey";
+
 -- Everything that pointed at a per-edition budget category now points at the
 -- department itself.
 UPDATE "JournalEntry" e SET "departmentId" = b."departmentId" FROM "DepartmentBudget" b WHERE b."id" = e."departmentId";
@@ -58,10 +68,6 @@ WHERE a."id" > k."id"
   AND ba."departmentId" = bk."departmentId";
 
 UPDATE "AppointmentInviteDepartment" i SET "departmentId" = b."departmentId" FROM "DepartmentBudget" b WHERE b."id" = i."departmentId";
-
-ALTER TABLE "JournalEntry" DROP CONSTRAINT "JournalEntry_departmentId_fkey";
-ALTER TABLE "ExpenseReport" DROP CONSTRAINT "ExpenseReport_departmentId_fkey";
-ALTER TABLE "AppointmentInviteDepartment" DROP CONSTRAINT "AppointmentInviteDepartment_departmentId_fkey";
 
 ALTER TABLE "JournalEntry" ADD CONSTRAINT "JournalEntry_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ALTER TABLE "ExpenseReport" ADD CONSTRAINT "ExpenseReport_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
