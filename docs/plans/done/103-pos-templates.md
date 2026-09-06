@@ -1,6 +1,8 @@
 # 103 — POS templates
 
-**Read [100-cash-manager-pos.md](100-cash-manager-pos.md) first** — the shared
+> **Done** — shipped in v0.36.0 on 2026-09-06.
+
+**Read [100-cash-manager-pos.md](../100-cash-manager-pos.md) first** — the shared
 context, the ground rules, the delegation policy and the release protocol live
 there. Then work from that file and this one only. Do not read 101, 102 or
 104–107; their context is not yours.
@@ -323,5 +325,5 @@ Commit anything this changed.
 
 ## Step 9 — Release
 
-Follow **Release protocol** in [100-cash-manager-pos.md](100-cash-manager-pos.md).
+Follow **Release protocol** in [100-cash-manager-pos.md](../100-cash-manager-pos.md).
 Directive: **`requires-migration`**. Do not monitor the deployment.
