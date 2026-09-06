@@ -6,6 +6,7 @@ import { Check, Eye, Pencil, Plus, TrendingDown, TrendingUp, Trash2, X } from "l
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
+import { useCloseOnSuccess } from "@/components/use-close-on-success";
 import {
   Button,
   Card,
@@ -15,6 +16,7 @@ import {
   CardletFields,
   CardletHeader,
   CardletList,
+  Chip,
   Field,
   IconButton,
   Input,
@@ -36,7 +38,15 @@ import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
 
-import { createBudgetLineAction, deleteBudgetLineAction, updateBudgetLineAction } from "./actions";
+import {
+  createBudgetLineAction,
+  deleteBudgetAction,
+  deleteBudgetLineAction,
+  updateBudgetAction,
+  updateBudgetLineAction,
+} from "./actions";
+import { BudgetFormFields } from "./budget-form-fields";
+import { CreateBudgetModal } from "./create-budget-modal";
 
 type BudgetLineItem = {
   id: string;
@@ -56,9 +66,10 @@ type JournalEntryItem = {
   counterparty: string | null;
 };
 
-type DepartmentItem = {
+type BudgetItem = {
   id: string;
   name: string;
+  departments: { id: string; name: string }[];
   budgetLines: BudgetLineItem[];
   journalEntries: JournalEntryItem[];
 };
@@ -66,17 +77,17 @@ type DepartmentItem = {
 type BudgetPageClientProps = {
   locale: Locale;
   editionName: string;
-  departments: DepartmentItem[];
+  budgets: BudgetItem[];
   canManage: boolean;
-  emptyStateMessage: string;
+  attachableDepartments: { id: string; name: string }[];
 };
 
 /**
- * One account type of a department: its budget lines, its journal entries, and
- * the two totals every view of this screen compares.
+ * One account type of a budget: its budget lines, its journal entries, and the
+ * two totals every view of this screen compares.
  *
  * `actualTotal` is a section-level fact and cannot be anything finer: a journal
- * entry carries a department and a CHARGES/PRODUITS type, never a budget line
+ * entry carries a budget and a CHARGES/PRODUITS type, never a budget line
  * (see `JournalEntry` in prisma/schema.prisma), which is also how the dashboard
  * computes budget vs. actuals. That is why the phone's progress bar sits on the
  * section and not on the line.
@@ -90,9 +101,9 @@ type AccountSection = {
   actualTotal: number;
 };
 
-/** Everything a department needs, summed once for the table, the cards and the modal. */
-type DepartmentSummary = {
-  department: DepartmentItem;
+/** Everything a budget needs, summed once for the table, the cards and the modal. */
+type BudgetSummary = {
+  budget: BudgetItem;
   sections: [AccountSection, AccountSection];
   charges: AccountSection;
   produits: AccountSection;
@@ -157,22 +168,33 @@ function BudgetRollup({ budgetedLabel, actualLabel, budgeted, actual, gap, tone 
   );
 }
 
-export default function BudgetPageClient({ locale, editionName, departments, canManage: canManageProp, emptyStateMessage }: BudgetPageClientProps) {
+const EDIT_BUDGET_FORM_ID = "edit-budget-form";
+const DELETE_BUDGET_FORM_ID = "delete-budget-form";
+
+export default function BudgetPageClient({
+  locale,
+  editionName,
+  budgets,
+  canManage: canManageProp,
+  attachableDepartments,
+}: BudgetPageClientProps) {
   const isReadOnly = useEditionReadOnly();
   // A closed edition is read-only, so it takes the same path as "not allowed to manage".
   const canManage = canManageProp && !isReadOnly;
   const copy = dictionaries[locale];
   const router = useRouter();
 
-  const [entryModalDepartment, setEntryModalDepartment] = useState<{ id: string; name: string } | null>(null);
+  const [entryModalBudget, setEntryModalBudget] = useState<{ id: string; name: string } | null>(null);
   const [editingBudgetLineId, setEditingBudgetLineId] = useState<string | null>(null);
   const [editBudgetDraft, setEditBudgetDraft] = useState<{ label: string; amount: string; notes: string } | null>(null);
-  const [detailsDepartmentId, setDetailsDepartmentId] = useState<string | null>(null);
+  const [detailsBudgetId, setDetailsBudgetId] = useState<string | null>(null);
+  const [editingBudget, setEditingBudget] = useState<BudgetItem | null>(null);
+  const [deletingBudget, setDeletingBudget] = useState<BudgetItem | null>(null);
 
   async function handleCreateBudgetLine(_prevState: ActionState, formData: FormData): Promise<ActionState> {
     const result = await createBudgetLineAction(_prevState, formData);
     if (!result.error) {
-      setEntryModalDepartment(null);
+      setEntryModalBudget(null);
       router.refresh();
     }
     return result;
@@ -186,6 +208,18 @@ export default function BudgetPageClient({ locale, editionName, departments, can
     deleteBudgetLineAction,
     initialActionState
   );
+
+  const [editBudgetState, editBudgetFormAction, isSavingBudget] = useActionState(
+    updateBudgetAction,
+    initialActionState
+  );
+  const markEditBudgetSubmitted = useCloseOnSuccess(editBudgetState, isSavingBudget, () => setEditingBudget(null));
+
+  const [deleteBudgetState, deleteBudgetFormAction, isDeletingBudget] = useActionState(
+    deleteBudgetAction,
+    initialActionState
+  );
+  const markDeleteBudgetSubmitted = useCloseOnSuccess(deleteBudgetState, isDeletingBudget, () => setDeletingBudget(null));
 
   async function handleSaveBudgetLine(_prevState: ActionState): Promise<ActionState> {
     if (!editingBudgetLineId || !editBudgetDraft) {
@@ -214,10 +248,10 @@ export default function BudgetPageClient({ locale, editionName, departments, can
     initialActionState
   );
 
-  const summaries = useMemo<DepartmentSummary[]>(() => departments.map((department) => {
+  const summaries = useMemo<BudgetSummary[]>(() => budgets.map((budget) => {
     function buildSection(accountType: AccountSection["accountType"], title: string, emptyMessage: string): AccountSection {
-      const lines = department.budgetLines.filter((line) => line.accountType === accountType);
-      const journalEntries = department.journalEntries.filter((entry) => entry.accountType === accountType);
+      const lines = budget.budgetLines.filter((line) => line.accountType === accountType);
+      const journalEntries = budget.journalEntries.filter((entry) => entry.accountType === accountType);
       return { accountType, title, emptyMessage, lines, budgetTotal: sumAmounts(lines), actualTotal: sumAmounts(journalEntries) };
     }
 
@@ -225,7 +259,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
     const produits = buildSection("PRODUITS", copy.common.produits, copy.budget.noEarningsEntries);
 
     return {
-      department,
+      budget,
       sections: [charges, produits],
       charges,
       produits,
@@ -233,9 +267,9 @@ export default function BudgetPageClient({ locale, editionName, departments, can
       actualResult: produits.actualTotal - charges.actualTotal,
       chargesAvailability: charges.budgetTotal - charges.actualTotal,
     };
-  }), [departments, copy]);
+  }), [budgets, copy]);
 
-  const detailsSummary = summaries.find((summary) => summary.department.id === detailsDepartmentId) ?? null;
+  const detailsSummary = summaries.find((summary) => summary.budget.id === detailsBudgetId) ?? null;
 
   return (
     <div className="space-y-4 lg:space-y-8">
@@ -243,29 +277,39 @@ export default function BudgetPageClient({ locale, editionName, departments, can
         eyebrow={copy.budget.title}
         title={<>{copy.budget.entriesFor} {editionName}</>}
         description={copy.budget.subtitle}
+        actions={canManage ? <CreateBudgetModal locale={locale} departments={attachableDepartments} /> : null}
       />
 
       <div className="space-y-4">
         <FormError message={deleteLineState.error} />
         <FormError message={saveLineState.error} />
-        {departments.length === 0 ? (
+        <FormError message={deleteBudgetState.error} />
+        {summaries.length === 0 ? (
           <CardGrid>
-            <Card span="full" dashed>{emptyStateMessage}</Card>
+            <Card span="full" dashed>
+              {canManage ? copy.budget.noBudgets : copy.budget.noVisibleBudgets}
+            </Card>
           </CardGrid>
         ) : (
           <CardGrid>
             {summaries.map((summary) => {
-              const { department } = summary;
+              const { budget } = summary;
 
               return (
-                <Card key={department.id} as="article" span="1/2">
+                <Card key={budget.id} as="article" span="1/2">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <SectionTitle>{department.name}</SectionTitle>
-                      <p className="mt-2 text-sm text-[var(--muted)]">
-                        {department.budgetLines.length} {copy.budget.budgetEntries}
-                      </p>
-                      {department.budgetLines.length > 0 && (
+                      <SectionTitle>{budget.name}</SectionTitle>
+                      {budget.departments.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {budget.departments.map((department) => (
+                            <Chip key={department.id}>{department.name}</Chip>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="mt-2 text-sm text-[var(--muted)]">{copy.budget.noDepartment}</p>
+                      )}
+                      {budget.budgetLines.length > 0 && (
                         <div className="mt-2 flex items-center gap-1.5 text-sm font-semibold">
                           <span className={summary.budgetResult >= 0 ? "text-emerald-400" : "text-rose-400"}>{formatCurrency(summary.budgetResult)}</span>
                           {summary.budgetResult >= 0
@@ -278,7 +322,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                         read-only roll-up below, and the details modal behind the eye is
                         three wide tables that do not fit one. */}
                     <div className="hidden items-center gap-2 sm:flex">
-                      <IconButton tone="neutral" label={copy.budget.viewDetails} onClick={() => setDetailsDepartmentId(department.id)}>
+                      <IconButton tone="neutral" label={copy.budget.viewDetails} onClick={() => setDetailsBudgetId(budget.id)}>
                         <Eye />
                       </IconButton>
                       {canManage ? (
@@ -286,9 +330,23 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                           <IconButton
                             tone="neutral"
                             label={copy.budget.addBudgetEntry}
-                            onClick={() => setEntryModalDepartment({ id: department.id, name: department.name })}
+                            onClick={() => setEntryModalBudget({ id: budget.id, name: budget.name })}
                           >
                             <Plus />
+                          </IconButton>
+                          <IconButton
+                            tone="neutral"
+                            label={copy.budget.editBudget}
+                            onClick={() => setEditingBudget(budget)}
+                          >
+                            <Pencil />
+                          </IconButton>
+                          <IconButton
+                            tone="delete"
+                            label={copy.budget.deleteBudget}
+                            onClick={() => setDeletingBudget(budget)}
+                          >
+                            <Trash2 />
                           </IconButton>
                         </>
                       ) : null}
@@ -436,8 +494,8 @@ export default function BudgetPageClient({ locale, editionName, departments, can
       {detailsSummary ? (
         <Modal
           open
-          onClose={() => setDetailsDepartmentId(null)}
-          title={`${copy.budget.detailsTitle} - ${detailsSummary.department.name}`}
+          onClose={() => setDetailsBudgetId(null)}
+          title={`${copy.budget.detailsTitle} - ${detailsSummary.budget.name}`}
           size="full"
         >
           <Card as="div" className="mb-5 grid gap-3 sm:grid-cols-3">
@@ -523,12 +581,12 @@ export default function BudgetPageClient({ locale, editionName, departments, can
                   </TR>
                 </THead>
                 <tbody>
-                  {detailsSummary.department.journalEntries.length === 0 ? (
+                  {detailsSummary.budget.journalEntries.length === 0 ? (
                     <TR>
                       <TD colSpan={6} className="text-xs text-[var(--muted)]">{copy.budget.noJournalEntries}</TD>
                     </TR>
                   ) : (
-                    detailsSummary.department.journalEntries.map((entry) => (
+                    detailsSummary.budget.journalEntries.map((entry) => (
                       <TR key={entry.id}>
                         <TD>{new Date(entry.date).toLocaleDateString(locale)}</TD>
                         <TD className="text-xs text-[var(--muted)]">{entry.accountType === "CHARGES" ? copy.common.charges : copy.common.produits}</TD>
@@ -550,13 +608,13 @@ export default function BudgetPageClient({ locale, editionName, departments, can
 
       {canManage ? (
         <Modal
-          open={entryModalDepartment !== null}
-          onClose={() => setEntryModalDepartment(null)}
-          title={entryModalDepartment ? `${copy.budget.addBudgetEntry} - ${entryModalDepartment.name}` : copy.budget.addBudgetEntry}
+          open={entryModalBudget !== null}
+          onClose={() => setEntryModalBudget(null)}
+          title={entryModalBudget ? `${copy.budget.addBudgetEntry} - ${entryModalBudget.name}` : copy.budget.addBudgetEntry}
           size="md"
           footer={
             <>
-              <Button variant="secondary" onClick={() => setEntryModalDepartment(null)}>
+              <Button variant="secondary" onClick={() => setEntryModalBudget(null)}>
                 {copy.shell.cancel}
               </Button>
               <Button type="submit" form="create-budget-line-form" variant="primary" disabled={isSavingBudgetLine}>
@@ -567,7 +625,7 @@ export default function BudgetPageClient({ locale, editionName, departments, can
         >
           <form id="create-budget-line-form" action={createLineFormAction} className="space-y-4">
             <FormError message={createLineState.error} />
-            <input type="hidden" name="departmentId" value={entryModalDepartment?.id ?? ""} />
+            <input type="hidden" name="budgetId" value={entryModalBudget?.id ?? ""} />
 
             <Field label={copy.budget.type}>
               <Select name="accountType" defaultValue="CHARGES" required>
@@ -587,6 +645,79 @@ export default function BudgetPageClient({ locale, editionName, departments, can
             <Field label={copy.budget.notesOptional}>
               <Textarea name="notes" rows={3} />
             </Field>
+          </form>
+        </Modal>
+      ) : null}
+
+      {canManage ? (
+        <Modal
+          open={editingBudget !== null}
+          onClose={() => setEditingBudget(null)}
+          title={copy.budget.editBudget}
+          size="sm"
+          mobileFullScreen
+          footer={
+            <>
+              <Button type="button" variant="secondary" onClick={() => setEditingBudget(null)}>
+                {copy.shell.cancel}
+              </Button>
+              <Button type="submit" form={EDIT_BUDGET_FORM_ID} variant="primary" disabled={isSavingBudget}>
+                {copy.shell.save}
+              </Button>
+            </>
+          }
+        >
+          <form
+            key={editingBudget?.id}
+            id={EDIT_BUDGET_FORM_ID}
+            action={editBudgetFormAction}
+            onSubmit={markEditBudgetSubmitted}
+            className="space-y-4"
+          >
+            <FormError message={editBudgetState.error} />
+            <input type="hidden" name="budgetId" value={editingBudget?.id ?? ""} />
+            {editingBudget ? (
+              <BudgetFormFields
+                locale={locale}
+                departments={attachableDepartments}
+                budget={{
+                  name: editingBudget.name,
+                  departmentIds: editingBudget.departments.map((department) => department.id),
+                }}
+              />
+            ) : null}
+          </form>
+        </Modal>
+      ) : null}
+
+      {canManage ? (
+        <Modal
+          open={deletingBudget !== null}
+          onClose={() => setDeletingBudget(null)}
+          title={copy.budget.deleteBudget}
+          size="sm"
+          footer={
+            <>
+              <Button type="button" variant="secondary" onClick={() => setDeletingBudget(null)}>
+                {copy.shell.cancel}
+              </Button>
+              <Button type="submit" form={DELETE_BUDGET_FORM_ID} variant="destructive" disabled={isDeletingBudget}>
+                {copy.budget.deleteBudget}
+              </Button>
+            </>
+          }
+        >
+          <form
+            id={DELETE_BUDGET_FORM_ID}
+            action={deleteBudgetFormAction}
+            onSubmit={markDeleteBudgetSubmitted}
+            className="space-y-4"
+          >
+            <FormError message={deleteBudgetState.error} />
+            <input type="hidden" name="budgetId" value={deletingBudget?.id ?? ""} />
+
+            <p className="text-sm font-medium">{deletingBudget?.name}</p>
+            <p className="text-sm text-[var(--muted)]">{copy.budget.deleteBudgetBlocked}</p>
           </form>
         </Modal>
       ) : null}
