@@ -203,6 +203,7 @@ model Edition {
   todos          Todo[]
   tasks          Task[]
   cashRegisters  CashRegister[]
+  posTemplates   PosTemplate[]
 }
 
 /// One named envelope of money inside one edition — what used to be a
@@ -770,6 +771,7 @@ model StockElement {
   unit      StockUnit       @relation(fields: [unitId], references: [id], onDelete: Restrict)
   items     StockItem[]
   movements StockMovement[]
+  posCells  PosTemplateCell[]
 
   @@index([name])
   @@index([unitId])
@@ -873,4 +875,44 @@ model CashCount {
 
   @@unique([registerId, kind, denomination])
   @@index([registerId])
+}
+
+/// A saved till layout: which articles a bar sells, at what price, in what
+/// order on the grid. Prices live here rather than on the article, so the same
+/// beer can be CHF 4 at one bar and CHF 5 at another on the same night.
+model PosTemplate {
+  id        String   @id @default(cuid())
+  editionId String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  edition Edition           @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  cells   PosTemplateCell[]
+
+  @@unique([editionId, name])
+  @@index([editionId])
+}
+
+/// One tile. `position` is a 0-based slot index across the whole template;
+/// eight slots make a page and the ninth tile of every page is the "custom
+/// sale" button, which is drawn rather than stored.
+///
+/// `label` is a snapshot taken from the article when the tile was made and is
+/// then free text: a bar tile says "Beer 3dl", not "Feldschlösschen Original
+/// 30cl". Renaming the article later does not rewrite the tile.
+model PosTemplateCell {
+  id         String  @id @default(cuid())
+  templateId String
+  position   Int
+  elementId  String
+  label      String
+  /// Negative is allowed and meaningful — a deposit handed back.
+  price      Decimal @db.Decimal(10, 2)
+
+  template PosTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  element  StockElement @relation(fields: [elementId], references: [id], onDelete: Restrict)
+
+  @@unique([templateId, position])
+  @@index([elementId])
 }
