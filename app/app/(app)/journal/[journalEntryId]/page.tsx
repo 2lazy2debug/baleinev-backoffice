@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
 import { Card, PageHeader } from "@/components/ui";
+import { editionBudgets } from "@/lib/budgets";
 import { prisma } from "@/lib/db";
-import { budgetingDepartments } from "@/lib/departments";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
@@ -31,7 +31,7 @@ export default async function JournalEntryEditPage({ params }: JournalEntryEditP
     notFound();
   }
 
-  const departments = await budgetingDepartments();
+  const budgets = await editionBudgets(activeEdition.id);
 
   const entry = await prisma.journalEntry.findFirst({
     where: {
@@ -59,7 +59,7 @@ export default async function JournalEntryEditPage({ params }: JournalEntryEditP
           shellCopy={copy.shell}
           entry={{
             id: entry.id,
-            departmentId: entry.departmentId,
+            budgetId: entry.budgetId,
             accountType: entry.accountType,
             date: entry.date.toISOString().slice(0, 10),
             amount: decimalToNumber(entry.amount).toFixed(2),
@@ -69,7 +69,7 @@ export default async function JournalEntryEditPage({ params }: JournalEntryEditP
             referenceNumber: entry.referenceNumber,
             costCenterId: entry.costCenterId,
           }}
-          departments={departments}
+          budgets={budgets}
           moneyAccounts={activeEdition.moneyAccounts}
           costCenters={activeEdition.costCenters}
         />

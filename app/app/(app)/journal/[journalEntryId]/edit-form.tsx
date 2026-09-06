@@ -12,8 +12,8 @@ import { type ActionState, initialActionState } from "@/lib/server-action-helper
 import { updateJournalEntryAction } from "../actions";
 
 type Copy = {
-  department: string;
-  selectDepartment: string;
+  budget: string;
+  selectBudget: string;
   type: string;
   date: string;
   amount: string;
@@ -33,7 +33,7 @@ type JournalEntryEditFormProps = {
   shellCopy: ShellCopy;
   entry: {
     id: string;
-    departmentId: string | null;
+    budgetId: string | null;
     accountType: "CHARGES" | "PRODUITS";
     date: string;
     amount: string;
@@ -43,7 +43,7 @@ type JournalEntryEditFormProps = {
     referenceNumber: string | null;
     costCenterId: string | null;
   };
-  departments: Array<{ id: string; name: string }>;
+  budgets: Array<{ id: string; name: string }>;
   moneyAccounts: Array<{ id: string; name: string }>;
   costCenters: Array<{ id: string; code: string }>;
 };
@@ -53,7 +53,7 @@ export function JournalEntryEditForm({
   commonCopy,
   shellCopy,
   entry,
-  departments,
+  budgets,
   moneyAccounts,
   costCenters,
 }: JournalEntryEditFormProps) {
@@ -77,14 +77,14 @@ export function JournalEntryEditForm({
       <FormError message={state.error} />
       <input type="hidden" name="journalEntryId" value={entry.id} />
 
-      <Field label={copy.department}>
-        <Select name="departmentId" required defaultValue={entry.departmentId ?? ""}>
+      <Field label={copy.budget}>
+        <Select name="budgetId" required defaultValue={entry.budgetId ?? ""}>
           <option value="" disabled>
-            {copy.selectDepartment}
+            {copy.selectBudget}
           </option>
-          {departments.map((department) => (
-            <option key={department.id} value={department.id}>
-              {department.name}
+          {budgets.map((budget) => (
+            <option key={budget.id} value={budget.id}>
+              {budget.name}
             </option>
           ))}
         </Select>
