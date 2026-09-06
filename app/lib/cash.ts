@@ -38,3 +38,34 @@ export function formatDenomination(rappen: number): string {
 export function countTotal(counts: DenominationCount[]): number {
   return counts.reduce((total, { denomination, quantity }) => total + denomination * quantity, 0);
 }
+
+/**
+ * The fewest coins and notes that make `rappen`, largest first.
+ *
+ * Greedy is optimal here and it is not a coincidence: the Swiss set is a
+ * 1-2-5 series, which is canonical, so the obvious loop is the right answer.
+ * Do not write a dynamic-programming solver.
+ *
+ * It assumes the drawer holds whatever it needs, because nothing in this app
+ * tracks what is physically in it. The seller adjusts; the sheet is advice.
+ * Returns [] for zero or negative input.
+ */
+export function makeChange(rappen: number): DenominationCount[] {
+  const counts: DenominationCount[] = [];
+
+  if (!Number.isFinite(rappen) || rappen <= 0) {
+    return counts;
+  }
+
+  let remaining = Math.floor(rappen);
+
+  for (const denomination of CASH_DENOMINATIONS) {
+    const quantity = Math.floor(remaining / denomination);
+    if (quantity > 0) {
+      counts.push({ denomination, quantity });
+      remaining -= quantity * denomination;
+    }
+  }
+
+  return counts;
+}
