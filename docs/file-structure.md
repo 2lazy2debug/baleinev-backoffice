@@ -77,6 +77,30 @@ app/
 │   │                                permission and edition guards, denomination parsing, the
 │   │                                one-transaction write. Closing is not idempotent
 │   │
+│   ├── pos/                     ← Point of sale. `page.tsx` redirects to `/pos/templates` until
+│   │   │                            104 adds the real home. Edition-scoped, admin-only
+│   │   ├── actions.ts            ← `createPosTemplateAction` / `renamePosTemplateAction` /
+│   │   │                            `deletePosTemplateAction` / `setPosTemplateCellAction` (an
+│   │   │                            upsert on `(templateId, position)`) / `clearPosTemplateCellAction`.
+│   │   │                            Each `requireAdmin()` + `resolveWritableEditionId()` and
+│   │   │                            re-checks the template is in the edition. Prices take a comma
+│   │   │                            decimal and allow negatives and zero
+│   │   └── templates/
+│   │       ├── page.tsx          ← The list (data-fetching only): name, tile count, page count
+│   │       │                        (from the highest slot, holes and all). `<EmptyPage>` with the
+│   │       │                        create button when there are none
+│   │       ├── client.tsx        ← Table above `sm`, cardlets below; the rename modal and the
+│   │       │                        confirm-guarded delete, one of each for the list
+│   │       ├── create-template-modal.tsx ← Header button + modal, one name field (the standard shape)
+│   │       └── [templateId]/
+│   │           ├── page.tsx      ← Loads the template's cells and every article for the picker
+│   │           │                    (`tracksStock` off included); `notFound()` when it is not in
+│   │           │                    the edition. Back link in the header
+│   │           └── grid-editor.tsx ← The 3×3 pager and grid. One tile dialog (add or edit, the
+│   │                                upsert) with an article picker that prefills the editable
+│   │                                label; "Remove from grid" when editing. Grid stays 3×3 at
+│   │                                every width; the ninth tile of each page is a drawn "custom sale"
+│   │
 │   ├── expense-reports/
 │   │   ├── page.tsx              ← Header + history (data-fetching only)
 │   │   ├── create-expense-report-modal.tsx ← Header button + create modal (standard + driving, proof upload)
@@ -115,7 +139,8 @@ app/
 │   │   ├── create-article-button.tsx ← The header trigger for the shared dialog
 │   │   └── actions.ts            ← create/update/delete an article, each `requireAdmin()`. Turning
 │   │                                "Counted in stock" or "Expires" off is refused while pieces
-│   │                                (or dated pieces) of it sit in a stock
+│   │                                (or dated pieces) of it sit in a stock; deleting is refused
+│   │                                while pieces are stocked or a POS template still sells it
 │   │
 │   ├── stock/
 │   │   ├── page.tsx              ← Three screens in one route: nothing to work with yet, the
@@ -310,7 +335,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `open-food-facts.ts` | `fetchProductByBarcode()` — what a scanned EAN says about a product (name, brand, size of one piece), from the open catalogue keyed by that code. The name is read `fr` → `en` → `de` → generic, one fixed order for everyone, since the item it fills in is shared. Server-only, best-effort: a miss, a timeout or a half-empty product all mean "type the rest yourself" |
 | `addresses.ts` | `addressDisplayName()` / `addressNameBlock()` / `addressPersonName()` / `formatPhone()` / `formatPostalLine()` and `DEFAULT_COUNTRY`. Import-free on purpose — the table, the pickers and the actions all read the same rules without dragging Prisma into a browser bundle |
 | `articles.ts` | `elementFieldsFrom()` / `assertBarcodeFree()` — the `StockElement` fields both writing forms post (articles' own dialog, and the stock app's "new item" half) and the "one barcode, one article" check, shared so the two paths cannot drift |
-| `cash.ts` | `CASH_DENOMINATIONS` (the twelve Swiss denominations, rappen, largest first) plus `toRappen()` / `fromRappen()` / `formatDenomination()` / `countTotal()`. Every amount in the cash and POS apps is integer rappen; this is where the conversion and the denomination list live so nothing downstream re-derives them. Import-free |
+| `cash.ts` | `CASH_DENOMINATIONS` (the twelve Swiss denominations, rappen, largest first), `POS_PAGE_SLOTS` (`8` — article tiles per POS grid page, the ninth being the drawn "custom sale"), plus `toRappen()` / `fromRappen()` / `formatDenomination()` / `countTotal()`. Every amount in the cash and POS apps is integer rappen; this is where the conversion, the denomination list and the grid constant live so nothing downstream re-derives them. Import-free |
 | `city-book.ts` | `rememberCity()` — files a postal code / locality pair the user actually saved, so the seeded Swiss list grows into whatever the address book turns out to need |
 | `countries.ts` | `countryOptions(locale)` / `countryName()` — countries and international dialling prefixes from libphonenumber-js + `Intl.DisplayNames`. Built on the server and passed down as props; the phone metadata has no business in a browser bundle that only needs "+41" |
 | `db.ts` | Singleton Prisma client (re-used across hot reloads in dev) |

@@ -603,3 +603,42 @@ sheets; a till counted tonight may be booked next week. The journal entries a cl
 the float returned, the takings, and the gap a user correction leaves — are written later by an
 admin, from the two counts and what the point of sale recorded (documented with the POS closing
 flow).
+
+## 13. Point of Sale
+
+The till a bar actually sells from. This section grows with the point-of-sale chain; the first
+piece is the **template** — the saved layout a bar opens on for the night.
+
+### Templates
+
+A **template** is a saved till layout, at `/pos/templates`. It is **per edition** and
+**admin-only**: composing the grid of what a bar sells, and at what price, is configuration.
+
+The grid is a **paginated 3×3**. Eight of the nine tiles on a page are article slots; the
+**bottom-right tile of every page is always "Custom sale"** and is drawn by the renderer, never
+stored — same tile, same place, every page, so a bar hits it without looking. A cell's `position`
+is a 0-based slot index across the whole template: `page = Math.floor(position / 8)`,
+`slot = position % 8`. The `8` is `POS_PAGE_SLOTS` in `app/lib/cash.ts`; nothing hardcodes it.
+
+Each article slot carries three things:
+
+- the **article** it points at (`StockElement`) — every article is offered, including ones with
+  `tracksStock` off, because that flag is exactly what makes a poured glass sellable;
+- a **label**, snapshotted from the article's name when the tile is made and then free text — a bar
+  tile says "Beer 3dl", not "Feldschlösschen Original 30cl", and renaming the article later does not
+  rewrite the tile;
+- a **price**, which lives on the cell and **not** on the article. The same beer is CHF 4 at one
+  bar and CHF 5 at another on the same night. A **negative price is legal and meaningful** — a
+  bottle deposit handed back is a tile that takes money out of the till — so nothing validates a
+  price for positivity.
+
+A page **may have holes**. Removing a tile frees its slot and leaves the others where they are —
+muscle memory beats compaction, so there is no drag-to-reorder and no auto-fill. The page count of
+a template comes from the highest slot in use, not the tile count: eight tiles with a hole can
+still span two pages. Adding a page is just paging right into an empty one — there is no "add page"
+button and no page record.
+
+An article a template sells **cannot be deleted** until it is taken off every template
+(`PosTemplateCell.elementId` is `Restrict`); the articles app says so in a sentence. A closed
+edition hides the create button and every template write is refused. Nothing here sells anything —
+opening a session and ringing sales up is a later part of this chain.

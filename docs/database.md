@@ -129,6 +129,7 @@ Top-level scoping unit for a fiscal year / accounting period.
 | `isDefault` | Boolean | At most one. Seeds `User.selectedEditionId` for accounts that have none; never a runtime fallback |
 | `closedAt` | DateTime? | Set when the year is closed. Non-null makes the edition read-only — `requireWritableEdition()` refuses every write against it, while reads, exports and PDFs keep working. Clearing it (`reopenEditionAction`) makes the edition writable again |
 | `usersSelecting` | `User[]` | Users currently working in this edition |
+| `posTemplates` | `PosTemplate[]` | Saved till layouts for this edition's point of sale |
 
 There is no carry-forward balance on the edition itself: a previous year's closing balance arrives
 as a locked opening `JournalEntry` per money account, written by `carryOverEdition()`.
@@ -489,10 +490,11 @@ The catalogue entry — what *can* be stocked or sold, not the stock itself. Man
 | `unitQty` | Decimal(12,3) | The size of **one piece**: a 1.5 l bottle is unit `l`, unitQty `1.5` |
 | `expireable` | Boolean | Whether a piece carries an expiry date. False hides the field entirely |
 | `tracksStock` | Boolean | Default `true`. Whether pieces are counted on a shelf. `false` = sold but never stocked (a poured glass, not the barrel): hidden from every stock screen and the "add stock" picker, still available to a POS template. Turning it off is refused while any `StockItem` references it |
+| `posCells` | `PosTemplateCell[]` | Tiles on POS templates that sell this article |
 
-Deleting one is refused while any `StockItem` references it (`Restrict`), and takes its movements
-with it when it is allowed (`Cascade`) — a log of an item that no longer exists has nothing left to
-name it by.
+Deleting one is refused while any `StockItem` **or `PosTemplateCell`** references it (`Restrict`),
+and takes its movements with it when it is allowed (`Cascade`) — a log of an item that no longer
+exists has nothing left to name it by.
 
 ### `StockItem`
 One element, in one place, at one expiry date, counted in **pieces**.
@@ -570,6 +572,42 @@ How many of one denomination were counted, at one end of a register's life.
 
 Unique on `(registerId, kind, denomination)`. The twelve Swiss denominations and the
 rappen/franc conversion live in [`app/lib/cash.ts`](./file-structure.md).
+
+---
+
+### `PosTemplate`
+A saved till layout: which articles a bar sells, at what price, in what order on the grid. Per
+edition, managed at `/pos/templates`, admin-only. Holds only its cells — nothing points at a
+template yet (selling is a later part of the POS chain).
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `editionId` | String | FK → Edition, `Cascade` |
+| `name` | String | |
+| `cells` | `PosTemplateCell[]` | |
+
+Unique on `(editionId, name)` — one template name per edition, caught in the action before the
+index can throw.
+
+### `PosTemplateCell`
+One tile. `position` is a 0-based slot index across the whole template; eight slots
+(`POS_PAGE_SLOTS` in [`app/lib/cash.ts`](./file-structure.md)) make a page and the ninth tile of
+every page is the "custom sale" button, which the renderer draws and this table never stores. A
+page may have holes — removing a tile frees its slot and leaves the rest in place.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `templateId` | String | FK → PosTemplate, `Cascade` |
+| `position` | Int | 0-based slot index. `page = position / 8`, `slot = position % 8` |
+| `elementId` | String | FK → StockElement, **`Restrict`** — an article a template sells cannot be deleted under it |
+| `label` | String | Snapshot of the article's name when the tile was made, then free text. Renaming the article does not rewrite it |
+| `price` | Decimal(10,2) | On the cell, never on the article. **Negative is legal** — a deposit handed back |
+
+Unique on `(templateId, position)` — one tile per slot, which is what makes the "set a cell" action
+a clean upsert. Prisma's `Restrict` on `elementId` is backed by an explicit count check in
+`deleteArticleAction`, so the user gets a sentence rather than a raw constraint error.
 
 ---
 
