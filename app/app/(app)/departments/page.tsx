@@ -8,8 +8,8 @@ import { CreateDepartmentModal } from "./create-department-modal";
 
 /**
  * The association's departments. Admins only, and deliberately not
- * edition-scoped: a department outlives an edition, and the per-edition part of
- * it — the budget — is the `hasBudget` flag here and the lines in /budget.
+ * edition-scoped: a department outlives an edition. Budgets are independent —
+ * a department is attached to them from /budget, never the other way round.
  */
 export default async function DepartmentsPage() {
   await requireAdmin();
@@ -22,8 +22,11 @@ export default async function DepartmentsPage() {
       id: true,
       name: true,
       abbreviation: true,
-      hasBudget: true,
       _count: { select: { users: true } },
+      budgets: {
+        select: { budget: { select: { name: true } } },
+        orderBy: { budget: { name: "asc" } },
+      },
     },
   });
 
@@ -42,8 +45,8 @@ export default async function DepartmentsPage() {
           id: department.id,
           name: department.name,
           abbreviation: department.abbreviation,
-          hasBudget: department.hasBudget,
           peopleCount: department._count.users,
+          budgetNames: [...new Set(department.budgets.map((link) => link.budget.name))],
         }))}
       />
     </div>

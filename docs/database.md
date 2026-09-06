@@ -150,19 +150,20 @@ password entry is shared with, and what an appointment invites. Managed at `/dep
 | `id` | String (cuid) | |
 | `name` | String | Unique |
 | `abbreviation` | String? | Short code for dense rows; optional |
-| `hasBudget` | Boolean | Default `false`. Whether the department may be attached to budgets |
 | `budgets` | `BudgetDepartment[]` | The budgets this department is attached to and can see |
 | `users` / `passwordEntries` | many-to-many | Membership, and vault visibility |
 | `expenseReports` | `ExpenseReport[]` | Expenses filed under it |
 | `appointmentInvites` | `AppointmentInviteDepartment[]` | Calendar invitations addressed to it |
 
-**`hasBudget` is the guarded field.** Its only job is to filter which departments may be attached
-to a budget — it opens and closes nothing by itself. Turning it off detaches the department from
-every budget, and is refused while any of those budgets still holds budget lines or journal
-entries (`lib/departments.ts#departmentBudgetUsage`): that would hide live money from the team.
+**Budgets and departments are independent.** A department has just a name and an abbreviation —
+it does not own a budget, gate one, or carry a flag about one. Any department may be attached to
+any budget from `/budget`, and the attachment (`BudgetDepartment`) is visibility only.
 
-Deleting a department is refused while people, budget lines, journal entries, expense reports,
-password entries or appointment invitations still point at it.
+Deleting a department is refused while **people, expense reports, appointment invitations or
+password entries** still point at it. Budgets do **not** stand in the way: the delete cascades the
+`BudgetDepartment` join rows away and every budget, its lines and its journal entries stay put.
+The `/departments` delete dialog warns when the department is attached to budgets, listing them,
+before the admin confirms.
 
 ---
 
@@ -544,9 +545,9 @@ an edition must not delete the users who were looking at it.
 
 ### Cascade vs Restrict
 - Edition delete cascades to all its records.
-- Department delete cascades to its BudgetDepartment join rows (not the budgets themselves) — but
-  a department attached to a budget that holds lines or entries is refused deletion before it gets
-  there.
+- Department delete cascades to its BudgetDepartment join rows (not the budgets themselves). It is
+  refused only while people, expense reports, invitations or password entries point at it — never
+  because of a budget.
 - Edition delete cascades to its Budget records, those to their BudgetLine records, and each
   journal entry's `budgetId` is set null on the way (SetNull, so the cascade cannot deadlock).
 - StockPlace delete cascades to its items and movements; StockElement delete is *refused* while it

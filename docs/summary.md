@@ -35,16 +35,16 @@ Two roles, stored on `User.role`:
 
 A user belongs to `Department` records directly (a many-to-many). Departments are
 edition-independent, so a membership survives an edition change; what is per-edition is the
-`Budget` — a named envelope a department may be *attached* to, to see it. Admins manage the
-department list at `/departments`, where `hasBudget` decides whether a department may be attached
-to budgets at all.
+`Budget` — a named envelope a department may be *attached* to, to see it. Budgets and departments
+are independent: any department may be attached to any budget from `/budget`, and a department is
+just a name (admins manage the list at `/departments`).
 
 ## Core domain
 
 | Concept | What it is |
 | --- | --- |
 | `Edition` | One festival year. Owns everything else. Users select one each; the one flagged `isDefault` seeds accounts that have none. Carries the per-km driving reimbursement rate. |
-| `Department` | A team of the association — global, not per edition. Carries a name, an optional abbreviation and `hasBudget`. |
+| `Department` | A team of the association — global, not per edition. Carries a name and an optional abbreviation. |
 | `Budget` | A named envelope of money inside one edition; holds the budget lines and the journal entries booked against it. Attached to zero or more departments (visibility only); no attachment means admin-only. |
 | `MoneyAccount` | A bank, cash, or other account, with opening balance and (bank only) beneficiary/IBAN details. Managed by admins and the "Comptabilité" department. |
 | `CostCenter` | An analytic code used to group spending across departments. |

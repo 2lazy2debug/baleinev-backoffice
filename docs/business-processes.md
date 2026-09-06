@@ -93,9 +93,9 @@ to **admins only**; a department user sees exactly the budgets of their own depa
 each.
 
 ### Who does what
-- **Admin:** creates budgets at `/budget`, names them, attaches departments (the picker offers the
-  departments with `hasBudget` on), and creates BudgetLines with their amounts. Deleting a budget
-  is refused while it holds a line — empty it first.
+- **Admin:** creates budgets at `/budget`, names them, attaches any departments (there is no
+  eligibility flag — the picker offers every department), and creates BudgetLines with their
+  amounts. Deleting a budget is refused while it holds a line — empty it first.
 - **Department user:** views the budgets their departments are attached to, budget vs. actual
   spending (read-only).
 
@@ -106,8 +106,7 @@ stale page from another edition cannot mutate its data.
 
 ### Setup flow
 ```
-Admin creates Departments at /departments, with "Has a budget" on
-  (so they can be attached to budgets)
+Admin creates Departments at /departments (just a name)
         │
         ▼
 Admin creates a Budget at /budget, names it, attaches departments
@@ -124,11 +123,12 @@ Department users are assigned to departments in /users
 As journal entries are booked against a budget, the dashboard shows budget vs. actuals
 ```
 
-### Turning `hasBudget` off
-`hasBudget` only decides whether a department may be *attached* to a budget. Turning it off
-detaches the department from every budget it watches; it moves no money, but it is refused while
-one of those budgets still holds budget lines or journal entries
-(`departmentBudgetUsage()` in `app/lib/departments.ts`) — that would hide live money from the team.
+### Deleting a department
+A department does not own its budgets, so a budget never blocks its deletion. Deleting the
+department cascades the `BudgetDepartment` join rows away — every budget, its lines and its
+journal entries stay put. The `/departments` delete dialog warns when the department is attached
+to budgets and lists them before the admin confirms. Deletion is still refused while people,
+expense reports, appointment invitations or password entries point at the department.
 
 ### Budget vs. actuals calculation
 The dashboard (`app/(app)/page.tsx`) reads the edition's `Budget` rows: each row's planned side is

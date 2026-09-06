@@ -121,18 +121,15 @@ model User {
 // A department of the association — the team, not its money. Edition-independent
 // on purpose: the same PROGRAMMATION carries from one edition to the next, and
 // it is what a user belongs to, what a password is shared with and what an
-// appointment invites. A department no longer owns a budget: it may be attached
-// to several through `BudgetDepartment`, which only decides who gets to look.
+// appointment invites. Budgets and departments are fully independent: any
+// department may be attached to any budget through `BudgetDepartment`, which
+// only decides who gets to look. Nothing here gates that.
 model Department {
   id           String   @id @default(cuid())
   name         String   @unique
   // A short code for dense rows. Optional: the departments that predate this
   // screen have none until an admin fills them in.
   abbreviation String?
-  // Whether this department may be attached to a budget at all. It opens and
-  // closes nothing by itself now — it is only the filter for the department
-  // picker in the budget app.
-  hasBudget    Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

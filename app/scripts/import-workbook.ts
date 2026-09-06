@@ -229,8 +229,8 @@ async function main() {
     for (const departmentName of uniqueDepartmentNames) {
       await tx.department.upsert({
         where: { name: departmentName },
-        update: { hasBudget: true },
-        create: { name: departmentName, hasBudget: true },
+        update: {},
+        create: { name: departmentName },
       });
     }
 

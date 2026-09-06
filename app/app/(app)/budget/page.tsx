@@ -1,7 +1,7 @@
 import { getCurrentUserAccess } from "@/lib/access";
 import { visibleBudgetsWhere } from "@/lib/budgets";
 import { prisma } from "@/lib/db";
-import { budgetingDepartments } from "@/lib/departments";
+import { attachableDepartments } from "@/lib/departments";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
@@ -32,7 +32,7 @@ export default async function BudgetPage() {
   // lines and its own journal entries. The visibility rule lives in
   // `visibleBudgetsWhere` and nowhere else; actuals are the budget's own entries,
   // so there is no second query to match up by department.
-  const [budgets, attachableDepartments] = await Promise.all([
+  const [budgets, departmentOptions] = await Promise.all([
     prisma.budget.findMany({
       where: visibleBudgetsWhere(access, activeEdition.id),
       orderBy: { name: "asc" },
@@ -56,7 +56,7 @@ export default async function BudgetPage() {
         },
       },
     }),
-    canManage ? budgetingDepartments() : Promise.resolve([]),
+    canManage ? attachableDepartments() : Promise.resolve([]),
   ]);
 
   return (
@@ -64,7 +64,7 @@ export default async function BudgetPage() {
       locale={locale}
       editionName={activeEdition.name}
       canManage={canManage}
-      attachableDepartments={attachableDepartments}
+      attachableDepartments={departmentOptions}
       budgets={budgets.map((budget) => ({
         id: budget.id,
         name: budget.name,

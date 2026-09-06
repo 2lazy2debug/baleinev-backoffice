@@ -159,8 +159,8 @@ app/
 │   │   ├── page.tsx              ← The association's departments (admin only, global — no edition)
 │   │   ├── client.tsx            ← Table above `sm`, cardlets below; edit and delete dialogs
 │   │   ├── create-department-modal.tsx ← The header button and its dialog
-│   │   ├── department-form-fields.tsx  ← The three fields create and edit share
-│   │   └── actions.ts            ← Server actions: create/update/delete; the update guards `hasBudget`
+│   │   ├── department-form-fields.tsx  ← The two fields (name, abbreviation) create and edit share
+│   │   └── actions.ts            ← Server actions: create/update/delete; delete is refused only for people/expense-reports/invites/passwords, never budgets
 │   │
 │   └── account/
 │       ├── page.tsx              ← The signed-in user's own account (global, not edition-scoped)
@@ -284,7 +284,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `i18n.ts` | `getLocale()` (reads cookie server-side) and `getDictionary()` |
 | `document-templates.ts` | `[[field]]` renderer, `InvoiceDocumentPayload` type, default invoice HTML template, `ensureDefaultInvoiceTemplate()` |
 | `swiss-qr.ts` | `buildSwissQrPayload()` — builds a SPC-format QR string for Swiss ISO 20022 QR invoices |
-| `departments.ts` | `budgetingDepartments()` (the departments that may be attached to a budget) and `departmentBudgetUsage()` (what stands in the way of detaching a department, i.e. turning `hasBudget` off) |
+| `departments.ts` | `attachableDepartments()` — every department, `id` and `name`, for the budget app's attach picker (no eligibility filter) |
 | `budgets.ts` | `visibleBudgetsWhere(access, editionId)` — the one place the visibility rule lives (admins see all, others see only their departments' budgets); `editionBudgets()` (the journal picker's options); `assertBudgetInEdition()`; `resolveDefaultBudgetForDepartment()` (the expense-report → journal prefill) |
 | `edition-carry-over.ts` | `carryOverEdition(tx, source, target)` — copies budgets with their lines and department attachments, cost centers and money accounts into another edition and writes each account's closing balance as a locked opening entry |
 | `edition-context.ts` | The single answer to "which edition is this request in", read from `User.selectedEditionId`: `resolveEditionIdOrNull()` (pages), `resolveEditionId()` (write paths, throws), `resolveWritableEditionId()` (write paths, also refuses a closed edition), `requireWritableEdition(id)` (guards a write against a named edition), `resolveEdition()` (the record), `ensureUserEdition()` (the only writer of the seed) |
@@ -306,7 +306,7 @@ which. Nothing here should be re-implemented inline in a page.
 
 | File | Purpose |
 |---|---|
-| `import-workbook.ts` | One-off: parse an Excel workbook JOURNAL sheet → seed departments (global, `hasBudget` on) + one budget per department + money accounts, and book the journal entries against those budgets |
+| `import-workbook.ts` | One-off: parse an Excel workbook JOURNAL sheet → seed departments (global) + one budget per department + money accounts, and book the journal entries against those budgets |
 | `import-budget.ts` | One-off: parse budget department sheets from the same workbook → upsert one budget per department name and seed its budget lines |
 | `import-bank-statement.ts` | Replays a BCV "Extraction transactionnelle" onto one edition: replaces every entry on the bank account, mirrors bank/cash transfers onto the cash box, and refreshes the next edition's carry-over |
 

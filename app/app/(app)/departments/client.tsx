@@ -6,7 +6,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
 import {
-  Badge,
+  Alert,
   Button,
   Card,
   CardGrid,
@@ -35,9 +35,10 @@ export type DepartmentRow = {
   id: string;
   name: string;
   abbreviation: string | null;
-  hasBudget: boolean;
   /** How many accounts belong to it — what an admin reads this list for. */
   peopleCount: number;
+  /** The budgets this department is attached to, by name — the delete warning. */
+  budgetNames: string[];
 };
 
 const EDIT_FORM_ID = "edit-department-form";
@@ -45,7 +46,7 @@ const DELETE_FORM_ID = "delete-department-form";
 
 /**
  * The departments, as a table on a desktop and as cardlets on a phone — both fed
- * by the one array, so neither can drift into a second reading of "has a budget".
+ * by the one array.
  *
  * Editing is a dialog rather than an unlocked row: a department is named by the
  * budget, the journal, the vault and everyone's account, so renaming it is not a
@@ -63,14 +64,6 @@ export function DepartmentsClient({ locale, departments }: { locale: Locale; dep
   const markEditSubmitted = useCloseOnSuccess(editState, isSaving, () => setEditing(null));
   const markDeleteSubmitted = useCloseOnSuccess(deleteState, isDeleting, () => setDeleting(null));
 
-  const budgetBadge = (department: DepartmentRow, standalone: boolean) => (
-    <Badge tone={department.hasBudget ? "info" : "neutral"}>
-      {department.hasBudget
-        ? (standalone ? copy.budgetOn : copy.budgetYes)
-        : (standalone ? copy.budgetOff : copy.budgetNo)}
-    </Badge>
-  );
-
   if (departments.length === 0) {
     return (
       <CardGrid>
@@ -87,7 +80,6 @@ export function DepartmentsClient({ locale, departments }: { locale: Locale; dep
             <TR>
               <TH>{copy.name}</TH>
               <TH>{copy.abbreviation}</TH>
-              <TH>{copy.budget}</TH>
               <TH className="text-right">{copy.people}</TH>
               <TH />
             </TR>
@@ -97,7 +89,6 @@ export function DepartmentsClient({ locale, departments }: { locale: Locale; dep
               <TR key={department.id}>
                 <TD className="font-medium">{department.name}</TD>
                 <TD className="text-[var(--muted)]">{department.abbreviation ?? "—"}</TD>
-                <TD>{budgetBadge(department, false)}</TD>
                 <TD className="text-right tabular-nums">{department.peopleCount}</TD>
                 <TD>
                   <div className="flex items-center justify-end gap-2">
@@ -117,7 +108,7 @@ export function DepartmentsClient({ locale, departments }: { locale: Locale; dep
         <CardletList>
           {departments.map((department) => (
             <Cardlet key={department.id}>
-              <CardletHeader title={department.name} action={budgetBadge(department, true)} />
+              <CardletHeader title={department.name} />
               <CardletFields>
                 <CardletField label={copy.abbreviation}>{department.abbreviation ?? "—"}</CardletField>
                 <CardletField label={copy.people}>{department.peopleCount}</CardletField>
@@ -188,6 +179,13 @@ export function DepartmentsClient({ locale, departments }: { locale: Locale; dep
           <input type="hidden" name="departmentId" value={deleting?.id ?? ""} />
 
           <p className="text-sm font-medium">{deleting?.name}</p>
+
+          {deleting && deleting.budgetNames.length > 0 ? (
+            <Alert tone="warning">
+              {copy.deleteBudgetWarning} {deleting.budgetNames.join(", ")}
+            </Alert>
+          ) : null}
+
           <p className="text-sm text-[var(--muted)]">{copy.deleteConfirm}</p>
         </form>
       </Modal>

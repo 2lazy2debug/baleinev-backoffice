@@ -5,7 +5,7 @@ import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 
 type Props = {
   locale: Locale;
-  /** The departments a budget may be attached to — the ones that budget at all. */
+  /** Every department — any of them may be attached to a budget. */
   departments: { id: string; name: string }[];
   /** Prefilled when the form is editing an existing budget. */
   budget?: { name: string; departmentIds: string[] };

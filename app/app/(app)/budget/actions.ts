@@ -25,9 +25,10 @@ function toPositiveAmount(raw: string) {
 }
 
 /**
- * The departments a budget may be attached to: the ids from the form, refused
- * unless every one of them is a real department that budgets. Returns the
- * de-duplicated list ready for a nested `create`.
+ * The departments a budget is attached to: the ids from the form, refused unless
+ * every one of them is a real department. Any department may be attached — the
+ * attachment is visibility only. Returns the de-duplicated list ready for a
+ * nested `create`.
  */
 async function readBudgetingDepartmentIds(formData: FormData) {
   const departmentIds = [
@@ -43,12 +44,12 @@ async function readBudgetingDepartmentIds(formData: FormData) {
     return departmentIds;
   }
 
-  const budgeting = await prisma.department.count({
-    where: { id: { in: departmentIds }, hasBudget: true },
+  const found = await prisma.department.count({
+    where: { id: { in: departmentIds } },
   });
 
-  if (budgeting !== departmentIds.length) {
-    throw new Error("A department without a budget cannot be attached to a budget.");
+  if (found !== departmentIds.length) {
+    throw new Error("One of those departments no longer exists.");
   }
 
   return departmentIds;
