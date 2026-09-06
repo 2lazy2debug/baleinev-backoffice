@@ -7,7 +7,7 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { toDateInputValue } from "@/lib/stock";
 import { decimalToNumber } from "@/lib/utils";
 
-import { EmptyPage, PageHeader, buttonClasses, iconButtonClasses } from "@/components/ui";
+import { EmptyPage, buttonClasses, iconButtonClasses } from "@/components/ui";
 
 import { AddStockModal } from "./add-stock-modal";
 import { StockClient } from "./client";
@@ -75,68 +75,67 @@ export default async function StockPage() {
     prisma.stockUnitConversion.findMany({ include: { toUnit: true }, orderBy: { toUnit: { name: "asc" } } }),
   ]);
 
+  const actions = (
+    <>
+      <AddStockModal
+        locale={locale}
+        stockPlaceId={selected.id}
+        elements={elements.map((element) => ({
+          id: element.id,
+          name: element.name,
+          brand: element.brand ?? "",
+          unitName: element.unit.name,
+          unitQty: decimalToNumber(element.unitQty),
+          expireable: element.expireable,
+        }))}
+        units={units.map((unit) => ({ id: unit.id, name: unit.name }))}
+        conversions={conversions.map((conversion) => ({
+          fromUnitId: conversion.fromUnitId,
+          toUnitId: conversion.toUnitId,
+          toUnitName: conversion.toUnit.name,
+          factor: decimalToNumber(conversion.factor),
+        }))}
+      />
+      <StockPlaceSwitcher locale={locale} places={options} selectedId={selected.id} />
+      <Link
+        href="/stock/items"
+        title={copy.stock.itemsTitle}
+        aria-label={copy.stock.itemsTitle}
+        className={iconButtonClasses("neutral", "md")}
+      >
+        <Package />
+      </Link>
+      <Link
+        href="/stock/history"
+        title={copy.stock.historyTitle}
+        aria-label={copy.stock.historyTitle}
+        className={iconButtonClasses("neutral", "md")}
+      >
+        <History />
+      </Link>
+      {isAdmin(access) ? (
+        <Link
+          href="/stock/settings"
+          title={copy.stock.settingsTitle}
+          aria-label={copy.stock.settingsTitle}
+          className={iconButtonClasses("neutral", "md")}
+        >
+          <Settings />
+        </Link>
+      ) : null}
+    </>
+  );
+
   return (
     <div className="space-y-4 lg:space-y-8">
-      <PageHeader
-        eyebrow={copy.stock.title}
-        title={selected.name}
-        description={copy.stock.subtitle}
-        actions={
-          <>
-            <AddStockModal
-              locale={locale}
-              stockPlaceId={selected.id}
-              elements={elements.map((element) => ({
-                id: element.id,
-                name: element.name,
-                brand: element.brand ?? "",
-                unitName: element.unit.name,
-                unitQty: decimalToNumber(element.unitQty),
-                expireable: element.expireable,
-              }))}
-              units={units.map((unit) => ({ id: unit.id, name: unit.name }))}
-              conversions={conversions.map((conversion) => ({
-                fromUnitId: conversion.fromUnitId,
-                toUnitId: conversion.toUnitId,
-                toUnitName: conversion.toUnit.name,
-                factor: decimalToNumber(conversion.factor),
-              }))}
-            />
-            <StockPlaceSwitcher locale={locale} places={options} selectedId={selected.id} />
-            <Link
-              href="/stock/items"
-              title={copy.stock.itemsTitle}
-              aria-label={copy.stock.itemsTitle}
-              className={iconButtonClasses("neutral", "md")}
-            >
-              <Package />
-            </Link>
-            <Link
-              href="/stock/history"
-              title={copy.stock.historyTitle}
-              aria-label={copy.stock.historyTitle}
-              className={iconButtonClasses("neutral", "md")}
-            >
-              <History />
-            </Link>
-            {isAdmin(access) ? (
-              <Link
-                href="/stock/settings"
-                title={copy.stock.settingsTitle}
-                aria-label={copy.stock.settingsTitle}
-                className={iconButtonClasses("neutral", "md")}
-              >
-                <Settings />
-              </Link>
-            ) : null}
-          </>
-        }
-      />
-
       <StockClient
         locale={locale}
         places={options}
         currentPlaceId={selected.id}
+        eyebrow={copy.stock.title}
+        title={selected.name}
+        description={copy.stock.subtitle}
+        actions={actions}
         rows={items.map((item) => ({
           id: item.id,
           name: item.element.name,
