@@ -100,6 +100,9 @@ turns the row's labels into the same four fields the add row uses (`updateShiftA
 description or a capacity can be corrected without deleting the shift and losing everyone on it. The
 capacity cannot drop under the people already assigned, and because a `STAFF_SHIFT` task quotes the
 shift's hours in its title and due date, moving a shift rewrites the pending tasks that point at it.
+A day's whole shift schema is often reused across an event: the copy icon on a day opens a picker of
+the event's other active days and clones every shift onto the ones ticked (`duplicateEventDayShiftsAction`).
+The clones are plain new rows — no assignments carried over, and editing one later leaves the rest alone.
 
 **Department access requests.** A user asks to join a department from the Department access card on
 [app/app/(app)/account/client.tsx](../app/app/(app)/account/client.tsx). That files one

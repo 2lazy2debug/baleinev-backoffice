@@ -288,6 +288,71 @@ export async function toggleEventDayOffAction(_prevState: ActionState, formData:
   }
 }
 
+/**
+ * Copy every shift of one day onto one or more other days of the same event.
+ * The staffing schema of a day is often the same across an event, and retyping
+ * it is the tedious part. The copies are independent rows — no assignments come
+ * across, and editing one later leaves the others alone.
+ */
+export async function duplicateEventDayShiftsAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    const sourceDayId = getRequiredString(formData, "sourceDayId");
+    const targetDayIds = [...new Set(formData.getAll("targetDayIds").map(String).filter(Boolean))];
+
+    if (targetDayIds.length === 0) {
+      throw new Error("Pick at least one day to copy the shifts to.");
+    }
+
+    await requireWritableEventDay(sourceDayId);
+
+    const source = await prisma.eventDay.findUniqueOrThrow({
+      where: { id: sourceDayId },
+      include: { shifts: { orderBy: { startTime: "asc" } } },
+    });
+
+    if (source.shifts.length === 0) {
+      throw new Error("This day has no shifts to copy.");
+    }
+
+    // A target has to be another active day of the same event — a day off or a
+    // day from another event is silently dropped rather than copied onto.
+    const targets = await prisma.eventDay.findMany({
+      where: {
+        id: { in: targetDayIds },
+        eventId: source.eventId,
+        isOff: false,
+        NOT: { id: sourceDayId },
+      },
+      select: { id: true },
+    });
+
+    if (targets.length === 0) {
+      throw new Error("None of the selected days can receive a copy.");
+    }
+
+    await prisma.eventShift.createMany({
+      data: targets.flatMap((target) =>
+        source.shifts.map((shift) => ({
+          eventDayId: target.id,
+          startTime: shift.startTime,
+          endTime: shift.endTime,
+          role: shift.role,
+          capacity: shift.capacity,
+        })),
+      ),
+    });
+
+    revalidatePath("/events");
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // EventShift CRUD (admin only)
 // ────────────────────────────────────────────────────────────────────────────

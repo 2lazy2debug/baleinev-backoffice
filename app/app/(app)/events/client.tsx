@@ -17,6 +17,7 @@ import {
   withdrawFromShiftAction,
 } from "./actions";
 import AddShiftForm from "./add-shift-form";
+import DuplicateDayModal from "./duplicate-day-modal";
 import EditShiftForm from "./edit-shift-form";
 
 /**
@@ -98,6 +99,11 @@ type EventsCopy = {
   copyEventLink: string;
   eventLinkCopied: string;
   eventLinkCopyFailed: string;
+  duplicateDay: string;
+  duplicateDayTitle: string;
+  duplicateDayDescription: string;
+  duplicateDayEmpty: string;
+  duplicateDayHasShifts: string;
 };
 
 type Props = {
@@ -345,12 +351,37 @@ export default function EventsPageClient({
                         {day.isOff ? <Badge tone="neutral">{copy.isOff}</Badge> : null}
                       </div>
                       {canManageEvents ? (
-                        <form action={toggleDayOffFormAction}>
-                          <input type="hidden" name="id" value={day.id} />
-                          <Button type="submit" variant="ghost" size="sm" disabled={isTogglingDayOff}>
-                            {day.isOff ? copy.toggleOn : copy.toggleOff}
-                          </Button>
-                        </form>
+                        <div className="flex items-center gap-2">
+                          {/* Reproduce this day's shift schema onto other days —
+                              a copy, so later edits to either side stay separate. */}
+                          {!day.isOff && day.shifts.length > 0 ? (
+                            <DuplicateDayModal
+                              sourceDayId={day.id}
+                              sourceDate={day.date}
+                              sourceShiftCount={day.shifts.length}
+                              days={event.days.map((d) => ({
+                                id: d.id,
+                                date: d.date,
+                                isOff: d.isOff,
+                                shiftCount: d.shifts.length,
+                              }))}
+                              copy={{
+                                duplicateDay: copy.duplicateDay,
+                                duplicateDayTitle: copy.duplicateDayTitle,
+                                duplicateDayDescription: copy.duplicateDayDescription,
+                                duplicateDayEmpty: copy.duplicateDayEmpty,
+                                duplicateDayHasShifts: copy.duplicateDayHasShifts,
+                                cancel: shellCopy.cancel,
+                              }}
+                            />
+                          ) : null}
+                          <form action={toggleDayOffFormAction}>
+                            <input type="hidden" name="id" value={day.id} />
+                            <Button type="submit" variant="ghost" size="sm" disabled={isTogglingDayOff}>
+                              {day.isOff ? copy.toggleOn : copy.toggleOff}
+                            </Button>
+                          </form>
+                        </div>
                       ) : null}
                     </div>
 
