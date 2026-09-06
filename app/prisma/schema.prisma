@@ -750,6 +750,11 @@ model StockElement {
   /// Whether a piece of this carries an expiry date. False hides the date
   /// everywhere — the field is not left empty, it is not drawn at all.
   expireable Boolean  @default(false)
+  /// Whether pieces of this are counted on a shelf. Off means the article exists
+  /// only to be sold — a poured glass of beer is sold by the till and never
+  /// stocked, while the barrel behind it is both. Off hides it from every stock
+  /// screen; it never hides it from a POS template.
+  tracksStock Boolean @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
