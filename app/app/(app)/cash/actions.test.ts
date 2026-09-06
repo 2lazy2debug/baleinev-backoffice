@@ -14,6 +14,7 @@ const tx = {
 const prisma = {
   moneyAccount: { findUnique: vi.fn() },
   cashRegister: { findUnique: vi.fn() },
+  posSession: { findFirst: vi.fn() },
   $transaction: vi.fn(async (fn: (t: typeof tx) => unknown) => fn(tx)),
 };
 
@@ -58,6 +59,7 @@ beforeEach(() => {
   resolveWritableEditionId.mockResolvedValue("ed_1");
   prisma.moneyAccount.findUnique.mockResolvedValue({ editionId: "ed_1", type: "CASH" });
   prisma.cashRegister.findUnique.mockResolvedValue({ editionId: "ed_1", closedAt: null });
+  prisma.posSession.findFirst.mockResolvedValue(null);
   tx.cashRegister.create.mockResolvedValue({ id: "reg_1" });
   prisma.$transaction.mockImplementation(async (fn: (t: typeof tx) => unknown) => fn(tx));
 });
@@ -119,6 +121,13 @@ describe("closeCashRegisterAction", () => {
     prisma.cashRegister.findUnique.mockResolvedValue({ editionId: "ed_1", closedAt: new Date() });
     const result = await closeCashRegisterAction({ error: null }, closeForm());
     expect(result.error).toMatch(/already closed/i);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("refuses to close while a POS session is still on the register", async () => {
+    prisma.posSession.findFirst.mockResolvedValue({ id: "sess_1" });
+    const result = await closeCashRegisterAction({ error: null }, closeForm());
+    expect(result.error).toMatch(/point-of-sale session is still using this register/i);
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 

@@ -9,6 +9,7 @@ const revalidatePath = vi.fn();
 const prisma = {
   posTemplate: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
   posTemplateCell: { upsert: vi.fn(), deleteMany: vi.fn() },
+  posSession: { count: vi.fn() },
   stockElement: { findUnique: vi.fn() },
 };
 
@@ -52,6 +53,7 @@ beforeEach(() => {
   prisma.posTemplate.delete.mockResolvedValue({ id: "tpl_1" });
   prisma.posTemplateCell.upsert.mockResolvedValue({ id: "cell_1" });
   prisma.posTemplateCell.deleteMany.mockResolvedValue({ count: 1 });
+  prisma.posSession.count.mockResolvedValue(0);
   prisma.stockElement.findUnique.mockResolvedValue({ id: "el_1" });
 });
 
@@ -135,6 +137,14 @@ describe("deletePosTemplateAction", () => {
     const result = await deletePosTemplateAction({ error: null }, form({ templateId: "tpl_1" }));
     expect(result).toEqual({ error: null });
     expect(prisma.posTemplate.delete).toHaveBeenCalledWith({ where: { id: "tpl_1" } });
+  });
+
+  it("refuses a template a session has used", async () => {
+    templateIsInEdition();
+    prisma.posSession.count.mockResolvedValue(2);
+    const result = await deletePosTemplateAction({ error: null }, form({ templateId: "tpl_1" }));
+    expect(result.error).toMatch(/a session has used this template/i);
+    expect(prisma.posTemplate.delete).not.toHaveBeenCalled();
   });
 });
 

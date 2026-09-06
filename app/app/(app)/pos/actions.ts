@@ -122,7 +122,12 @@ export async function deletePosTemplateAction(_prevState: ActionState, formData:
 
     await templateInEdition(templateId, editionId);
 
-    // The cells cascade. In 103 nothing else points at a template.
+    const sessionCount = await prisma.posSession.count({ where: { templateId } });
+    if (sessionCount > 0) {
+      throw new Error("A session has used this template. It cannot be deleted.");
+    }
+
+    // The cells cascade; sessions are `Restrict` and checked above.
     await prisma.posTemplate.delete({ where: { id: templateId } });
 
     revalidateTemplate(templateId);

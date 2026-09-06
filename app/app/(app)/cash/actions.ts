@@ -122,6 +122,15 @@ export async function closeCashRegisterAction(_prevState: ActionState, formData:
       throw new Error("That register is already closed.");
     }
 
+    // Closing the drawer under a running till is how money goes missing.
+    const liveSession = await prisma.posSession.findFirst({
+      where: { cashRegisterId: registerId, status: { in: ["OPEN", "PAUSED"] } },
+      select: { id: true },
+    });
+    if (liveSession) {
+      throw new Error("A point-of-sale session is still using this register. Close it first.");
+    }
+
     const counts = parseCounts(formData, "closing");
 
     // A till can genuinely come back empty, but a blank sheet and an empty till

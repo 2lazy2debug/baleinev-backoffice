@@ -104,6 +104,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
     { type: "item", href: "/expense-reports", label: copy.expenseReports, icon: ReceiptText },
     { type: "item", href: "/events", label: copy.events, icon: Target },
     ...(canManageMoneyAccounts ? [moneyAccountsItem, cashRegisterItem] : []),
+    { type: "item", href: "/pos", label: copy.pos, icon: LayoutGrid },
     { type: "divider", key: "dept-d2" },
     { type: "item", href: "/addresses", label: copy.addresses, icon: Contact },
     { type: "item", href: "/stock", label: copy.stock, icon: Boxes },
