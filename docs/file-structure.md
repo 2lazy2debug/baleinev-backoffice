@@ -83,6 +83,21 @@ app/
 │   │   └── actions.ts            ← Server actions: address + bank-account CRUD (open to any signed-in
 │   │                                user except deleting), plus contact-type CRUD (admin only)
 │   │
+│   ├── articles/                ← The catalogue behind stock (`StockElement`), its own admin-only
+│   │   │                            app. "Article" is the UI word; the model is unchanged
+│   │   ├── page.tsx              ← List + filters, data-fetching only; `requireAdmin()`
+│   │   ├── client.tsx            ← Table above `sm`, cardlets below, both from one array. An
+│   │   │                            untracked article shows a "Not stocked" badge where the piece
+│   │   │                            count would be. Create/edit/delete, all admin (the app is)
+│   │   ├── article-form-modal.tsx ← What an article is, in one dialog — the header create button
+│   │   │                            and the pencil on a row both open it. Scan fills the barcode
+│   │   │                            (and, on a new article, name/brand/size). "Counted in stock"
+│   │   │                            and "Expires" checkboxes
+│   │   ├── create-article-button.tsx ← The header trigger for the shared dialog
+│   │   └── actions.ts            ← create/update/delete an article, each `requireAdmin()`. Turning
+│   │                                "Counted in stock" or "Expires" off is refused while pieces
+│   │                                (or dated pieces) of it sit in a stock
+│   │
 │   ├── stock/
 │   │   ├── page.tsx              ← Three screens in one route: nothing to work with yet, the
 │   │   │                            one-time stock picker, and the contents of the stock this
@@ -92,13 +107,11 @@ app/
 │   │   │                            `sm`, tight cardlets below, and the entry controls — +/-
 │   │   │                            straight to the server, or the edit button to unlock the count
 │   │   │                            *and* the expiry date and save the recount as one movement
-│   │   ├── add-stock-modal.tsx   ← Header button + "new entry" modal; can invent the item it is
-│   │   │                            stocking, in the same submission. The scan button opens the
-│   │   │                            camera in place of this form: a known code selects its item,
+│   │   ├── add-stock-modal.tsx   ← Header button + "new entry" modal; can invent the article it is
+│   │   │                            stocking, in the same submission (any signed-in user, and the
+│   │   │                            article lands counted in stock). The scan button opens the
+│   │   │                            camera in place of this form: a known code selects its article,
 │   │   │                            an unknown one opens the "new item" half, prefilled
-│   │   ├── unit-size-fields.tsx  ← "One piece is" — the size and the unit as one control, plus the
-│   │   │                            convert button that rewrites both from the conversion table.
-│   │   │                            Shared by the two dialogs that write an item
 │   │   ├── stock-place-switcher.tsx ← <StockPlacePicker> (the first-visit screen),
 │   │   │                            <StockPlaceSwitcher> (the box next to "New entry") — both write
 │   │   │                            the choice to the user through the preference route — and the
@@ -106,15 +119,14 @@ app/
 │   │   ├── transfer-stock-modal.tsx ← The swap-icon row button: moves some or all of an entry to
 │   │   │                            another stock, picking the destination from <StockPlaceList>.
 │   │   │                            Logs as an Out and an In, exactly like `deleteStockPlaceAction`
-│   │   ├── items/                ← The catalogue: list + filters, create/edit in one dialog on
-│   │   │                            both breakpoints, delete admin-only and only when unstocked
-│   │   ├── history/              ← The movement log, newest first, filtered by item/stock/direction
+│   │   ├── history/              ← The movement log, newest first, filtered by article/stock/direction
 │   │   ├── settings/             ← Stocks, units and the conversions between them (admin only).
 │   │   │                            Deleting a stock asks where its contents go first
-│   │   └── actions.ts            ← Server actions: add/adjust/set/remove stock, element CRUD, the
-│   │                                place/unit configuration, and `lookupBarcodeAction()` — the
-│   │                                read behind a scan. Every quantity change goes through one
-│   │                                helper that writes the row and its movement together
+│   │   └── actions.ts            ← Server actions: add/adjust/set/remove stock, the place/unit
+│   │                                configuration, and `lookupBarcodeAction()` — the read behind a
+│   │                                scan. The scan-to-create path still writes a `StockElement`
+│   │                                here. Every quantity change goes through one helper that writes
+│   │                                the row and its movement together
 │   │
 │   ├── templates/
 │   │   ├── page.tsx              ← Document template manager (admin only, data-fetching only)
@@ -212,6 +224,7 @@ app/
 | `sign-out-button.tsx` | Sign-out action for the app shell — a labelled `<Button>` when expanded, an icon `<IconButton>` when the sidebar is collapsed, a `<MobileSheetRow>` (`row`) in the mobile account menu |
 | `form-error.tsx` | Renders a server-action error message through the shared `<Alert>` (nothing when there is no message) |
 | `barcode-scanner.tsx` | `<BarcodeScanner locale onDetected onCancel>` — the camera reading an EAN, plus the typed field a hardware scanner types into. **Not a dialog**: it renders inside the one that asked, in place of that dialog's form. The decoder (`@zxing/browser`) is imported on first use so no screen pays for it until someone taps scan |
+| `unit-size-fields.tsx` | `<UnitSizeFields>` — "one piece is" as one control (the size and its unit) plus the convert button that rewrites both from the conversion table. Shared by the two dialogs that write a `StockElement`: the articles form and the stock app's "new item" half |
 | `tasks-create-modal.tsx` | Modal with the two "create todo" / "create task" forms used on the tasks page |
 | `use-close-on-success.ts` | `useCloseOnSuccess()` — closes a create modal once its `useActionState` form comes back without an error |
 | `address-fields.tsx` | `<AddressFields>` / `<BankAccountFields>` / `<PostalFields>` plus their empty drafts — the fields an address and a bank account are made of, shared by every screen that writes one. Each control carries its own `name`, so the surrounding `<form>` posts straight to a server action |
@@ -277,6 +290,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `stock.ts` | `formatPiece()` / `formatTotal()` / `formatQuantity()` / `formatExpiry()` / `toDateInputValue()` — the two numbers a stock row carries (pieces, and what they add up to) written the same way everywhere — plus `normalizeBarcode()` / `isValidBarcode()`, so a camera and a typed field are checked by the same GTIN rule, and `convertQuantity()` / `formatFactor()` for the unit conversions. Import-free, like `addresses.ts` |
 | `open-food-facts.ts` | `fetchProductByBarcode()` — what a scanned EAN says about a product (name, brand, size of one piece), from the open catalogue keyed by that code. The name is read `fr` → `en` → `de` → generic, one fixed order for everyone, since the item it fills in is shared. Server-only, best-effort: a miss, a timeout or a half-empty product all mean "type the rest yourself" |
 | `addresses.ts` | `addressDisplayName()` / `addressNameBlock()` / `addressPersonName()` / `formatPhone()` / `formatPostalLine()` and `DEFAULT_COUNTRY`. Import-free on purpose — the table, the pickers and the actions all read the same rules without dragging Prisma into a browser bundle |
+| `articles.ts` | `elementFieldsFrom()` / `assertBarcodeFree()` — the `StockElement` fields both writing forms post (articles' own dialog, and the stock app's "new item" half) and the "one barcode, one article" check, shared so the two paths cannot drift |
 | `city-book.ts` | `rememberCity()` — files a postal code / locality pair the user actually saved, so the seeded Swiss list grows into whatever the address book turns out to need |
 | `countries.ts` | `countryOptions(locale)` / `countryName()` — countries and international dialling prefixes from libphonenumber-js + `Intl.DisplayNames`. Built on the server and passed down as props; the phone metadata has no business in a browser bundle that only needs "+41" |
 | `db.ts` | Singleton Prisma client (re-used across hot reloads in dev) |

@@ -470,17 +470,19 @@ Nothing here converts stored data. A factor fills in a form field before it is s
 one never moves stock, and items saved earlier keep the numbers they were saved with.
 
 ### `StockElement`
-The catalogue entry — what *can* be stocked, not the stock itself.
+The catalogue entry — what *can* be stocked or sold, not the stock itself. Managed at `/articles`
+("article" is the UI word for it); the model keeps its name here and in every relation.
 
 | Field | Type | Notes |
 |---|---|---|
 | `id` | String (cuid) | |
 | `name` | String | |
 | `brand` | String? | |
-| `barcode` | String? | Unique. The EAN/GTIN printed on the packaging, digits only — what the scanner looks an item up by |
+| `barcode` | String? | Unique. The EAN/GTIN printed on the packaging, digits only — what the scanner looks an article up by |
 | `unitId` | String | FK → StockUnit, `Restrict` |
 | `unitQty` | Decimal(12,3) | The size of **one piece**: a 1.5 l bottle is unit `l`, unitQty `1.5` |
 | `expireable` | Boolean | Whether a piece carries an expiry date. False hides the field entirely |
+| `tracksStock` | Boolean | Default `true`. Whether pieces are counted on a shelf. `false` = sold but never stocked (a poured glass, not the barrel): hidden from every stock screen and the "add stock" picker, still available to a POS template. Turning it off is refused while any `StockItem` references it |
 
 Deleting one is refused while any `StockItem` references it (`Restrict`), and takes its movements
 with it when it is allowed (`Cascade`) — a log of an item that no longer exists has nothing left to

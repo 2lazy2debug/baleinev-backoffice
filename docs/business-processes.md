@@ -428,19 +428,18 @@ What the festival owns and where it sits, at `/stock`. Like the address book it 
 shelf does not empty when an edition closes, and none of it is refused while a closed edition is
 selected.
 
-### The three things it is made of
-- An **item** is the catalogue entry — a name, an optional brand, the barcode printed on it when it
-  has one, and the size of *one piece* (a 1.5 l bottle is unit `l`, one piece = 1.5) plus whether
-  that piece carries an expiry date. The unit can be swapped for one it converts to: see
-  [the conversion table](#the-conversion-table).
+### The two things it is made of
 - A **stock** is a place things sit in: a cellar, a container, a van.
-- An **entry** is one item, in one stock, at one expiry date, counted **in pieces**. Six bottles
-  read as `6 x 1.5 l = 9 l`, which is why the two numbers are never mixed: the count is what you
-  change, the total is what you have.
+- An **entry** is one [article](#11-articles), in one stock, at one expiry date, counted **in
+  pieces**. Six bottles read as `6 x 1.5 l = 9 l`, which is why the two numbers are never mixed: the
+  count is what you change, the total is what you have.
 
-Two entries of the same item in the same stock exist precisely when their expiry dates differ.
+The article — a name, a brand, the barcode, the size of one piece, whether it expires — is the
+[articles app](#11-articles)'s to define. Stock only points at it.
+
+Two entries of the same article in the same stock exist precisely when their expiry dates differ.
 Adding stock with a date that is already on the shelf tops that entry up instead of making a second
-one; an item that does not expire never shows a date field at all.
+one; an article that does not expire never shows a date field at all.
 
 ### Pick a stock once
 The first visit asks which stock you are in, and writes the answer to the user
@@ -468,9 +467,9 @@ one of three things happens:
   the lookup is a convenience, never a gate.
 - **The digits are not a GTIN.** Nothing is looked up and the dialog says so.
 
-The same button sits next to the barcode field on the catalogue's own item dialog, which is where a
-code is filed on an item that already exists. A barcode belongs to exactly one item — the second
-item to claim one is refused by name, before the write.
+The same button sits next to the barcode field in the [articles app](#11-articles)'s own dialog,
+which is where a code is filed on an article that already exists. A barcode belongs to exactly one
+article — the second article to claim one is refused by name, before the write.
 
 ### The conversion table
 Admins keep a table of "one `from` is `factor` `to`" on `/stock/settings` — one row per *direction*,
@@ -480,25 +479,25 @@ already there; the rest is theirs to add, correct and delete.
 
 What it is for: a scan hands back a bottle as **1500 ml** when every shelf in the building calls it
 **1.5 l**. Correcting that by hand means retyping the number *and* changing the unit, in that order,
-without slipping a zero — so wherever an item is written (the catalogue dialog, and the "new item"
+without slipping a zero — so wherever an article is written (the articles dialog, and the "new item"
 half of the new-entry dialog) a convert button sits beside the unit. It lists what this unit can
 become and the number each choice would leave behind, and picking one rewrites both fields at once.
 
 The table never converts anything on its own. It fills in a field a person is looking at, *before*
-they save — nothing on a shelf moves when a factor is corrected, and an item saved last week keeps
-the numbers it was saved with.
+they save — nothing on a shelf moves when a factor is corrected, and an article saved last week
+keeps the numbers it was saved with.
 
 ### Moving stock between places
 The swap-icon button on a row moves some or all of it to another stock: pick how many pieces, then
-the destination. It merges by the [same rule](#the-three-things-it-is-made-of) as adding stock —
-same item, same expiry date at the destination and the quantities add up; a different date starts a
-new entry there. Moving more than an entry holds is refused with a sentence rather than clamped, the
-way + / - clamp: inventing pieces at the destination is not the same mistake as a miscount.
+the destination. It merges by the [same rule](#the-two-things-it-is-made-of) as adding stock —
+same article, same expiry date at the destination and the quantities add up; a different date starts
+a new entry there. Moving more than an entry holds is refused with a sentence rather than clamped,
+the way + / - clamp: inventing pieces at the destination is not the same mistake as a miscount.
 
 The move logs as two ordinary movements — an **Out** at the source and an **In** at the destination
 — `StockMovement.isIn` still has exactly two values, there is no third kind for a transfer. Moving an
 entire entry deletes the now-empty source row exactly as taking it out of stock does; both movements
-survive and still name the item and its expiry date, because a movement outlives the entry it
+survive and still name the article and its expiry date, because a movement outlives the entry it
 changed.
 
 ### Everything that moves a quantity is logged
@@ -511,24 +510,56 @@ Four gestures, one log:
 - **Moving stock between places** is two movements, an Out and an In — see above.
 
 A date is not a quantity and logs nothing on its own. The exception is the one that matters: a shelf
-is an item *at a date*, so typing a date the shelf already carries makes the two lots one — that is
-a real move, both legs are logged, and the emptied row goes.
+is an article *at a date*, so typing a date the shelf already carries makes the two lots one — that
+is a real move, both legs are logged, and the emptied row goes.
 
 Taking out more than is on the shelf lands on zero and logs what actually left: a miscount is not
 worth blocking on. A movement outlives the entry it changed, so taking something out of a stock does
-not erase how it got there. `/stock/history` is the log, newest first, filtered by item, stock or
+not erase how it got there. `/stock/history` is the log, newest first, filtered by article, stock or
 direction.
 
 ### Who can do what
-Any signed-in user counts, adds, takes out, and keeps the catalogue up to date — including inventing
-an item from inside the "New entry" dialog, because the person in front of an unfamiliar delivery is
-the one who can name it. **Admins only**: deleting a catalogue item (and only once it is in no
-stock), and everything on `/stock/settings` — the stocks themselves, the units, and the conversions
-between them.
+Any signed-in user counts, adds and takes out — and can still invent an [article](#11-articles) from
+inside the "New entry" dialog, because the person in front of an unfamiliar delivery is the one who
+can name it (that scan-to-create always leaves the article counted in stock). **Admins only**:
+everything on `/stock/settings` — the stocks themselves, the units, and the conversions between
+them. Keeping the catalogue itself tidy — and deleting an article — is the [articles
+app](#11-articles)'s job, and that app is admin-only.
 
 ### Deleting a stock never orphans anything
 An empty stock is deleted outright. A stock with contents asks where they go first, and each entry
-lands in the destination — merged into the entry with the same item and expiry date if there is one.
-The one case with no answer is the last stock still holding something: there is nowhere to move it,
-so the delete is refused until another stock exists. Deleting a stock also takes its own movement
+lands in the destination — merged into the entry with the same article and expiry date if there is
+one. The one case with no answer is the last stock still holding something: there is nowhere to move
+it, so the delete is refused until another stock exists. Deleting a stock also takes its own movement
 history with it — there is no place left for those movements to describe.
+
+## 11. Articles
+
+The catalogue of everything the festival can **stock or sell**, at `/articles`. Like stock it is
+**global** — an article does not disappear when an edition closes — but unlike stock the app is
+**admin-only**: keeping the catalogue tidy is configuration, not day-to-day work.
+
+An **article** is a name, an optional brand, the barcode printed on it when it has one, the size of
+*one piece* (a 1.5 l bottle is unit `l`, one piece = 1.5), and two switches:
+
+- **Expires** — whether a piece carries an expiry date. Off hides the date field everywhere it is
+  drawn. Turning it off is refused while any dated entry of the article sits in a stock.
+- **Counted in stock** (`StockElement.tracksStock`) — whether pieces of it are counted on a shelf.
+  On for almost everything. Off means the article exists only to be **sold**: a poured glass of beer
+  is rung up by a till and never stocked, while the barrel behind it is both. An untracked article
+  is hidden from every stock screen — it never appears in the "add stock" picker, and the articles
+  list shows "Not stocked" where a piece count would be — but a point-of-sale template can still put
+  it on the grid. Turning it off is refused while any pieces of the article exist in a stock.
+
+The unit can be swapped for one it converts to with the same convert button the stock dialogs use;
+see [the conversion table](#the-conversion-table). A barcode belongs to exactly one article, checked
+by name before the write.
+
+Creating, editing and deleting an article all happen here, through the header button and its dialog,
+and all require an admin. An article can only be deleted once it sits in no stock. The one way a
+non-admin adds an article is the scan-to-create path inside the stock app's "New entry" dialog —
+that is stock content, not configuration, and it always produces an article that is counted in
+stock.
+
+The model is still `StockElement` in the database and in every relation; "article" is only the word
+the UI uses.
