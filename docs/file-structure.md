@@ -96,9 +96,13 @@ app/
 │   │   ├── unit-size-fields.tsx  ← "One piece is" — the size and the unit as one control, plus the
 │   │   │                            convert button that rewrites both from the conversion table.
 │   │   │                            Shared by the two dialogs that write an item
-│   │   ├── stock-place-switcher.tsx ← <StockPlacePicker> (the first-visit screen) and
-│   │   │                            <StockPlaceSwitcher> (the box next to "New entry"); both
-│   │   │                            write the choice to the user through the preference route
+│   │   ├── stock-place-switcher.tsx ← <StockPlacePicker> (the first-visit screen),
+│   │   │                            <StockPlaceSwitcher> (the box next to "New entry") — both write
+│   │   │                            the choice to the user through the preference route — and the
+│   │   │                            <StockPlaceList> the two of them and the transfer modal share
+│   │   ├── transfer-stock-modal.tsx ← The swap-icon row button: moves some or all of an entry to
+│   │   │                            another stock, picking the destination from <StockPlaceList>.
+│   │   │                            Logs as an Out and an In, exactly like `deleteStockPlaceAction`
 │   │   ├── items/                ← The catalogue: list + filters, create/edit in one dialog on
 │   │   │                            both breakpoints, delete admin-only and only when unstocked
 │   │   ├── history/              ← The movement log, newest first, filtered by item/stock/direction

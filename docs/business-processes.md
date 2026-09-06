@@ -473,13 +473,27 @@ The table never converts anything on its own. It fills in a field a person is lo
 they save — nothing on a shelf moves when a factor is corrected, and an item saved last week keeps
 the numbers it was saved with.
 
+### Moving stock between places
+The swap-icon button on a row moves some or all of it to another stock: pick how many pieces, then
+the destination. It merges by the [same rule](#the-three-things-it-is-made-of) as adding stock —
+same item, same expiry date at the destination and the quantities add up; a different date starts a
+new entry there. Moving more than an entry holds is refused with a sentence rather than clamped, the
+way + / - clamp: inventing pieces at the destination is not the same mistake as a miscount.
+
+The move logs as two ordinary movements — an **Out** at the source and an **In** at the destination
+— `StockMovement.isIn` still has exactly two values, there is no third kind for a transfer. Moving an
+entire entry deletes the now-empty source row exactly as taking it out of stock does; both movements
+survive and still name the item and its expiry date, because a movement outlives the entry it
+changed.
+
 ### Everything that moves a quantity is logged
-Three gestures, one log:
+Four gestures, one log:
 - **+ / -** go straight to the server, one movement per click.
 - **The edit button** unlocks the whole entry instead — the count *and* the expiry date. The +/-
   buttons then move the number being typed, and locking it again saves the correction as a
   **single** movement, which is what a recount is.
 - **New entry** and **take out of stock** are a movement each, in and out.
+- **Moving stock between places** is two movements, an Out and an In — see above.
 
 A date is not a quantity and logs nothing on its own. The exception is the one that matters: a shelf
 is an item *at a date*, so typing a date the shelf already carries makes the two lots one — that is
