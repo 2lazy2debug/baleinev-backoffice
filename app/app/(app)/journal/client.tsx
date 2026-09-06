@@ -14,14 +14,14 @@ type JournalPageClientProps = {
   activeEdition: {
     id: string;
     name: string;
-    departments: Array<{ id: string; name: string }>;
+    budgets: Array<{ id: string; name: string }>;
     moneyAccounts: Array<{ id: string; name: string; openingBalance: number }>;
     costCenters: Array<{ id: string; code: string }>;
     journalEntries: Array<{
       id: string;
       sequenceNumber: number;
       date: Date;
-      department: { name: string } | null;
+      budget: { name: string } | null;
       accountType: "CHARGES" | "PRODUITS";
       amount: string;
       label: string;
@@ -31,7 +31,7 @@ type JournalPageClientProps = {
       isOpeningEntry: boolean;
       moneyAccountId: string;
       linkedInvoice: { id: string; invoiceNumber: string } | null;
-      departmentId: string | null;
+      budgetId: string | null;
       costCenterId: string | null;
     }>;
   };
@@ -41,7 +41,7 @@ type JournalPageClientProps = {
   isAdmin: boolean;
   expensePrefill?: {
     expenseReportId: string;
-    departmentId: string;
+    budgetId: string | null;
     date: string;
     amount: string;
     label: string;
@@ -79,14 +79,14 @@ export default function JournalPageClient({ activeEdition, accountBalances, loca
         key={expensePrefill ? `prefill-${expensePrefill.referenceNumber}` : "default"}
         isOpen={isModalOpen}
         onClose={handleModalClose}
-        departments={activeEdition.departments}
+        budgets={activeEdition.budgets}
         moneyAccounts={activeEdition.moneyAccounts}
         costCenters={activeEdition.costCenters}
         onAfterSubmit={handleAfterSubmit}
         locale={locale}
         fromExpenseReportId={expensePrefill?.expenseReportId ?? null}
         initialValues={expensePrefill ? {
-          departmentId: expensePrefill.departmentId,
+          budgetId: expensePrefill.budgetId ?? undefined,
           accountType: "CHARGES",
           date: expensePrefill.date,
           amount: expensePrefill.amount,
@@ -104,7 +104,7 @@ export default function JournalPageClient({ activeEdition, accountBalances, loca
             activeEdition.moneyAccounts.map((account) => [account.id, account.openingBalance]),
           )}
           locale={locale}
-          departments={activeEdition.departments}
+          budgets={activeEdition.budgets}
           moneyAccounts={activeEdition.moneyAccounts}
           costCenters={activeEdition.costCenters}
           canBulkEdit={isAdmin}

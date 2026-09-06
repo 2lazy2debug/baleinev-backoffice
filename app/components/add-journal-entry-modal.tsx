@@ -11,13 +11,13 @@ import { type ActionState, initialActionState } from "@/lib/server-action-helper
 type AddJournalEntryModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  departments: Array<{ id: string; name: string }>;
+  budgets: Array<{ id: string; name: string }>;
   moneyAccounts: Array<{ id: string; name: string }>;
   costCenters: Array<{ id: string; code: string }>;
   onAfterSubmit?: () => void;
   locale: Locale;
   initialValues?: {
-    departmentId?: string;
+    budgetId?: string;
     accountType?: "CHARGES" | "PRODUITS";
     date?: string;
     amount?: string;
@@ -32,7 +32,7 @@ const FORM_ID = "add-journal-entry-form";
 export function AddJournalEntryModal({
   isOpen,
   onClose,
-  departments,
+  budgets,
   moneyAccounts,
   costCenters,
   onAfterSubmit,
@@ -95,14 +95,14 @@ export function AddJournalEntryModal({
           <input type="hidden" name="fromExpenseReportId" value={fromExpenseReportId} />
         ) : null}
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Department *">
-            <Select name="departmentId" required defaultValue={initialValues?.departmentId ?? ""}>
+          <Field label={`${copy.budget} *`}>
+            <Select name="budgetId" required defaultValue={initialValues?.budgetId ?? ""}>
               <option value="" disabled>
-                {copy.selectDepartment}
+                {copy.selectBudget}
               </option>
-              {departments.map((dept) => (
-                <option key={dept.id} value={dept.id}>
-                  {dept.name}
+              {budgets.map((budget) => (
+                <option key={budget.id} value={budget.id}>
+                  {budget.name}
                 </option>
               ))}
             </Select>
