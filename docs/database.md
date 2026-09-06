@@ -20,11 +20,16 @@ Edition
  ├─< CostCenter
  ├─< JournalEntry
  ├─< Invoice
- └─< ExpenseReport
+ ├─< ExpenseReport
+ └─< CashRegister
 
 JournalEntry ─── Budget (optional)
              ─── MoneyAccount
              ─── CostCenter (optional)
+
+CashRegister ─── MoneyAccount (a CASH account, Restrict)
+            ─< CashCount      (OPENING / CLOSING denomination sheets)
+            ─── User (openedBy / closedBy, SetNull)
 
 ExpenseReport ─── User (submittedBy)
               ─── Department
@@ -206,7 +211,8 @@ A bank, cash or other account used as the debit/credit side of journal entries a
 sender account for invoices. Created, edited and deleted from `/money-accounts` (menu entry under
 "Editions") by `ADMIN` users and by `DEPARTMENT` users in the `"Comptabilité"` department — see
 [`auth.md`](./auth.md). Deletion is blocked while the account still has journal entries or
-invoices attached.
+invoices attached, and a `CASH` account that has held a cash register cannot be deleted either
+(`CashRegister.moneyAccountId` is `Restrict`).
 
 | Field | Type | Notes |
 |---|---|---|
@@ -526,6 +532,44 @@ Every quantity change, in the order it happened.
 is deleted — which is the point of `stockItemId` being `SetNull`. The place is the one thing it
 cannot outlive: deleting a `StockPlace` cascades its movements, because there is no place left for
 them to describe (and a place can only be deleted once its contents have been moved out).
+
+---
+
+### `CashRegister`
+One till, opened on one `CASH` [`MoneyAccount`](#moneyaccount) for one stretch of work, from
+`/cash`. It holds two count sheets and no amount of its own. Counting is not booking: closing a
+register writes nothing to the journal — those entries are produced later, by an admin, from the two
+counts and what the point of sale sold.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `editionId` | String | FK → Edition, `Cascade` |
+| `moneyAccountId` | String | FK → MoneyAccount, **`Restrict`** — must be a `CASH` account |
+| `name` | String | Not unique — two "Bar 1" tills are two registers |
+| `openedById` | String? | FK → User, `SetNull` |
+| `openedAt` | DateTime | Defaults to now |
+| `closedById` | String? | FK → User, `SetNull` |
+| `closedAt` | DateTime? | Null while the register is open; set once, never re-set |
+
+Opening and closing require `canManageMoneyAccounts` (admin or the accounting department) and a
+writable edition. A register can only be closed once.
+
+---
+
+### `CashCount`
+How many of one denomination were counted, at one end of a register's life.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `registerId` | String | FK → CashRegister, `Cascade` |
+| `kind` | `CashCountKind` | `OPENING` \| `CLOSING` |
+| `denomination` | Int | Rappen — `5` for a 5-centime coin, `20000` for a 200 note |
+| `quantity` | Int | Always > 0; a denomination counted zero is simply not stored |
+
+Unique on `(registerId, kind, denomination)`. The twelve Swiss denominations and the
+rappen/franc conversion live in [`app/lib/cash.ts`](./file-structure.md).
 
 ---
 

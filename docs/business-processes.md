@@ -563,3 +563,43 @@ stock.
 
 The model is still `StockElement` in the database and in every relation; "article" is only the word
 the UI uses.
+
+## 12. Cash Manager
+
+A till at a bar, at `/cash`. A **cash register** is opened against a `MoneyAccount` whose type is
+`CASH`, inside one edition, by counting a **float** into it — coin by coin, note by note — and
+closed later by counting what is left. Both ends are a sheet of the twelve Swiss denominations
+(CHF 0.05 to CHF 200; there is no 1000 note in this app). Amounts are integer rappen in code and a
+`Decimal` only at the database edge — francs are never added as floats.
+
+### Who can do what
+
+Opening and closing a register is for whoever may already touch money accounts: an **admin**, or a
+member of the **accounting department** for an edition they belong to (`canManageMoneyAccounts`). No
+new role. The `/cash` link shows for exactly those people, and a closed edition hides the "Open a
+register" button and makes both actions refuse.
+
+### Opening
+
+Pick a cash account in the edition, name the till, count the float. The name is not unique — two
+bars both called "Bar 1", on two nights or in two editions, are two registers and the app does not
+argue. A float that totals zero is refused: there is nothing to open a till on. Counts must be whole
+numbers. Only the denominations actually counted are stored — a zero row and a missing row mean the
+same thing.
+
+### Closing
+
+Count what came back. The person counting sees the register's name and its float, but **not** a
+computed "expected" amount — a number to match is a number they will match. A closing count that
+totals zero is allowed (a till can genuinely come back empty) but, because a blank sheet and an
+empty till look identical, an empty sheet needs an explicit "the register came back empty"
+confirmation. Closing is **not** idempotent: a register can only be closed once, and a second count
+is refused rather than silently replacing the first.
+
+### Counting is not booking
+
+Closing a register writes **nothing to the journal**. A `CashRegister` carries only its two count
+sheets; a till counted tonight may be booked next week. The journal entries a closed till produces —
+the float returned, the takings, and the gap a user correction leaves — are written later by an
+admin, from the two counts and what the point of sale recorded (documented with the POS closing
+flow).

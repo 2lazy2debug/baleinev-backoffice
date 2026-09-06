@@ -58,6 +58,25 @@ app/
 │   │   ├── create-cost-center-modal.tsx ← Header button + create modal
 │   │   └── actions.ts            ← Server actions: create/update/delete cost centers
 │   │
+│   ├── cash/                    ← Cash manager: open a till on a CASH money account with a counted
+│   │   │                            float, close it with a counted count. No journal writes — that
+│   │   │                            is the POS closing flow's job
+│   │   ├── page.tsx              ← List of registers (open first), data-fetching only; builds the
+│   │   │                            one row array both the table and the cardlets read
+│   │   ├── client.tsx            ← Table above `sm`, cardlets below. Owns the close dialog and the
+│   │   │                            read-only "both sheets side by side" dialog, one of each for
+│   │   │                            the whole list
+│   │   ├── denomination-counter.tsx ← The twelve-denomination count sheet with a live running
+│   │   │                            total — the number the person counting checks against the cash
+│   │   │                            in their hand. Used by both modals
+│   │   ├── open-register-modal.tsx  ← Header button + modal: pick a cash account, name it, count
+│   │   │                            the float (`canManageMoneyAccounts`, writable edition)
+│   │   ├── close-register-modal.tsx ← Count what came back. Shows the float, never a computed
+│   │   │                            "expected"; an empty sheet needs an explicit confirmation
+│   │   └── actions.ts            ← `openCashRegisterAction` / `closeCashRegisterAction` — the
+│   │                                permission and edition guards, denomination parsing, the
+│   │                                one-transaction write. Closing is not idempotent
+│   │
 │   ├── expense-reports/
 │   │   ├── page.tsx              ← Header + history (data-fetching only)
 │   │   ├── create-expense-report-modal.tsx ← Header button + create modal (standard + driving, proof upload)
@@ -291,6 +310,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `open-food-facts.ts` | `fetchProductByBarcode()` — what a scanned EAN says about a product (name, brand, size of one piece), from the open catalogue keyed by that code. The name is read `fr` → `en` → `de` → generic, one fixed order for everyone, since the item it fills in is shared. Server-only, best-effort: a miss, a timeout or a half-empty product all mean "type the rest yourself" |
 | `addresses.ts` | `addressDisplayName()` / `addressNameBlock()` / `addressPersonName()` / `formatPhone()` / `formatPostalLine()` and `DEFAULT_COUNTRY`. Import-free on purpose — the table, the pickers and the actions all read the same rules without dragging Prisma into a browser bundle |
 | `articles.ts` | `elementFieldsFrom()` / `assertBarcodeFree()` — the `StockElement` fields both writing forms post (articles' own dialog, and the stock app's "new item" half) and the "one barcode, one article" check, shared so the two paths cannot drift |
+| `cash.ts` | `CASH_DENOMINATIONS` (the twelve Swiss denominations, rappen, largest first) plus `toRappen()` / `fromRappen()` / `formatDenomination()` / `countTotal()`. Every amount in the cash and POS apps is integer rappen; this is where the conversion and the denomination list live so nothing downstream re-derives them. Import-free |
 | `city-book.ts` | `rememberCity()` — files a postal code / locality pair the user actually saved, so the seeded Swiss list grows into whatever the address book turns out to need |
 | `countries.ts` | `countryOptions(locale)` / `countryName()` — countries and international dialling prefixes from libphonenumber-js + `Intl.DisplayNames`. Built on the server and passed down as props; the phone metadata has no business in a browser bundle that only needs "+41" |
 | `db.ts` | Singleton Prisma client (re-used across hot reloads in dev) |
