@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { AccountType, TaskType } from "@prisma/client";
 
 import { requireAdmin } from "@/lib/access";
+import { assertBudgetInEdition } from "@/lib/budgets";
 import { prisma } from "@/lib/db";
-import { assertDepartmentsBudget } from "@/lib/departments";
 import { requireWritableEdition, resolveWritableEditionId } from "@/lib/edition-context";
 import {
   type ActionState,
@@ -30,7 +30,7 @@ export async function createJournalEntryAction(_prevState: ActionState, formData
     const admin = await requireAdmin();
     const editionId = await resolveWritableEditionId();
 
-    const departmentId = getRequiredString(formData, "departmentId");
+    const budgetId = getRequiredString(formData, "budgetId");
     const moneyAccountId = getRequiredString(formData, "moneyAccountId");
     const accountType = getRequiredString(formData, "accountType") as AccountType;
     const dateRaw = getRequiredString(formData, "date");
@@ -44,7 +44,7 @@ export async function createJournalEntryAction(_prevState: ActionState, formData
 
     const amount = toPositiveAmount(amountRaw);
 
-    await assertDepartmentsBudget([departmentId]);
+    await assertBudgetInEdition(budgetId, editionId);
 
     const counterparty = String(formData.get("counterparty") ?? "").trim() || null;
     const referenceNumber = String(formData.get("referenceNumber") ?? "").trim() || null;
@@ -64,7 +64,7 @@ export async function createJournalEntryAction(_prevState: ActionState, formData
         data: {
           editionId,
           sequenceNumber: (maxSequence._max.sequenceNumber ?? 0) + 1,
-          departmentId,
+          budgetId,
           moneyAccountId,
           accountType,
           date,
@@ -135,7 +135,7 @@ export async function updateJournalEntryAction(_prevState: ActionState, formData
   try {
     await requireAdmin();
     const journalEntryId = getRequiredString(formData, "journalEntryId");
-    const departmentId = getRequiredString(formData, "departmentId");
+    const budgetId = getRequiredString(formData, "budgetId");
     const moneyAccountId = getRequiredString(formData, "moneyAccountId");
     const accountType = getRequiredString(formData, "accountType") as AccountType;
     const dateRaw = getRequiredString(formData, "date");
@@ -165,7 +165,7 @@ export async function updateJournalEntryAction(_prevState: ActionState, formData
     const amount = toPositiveAmount(amountRaw);
     const costCenterId = String(formData.get("costCenterId") ?? "").trim() || null;
 
-    await assertDepartmentsBudget([departmentId]);
+    await assertBudgetInEdition(budgetId, entry.editionId);
 
     // Absent is not the same as blank. The edit form posts these two as named
     // inputs, so clearing one there still clears it; the journal's inline row
@@ -176,7 +176,7 @@ export async function updateJournalEntryAction(_prevState: ActionState, formData
     await prisma.journalEntry.update({
       where: { id: journalEntryId },
       data: {
-        departmentId,
+        budgetId,
         moneyAccountId,
         accountType,
         date,
@@ -243,7 +243,7 @@ export async function bulkUpdateJournalEntriesAction(_prevState: ActionState, fo
 
       return {
         id: readRequired("journalEntryId"),
-        departmentId: readRequired("departmentId"),
+        budgetId: readRequired("budgetId"),
         moneyAccountId: readRequired("moneyAccountId"),
         accountType: readRequired("accountType") as AccountType,
         date,
@@ -252,8 +252,6 @@ export async function bulkUpdateJournalEntriesAction(_prevState: ActionState, fo
         costCenterId: String(item.costCenterId ?? "").trim() || null,
       };
     });
-
-    await assertDepartmentsBudget(updates.map((update) => update.departmentId));
 
     const stored = await prisma.journalEntry.findMany({
       where: { id: { in: updates.map((update) => update.id) } },
@@ -275,7 +273,16 @@ export async function bulkUpdateJournalEntriesAction(_prevState: ActionState, fo
       throw new Error("Journal entries must belong to the same edition.");
     }
 
-    await requireWritableEdition([...editionIds][0]);
+    const editionId = [...editionIds][0];
+    await requireWritableEdition(editionId);
+
+    // Every distinct budget the payload books against must be the edition's —
+    // the same guard the inline and single-entry editors run, applied once per id.
+    await Promise.all(
+      [...new Set(updates.map((update) => update.budgetId))].map((budgetId) =>
+        assertBudgetInEdition(budgetId, editionId),
+      ),
+    );
 
     await prisma.$transaction(
       updates.map(({ id, ...data }) => prisma.journalEntry.update({ where: { id }, data })),
