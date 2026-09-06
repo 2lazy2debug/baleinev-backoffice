@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 
 import { getCurrentUserAccess, isAdmin, requireAdmin } from "@/lib/access";
+import { assertBarcodeFree, elementFieldsFrom } from "@/lib/articles";
 import { prisma } from "@/lib/db";
 import { fetchProductByBarcode } from "@/lib/open-food-facts";
 import { isValidBarcode, normalizeBarcode } from "@/lib/stock";
@@ -44,25 +45,6 @@ function optionalString(formData: FormData, key: string): string | null {
   return value || null;
 }
 
-/**
- * A barcode as it is stored: digits only, or NULL. A code that is not a real
- * GTIN is refused rather than saved — an item filed under a mistyped number is
- * an item the scanner will never find again.
- */
-function toBarcode(raw: string | null): string | null {
-  if (!raw) {
-    return null;
-  }
-
-  const barcode = normalizeBarcode(raw);
-
-  if (!isValidBarcode(barcode)) {
-    throw new Error("That barcode is not a valid EAN. Check the digits, or leave it empty.");
-  }
-
-  return barcode;
-}
-
 function toPositiveQuantity(raw: string): number {
   const quantity = Number(raw.trim());
 
@@ -81,16 +63,6 @@ function toCountedQuantity(raw: string): number {
   }
 
   return quantity;
-}
-
-function toUnitQty(raw: string): number {
-  const unitQty = Number(raw.replace(",", ".").trim());
-
-  if (!Number.isFinite(unitQty) || unitQty <= 0) {
-    throw new Error("The size of one piece must be a number above zero.");
-  }
-
-  return unitQty;
 }
 
 /**
@@ -112,27 +84,6 @@ function toExpireDate(raw: string | null, expireable: boolean): Date | null {
   }
 
   return date;
-}
-
-/**
- * A barcode belongs to one item. Checked before the write so the person gets a
- * sentence rather than the unique index's own words — and checked *inside* the
- * transaction that creates the item, where there is one.
- */
-async function assertBarcodeFree(
-  client: Prisma.TransactionClient,
-  barcode: string | null,
-  elementId?: string,
-) {
-  if (!barcode) {
-    return;
-  }
-
-  const owner = await client.stockElement.findUnique({ where: { barcode }, select: { id: true } });
-
-  if (owner && owner.id !== elementId) {
-    throw new Error("Another item already carries this barcode. Edit that item instead.");
-  }
 }
 
 /** Two date-only values, or two absences of one, are the same shelf. */
@@ -246,7 +197,9 @@ export async function addStockAction(_prevState: ActionState, formData: FormData
       if (isNewElement) {
         const fields = elementFieldsFrom(formData);
         await assertBarcodeFree(tx, fields.barcode);
-        elementId = (await tx.stockElement.create({ data: fields })).id;
+        // Something being put on a shelf is by definition stocked, and this form
+        // has no checkbox for it — the articles app is where that flag is set.
+        elementId = (await tx.stockElement.create({ data: { ...fields, tracksStock: true } })).id;
       } else {
         elementId = getRequiredString(formData, "elementId");
       }
@@ -527,17 +480,6 @@ export async function lookupBarcodeAction(raw: string): Promise<BarcodeLookup> {
     brand: product?.brand ?? "",
     unitQty: product?.unitQty ?? "",
     unitId: unit?.id ?? "",
-  };
-}
-
-function elementFieldsFrom(formData: FormData) {
-  return {
-    name: getRequiredString(formData, "name"),
-    brand: optionalString(formData, "brand"),
-    barcode: toBarcode(optionalString(formData, "barcode")),
-    unitId: getRequiredString(formData, "unitId"),
-    unitQty: toUnitQty(getRequiredString(formData, "unitQty")),
-    expireable: String(formData.get("expireable") ?? "") === "on",
   };
 }
 

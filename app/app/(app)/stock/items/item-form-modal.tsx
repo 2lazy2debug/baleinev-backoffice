@@ -5,13 +5,13 @@ import { ScanBarcode } from "lucide-react";
 
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { FormError } from "@/components/form-error";
+import { UnitSizeFields, type ConversionOption, type UnitOption } from "@/components/unit-size-fields";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
 import { Alert, Button, Checkbox, Field, IconButton, Input, Modal } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
 import { createStockElementAction, lookupBarcodeAction, updateStockElementAction } from "../actions";
-import { UnitSizeFields, type ConversionOption, type UnitOption } from "../unit-size-fields";
 
 export type { ConversionOption, UnitOption };
 
