@@ -16,6 +16,7 @@ import {
   ListTodo,
   Network,
   ReceiptText,
+  Tags,
   Target,
   Users,
   Wallet,
@@ -46,7 +47,7 @@ type AppShellProps = {
   pendingTaskCount: number;
 };
 
-const GLOBAL_ROUTES = ["/addresses", "/passwords", "/stock", "/users", "/departments", "/templates", "/editions", "/account"];
+const GLOBAL_ROUTES = ["/addresses", "/articles", "/passwords", "/stock", "/users", "/departments", "/templates", "/editions", "/account"];
 
 export function AppShell({ children, userName, editions, selectedEditionId, locale, role, canManageMoneyAccounts, pendingTaskCount }: AppShellProps) {
   const pathname = usePathname();
@@ -80,6 +81,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
     { type: "item", href: "/cost-centers", label: copy.costCenters, icon: Target },
     { type: "divider", key: "d2" },
     { type: "item", href: "/addresses", label: copy.addresses, icon: Contact },
+    { type: "item", href: "/articles", label: copy.articles, icon: Tags },
     { type: "item", href: "/stock", label: copy.stock, icon: Boxes },
     { type: "item", href: "/templates", label: copy.templates, icon: FileStack },
     { type: "item", href: "/passwords", label: copy.passwords, icon: KeyRound },

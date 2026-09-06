@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 
-import { ItemFormModal, type ConversionOption, type UnitOption } from "./item-form-modal";
+import { ArticleFormModal, type ConversionOption, type UnitOption } from "./article-form-modal";
 
 type Props = {
   locale: Locale;
@@ -14,9 +14,9 @@ type Props = {
   conversions: ConversionOption[];
 };
 
-/** The catalogue's own trigger for the shared item dialog. */
-export function CreateItemButton({ locale, units, conversions }: Props) {
-  const copy = dictionaries[locale].stock;
+/** The catalogue's own trigger for the shared article dialog. */
+export function CreateArticleButton({ locale, units, conversions }: Props) {
+  const copy = dictionaries[locale].articles;
   const [open, setOpen] = useState(false);
 
   return (
@@ -24,7 +24,7 @@ export function CreateItemButton({ locale, units, conversions }: Props) {
       <Button type="button" variant="primary" icon={<Plus />} compactOnMobile onClick={() => setOpen(true)}>
         {copy.addItem}
       </Button>
-      <ItemFormModal
+      <ArticleFormModal
         locale={locale}
         units={units}
         conversions={conversions}

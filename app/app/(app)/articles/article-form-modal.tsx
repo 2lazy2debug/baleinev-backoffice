@@ -11,11 +11,12 @@ import { Alert, Button, Checkbox, Field, IconButton, Input, Modal } from "@/comp
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
-import { createStockElementAction, lookupBarcodeAction, updateStockElementAction } from "../actions";
+import { lookupBarcodeAction } from "../stock/actions";
+import { createArticleAction, updateArticleAction } from "./actions";
 
 export type { ConversionOption, UnitOption };
 
-export type ItemDraft = {
+export type ArticleDraft = {
   id: string;
   name: string;
   brand: string;
@@ -23,6 +24,7 @@ export type ItemDraft = {
   unitId: string;
   unitQty: string;
   expireable: boolean;
+  tracksStock: boolean;
 };
 
 type Props = {
@@ -31,13 +33,13 @@ type Props = {
   conversions: ConversionOption[];
   open: boolean;
   onClose: () => void;
-  /** The item being edited, or null to create one. */
-  item: ItemDraft | null;
+  /** The article being edited, or null to create one. */
+  item: ArticleDraft | null;
 };
 
-const FORM_ID = "stock-item-form";
+const FORM_ID = "article-form";
 
-/** What a scan filled in, on top of the item (or the blank form) underneath it. */
+/** What a scan filled in, on top of the article (or the blank form) underneath it. */
 type Scanned = {
   barcode: string;
   name: string;
@@ -47,20 +49,20 @@ type Scanned = {
 };
 
 /**
- * What an item *is*, in one dialog — used both by the header's create button and
- * by the pencil on a row.
+ * What an article *is*, in one dialog — used both by the header's create button
+ * and by the pencil on a row.
  *
- * Editing is a dialog on every breakpoint rather than an inline row editor: five
- * fields, one of them a checkbox, do not fit a table cell on a phone, and a
+ * Editing is a dialog on every breakpoint rather than an inline row editor: the
+ * fields, two of them checkboxes, do not fit a table cell on a phone, and a
  * second mobile-only editor is exactly the drift the design rules forbid.
  *
  * The barcode is the field a scan writes. Scanning here files the code on an
- * item — the camera opens in place of the form, as it does in the stock dialog —
- * and on a new item it brings the name, brand and size along with it when Open
- * Food Facts knows the product.
+ * article — the camera opens in place of the form, as it does in the stock
+ * dialog — and on a new article it brings the name, brand and size along with it
+ * when Open Food Facts knows the product.
  */
-export function ItemFormModal({ locale, units, conversions, open, onClose, item }: Props) {
-  const copy = dictionaries[locale].stock;
+export function ArticleFormModal({ locale, units, conversions, open, onClose, item }: Props) {
+  const copy = dictionaries[locale].articles;
   const shellCopy = dictionaries[locale].shell;
 
   const [scanning, setScanning] = useState(false);
@@ -69,7 +71,7 @@ export function ItemFormModal({ locale, units, conversions, open, onClose, item 
   const [looking, startLookup] = useTransition();
 
   async function submit(previous: ActionState, formData: FormData): Promise<ActionState> {
-    return item ? updateStockElementAction(previous, formData) : createStockElementAction(previous, formData);
+    return item ? updateArticleAction(previous, formData) : createArticleAction(previous, formData);
   }
 
   const [state, formAction, pending] = useActionState(submit, initialActionState);
@@ -95,8 +97,8 @@ export function ItemFormModal({ locale, units, conversions, open, onClose, item 
           return;
         }
 
-        // Already filed, and not on the item being edited: the unique code would
-        // be refused on save, so say so now rather than after the round trip.
+        // Already filed, and not on the article being edited: the unique code
+        // would be refused on save, so say so now rather than after the round trip.
         if (result.status === "known") {
           setScanNote(result.elementId === item?.id ? copy.scanSameItem : copy.scanAlreadyFiled);
           return;
@@ -104,7 +106,7 @@ export function ItemFormModal({ locale, units, conversions, open, onClose, item 
 
         setScanned({
           barcode: result.barcode,
-          // An item being edited keeps what it says it is; only the code is new.
+          // An article being edited keeps what it says it is; only the code is new.
           name: item ? item.name : result.name,
           brand: item ? item.brand : result.brand,
           unitQty: item ? item.unitQty : result.unitQty,
@@ -156,7 +158,7 @@ export function ItemFormModal({ locale, units, conversions, open, onClose, item 
     >
       {scanning ? <BarcodeScanner locale={locale} onDetected={handleScanned} onCancel={() => setScanning(false)} /> : null}
 
-      {/* Keyed on the item and on the scan so the uncontrolled fields reset
+      {/* Keyed on the article and on the scan so the uncontrolled fields reset
           between two rows opened one after the other, and pick up what a scan
           brought back. Hidden rather than unmounted while the camera is up, so
           nothing already typed is thrown away. */}
@@ -211,7 +213,16 @@ export function ItemFormModal({ locale, units, conversions, open, onClose, item 
         />
         <div className="space-y-1">
           <Checkbox
-            id="stock-item-expireable"
+            id="article-tracks-stock"
+            name="tracksStock"
+            label={copy.tracksStock}
+            defaultChecked={item?.tracksStock ?? true}
+          />
+          <p className="text-xs text-[var(--muted)]">{copy.tracksStockHint}</p>
+        </div>
+        <div className="space-y-1">
+          <Checkbox
+            id="article-expireable"
             name="expireable"
             label={copy.expireable}
             defaultChecked={item?.expireable ?? false}

@@ -1,23 +1,22 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-
-import { getCurrentUserAccess, isAdmin } from "@/lib/access";
+import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { formatQuantity } from "@/lib/stock";
 import { decimalToNumber } from "@/lib/utils";
 
-import { PageHeader, buttonClasses, compactOnMobileWidths } from "@/components/ui";
+import { PageHeader } from "@/components/ui";
 
-import { StockItemsClient } from "./client";
-import { CreateItemButton } from "./create-item-button";
+import { ArticlesClient } from "./client";
+import { CreateArticleButton } from "./create-article-button";
 
 /**
- * The catalogue behind every stock entry. Open to everyone signed in: the person
- * holding a thing the book has never held is the one who can name it.
+ * The catalogue behind stock — everything the festival can stock or sell. Its
+ * own app now, and admin-only: the one way a non-admin adds a `StockElement` is
+ * the scan-to-create path inside "add stock", which is stock content rather than
+ * configuration.
  */
-export default async function StockItemsPage() {
-  const access = await getCurrentUserAccess();
+export default async function ArticlesPage() {
+  await requireAdmin();
   const locale = await getLocale();
   const copy = getDictionary(locale);
 
@@ -26,7 +25,7 @@ export default async function StockItemsPage() {
     prisma.stockUnit.findMany({ orderBy: { name: "asc" } }),
     prisma.stockUnitConversion.findMany({ include: { toUnit: true }, orderBy: { toUnit: { name: "asc" } } }),
     // One roll-up for the whole list rather than a count per row: what makes an
-    // item undeletable is the pieces sitting in *any* stock.
+    // article undeletable is the pieces sitting in *any* stock.
     prisma.stockItem.groupBy({ by: ["elementId"], _sum: { quantity: true } }),
   ]);
 
@@ -42,30 +41,16 @@ export default async function StockItemsPage() {
   return (
     <div className="space-y-4 lg:space-y-8">
       <PageHeader
-        eyebrow={copy.stock.title}
-        title={copy.stock.itemsTitle}
-        description={copy.stock.itemsSubtitle}
-        actions={
-          <>
-            <Link
-              href="/stock"
-              title={copy.stock.backToStock}
-              aria-label={copy.stock.backToStock}
-              className={buttonClasses("secondary", "md", compactOnMobileWidths.md)}
-            >
-              <ArrowLeft />
-              <span className="hidden lg:inline">{copy.stock.backToStock}</span>
-            </Link>
-            <CreateItemButton locale={locale} units={unitOptions} conversions={conversionOptions} />
-          </>
-        }
+        eyebrow={copy.articles.title}
+        title={copy.articles.title}
+        description={copy.articles.subtitle}
+        actions={<CreateArticleButton locale={locale} units={unitOptions} conversions={conversionOptions} />}
       />
 
-      <StockItemsClient
+      <ArticlesClient
         locale={locale}
         units={unitOptions}
         conversions={conversionOptions}
-        canDelete={isAdmin(access)}
         items={elements.map((element) => ({
           id: element.id,
           name: element.name,
@@ -75,6 +60,7 @@ export default async function StockItemsPage() {
           unitName: element.unit.name,
           unitQty: formatQuantity(decimalToNumber(element.unitQty)),
           expireable: element.expireable,
+          tracksStock: element.tracksStock,
           inStock: inStock.get(element.id) ?? 0,
         }))}
       />

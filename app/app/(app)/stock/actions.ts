@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 
-import { getCurrentUserAccess, isAdmin, requireAdmin } from "@/lib/access";
+import { getCurrentUserAccess, requireAdmin } from "@/lib/access";
 import { assertBarcodeFree, elementFieldsFrom } from "@/lib/articles";
 import { prisma } from "@/lib/db";
 import { fetchProductByBarcode } from "@/lib/open-food-facts";
@@ -34,7 +34,7 @@ import {
 /** Every screen that reads stock, refreshed together. */
 function revalidateStock() {
   revalidatePath("/stock");
-  revalidatePath("/stock/items");
+  revalidatePath("/articles");
   revalidatePath("/stock/history");
   revalidatePath("/stock/settings");
 }
@@ -481,76 +481,6 @@ export async function lookupBarcodeAction(raw: string): Promise<BarcodeLookup> {
     unitQty: product?.unitQty ?? "",
     unitId: unit?.id ?? "",
   };
-}
-
-export async function createStockElementAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-  try {
-    await getCurrentUserAccess();
-    const data = elementFieldsFrom(formData);
-    await assertBarcodeFree(prisma, data.barcode);
-    await prisma.stockElement.create({ data });
-
-    revalidateStock();
-    return { error: null };
-  } catch (err) {
-    return { error: toActionErrorMessage(err) };
-  }
-}
-
-/**
- * Editing an item that has already been stocked is allowed on every field but
- * one: turning off `expireable` would leave dated rows behind that nothing draws
- * a date for, so that switch is refused while any of them exist.
- */
-export async function updateStockElementAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-  try {
-    await getCurrentUserAccess();
-    const elementId = getRequiredString(formData, "elementId");
-    const data = elementFieldsFrom(formData);
-
-    await assertBarcodeFree(prisma, data.barcode, elementId);
-
-    if (!data.expireable) {
-      const dated = await prisma.stockItem.count({ where: { elementId, expireDate: { not: null } } });
-
-      if (dated > 0) {
-        throw new Error("This item is in stock with an expiry date. Take those entries out before turning expiry off.");
-      }
-    }
-
-    await prisma.stockElement.update({ where: { id: elementId }, data });
-
-    revalidateStock();
-    return { error: null, saved: true };
-  } catch (err) {
-    return { error: toActionErrorMessage(err) };
-  }
-}
-
-export async function deleteStockElementAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-  try {
-    const access = await getCurrentUserAccess();
-
-    if (!isAdmin(access)) {
-      throw new Error("Only an admin can delete an item.");
-    }
-
-    const elementId = getRequiredString(formData, "elementId");
-    const stocked = await prisma.stockItem.count({ where: { elementId } });
-
-    if (stocked > 0) {
-      throw new Error("This item is in a stock. Take it out of every stock before deleting it.");
-    }
-
-    // Its movements go with it: they describe an item that no longer exists,
-    // and there is nothing left for the history to name them by.
-    await prisma.stockElement.delete({ where: { id: elementId } });
-
-    revalidateStock();
-    return { error: null };
-  } catch (err) {
-    return { error: toActionErrorMessage(err) };
-  }
 }
 
 // ---------------------------------------------------------------------------

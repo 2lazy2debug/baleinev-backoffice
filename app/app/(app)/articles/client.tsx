@@ -27,12 +27,12 @@ import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatPiece } from "@/lib/stock";
 
-import { deleteStockElementAction } from "../actions";
-import { ItemFormModal, type ConversionOption, type ItemDraft, type UnitOption } from "./item-form-modal";
+import { deleteArticleAction } from "./actions";
+import { ArticleFormModal, type ConversionOption, type ArticleDraft, type UnitOption } from "./article-form-modal";
 
-export type ItemRow = ItemDraft & {
+export type ArticleRow = ArticleDraft & {
   unitName: string;
-  /** Pieces of this item across every stock, which is what makes it undeletable. */
+  /** Pieces of this article across every stock, which is what makes it undeletable. */
   inStock: number;
 };
 
@@ -40,18 +40,16 @@ type Props = {
   locale: Locale;
   units: UnitOption[];
   conversions: ConversionOption[];
-  items: ItemRow[];
-  /** Deleting a catalogue entry is the one thing the app keeps to admins. */
-  canDelete: boolean;
+  items: ArticleRow[];
 };
 
-/** The catalogue: what a thing is called, what one piece of it is, and whether it expires. */
-export function StockItemsClient({ locale, units, conversions, items, canDelete }: Props) {
-  const copy = dictionaries[locale].stock;
+/** The catalogue: what a thing is called, what one piece of it is, whether it expires and whether it is counted in stock. */
+export function ArticlesClient({ locale, units, conversions, items }: Props) {
+  const copy = dictionaries[locale].articles;
 
   const [filters, setFilters] = useState({ name: "", brand: "" });
-  const [editing, setEditing] = useState<ItemRow | null>(null);
-  const [deleteState, deleteFormAction, isDeleting] = useActionState(deleteStockElementAction, initialActionState);
+  const [editing, setEditing] = useState<ArticleRow | null>(null);
+  const [deleteState, deleteFormAction, isDeleting] = useActionState(deleteArticleAction, initialActionState);
 
   // Derived once: the table above `sm` and the cardlets below it read this same
   // array.
@@ -61,15 +59,17 @@ export function StockItemsClient({ locale, units, conversions, items, canDelete 
       item.brand.toLowerCase().includes(filters.brand.trim().toLowerCase()),
   );
 
-  function stockLabel(item: ItemRow) {
-    return `${item.inStock} ${copy.pieces}`;
-  }
-
-  function deleteButton(item: ItemRow, variant: "icon" | "button") {
-    if (!canDelete) {
-      return null;
+  // An untracked article never sits on a shelf, so a piece count would always
+  // read "0" and mean nothing — the badge says why instead.
+  function stockCell(item: ArticleRow) {
+    if (!item.tracksStock) {
+      return <Badge tone="neutral">{copy.notStocked}</Badge>;
     }
 
+    return <span className="tabular-nums">{`${item.inStock} ${copy.pieces}`}</span>;
+  }
+
+  function deleteButton(item: ArticleRow, variant: "icon" | "button") {
     const blocked = item.inStock > 0;
     const label = blocked ? copy.deleteItemBlocked : copy.deleteItem;
 
@@ -155,7 +155,7 @@ export function StockItemsClient({ locale, units, conversions, items, canDelete 
                 </TD>
                 <TD>{formatPiece(Number(item.unitQty), item.unitName)}</TD>
                 <TD>{item.expireable ? <Badge tone="info">{copy.expireable}</Badge> : null}</TD>
-                <TD className="tabular-nums">{stockLabel(item)}</TD>
+                <TD>{stockCell(item)}</TD>
                 <TD>
                   <div className="flex items-center gap-2">
                     <IconButton tone="accent" label={copy.editItem} onClick={() => setEditing(item)}>
@@ -185,7 +185,7 @@ export function StockItemsClient({ locale, units, conversions, items, canDelete 
               />
               <CardletFields>
                 <CardletField label={copy.piece}>{formatPiece(Number(item.unitQty), item.unitName)}</CardletField>
-                <CardletField label={copy.inStock}>{stockLabel(item)}</CardletField>
+                <CardletField label={copy.inStock}>{stockCell(item)}</CardletField>
               </CardletFields>
               <CardletActions>
                 <Button variant="secondary" size="sm" icon={<Pencil />} onClick={() => setEditing(item)}>
@@ -204,7 +204,7 @@ export function StockItemsClient({ locale, units, conversions, items, canDelete 
         ) : null}
       </Panel>
 
-      <ItemFormModal
+      <ArticleFormModal
         locale={locale}
         units={units}
         conversions={conversions}

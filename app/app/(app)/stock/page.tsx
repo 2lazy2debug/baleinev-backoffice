@@ -70,7 +70,9 @@ export default async function StockPage() {
       include: { element: { include: { unit: true } } },
       orderBy: [{ element: { name: "asc" } }, { expireDate: "asc" }],
     }),
-    prisma.stockElement.findMany({ include: { unit: true }, orderBy: { name: "asc" } }),
+    // Only articles that are counted on a shelf can be added to one — a poured
+    // glass exists in the catalogue to be sold, never stocked.
+    prisma.stockElement.findMany({ where: { tracksStock: true }, include: { unit: true }, orderBy: { name: "asc" } }),
     prisma.stockUnit.findMany({ orderBy: { name: "asc" } }),
     prisma.stockUnitConversion.findMany({ include: { toUnit: true }, orderBy: { toUnit: { name: "asc" } } }),
   ]);
@@ -97,14 +99,16 @@ export default async function StockPage() {
         }))}
       />
       <StockPlaceSwitcher locale={locale} places={options} selectedId={selected.id} />
-      <Link
-        href="/stock/items"
-        title={copy.stock.itemsTitle}
-        aria-label={copy.stock.itemsTitle}
-        className={iconButtonClasses("neutral", "md")}
-      >
-        <Package />
-      </Link>
+      {isAdmin(access) ? (
+        <Link
+          href="/articles"
+          title={copy.articles.title}
+          aria-label={copy.articles.title}
+          className={iconButtonClasses("neutral", "md")}
+        >
+          <Package />
+        </Link>
+      ) : null}
       <Link
         href="/stock/history"
         title={copy.stock.historyTitle}
