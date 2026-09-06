@@ -31,11 +31,13 @@ app/
 │   ├── page.tsx                  ← Dashboard (budget vs actuals + money account balances)
 │   │
 │   ├── budget/
-│   │   ├── page.tsx              ← One row per budgeting department, plus this edition's entries
-│   │   ├── client.tsx            ← Department cards: budget tables above `sm`, a read-only
-│   │   │                            planned-vs-actual roll-up and cardlets below (management
-│   │   │                            and the details modal are desktop-only)
-│   │   └── actions.ts            ← Server actions: create/edit/delete budget lines
+│   │   ├── page.tsx              ← Queries the edition's budgets (visible-to-me filtered), one card each
+│   │   ├── client.tsx            ← One card per budget: budget tables above `sm`, a read-only
+│   │   │                            planned-vs-actual roll-up and cardlets below; department chips,
+│   │   │                            edit/delete a budget (management and the details modal are desktop-only)
+│   │   ├── create-budget-modal.tsx ← Header-button + Modal for "create a budget" (client component)
+│   │   ├── budget-form-fields.tsx  ← Shared name + department MultiSelect for the create/edit forms
+│   │   └── actions.ts            ← Server actions: create/edit/delete a budget, create/edit/delete budget lines
 │   │
 │   ├── journal/
 │   │   ├── page.tsx              ← Journal entry list, reads ?fromExpenseReport for prefill
@@ -282,8 +284,9 @@ which. Nothing here should be re-implemented inline in a page.
 | `i18n.ts` | `getLocale()` (reads cookie server-side) and `getDictionary()` |
 | `document-templates.ts` | `[[field]]` renderer, `InvoiceDocumentPayload` type, default invoice HTML template, `ensureDefaultInvoiceTemplate()` |
 | `swiss-qr.ts` | `buildSwissQrPayload()` — builds a SPC-format QR string for Swiss ISO 20022 QR invoices |
-| `departments.ts` | `budgetingDepartments()`, `assertDepartmentsBudget()`, `resolveDepartmentBudgetId()` (opens a `DepartmentBudget` on first use) and `departmentBudgetUsage()` (what stands in the way of turning a budget off) |
-| `edition-carry-over.ts` | `carryOverEdition(tx, source, target)` — copies department budgets with their lines, cost centers and money accounts into another edition and writes each account's closing balance as a locked opening entry |
+| `departments.ts` | `budgetingDepartments()` (the departments that may be attached to a budget) and `departmentBudgetUsage()` (what stands in the way of detaching a department, i.e. turning `hasBudget` off) |
+| `budgets.ts` | `visibleBudgetsWhere(access, editionId)` — the one place the visibility rule lives (admins see all, others see only their departments' budgets); `editionBudgets()` (the journal picker's options); `assertBudgetInEdition()`; `resolveDefaultBudgetForDepartment()` (the expense-report → journal prefill) |
+| `edition-carry-over.ts` | `carryOverEdition(tx, source, target)` — copies budgets with their lines and department attachments, cost centers and money accounts into another edition and writes each account's closing balance as a locked opening entry |
 | `edition-context.ts` | The single answer to "which edition is this request in", read from `User.selectedEditionId`: `resolveEditionIdOrNull()` (pages), `resolveEditionId()` (write paths, throws), `resolveWritableEditionId()` (write paths, also refuses a closed edition), `requireWritableEdition(id)` (guards a write against a named edition), `resolveEdition()` (the record), `ensureUserEdition()` (the only writer of the seed) |
 | `server-action-helpers.ts` | Shared helpers for server actions: `getRequiredString()`, plus the `ActionState` type (`{ error: string \| null }`), `initialActionState`, and `toActionErrorMessage()` used by every action to report validation failures instead of throwing. Kept free of server-only imports — client components import `initialActionState` from here |
 | `utils.ts` | `formatCurrency()`, `decimalToNumber()`, `incrementEditionName()` |
@@ -303,8 +306,8 @@ which. Nothing here should be re-implemented inline in a page.
 
 | File | Purpose |
 |---|---|
-| `import-workbook.ts` | One-off: parse an Excel workbook JOURNAL sheet → seed journal entries + departments (global, `hasBudget` on) + money accounts |
-| `import-budget.ts` | One-off: parse budget department sheets from the same workbook → seed budget lines |
+| `import-workbook.ts` | One-off: parse an Excel workbook JOURNAL sheet → seed departments (global, `hasBudget` on) + one budget per department + money accounts, and book the journal entries against those budgets |
+| `import-budget.ts` | One-off: parse budget department sheets from the same workbook → upsert one budget per department name and seed its budget lines |
 | `import-bank-statement.ts` | Replays a BCV "Extraction transactionnelle" onto one edition: replaces every entry on the bank account, mirrors bank/cash transfers onto the cash box, and refreshes the next edition's carry-over |
 
 Run with `npx tsx scripts/<file>.ts --workbook ../soa/compta_2025-2026.xlsx`.

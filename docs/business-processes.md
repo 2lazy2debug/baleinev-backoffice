@@ -68,8 +68,8 @@ Reopening it clears closedAt and writes work again
 - Creating a new edition does NOT delete old data — historical editions remain fully readable.
 - **Bringing data into a new edition is an explicit choice.** The new-edition dialog has an
   optional "Bring over from" select; leaving it empty creates a blank edition.
-  `carryOverEdition()` in `app/lib/edition-carry-over.ts` copies **department budgets with their
-  lines**, **cost centers** and **money accounts** (bank identity included, so a carried account can
+  `carryOverEdition()` in `app/lib/edition-carry-over.ts` copies **budgets with their lines and
+  department attachments**, **cost centers** and **money accounts** (bank identity included, so a carried account can
   still produce a Swiss QR invoice), then writes one locked `isOpeningEntry = true` journal entry per
   account that does not close at zero, labelled `Report édition précédente`. Each opening entry takes
   its own sequence number, because `JournalEntry` is unique on `(editionId, sequenceNumber)`.
@@ -84,42 +84,56 @@ Reopening it clears closedAt and writes work again
 
 ## 2. Budget Management
 
-### Who does what
-- **Admin:** turns a department's budget on at `/departments`, then creates BudgetLines and sets
-  amounts at `/budget`. Departments themselves are never created from the budget screen — they are
-  global, and `/budget` only shows the ones with `hasBudget` for the selected edition.
-- **Department user:** views their own department's budget vs. actual spending (read-only).
+A **budget** is a named envelope of money inside one edition. It is created by hand at `/budget`
+("create a budget" is a header button and a modal, like every other create in the app), holds the
+budget lines and the journal entries booked against it, and is attached to zero or more
+departments. **The attachment is visibility only** — it carries no money and no share, and
+detaching a department takes nothing away from the budget. A budget with no department is visible
+to **admins only**; a department user sees exactly the budgets of their own departments, one card
+each.
 
-Create, update, and delete of budget lines (`app/(app)/budget/actions.ts`) are all scoped to the
-user's selected edition: the mutation first confirms the target line's `DepartmentBudget` belongs to
-the edition `resolveEditionId()` returns, so a stale page from another edition cannot mutate its
-data. Writing the first line of a department's budget is also what opens that `DepartmentBudget`
-row — see `resolveDepartmentBudgetId()` in `app/lib/departments.ts`.
+### Who does what
+- **Admin:** creates budgets at `/budget`, names them, attaches departments (the picker offers the
+  departments with `hasBudget` on), and creates BudgetLines with their amounts. Deleting a budget
+  is refused while it holds a line — empty it first.
+- **Department user:** views the budgets their departments are attached to, budget vs. actual
+  spending (read-only).
+
+Create, update, and delete of budgets and budget lines (`app/(app)/budget/actions.ts`) are all
+scoped to the user's selected edition: the mutation first confirms the target budget belongs to
+the edition `resolveEditionId()` returns (`assertBudgetInEdition()` in `app/lib/budgets.ts`), so a
+stale page from another edition cannot mutate its data.
 
 ### Setup flow
 ```
 Admin creates Departments at /departments, with "Has a budget" on
-  (e.g. "Communication", "Events")
+  (so they can be attached to budgets)
         │
         ▼
-Admin creates BudgetLines under each department, per edition
+Admin creates a Budget at /budget, names it, attaches departments
+  (e.g. "Communication" attached to the Comms department)
+        │
+        ▼
+Admin creates BudgetLines under each budget, per edition
   (e.g. "Printing: 500 CHF", "Venue rental: 2000 CHF")
         │
         ▼
 Department users are assigned to departments in /users
         │
         ▼
-As journal entries accumulate, the dashboard shows budget vs. actuals
+As journal entries are booked against a budget, the dashboard shows budget vs. actuals
 ```
 
-### Turning a budget off
-`hasBudget` is a department-level flag, so it is refused whenever any edition's budget still holds
-budget lines or any journal entry names the department — that data would have nowhere left to go.
-Empty budgets are deleted with the flag. Turning a budget *on* writes nothing until a line is
-planned.
+### Turning `hasBudget` off
+`hasBudget` only decides whether a department may be *attached* to a budget. Turning it off
+detaches the department from every budget it watches; it moves no money, but it is refused while
+one of those budgets still holds budget lines or journal entries
+(`departmentBudgetUsage()` in `app/lib/departments.ts`) — that would hide live money from the team.
 
 ### Budget vs. actuals calculation
-The dashboard (`app/(app)/page.tsx`) reads the edition's `DepartmentBudget` rows for the planned side, and its own `JournalEntry` rows — matched on `departmentId`, since an entry carries its edition itself — for the actual one. The difference is the remaining (or overspent) budget.
+The dashboard (`app/(app)/page.tsx`) reads the edition's `Budget` rows: each row's planned side is
+the sum of its budget lines, and its actual side is the sum of the journal entries booked against
+it. The difference is the remaining (or overspent) budget.
 
 ---
 
@@ -129,7 +143,8 @@ The journal is the core accounting ledger. Every financial movement is recorded 
 
 ### Entry fields
 - **Date**, **Description**, **Debit** or **Credit** amount
-- **Department** — which budget is affected
+- **Budget** (optional) — which budget the movement is booked against; an entry no longer carries a
+  department
 - **MoneyAccount** — which bank/cash account is involved
 - **CostCenter** (optional) — for sub-categorisation
 
@@ -141,7 +156,7 @@ Entries with `isOpeningEntry = true` were imported from a previous edition's clo
 
 ### Editing entries
 Three paths write an existing entry, and they share the same seven fields — date,
-department, type, amount, label, money account, cost centre:
+budget, type, amount, label, money account, cost centre:
 
 - **Inline, one row** (desktop table) — the pencil turns a row into inputs; the tick
   saves it on its own.
@@ -165,7 +180,7 @@ Counterparty and reference number are not columns of the grid, so neither the bu
 save nor the inline row save touches them.
 
 ### Journal entry creation
-The journal page reads `?fromExpenseReport=<id>` from the URL. If present, the add-entry modal is pre-filled with the expense report's title, amount, date, and submitter's department — making it easy for an admin to record reimbursement after approving an expense report.
+The journal page reads `?fromExpenseReport=<id>` from the URL. If present, the add-entry modal is pre-filled with the expense report's title, amount, and date. The budget is prefilled only when the submitter's department is attached to exactly one budget in the edition (`resolveDefaultBudgetForDepartment()` in `app/lib/budgets.ts`); attached to two, the picker is left empty and required, because guessing would book real money into the wrong envelope.
 
 ### Importing a bank statement
 `scripts/import-bank-statement.ts` (`npm run db:import:bank`) replays a BCV

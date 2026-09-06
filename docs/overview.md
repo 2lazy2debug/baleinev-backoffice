@@ -49,7 +49,7 @@ Never rely on the middleware alone. Sensitive actions always call `requireAdmin(
 
 ### 4. Edition-scoped data
 
-Almost everything (department budgets, money accounts, budget lines, journal entries, invoices, expense reports) is tied to an `Edition` record. Departments themselves are not: a team carries across editions, and only its budget is per-edition.
+Almost everything (budgets, money accounts, budget lines, journal entries, invoices, expense reports) is tied to an `Edition` record. Departments themselves are not: a team carries across editions, while the budgets it watches are per-edition.
 
 **Which edition is a per-user setting, not a global mode.** It is stored on the user
 (`User.selectedEditionId`) and every query resolves it through `lib/edition-context.ts` — so two

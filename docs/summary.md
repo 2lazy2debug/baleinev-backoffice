@@ -35,8 +35,9 @@ Two roles, stored on `User.role`:
 
 A user belongs to `Department` records directly (a many-to-many). Departments are
 edition-independent, so a membership survives an edition change; what is per-edition is the
-`DepartmentBudget` a department opens when it plans something. Admins manage the list at
-`/departments`, where `hasBudget` decides whether a department budgets at all.
+`Budget` — a named envelope a department may be *attached* to, to see it. Admins manage the
+department list at `/departments`, where `hasBudget` decides whether a department may be attached
+to budgets at all.
 
 ## Core domain
 
@@ -44,11 +45,11 @@ edition-independent, so a membership survives an edition change; what is per-edi
 | --- | --- |
 | `Edition` | One festival year. Owns everything else. Users select one each; the one flagged `isDefault` seeds accounts that have none. Carries the per-km driving reimbursement rate. |
 | `Department` | A team of the association — global, not per edition. Carries a name, an optional abbreviation and `hasBudget`. |
-| `DepartmentBudget` | One department's budget inside one edition; holds the budget lines and nothing else. |
+| `Budget` | A named envelope of money inside one edition; holds the budget lines and the journal entries booked against it. Attached to zero or more departments (visibility only); no attachment means admin-only. |
 | `MoneyAccount` | A bank, cash, or other account, with opening balance and (bank only) beneficiary/IBAN details. Managed by admins and the "Comptabilité" department. |
 | `CostCenter` | An analytic code used to group spending across departments. |
-| `BudgetLine` | A planned income or expense line attached to a department, typed `CHARGES` or `PRODUITS`. |
-| `JournalEntry` | An actual accounting movement: date, amount, label, counterparty, money account, department, cost center, and a per-edition sequence number. Opening entries are locked. |
+| `BudgetLine` | A planned income or expense line inside a budget, typed `CHARGES` or `PRODUITS`. |
+| `JournalEntry` | An actual accounting movement: date, amount, label, counterparty, money account, budget (optional), cost center, and a per-edition sequence number. Opening entries are locked. |
 | `Invoice` | An outgoing invoice with a Swiss QR-bill payload, renderable to PDF. Can be linked 1:1 to the `PRODUITS` journal entry that settles it. |
 | `ExpenseReport` | A reimbursement claim (standard, with a receipt file; or driving, computed from kilometers × rate). Flows `PENDING → APPROVED / REJECTED`. |
 | `DocumentTemplate` | Admin-authored HTML used to render invoice PDFs, with `[[placeholder]]` substitution. |
