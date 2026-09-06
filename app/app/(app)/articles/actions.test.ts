@@ -7,6 +7,7 @@ const revalidatePath = vi.fn();
 const prisma = {
   stockElement: { create: vi.fn(), update: vi.fn(), delete: vi.fn(), findUnique: vi.fn() },
   stockItem: { count: vi.fn() },
+  posTemplateCell: { count: vi.fn() },
 };
 
 vi.mock("next/cache", () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
@@ -33,6 +34,7 @@ beforeEach(() => {
   prisma.stockElement.delete.mockResolvedValue({ id: "el_1" });
   prisma.stockElement.findUnique.mockResolvedValue(null);
   prisma.stockItem.count.mockResolvedValue(0);
+  prisma.posTemplateCell.count.mockResolvedValue(0);
 });
 
 describe("every article action is admin-only", () => {
@@ -83,7 +85,14 @@ describe("deleteArticleAction", () => {
     expect(prisma.stockElement.delete).not.toHaveBeenCalled();
   });
 
-  it("deletes when the article is in no stock", async () => {
+  it("refuses while the article sits on a POS template", async () => {
+    prisma.posTemplateCell.count.mockResolvedValue(2);
+    const result = await deleteArticleAction({ error: null }, form());
+    expect(result.error).toMatch(/POS template/i);
+    expect(prisma.stockElement.delete).not.toHaveBeenCalled();
+  });
+
+  it("deletes when the article is in no stock and on no template", async () => {
     const result = await deleteArticleAction({ error: null }, form());
     expect(result).toEqual({ error: null });
     expect(prisma.stockElement.delete).toHaveBeenCalledWith({ where: { id: "el_1" } });

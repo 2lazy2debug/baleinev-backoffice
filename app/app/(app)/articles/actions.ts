@@ -86,6 +86,14 @@ export async function deleteArticleAction(_prevState: ActionState, formData: For
       throw new Error("This item is in a stock. Take it out of every stock before deleting it.");
     }
 
+    // A POS template cell is `Restrict` on `elementId` — without this check the
+    // foreign key throws a raw Prisma error at the user instead.
+    const onTemplates = await prisma.posTemplateCell.count({ where: { elementId } });
+
+    if (onTemplates > 0) {
+      throw new Error("This article is on a POS template. Remove it from every template before deleting it.");
+    }
+
     // Its movements go with it: they describe an item that no longer exists,
     // and there is nothing left for the history to name them by.
     await prisma.stockElement.delete({ where: { id: elementId } });
