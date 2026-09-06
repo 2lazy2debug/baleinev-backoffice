@@ -374,6 +374,66 @@ export async function setStockItemQuantityAction(_prevState: ActionState, formDa
   }
 }
 
+/**
+ * Moves pieces from the stock a row is in to another one: an Out here, an In
+ * there, in the same transaction — the history reads it as two ordinary
+ * movements rather than a third kind existing.
+ *
+ * Unlike the +/- buttons, this does not clamp to what is there: moving more
+ * than is on the shelf would invent it at the destination, so it is refused
+ * instead.
+ */
+export async function transferStockItemAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    const access = await getCurrentUserAccess();
+    const stockItemId = getRequiredString(formData, "stockItemId");
+    const toStockPlaceId = getRequiredString(formData, "toStockPlaceId");
+    const quantity = toPositiveQuantity(getRequiredString(formData, "quantity"));
+
+    await prisma.$transaction(async (tx) => {
+      const item = await tx.stockItem.findUnique({ where: { id: stockItemId } });
+
+      if (!item) {
+        throw new Error("That entry no longer exists. Refresh and try again.");
+      }
+
+      if (toStockPlaceId === item.stockPlaceId) {
+        throw new Error("That is the stock this entry is already in. Pick another one.");
+      }
+
+      const destination = await tx.stockPlace.findUnique({ where: { id: toStockPlaceId }, select: { id: true } });
+
+      if (!destination) {
+        throw new Error("That destination stock no longer exists. Refresh and try again.");
+      }
+
+      if (quantity > item.quantity) {
+        throw new Error(`There are only ${item.quantity} pieces here.`);
+      }
+
+      await applyMovement(tx, item, -quantity, access.id);
+      await addToPlace(
+        tx,
+        { stockPlaceId: destination.id, elementId: item.elementId, expireDate: item.expireDate },
+        quantity,
+        access.id,
+      );
+
+      // A shelf deliberately emptied *into another place* is not a shelf here
+      // any more, mirroring `removeStockItemAction`. A row that still holds
+      // pieces is left where it is.
+      if (quantity === item.quantity) {
+        await tx.stockItem.delete({ where: { id: item.id } });
+      }
+    });
+
+    revalidateStock();
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
 /** Takes the whole row out of the place: everything left leaves as one movement. */
 export async function removeStockItemAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
