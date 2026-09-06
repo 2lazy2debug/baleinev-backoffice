@@ -22,6 +22,46 @@ type SwitcherProps = PickerProps & {
   selectedId: string;
 };
 
+type StockPlaceListProps = {
+  locale: Locale;
+  places: StockPlaceOption[];
+  /** Marked with a check — the place currently open. Omit in the transfer modal. */
+  selectedId?: string;
+  disabled?: boolean;
+  onPick: (stockPlaceId: string) => void;
+};
+
+/** The column of places both the switcher and the transfer modal pick from. */
+export function StockPlaceList({ locale, places, selectedId, disabled, onPick }: StockPlaceListProps) {
+  const copy = dictionaries[locale].stock;
+
+  return (
+    <div className="flex flex-col gap-2">
+      {places.map((place) => {
+        const isSelected = place.id === selectedId;
+
+        return (
+          <button
+            key={place.id}
+            type="button"
+            onClick={() => onPick(place.id)}
+            disabled={disabled}
+            className="flex items-center justify-between gap-3 rounded-lg border border-[var(--line)] px-3 py-2.5 text-left text-sm transition hover:bg-[var(--panel-strong)] disabled:opacity-50"
+          >
+            <span className="min-w-0">
+              <span className="block truncate font-medium">{place.name}</span>
+              <span className="block text-2xs text-[var(--muted)]">
+                {place.itemCount === 0 ? copy.emptyPlace : `${place.itemCount} ${copy.entries}`}
+              </span>
+            </span>
+            {isSelected ? <Check className="h-4 w-4 shrink-0 text-[var(--accent)]" /> : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /**
  * Remembering which stock someone works in is a *preference*, not a page state:
  * it survives the tab being closed, the same way the selected edition does, so
@@ -95,29 +135,7 @@ export function StockPlaceSwitcher({ locale, places, selectedId }: SwitcherProps
       </IconButton>
 
       <Modal open={open} onClose={() => setOpen(false)} title={copy.switchPlace} size="sm">
-        <div className="flex flex-col gap-2">
-          {places.map((place) => {
-            const isSelected = place.id === selectedId;
-
-            return (
-              <button
-                key={place.id}
-                type="button"
-                onClick={() => pick(place.id)}
-                disabled={pending}
-                className="flex items-center justify-between gap-3 rounded-lg border border-[var(--line)] px-3 py-2.5 text-left text-sm transition hover:bg-[var(--panel-strong)] disabled:opacity-50"
-              >
-                <span className="min-w-0">
-                  <span className="block truncate font-medium">{place.name}</span>
-                  <span className="block text-2xs text-[var(--muted)]">
-                    {place.itemCount === 0 ? copy.emptyPlace : `${place.itemCount} ${copy.entries}`}
-                  </span>
-                </span>
-                {isSelected ? <Check className="h-4 w-4 shrink-0 text-[var(--accent)]" /> : null}
-              </button>
-            );
-          })}
-        </div>
+        <StockPlaceList locale={locale} places={places} selectedId={selectedId} disabled={pending} onPick={pick} />
       </Modal>
     </>
   );
