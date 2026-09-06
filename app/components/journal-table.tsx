@@ -131,8 +131,8 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   const tableRef = useRef<HTMLTableElement | null>(null);
 
   useEffect(() => {
-    function onSidebarToggled(e: any) {
-      const extra: number = Number(e?.detail?.extra ?? 0);
+    function onSidebarToggled(e: Event) {
+      const extra: number = Number((e as CustomEvent<{ extra?: number }>).detail?.extra ?? 0);
       const table = tableRef.current;
       if (!table) return;
 
@@ -171,8 +171,8 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
       });
     }
 
-    window.addEventListener("sidebar:toggled", onSidebarToggled as any);
-    return () => window.removeEventListener("sidebar:toggled", onSidebarToggled as any);
+    window.addEventListener("sidebar:toggled", onSidebarToggled);
+    return () => window.removeEventListener("sidebar:toggled", onSidebarToggled);
   }, []);
 
   // Build deterministic running balances from opening balances and journal sequence.
