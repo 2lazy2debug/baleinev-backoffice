@@ -7,7 +7,7 @@ app/              ← Next.js App Router root
 components/       ← Shared UI components
 lib/              ← Server-side helpers, utilities, auth wiring
 prisma/           ← Database schema, seed, migrations
-scripts/          ← One-off data-import scripts
+scripts/          ← Data-import scripts and the check:design / check:i18n guards
 public/           ← Static files served at "/"
 types/            ← TypeScript module augmentations
 docs/             ← This documentation
@@ -312,7 +312,7 @@ which. Nothing here should be re-implemented inline in a page.
 | File | Purpose |
 |---|---|
 | `schema.prisma` | Single source of truth for the database schema |
-| `seed.ts` | Creates the first admin user (reads `ADMIN_EMAIL`, `ADMIN_PASSWORD` env vars) |
+| `seed.ts` | Upserts the first admin user (reads `ADMIN_EMAIL`, `ADMIN_PASSWORD`). With `SEED_DEV_FIXTURES=1` and `NODE_ENV` ≠ production it also creates `dev-department@baleinev.local` (DEPARTMENT / `devpassword`) and a closed edition — the non-admin and closed-edition fixtures the verification steps in `docs/plans/` need. Both guards must stay: `npm run db:seed` is run on the server too |
 
 ---
 
@@ -320,11 +320,13 @@ which. Nothing here should be re-implemented inline in a page.
 
 | File | Purpose |
 |---|---|
+| `check-design.mjs` | `npm run check:design` — the design-token guard (see CLAUDE.md → "Design system rules"): no hardcoded hex, no arbitrary radius, no bare `var(--space-…)` in markup under `app/` · `components/` |
+| `check-i18n.mjs` | `npm run check:i18n` — fails when `lib/i18n-dictionaries.ts` `en` and `fr` fall out of step (a key in one locale and not the other, or an object vs a string). `--dead` additionally lists leaf keys whose name appears nowhere in code — off by default, run it before/after moving keys between blocks and compare |
 | `import-workbook.ts` | One-off: parse an Excel workbook JOURNAL sheet → seed departments (global) + one budget per department + money accounts, and book the journal entries against those budgets |
 | `import-budget.ts` | One-off: parse budget department sheets from the same workbook → upsert one budget per department name and seed its budget lines |
 | `import-bank-statement.ts` | Replays a BCV "Extraction transactionnelle" onto one edition: replaces every entry on the bank account, mirrors bank/cash transfers onto the cash box, and refreshes the next edition's carry-over |
 
-Run with `npx tsx scripts/<file>.ts --workbook ../soa/compta_2025-2026.xlsx`.
+Run the importers with `npx tsx scripts/<file>.ts --workbook ../soa/compta_2025-2026.xlsx`.
 
 `import-bank-statement.ts` is the one that is meant to be re-run — the statement is
 the truth for the bank account, so a fresh export replaces what the last one wrote.
@@ -341,3 +343,17 @@ named charge rather than being silently absorbed. See
 | File | Purpose |
 |---|---|
 | `next-auth.d.ts` | Module augmentation that adds `role`, `departmentIds`, `departmentNames`, and `id` to the NextAuth `User`, `Session`, and `JWT` types |
+
+---
+
+## Tests
+
+`vitest.config.ts` + `*.test.ts` next to the code they cover. Node environment,
+no DOM — the UI is covered by `build` + `lint` + `check:design`; unit tests cover
+the *logic* those cannot see (the "refuse X while Y exists" rules, FormData
+parsing, money maths). `npm test` runs them once, `npm run test:watch` watches.
+
+A `"use server"` action is a plain async function: a test imports it and mocks
+the three things it reaches for — `next/cache`, `@/lib/access`, `@/lib/db` — then
+asserts on the `{ error }` it returns. See
+`app/(app)/articles/actions.test.ts` for the pattern and `docs/testing.md`.

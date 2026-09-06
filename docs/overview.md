@@ -108,5 +108,7 @@ install.sh         ← first-time server install
 - [production.md](production.md) — the server, the ports, the tag vocabulary, and the
   first-install runbook.
 - [file-structure.md](file-structure.md) — where each route and helper lives.
+- [testing.md](testing.md) — the four check commands, how to unit-test a server
+  action, and the local smoke-test recipe.
 - [database.md](database.md) · [auth.md](auth.md) · [passwords.md](passwords.md) —
   the data model, the session layer, and the vault.

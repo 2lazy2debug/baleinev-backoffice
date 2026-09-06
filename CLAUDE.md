@@ -4,6 +4,15 @@ actual implementation. you don´t have to parse this folder upon receiving a pro
 
 ## Local database 
 You can use it to perform tests. there is no production data into it.
+`SEED_DEV_FIXTURES=1 npm run db:seed` adds a DEPARTMENT user and a closed edition
+for verification steps that need a non-admin or a read-only edition.
+
+## Checks
+Run from `app/` before shipping: `npm run build`, `npm run lint`,
+`npm run check:design`, `npm run check:i18n`, `npm test`. There is no CI —
+these are the whole safety net. Server-action logic (the "refuse X while Y
+exists" rules, FormData parsing) belongs in a `*.test.ts` next to the code;
+`app/(app)/articles/actions.test.ts` is the pattern. See `docs/testing.md`.
 
 # Git
 Keep .gitignore up to date.
