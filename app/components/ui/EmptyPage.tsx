@@ -6,6 +6,12 @@ type EmptyPageProps = {
   eyebrow?: React.ReactNode;
   /** What is missing, stated plainly ("No edition selected"). */
   title: React.ReactNode;
+  /**
+   * Page-level actions, passed straight through to <PageHeader>. For an empty
+   * list screen whose one affordance is "create the first one" — the create
+   * button belongs in the header on every screen, empty or not.
+   */
+  actions?: React.ReactNode;
   /** What to do about it. */
   children: React.ReactNode;
 };
@@ -19,10 +25,10 @@ type EmptyPageProps = {
  * one line a phone user actually needs on these screens is the *direction*, so
  * here it is content — a dashed empty-state card — not a subtitle.
  */
-export function EmptyPage({ eyebrow, title, children }: EmptyPageProps) {
+export function EmptyPage({ eyebrow, title, actions, children }: EmptyPageProps) {
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow={eyebrow} title={title} />
+      <PageHeader eyebrow={eyebrow} title={title} actions={actions} />
       <Card dashed>{children}</Card>
     </div>
   );
