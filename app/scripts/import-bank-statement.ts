@@ -423,7 +423,7 @@ async function main() {
     // The cash box is not ours to replace, except for the transfer legs a
     // previous run wrote there — without clearing those, re-importing doubles
     // every transfer. They are recognisable because createJournalEntryAction and
-    // both update actions all require a department, so an entry with none can
+    // both update actions all require a budget, so an entry with none can
     // only have come from this script.
     const removed = await tx.journalEntry.deleteMany({
       where: {
@@ -432,7 +432,7 @@ async function main() {
           { moneyAccountId: bank.id },
           {
             moneyAccountId: cash.id,
-            departmentId: null,
+            budgetId: null,
             costCenterId: null,
             enteredById: null,
           },
@@ -462,7 +462,7 @@ async function main() {
         amount: entry.amount,
         counterparty: entry.counterparty,
         label: entry.label,
-        departmentId: null,
+        budgetId: null,
         costCenterId: null,
         enteredById: null,
         isOpeningEntry: false,

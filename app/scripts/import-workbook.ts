@@ -215,10 +215,10 @@ async function main() {
 
     if (force) {
       await tx.journalEntry.deleteMany({ where: { editionId: edition.id } });
-      await tx.budgetLine.deleteMany({ where: { departmentBudget: { editionId: edition.id } } });
+      await tx.budgetLine.deleteMany({ where: { budget: { editionId: edition.id } } });
       // The departments themselves are global and survive a re-import; only
-      // their budget for this edition is thrown away with the entries.
-      await tx.departmentBudget.deleteMany({ where: { editionId: edition.id } });
+      // the budgets for this edition are thrown away with the entries.
+      await tx.budget.deleteMany({ where: { editionId: edition.id } });
       await tx.costCenter.deleteMany({ where: { editionId: edition.id } });
       await tx.moneyAccount.deleteMany({ where: { editionId: edition.id } });
     }
@@ -258,11 +258,33 @@ async function main() {
     const moneyAccountByName = new Map(moneyAccounts.map((account) => [account.name, account.id]));
     const costCenterByCode = new Map(costCenters.map((center) => [center.code, center.id]));
 
+    // One budget per department name, named after the department and attached to
+    // it — the workbook has no notion of a budget separate from a department, so
+    // the import re-creates the one-to-one shape and an admin splits or merges
+    // budgets by hand afterwards.
+    const budgetByDepartmentName = new Map<string, string>();
+    for (const departmentName of uniqueDepartmentNames) {
+      const departmentId = departmentByName.get(departmentName);
+      if (!departmentId) {
+        continue;
+      }
+      const budget = await tx.budget.upsert({
+        where: { editionId_name: { editionId: edition.id, name: departmentName } },
+        update: {},
+        create: {
+          editionId: edition.id,
+          name: departmentName,
+          departments: { create: { departmentId } },
+        },
+      });
+      budgetByDepartmentName.set(departmentName, budget.id);
+    }
+
     for (const row of journalRows) {
-      const departmentId = departmentByName.get(row.departmentName);
+      const budgetId = budgetByDepartmentName.get(row.departmentName);
       const moneyAccountId = moneyAccountByName.get(row.moneyAccountName);
 
-      if (!departmentId || !moneyAccountId) {
+      if (!budgetId || !moneyAccountId) {
         continue;
       }
 
@@ -274,7 +296,7 @@ async function main() {
           },
         },
         update: {
-          departmentId,
+          budgetId,
           moneyAccountId,
           enteredById: adminUser?.id ?? null,
           costCenterId: row.costCenterCode ? costCenterByCode.get(row.costCenterCode) ?? null : null,
@@ -288,7 +310,7 @@ async function main() {
         },
         create: {
           editionId: edition.id,
-          departmentId,
+          budgetId,
           moneyAccountId,
           enteredById: adminUser?.id ?? null,
           costCenterId: row.costCenterCode ? costCenterByCode.get(row.costCenterCode) ?? null : null,

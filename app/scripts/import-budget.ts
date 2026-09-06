@@ -176,34 +176,42 @@ async function main() {
         create: { name: departmentName, hasBudget: true },
       });
 
-      await tx.departmentBudget.upsert({
-        where: { editionId_departmentId: { editionId: edition.id, departmentId: department.id } },
+      // The workbook names one budget per department; it is upserted by
+      // (editionId, name) and attached to that department.
+      const budget = await tx.budget.upsert({
+        where: { editionId_name: { editionId: edition.id, name: departmentName } },
         update: {},
-        create: { editionId: edition.id, departmentId: department.id },
+        create: { editionId: edition.id, name: departmentName },
+      });
+
+      await tx.budgetDepartment.upsert({
+        where: { budgetId_departmentId: { budgetId: budget.id, departmentId: department.id } },
+        update: {},
+        create: { budgetId: budget.id, departmentId: department.id },
       });
     }
 
     if (replaceExisting) {
-      await tx.budgetLine.deleteMany({ where: { departmentBudget: { editionId: edition.id } } });
+      await tx.budgetLine.deleteMany({ where: { budget: { editionId: edition.id } } });
     }
 
-    const budgets = await tx.departmentBudget.findMany({
+    const budgets = await tx.budget.findMany({
       where: { editionId: edition.id },
-      include: { department: { select: { name: true } } },
+      select: { id: true, name: true },
     });
-    const budgetByDepartmentName = new Map(budgets.map((budget) => [budget.department.name, budget.id]));
+    const budgetByDepartmentName = new Map(budgets.map((budget) => [budget.name, budget.id]));
 
     let inserted = 0;
 
     for (const line of parsedLines) {
-      const departmentBudgetId = budgetByDepartmentName.get(line.departmentName);
-      if (!departmentBudgetId) {
+      const budgetId = budgetByDepartmentName.get(line.departmentName);
+      if (!budgetId) {
         continue;
       }
 
       await tx.budgetLine.create({
         data: {
-          departmentBudgetId,
+          budgetId,
           accountType: line.accountType,
           billingMonth: line.billingMonth,
           label: line.label,
