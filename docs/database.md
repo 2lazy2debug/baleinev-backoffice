@@ -21,7 +21,9 @@ Edition
  ├─< JournalEntry
  ├─< Invoice
  ├─< ExpenseReport
- └─< CashRegister
+ ├─< CashRegister
+ ├─< PosTemplate ─< PosTemplateCell >─ StockElement (Restrict)
+ └─< PosSession
 
 JournalEntry ─── Budget (optional)
              ─── MoneyAccount
@@ -30,6 +32,13 @@ JournalEntry ─── Budget (optional)
 CashRegister ─── MoneyAccount (a CASH account, Restrict)
             ─< CashCount      (OPENING / CLOSING denomination sheets)
             ─── User (openedBy / closedBy, SetNull)
+
+PosSession ─── PosTemplate (Restrict)
+           ─── CashRegister? (Restrict, set only when CASH is accepted)
+           ─── User (openedBy, SetNull; usersSelecting = phones in the session)
+           ─< PosSessionPayment  (accepted methods, fixed at open)
+           ─< PosSale ─< PosSaleLine >─ StockElement? (SetNull, snapshot label/price)
+                      ─< PosSaleChange   (change handed back, one row per denomination)
 
 ExpenseReport ─── User (submittedBy)
               ─── Department
@@ -75,6 +84,8 @@ Represents an authenticated application user.
 | `twoFactorIv` | String? | Base64 nonce |
 | `twoFactorTag` | String? | Base64 GCM auth tag |
 | `selectedEditionId` | String? | FK → Edition (`onDelete: SetNull`). The edition this user works in — see below |
+| `selectedStockPlaceId` | String? | FK → StockPlace (`onDelete: SetNull`). Which stock place this user works in — a preference, asked once |
+| `selectedPosSessionId` | String? | FK → PosSession (`onDelete: SetNull`). Which point-of-sale session this user is selling in. Same "asked once, then remembered" idea; closing a session clears it for every user pointing at it |
 | `departments` | `Department[]` | Many-to-many: which departments this user belongs to |
 
 **`selectedEditionId` is how edition scoping works.** There is no global active edition; every
@@ -130,6 +141,7 @@ Top-level scoping unit for a fiscal year / accounting period.
 | `closedAt` | DateTime? | Set when the year is closed. Non-null makes the edition read-only — `requireWritableEdition()` refuses every write against it, while reads, exports and PDFs keep working. Clearing it (`reopenEditionAction`) makes the edition writable again |
 | `usersSelecting` | `User[]` | Users currently working in this edition |
 | `posTemplates` | `PosTemplate[]` | Saved till layouts for this edition's point of sale |
+| `posSessions` | `PosSession[]` | Point-of-sale sessions opened in this edition |
 
 There is no carry-forward balance on the edition itself: a previous year's closing balance arrives
 as a locked opening `JournalEntry` per money account, written by `carryOverEdition()`.
@@ -491,6 +503,7 @@ The catalogue entry — what *can* be stocked or sold, not the stock itself. Man
 | `expireable` | Boolean | Whether a piece carries an expiry date. False hides the field entirely |
 | `tracksStock` | Boolean | Default `true`. Whether pieces are counted on a shelf. `false` = sold but never stocked (a poured glass, not the barrel): hidden from every stock screen and the "add stock" picker, still available to a POS template. Turning it off is refused while any `StockItem` references it |
 | `posCells` | `PosTemplateCell[]` | Tiles on POS templates that sell this article |
+| `posSaleLines` | `PosSaleLine[]` | Lines of recorded POS sales that pointed at this article (`SetNull` — the line snapshots its own label and price) |
 
 Deleting one is refused while any `StockItem` **or `PosTemplateCell`** references it (`Restrict`),
 and takes its movements with it when it is allowed (`Cascade`) — a log of an item that no longer
@@ -555,7 +568,8 @@ counts and what the point of sale sold.
 | `closedAt` | DateTime? | Null while the register is open; set once, never re-set |
 
 Opening and closing require `canManageMoneyAccounts` (admin or the accounting department) and a
-writable edition. A register can only be closed once.
+writable edition. A register can only be closed once, and **not** while an `OPEN` or `PAUSED`
+[`PosSession`](#possession) is still on it (`posSessions` back-relation, FK `Restrict`).
 
 ---
 
@@ -608,6 +622,86 @@ page may have holes — removing a tile frees its slot and leaves the rest in pl
 Unique on `(templateId, position)` — one tile per slot, which is what makes the "set a cell" action
 a clean upsert. Prisma's `Restrict` on `elementId` is backed by an explicit count check in
 `deleteArticleAction`, so the user gets a sentence rather than a raw constraint error.
+
+---
+
+### `PosSession`
+One stretch of selling at `/pos`: one template, a fixed set of accepted payment methods, and — only
+when `CASH` is one of them — one open `CashRegister`. Several sessions run at once and several
+phones share one (`User.selectedPosSessionId` points here). **Any signed-in user** may open, join,
+pause, resume, close and sell; every write goes through `resolveWritableEditionId()`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `editionId` | String | FK → Edition, `Cascade` |
+| `templateId` | String | FK → PosTemplate, **`Restrict`** — a template a session has used cannot be deleted |
+| `cashRegisterId` | String? | FK → CashRegister, **`Restrict`**. Set exactly when `CASH` is accepted, and at most one |
+| `name` | String | Not unique |
+| `status` | `PosSessionStatus` | `OPEN` \| `PAUSED` \| `CLOSED`. Default `OPEN`. `CLOSED` is terminal |
+| `openedById` | String? | FK → User, `SetNull` |
+| `openedAt` | DateTime | Defaults to now |
+| `closedAt` | DateTime? | Set on close. **Closing writes nothing to the journal** — the takings are read when the register is closed |
+| `methods` | `PosSessionPayment[]` | The accepted payment methods, fixed at open |
+| `sales` | `PosSale[]` | Every transaction rung up |
+| `usersSelecting` | `User[]` | Phones currently in this session; closing clears all of them |
+
+Indexes: `(editionId, status)`, `(cashRegisterId)`.
+
+### `PosSessionPayment`
+One accepted payment method on a session. Unique on `(sessionId, method)`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `sessionId` | String | FK → PosSession, `Cascade` |
+| `method` | `PosPaymentMethod` | `CASH` \| `TWINT` \| `BANK` |
+
+### `PosSale`
+One completed transaction, written as it happens. `total` is what was charged and **may be negative
+or zero** — an all-refund sale is money leaving the drawer. The server recomputes `total` in integer
+rappen from the lines; the client's arithmetic is never trusted.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `sessionId` | String | FK → PosSession, `Cascade` |
+| `soldById` | String? | FK → User, `SetNull` |
+| `soldAt` | DateTime | Defaults to now |
+| `method` | `PosPaymentMethod` | One the session accepts |
+| `total` | Decimal(10,2) | Charged amount; negative/zero allowed |
+| `cashGiven` | Decimal(10,2)? | Cash only — what the customer put down (`0` on an all-refund sale). Null otherwise |
+| `changeDue` | Decimal(10,2)? | Cash only — what the app said to hand back. Null otherwise |
+
+Index: `(sessionId, soldAt)`.
+
+### `PosSaleLine`
+One line of a sale. Label and unit price are **snapshotted**, so history still reads after the
+template is re-priced. `elementId` is null for a custom sale.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `saleId` | String | FK → PosSale, `Cascade` |
+| `elementId` | String? | FK → StockElement, **`SetNull`** — the line stands on its own snapshot |
+| `label` | String | Snapshot at sale time |
+| `unitPrice` | Decimal(10,2) | Snapshot; negative allowed |
+| `quantity` | Int | Positive integer |
+
+Indexes: `(saleId)`, `(elementId)`.
+
+### `PosSaleChange`
+The coins and notes the app told the seller to hand back on a cash sale, one row per denomination —
+greedy over the twelve Swiss denominations (`makeChange()` in `app/lib/cash.ts`). Recorded because
+"what did we say to give?" is a question a short till has to be able to ask. Unique on
+`(saleId, denomination)`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `saleId` | String | FK → PosSale, `Cascade` |
+| `denomination` | Int | Rappen |
+| `quantity` | Int | > 0 |
 
 ---
 

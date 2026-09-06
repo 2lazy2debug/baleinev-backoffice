@@ -640,5 +640,67 @@ button and no page record.
 
 An article a template sells **cannot be deleted** until it is taken off every template
 (`PosTemplateCell.elementId` is `Restrict`); the articles app says so in a sentence. A closed
-edition hides the create button and every template write is refused. Nothing here sells anything —
-opening a session and ringing sales up is a later part of this chain.
+edition hides the create button and every template write is refused. A template a **session** has
+used cannot be deleted either — the same sentence, checked before the constraint can throw.
+
+### Sessions
+
+A **session** (`/pos`, the `PosSession` model) is one stretch of selling: **one template**, a
+**fixed set of accepted payment methods**, and — only when cash is one of them — **one open cash
+register** behind the drawer. Several sessions run at once (two bars, two tills) and **several
+phones share one session** — the session is the till, not the device, so which session a person is
+selling in is remembered on `User.selectedPosSessionId`, the same "asked once, then remembered"
+idea as the selected stock place.
+
+**Any signed-in user may open, join, pause, resume and close a session, and may sell.** That is the
+bar staff; the money they touch is already fenced by a register that someone with the money-account
+role had to open first. Templates stay admin-only and registers stay behind `canManageMoneyAccounts`.
+Every session write still goes through `resolveWritableEditionId()` — a closed edition sells
+nothing.
+
+- **Opening** needs a name, a template **with at least one tile**, and at least one payment method.
+  Tick cash and a register field appears: it must be an **open** register in the edition. Untick
+  cash and any register is dropped — a session that takes no cash stores no drawer. Opening a
+  session joins it.
+- **The payment methods are fixed at open.** There is no editing them afterwards; open another
+  session instead.
+- **Pausing** stops selling — the till refuses a sale — without ending the session. Resuming lifts
+  it.
+- **Closing is terminal.** It sets `closedAt`, drops **every** phone that was in the session back to
+  the picker, and cannot be undone — a reopened session would muddy the takings. **Closing writes
+  nothing to the journal.** What the session took in cash is read later, when the *cash register*
+  is closed (that is the register-close flow's job); a session is not a booking event. The
+  confirmation says so.
+- A register **cannot be closed** while an `OPEN` or `PAUSED` session is still on it — closing the
+  drawer under a running till is how money goes missing.
+
+### Selling
+
+The till is the joined session's screen: a big running total, the template's **3×3 grid** (the same
+3×3 at every width), a pager when the template has more than one page, and **List** / **Checkout**.
+The ninth tile of every page is **Custom sale** — a label and an amount, negatives allowed, no
+article behind it.
+
+**The cart lives in the browser and nowhere else** until checkout succeeds. A refresh loses an
+unfinished sale, and that is correct — an unfinished sale is not a sale. The **List** dialog edits
+the cart (per-line +/−/bin, or clear the whole sale); the grid itself only ever adds.
+
+At **checkout** the seller picks one of the session's payment methods:
+
+- **Non-cash** (Twint, bank) records that the money arrived that way and nothing else — no terminal
+  integration.
+- **Cash** asks what the customer put down and shows, live, the **change**: the amount and then the
+  coins and notes to hand back, **greedy over the twelve Swiss denominations** (`makeChange()` in
+  `app/lib/cash.ts`). The Swiss set is a 1-2-5 series so greedy is optimal. The sheet is **advice,
+  not a drawer count** — nothing in the app tracks what is physically in the till, so the seller
+  adjusts.
+
+Every sale is one `PosSale` written as it happens, with its lines (`PosSaleLine` — label and unit
+price **snapshotted**, so history still reads after the template is re-priced; `elementId` null for
+a custom sale) and, cash only, its `PosSaleChange` sheet. **The client's arithmetic is never
+trusted**: the server re-reads every line, recomputes the total in integer rappen, and refuses a
+cash sale where less than the total was given. `total`, `cashGiven` and `changeDue` may all be
+negative or zero — an all-refund sale is money going *out* of the drawer, recorded like any other.
+
+**A sale does not move stock yet** — that is a later part of this chain and needs a stock place a
+session does not carry.

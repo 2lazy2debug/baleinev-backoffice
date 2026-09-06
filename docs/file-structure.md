@@ -77,11 +77,38 @@ app/
 │   │                                permission and edition guards, denomination parsing, the
 │   │                                one-transaction write. Closing is not idempotent
 │   │
-│   ├── pos/                     ← Point of sale. `page.tsx` redirects to `/pos/templates` until
-│   │   │                            104 adds the real home. Edition-scoped, admin-only
+│   ├── pos/                     ← Point of sale. `page.tsx` is the till itself; `templates/` is the
+│   │   │                            admin-only layout editor. Edition-scoped
+│   │   ├── page.tsx              ← Data-fetching only. No edition → `<EmptyPage>`; no template →
+│   │   │                            `<EmptyPage>` for an admin to build one; no session joined →
+│   │   │                            `<SessionPicker>`; joined → `<Till>` with the template's cells
+│   │   │                            as rappen. Header carries the sessions manager and, for admins,
+│   │   │                            a link to templates. Any signed-in user
+│   │   ├── session-actions.ts    ← The selling side, kept apart from the admin-only `actions.ts`:
+│   │   │                            `openPosSessionAction` / `joinPosSessionAction` /
+│   │   │                            `leavePosSessionAction` / `setPosSessionStatusAction` /
+│   │   │                            `recordPosSaleAction`. Every write `getCurrentUserAccess()` +
+│   │   │                            `resolveWritableEditionId()`; the sale recomputes the total in
+│   │   │                            rappen, stores the greedy change sheet, forces cash fields null
+│   │   │                            on non-cash. Closing a session clears every seller's selection
+│   │   ├── open-session-modal.tsx ← Header button + modal (the standard create shape): name,
+│   │   │                            template, payment-method checkboxes; the register `<Select>`
+│   │   │                            appears only once Cash is ticked. Shared by picker and manager
+│   │   ├── session-picker.tsx    ← The "no session joined" screen, in the `StockPlacePicker` shape:
+│   │   │                            a card per running session with a Join button, plus the open button
+│   │   ├── sessions-modal.tsx    ← The "list icon" sessions manager: every running session with
+│   │   │                            join / pause-resume / close (close confirmed, copy says nothing
+│   │   │                            is booked to the journal). Holds the open-session button too
+│   │   ├── till.tsx              ← The selling screen. Client-side cart (nothing written until
+│   │   │                            checkout), running total, 3×3 grid + pager, custom-sale modal,
+│   │   │                            a List modal with +/−/bin, and a checkout modal that shows the
+│   │   │                            live change sheet from `makeChange()` for a cash sale
+│   │   ├── pos-methods.ts        ← `PosMethod`, `orderMethods()`, `methodLabel()` — shared by the
+│   │   │                            client screens so method order and labels never drift
 │   │   ├── actions.ts            ← `createPosTemplateAction` / `renamePosTemplateAction` /
-│   │   │                            `deletePosTemplateAction` / `setPosTemplateCellAction` (an
-│   │   │                            upsert on `(templateId, position)`) / `clearPosTemplateCellAction`.
+│   │   │                            `deletePosTemplateAction` (refuses a template a session has used) /
+│   │   │                            `setPosTemplateCellAction` (an upsert on `(templateId, position)`) /
+│   │   │                            `clearPosTemplateCellAction`.
 │   │   │                            Each `requireAdmin()` + `resolveWritableEditionId()` and
 │   │   │                            re-checks the template is in the edition. Prices take a comma
 │   │   │                            decimal and allow negatives and zero
@@ -335,7 +362,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `open-food-facts.ts` | `fetchProductByBarcode()` — what a scanned EAN says about a product (name, brand, size of one piece), from the open catalogue keyed by that code. The name is read `fr` → `en` → `de` → generic, one fixed order for everyone, since the item it fills in is shared. Server-only, best-effort: a miss, a timeout or a half-empty product all mean "type the rest yourself" |
 | `addresses.ts` | `addressDisplayName()` / `addressNameBlock()` / `addressPersonName()` / `formatPhone()` / `formatPostalLine()` and `DEFAULT_COUNTRY`. Import-free on purpose — the table, the pickers and the actions all read the same rules without dragging Prisma into a browser bundle |
 | `articles.ts` | `elementFieldsFrom()` / `assertBarcodeFree()` — the `StockElement` fields both writing forms post (articles' own dialog, and the stock app's "new item" half) and the "one barcode, one article" check, shared so the two paths cannot drift |
-| `cash.ts` | `CASH_DENOMINATIONS` (the twelve Swiss denominations, rappen, largest first), `POS_PAGE_SLOTS` (`8` — article tiles per POS grid page, the ninth being the drawn "custom sale"), plus `toRappen()` / `fromRappen()` / `formatDenomination()` / `countTotal()`. Every amount in the cash and POS apps is integer rappen; this is where the conversion, the denomination list and the grid constant live so nothing downstream re-derives them. Import-free |
+| `cash.ts` | `CASH_DENOMINATIONS` (the twelve Swiss denominations, rappen, largest first), `POS_PAGE_SLOTS` (`8` — article tiles per POS grid page, the ninth being the drawn "custom sale"), plus `toRappen()` / `fromRappen()` / `formatDenomination()` / `countTotal()` / `makeChange()` (greedy Swiss change, largest first — the 1-2-5 set makes greedy optimal). Every amount in the cash and POS apps is integer rappen; this is where the conversion, the denomination list and the grid constant live so nothing downstream re-derives them. Import-free |
 | `city-book.ts` | `rememberCity()` — files a postal code / locality pair the user actually saved, so the seeded Swiss list grows into whatever the address book turns out to need |
 | `countries.ts` | `countryOptions(locale)` / `countryName()` — countries and international dialling prefixes from libphonenumber-js + `Intl.DisplayNames`. Built on the server and passed down as props; the phone metadata has no business in a browser bundle that only needs "+41" |
 | `db.ts` | Singleton Prisma client (re-used across hot reloads in dev) |
