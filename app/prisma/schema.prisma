@@ -60,6 +60,11 @@ enum TaskStatus {
   DONE
 }
 
+enum CashCountKind {
+  OPENING
+  CLOSING
+}
+
 model User {
   id                   String   @id @default(cuid())
   email                String   @unique
@@ -113,6 +118,8 @@ model User {
   assignedTodos           Todo[]                  @relation("TodoAssignee")
   createdPasswordEntries  PasswordEntry[]         @relation("PasswordEntryCreatedBy")
   stockMovements          StockMovement[]         @relation("StockMovementCreatedBy")
+  cashRegistersOpened     CashRegister[]          @relation("CashRegisterOpenedBy")
+  cashRegistersClosed     CashRegister[]          @relation("CashRegisterClosedBy")
 
   @@index([selectedEditionId])
   @@index([selectedStockPlaceId])
@@ -195,6 +202,7 @@ model Edition {
   appointments   Appointment[]
   todos          Todo[]
   tasks          Task[]
+  cashRegisters  CashRegister[]
 }
 
 /// One named envelope of money inside one edition — what used to be a
@@ -251,6 +259,7 @@ model MoneyAccount {
   edition        Edition        @relation(fields: [editionId], references: [id], onDelete: Cascade)
   invoices       Invoice[]
   journalEntries JournalEntry[]
+  cashRegisters  CashRegister[]
 
   @@unique([editionId, name])
 }
@@ -821,4 +830,47 @@ model StockMovement {
   @@index([stockPlaceId, createdAt])
   @@index([elementId])
   @@index([createdAt])
+}
+
+/// One till, opened on one cash account, for one stretch of work.
+///
+/// It holds two counts and no amounts of its own: the float that went in and
+/// what came back out, each as a sheet of denominations. Counting is not
+/// booking — the journal entries a closed register produces are written later,
+/// by an admin, from the two counts and what the POS sold.
+model CashRegister {
+  id             String    @id @default(cuid())
+  editionId      String
+  moneyAccountId String
+  name           String
+  openedById     String?
+  openedAt       DateTime  @default(now())
+  closedById     String?
+  closedAt       DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  edition      Edition      @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  moneyAccount MoneyAccount @relation(fields: [moneyAccountId], references: [id], onDelete: Restrict)
+  openedBy     User?        @relation("CashRegisterOpenedBy", fields: [openedById], references: [id], onDelete: SetNull)
+  closedBy     User?        @relation("CashRegisterClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
+  counts       CashCount[]
+
+  @@index([editionId, moneyAccountId])
+  @@index([editionId, closedAt])
+}
+
+/// How many of one denomination were counted, at one end of a register's life.
+/// `denomination` is rappen — 5 for a five-centime coin, 20000 for a 200 note.
+model CashCount {
+  id           String        @id @default(cuid())
+  registerId   String
+  kind         CashCountKind
+  denomination Int
+  quantity     Int
+
+  register CashRegister @relation(fields: [registerId], references: [id], onDelete: Cascade)
+
+  @@unique([registerId, kind, denomination])
+  @@index([registerId])
 }
