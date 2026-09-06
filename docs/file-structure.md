@@ -85,10 +85,11 @@ app/
 │   │   ├── page.tsx              ← Three screens in one route: nothing to work with yet, the
 │   │   │                            one-time stock picker, and the contents of the stock this
 │   │   │                            user last opened (global, any signed-in user)
-│   │   ├── client.tsx            ← The contents: table above `sm`, tight cardlets below, and the
-│   │   │                            entry controls — +/- straight to the server, or the edit button
-│   │   │                            to unlock the count *and* the expiry date and save the recount
-│   │   │                            as one movement
+│   │   ├── client.tsx            ← Owns the page header (like passwords' client) with the search
+│   │   │                            field both breakpoints read, plus the contents: table above
+│   │   │                            `sm`, tight cardlets below, and the entry controls — +/-
+│   │   │                            straight to the server, or the edit button to unlock the count
+│   │   │                            *and* the expiry date and save the recount as one movement
 │   │   ├── add-stock-modal.tsx   ← Header button + "new entry" modal; can invent the item it is
 │   │   │                            stocking, in the same submission. The scan button opens the
 │   │   │                            camera in place of this form: a known code selects its item,
