@@ -11,7 +11,7 @@ the other subplans — not reading them is the entire point of the split.
 
 | # | Subplan | What it delivers | Needs |
 |---|---|---|---|
-| 101 | [Articles app](101-articles-app.md) | The catalogue leaves `/stock/items` and becomes its own `/articles` app, with a `tracksStock` flag | — |
+| 101 | [Articles app](done/101-articles-app.md) ✅ | The catalogue leaves `/stock/items` and becomes its own `/articles` app, with a `tracksStock` flag | — |
 | 102 | [Cash registers](102-cash-registers.md) | Open a till on a cash account with a counted float, close it with a counted count. No journal writes. | — |
 | 103 | [POS templates](103-pos-templates.md) | A 3x3 paginated grid of articles and prices, saved as a reusable template | 101 |
 | 104 | [POS sessions & selling](104-pos-sessions.md) | Open/pause/close a session, sell from the grid, take cash or Twint or bank, compute change, record every sale | 102, 103 |
@@ -22,6 +22,8 @@ the other subplans — not reading them is the entire point of the split.
 **The chain is 101 → 102 → 103 → 104 → {105, 106, 107}.** 101 and 102 are
 independent of each other and may be done in either order. 105, 106 and 107 are
 independent of each other and may be done in any order once 104 has landed.
+
+**Done so far:** 101 (shipped in v0.34.0).
 
 ---
 
@@ -183,9 +185,23 @@ what you shipped. The full tag vocabulary is in `docs/production.md`.
 
 ---
 
+## Marking a subplan done
+
+**A subplan is done the moment it has shipped its release.** Do not wait for the
+whole chain. When a subplan lands:
+
+1. Add a `> **Done** — shipped in <tag> on <date>.` line directly under its H1.
+2. `git mv docs/plans/<n>-<name>.md docs/plans/done/`, keeping the name.
+3. Update **Done so far** above, and tick the subplan's row hint in the table if
+   you want the master to read at a glance.
+4. Fix the relative links: a subplan in `done/` points back at the master as
+   `../100-cash-manager-pos.md`, and the master's table points into
+   `done/<n>-<name>.md`. Run a quick grep for the moved name so nothing dangles.
+5. Commit that move on its own: `git commit -m "docs(plans): move <n> to done"`.
+
 ## When the chain is done
 
-Move this file and all seven subplans into `docs/plans/done/`, keeping their
-names. `015-cash-manager.md` is the original single-file draft, kept for
-comparison — move it too, and do not treat it as a source of truth where it and
-this chain disagree.
+Move this file into `docs/plans/done/` too, keeping its name. `015-cash-manager.md`
+is the original single-file draft, kept for comparison — move it as well, and do
+not treat it as a source of truth where it and this chain disagree. By this point
+every subplan should already be in `done/` by the rule above.
