@@ -8,6 +8,15 @@
  */
 export const CASH_DENOMINATIONS = [20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50, 20, 10, 5] as const;
 
+/**
+ * Article slots on one POS grid page. The grid is 3x3 = 9 tiles and the
+ * bottom-right one is always "custom sale", drawn by the renderer and never
+ * stored — that leaves eight. A cell's `position` is a 0-based slot index
+ * across the whole template: `page = Math.floor(position / POS_PAGE_SLOTS)`,
+ * `slot = position % POS_PAGE_SLOTS`. Import it; never hardcode the 8.
+ */
+export const POS_PAGE_SLOTS = 8;
+
 export type DenominationCount = { denomination: number; quantity: number };
 
 /** A `Decimal(10,2)` (or anything with toString) as whole rappen. */
