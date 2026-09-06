@@ -1,7 +1,7 @@
 
 import { getCurrentUserAccess, isAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
-import { budgetingDepartments } from "@/lib/departments";
+import { editionBudgets, resolveDefaultBudgetForDepartment } from "@/lib/budgets";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
@@ -31,7 +31,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
       journalEntries: {
         orderBy: [{ sequenceNumber: "asc" }],
         include: {
-          department: { select: { name: true } },
+          budget: { select: { name: true } },
           moneyAccount: { select: { name: true } },
           costCenter: { select: { code: true } },
           linkedInvoice: { select: { id: true, invoiceNumber: true } },
@@ -40,8 +40,8 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
     },
   }) : null;
 
-  // Departments are global; the journal offers the ones that budget.
-  const departments = activeEdition ? await budgetingDepartments() : [];
+  // The journal books against a budget; the picker offers every budget of the edition.
+  const budgets = activeEdition ? await editionBudgets(activeEdition.id) : [];
 
   if (!activeEdition) {
     return (
@@ -66,6 +66,10 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
         description: true,
       },
     })
+    : null;
+
+  const prefillBudgetId = prefillExpenseReport
+    ? await resolveDefaultBudgetForDepartment(activeEdition.id, prefillExpenseReport.departmentId)
     : null;
 
   // Calculate account balances including opening balances
@@ -97,7 +101,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
         activeEdition={{
           id: activeEdition.id,
           name: activeEdition.name,
-          departments,
+          budgets,
             moneyAccounts: activeEdition.moneyAccounts.map((account) => ({
               id: account.id,
               name: account.name,
@@ -108,7 +112,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
             id: entry.id,
             sequenceNumber: entry.sequenceNumber,
             date: entry.date,
-            department: entry.department,
+            budget: entry.budget,
             accountType: entry.accountType,
             amount: entry.amount.toString(),
             label: entry.label,
@@ -118,7 +122,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
             isOpeningEntry: entry.isOpeningEntry,
             moneyAccountId: entry.moneyAccountId,
             linkedInvoice: entry.linkedInvoice,
-            departmentId: entry.departmentId ?? null,
+            budgetId: entry.budgetId ?? null,
             costCenterId: entry.costCenterId ?? null,
           })),
         }}
@@ -127,7 +131,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
         isAdmin={isAdmin(access)}
         expensePrefill={prefillExpenseReport ? {
           expenseReportId: prefillExpenseReport.id,
-          departmentId: prefillExpenseReport.departmentId,
+          budgetId: prefillBudgetId,
           date: prefillExpenseReport.date.toISOString().slice(0, 10),
           amount: decimalToNumber(prefillExpenseReport.amount).toFixed(2),
           label: prefillExpenseReport.description,

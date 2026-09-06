@@ -21,6 +21,20 @@ export function visibleBudgetsWhere(access: AccessContext, editionId: string): P
 }
 
 /**
+ * Every budget of an edition, `id` and `name`, ordered by name — the options a
+ * journal entry is booked against. The journal shows every entry of the edition
+ * to everyone and only admins may write one, so the picker offers the whole
+ * list, not the `visibleBudgetsWhere` subset.
+ */
+export async function editionBudgets(editionId: string) {
+  return prisma.budget.findMany({
+    where: { editionId },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+}
+
+/**
  * Refuses a journal entry booked against a budget that belongs to another
  * edition. The foreign key only says the budget exists; this says it is the
  * active edition's.
