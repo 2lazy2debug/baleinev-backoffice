@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import { Button, Card, Field, IconButton, Input, Modal, Select } from "@/components/ui";
+import { Button, Card, Field, IconButton, Input, Modal, Select, cn } from "@/components/ui";
 import { POS_PAGE_SLOTS } from "@/lib/cash";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
@@ -36,14 +36,48 @@ type Props = {
 const SET_FORM_ID = "pos-cell-form";
 const CLEAR_FORM_ID = "pos-cell-clear-form";
 
-/** The tile surface — dashed while empty, solid once filled. Reuses <Card> so
- *  no screen re-invents the dashed border (see the design rules). */
-function Tile({ dashed, className, children }: { dashed: boolean; className?: string; children: React.ReactNode }) {
+/**
+ * The tile surface — dashed while empty, solid once filled. Reuses <Card> so no
+ * screen re-invents the dashed border (see the design rules). With `onActivate`
+ * it is a `role="button"` target (a real <button> may not wrap the <div> a Card
+ * renders); without it, static — the read-only editor and the custom-sale tile.
+ */
+function Tile({
+  dashed,
+  onActivate,
+  label,
+  className,
+  children,
+}: {
+  dashed: boolean;
+  onActivate?: () => void;
+  label?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
   return (
     <Card
       as="div"
       dashed={dashed}
-      className={`flex h-full min-h-24 flex-col items-center justify-center gap-1 p-2 text-center sm:p-3 ${className ?? ""}`}
+      role={onActivate ? "button" : undefined}
+      tabIndex={onActivate ? 0 : undefined}
+      aria-label={onActivate ? label : undefined}
+      onClick={onActivate}
+      onKeyDown={
+        onActivate
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onActivate();
+              }
+            }
+          : undefined
+      }
+      className={cn(
+        "flex h-full min-h-24 flex-col items-center justify-center gap-1 p-2 text-center sm:p-3",
+        onActivate && "cursor-pointer transition hover:border-[var(--accent)]",
+        className,
+      )}
     >
       {children}
     </Card>
@@ -165,23 +199,15 @@ export function GridEditor({ locale, templateId, cells, articles, isReadOnly }: 
             </>
           );
 
-          if (isReadOnly) {
-            return (
-              <Tile key={position} dashed={!cell}>
-                {body}
-              </Tile>
-            );
-          }
-
           return (
-            <button
+            <Tile
               key={position}
-              type="button"
-              onClick={() => setEditing({ position, cell })}
-              className="rounded-2xl text-left transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+              dashed={!cell}
+              label={cell ? `${cell.label} — ${copy.editTile}` : copy.addTile}
+              onActivate={isReadOnly ? undefined : () => setEditing({ position, cell })}
             >
-              <Tile dashed={!cell}>{body}</Tile>
-            </button>
+              {body}
+            </Tile>
           );
         })}
       </div>
