@@ -542,7 +542,7 @@ export const dictionaries = {
       abbreviation: "Abbreviation",
       abbreviationOptional: "Abbreviation (optional)",
       hasBudget: "Has a budget",
-      hasBudgetHint: "A department with a budget gets budget lines and journal entries, one set per edition.",
+      hasBudgetHint: "Lets this department be attached to budgets, so its team can see them.",
       budget: "Budget",
       // The table has a Budget column, so its cell answers it; a cardlet badge
       // stands on its own and has to name what it is.
@@ -1376,7 +1376,7 @@ export const dictionaries = {
       abbreviation: "Abréviation",
       abbreviationOptional: "Abréviation (optionnel)",
       hasBudget: "Dispose d'un budget",
-      hasBudgetHint: "Un département avec budget reçoit des lignes budgétaires et des écritures, un jeu par exercice.",
+      hasBudgetHint: "Permet de rattacher ce département à des budgets, pour que son équipe les voie.",
       budget: "Budget",
       budgetYes: "Oui",
       budgetNo: "Non",

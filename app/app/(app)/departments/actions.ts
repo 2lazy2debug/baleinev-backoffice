@@ -61,8 +61,8 @@ export async function createDepartmentAction(_prevState: ActionState, formData: 
 
     await assertNameIsFree(name);
 
-    // No `DepartmentBudget` is written here even with `hasBudget` on: the budget
-    // row opens in the edition where the first line is actually planned.
+    // `hasBudget` only says the department may be attached to budgets; the
+    // budgets themselves are created by hand in the budget app.
     await prisma.department.create({ data: { name, abbreviation, hasBudget } });
 
     revalidateDepartments();
@@ -89,19 +89,19 @@ export async function updateDepartmentAction(_prevState: ActionState, formData: 
 
     await assertNameIsFree(name, departmentId);
 
-    // Turning a budget off is the one edit that can destroy something, so it is
-    // refused while any edition's budget still holds lines or entries.
+    // Turning the flag off detaches the department from every budget. It moves
+    // no money, but it is still refused while one of those budgets holds lines
+    // or entries — that would hide live money from the team.
     if (department.hasBudget && !hasBudget) {
       const usage = await departmentBudgetUsage(departmentId);
 
       if (usage.isUsed) {
         throw new Error(
-          "This department already has budget lines or journal entries. Its budget cannot be turned off.",
+          "This department is attached to a budget that holds lines or journal entries. Detach it there first.",
         );
       }
 
-      // Only empty budgets are left to remove.
-      await prisma.departmentBudget.deleteMany({ where: { departmentId } });
+      await prisma.budgetDepartment.deleteMany({ where: { departmentId } });
     }
 
     await prisma.department.update({
