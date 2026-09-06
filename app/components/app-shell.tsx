@@ -10,6 +10,7 @@ import {
   FileBadge,
   FileStack,
   Home,
+  Coins,
   KeyRound,
   Landmark,
   Boxes,
@@ -67,6 +68,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
   );
 
   const moneyAccountsItem: NavigationItem = { type: "item", href: "/money-accounts", label: copy.moneyAccounts, icon: Landmark };
+  const cashRegisterItem: NavigationItem = { type: "item", href: "/cash", label: copy.cash, icon: Coins };
 
   const adminNavigation: NavigationItem[] = [
     { type: "item", href: "/", label: copy.dashboard, icon: Home },
@@ -79,6 +81,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
     { type: "item", href: "/expense-reports", label: copy.expenseReports, icon: ReceiptText },
     { type: "item", href: "/invoices", label: copy.invoices, icon: FileBadge },
     { type: "item", href: "/cost-centers", label: copy.costCenters, icon: Target },
+    cashRegisterItem,
     { type: "divider", key: "d2" },
     { type: "item", href: "/addresses", label: copy.addresses, icon: Contact },
     { type: "item", href: "/articles", label: copy.articles, icon: Tags },
@@ -98,7 +101,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
     { type: "item", href: "/budget", label: copy.budget, icon: Wallet },
     { type: "item", href: "/expense-reports", label: copy.expenseReports, icon: ReceiptText },
     { type: "item", href: "/events", label: copy.events, icon: Target },
-    ...(canManageMoneyAccounts ? [moneyAccountsItem] : []),
+    ...(canManageMoneyAccounts ? [moneyAccountsItem, cashRegisterItem] : []),
     { type: "divider", key: "dept-d2" },
     { type: "item", href: "/addresses", label: copy.addresses, icon: Contact },
     { type: "item", href: "/stock", label: copy.stock, icon: Boxes },
