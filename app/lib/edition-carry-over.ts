@@ -7,9 +7,9 @@ export const CARRY_OVER_LABEL = "Report édition précédente";
 
 /**
  * Brings an edition's structure, budget and closing balances into another
- * edition: department budgets with their lines, cost centers and money
- * accounts, plus one locked opening entry per account that does not close at
- * zero.
+ * edition: budgets with their lines and department attachments, cost centers
+ * and money accounts, plus one locked opening entry per account that does not
+ * close at zero.
  *
  * A year's budget is mostly last year's budget with different amounts, so it is
  * copied verbatim — the admin edits the numbers afterwards rather than typing
@@ -30,7 +30,7 @@ export async function carryOverEdition(
   const source = await tx.edition.findUnique({
     where: { id: sourceEditionId },
     include: {
-      departmentBudgets: { include: { budgetLines: true } },
+      budgets: { include: { budgetLines: true, departments: true } },
       costCenters: true,
       moneyAccounts: { include: { journalEntries: true } },
     },
@@ -40,20 +40,26 @@ export async function carryOverEdition(
     throw new Error("The edition to bring data over from was not found.");
   }
 
-  for (const budget of source.departmentBudgets) {
+  for (const budget of source.budgets) {
     if (budget.budgetLines.length === 0) {
       continue;
     }
 
-    // The department itself is edition-independent and already exists — what
-    // carries over is its budget for the new edition.
-    const carried = await tx.departmentBudget.create({
-      data: { editionId: targetEditionId, departmentId: budget.departmentId },
+    // The departments are edition-independent and already exist — what carries
+    // over is the budget itself, its name, and which departments watch it.
+    const carried = await tx.budget.create({
+      data: {
+        editionId: targetEditionId,
+        name: budget.name,
+        departments: {
+          create: budget.departments.map((attachment) => ({ departmentId: attachment.departmentId })),
+        },
+      },
     });
 
     await tx.budgetLine.createMany({
       data: budget.budgetLines.map((line) => ({
-        departmentBudgetId: carried.id,
+        budgetId: carried.id,
         accountType: line.accountType,
         // Free text from the workbook ("Septembre", …), not a dated value, so
         // it stays true in the new edition.

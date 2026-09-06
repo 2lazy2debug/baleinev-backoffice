@@ -12,7 +12,7 @@ export default async function EditionsPage() {
     orderBy: { name: "asc" },
     include: {
       _count: {
-        select: { departmentBudgets: true, moneyAccounts: true, costCenters: true, journalEntries: true },
+        select: { budgets: true, moneyAccounts: true, costCenters: true, journalEntries: true },
       },
     },
   });

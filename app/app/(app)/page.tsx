@@ -24,15 +24,14 @@ export default async function DashboardPage() {
   const activeEdition = editionId ? await prisma.edition.findUnique({
     where: { id: editionId },
     include: {
-      departmentBudgets: {
-        orderBy: { department: { name: "asc" } },
-        include: { department: { select: { id: true, name: true } }, budgetLines: true },
+      budgets: {
+        orderBy: { name: "asc" },
+        include: { budgetLines: true, journalEntries: true },
       },
       moneyAccounts: {
         orderBy: { name: "asc" },
         include: { journalEntries: true },
       },
-      journalEntries: true,
     },
   }) : null;
 
@@ -44,7 +43,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const departmentRows = activeEdition.departmentBudgets.map((budget) => {
+  const departmentRows = activeEdition.budgets.map((budget) => {
     const budgetCharges = sumAmounts(
       budget.budgetLines.filter((line) => line.accountType === AccountType.CHARGES),
     );
@@ -52,18 +51,14 @@ export default async function DashboardPage() {
       budget.budgetLines.filter((line) => line.accountType === AccountType.PRODUITS),
     );
     const actualCharges = sumAmounts(
-      activeEdition.journalEntries.filter(
-        (entry) => entry.departmentId === budget.departmentId && entry.accountType === AccountType.CHARGES,
-      ),
+      budget.journalEntries.filter((entry) => entry.accountType === AccountType.CHARGES),
     );
     const actualProduits = sumAmounts(
-      activeEdition.journalEntries.filter(
-        (entry) => entry.departmentId === budget.departmentId && entry.accountType === AccountType.PRODUITS,
-      ),
+      budget.journalEntries.filter((entry) => entry.accountType === AccountType.PRODUITS),
     );
 
     return {
-      name: budget.department.name,
+      name: budget.name,
       budgetCharges,
       budgetProduits,
       budgetResult: budgetProduits - budgetCharges,
@@ -124,7 +119,7 @@ export default async function DashboardPage() {
         <Table frame={false} className="min-w-full">
             <THead>
               <TR>
-                <TH>{copy.dashboard.department}</TH>
+                <TH>{copy.dashboard.budget}</TH>
                 <TH>{copy.dashboard.budgetCharges}</TH>
                 <TH>{copy.dashboard.budgetProduits}</TH>
                 <TH>{copy.dashboard.budgetResult}</TH>
