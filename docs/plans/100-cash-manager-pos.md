@@ -12,7 +12,7 @@ the other subplans — not reading them is the entire point of the split.
 | # | Subplan | What it delivers | Needs |
 |---|---|---|---|
 | 101 | [Articles app](done/101-articles-app.md) ✅ | The catalogue leaves `/stock/items` and becomes its own `/articles` app, with a `tracksStock` flag | — |
-| 102 | [Cash registers](102-cash-registers.md) | Open a till on a cash account with a counted float, close it with a counted count. No journal writes. | — |
+| 102 | [Cash registers](done/102-cash-registers.md) ✅ | Open a till on a cash account with a counted float, close it with a counted count. No journal writes. | — |
 | 103 | [POS templates](103-pos-templates.md) | A 3x3 paginated grid of articles and prices, saved as a reusable template | 101 |
 | 104 | [POS sessions & selling](104-pos-sessions.md) | Open/pause/close a session, sell from the grid, take cash or Twint or bank, compute change, record every sale | 102, 103 |
 | 105 | [Session history](105-pos-session-history.md) | The read side: what each session sold, by payment method, with the change handed back | 104 |
@@ -23,7 +23,7 @@ the other subplans — not reading them is the entire point of the split.
 independent of each other and may be done in either order. 105, 106 and 107 are
 independent of each other and may be done in any order once 104 has landed.
 
-**Done so far:** 101 (shipped in v0.34.0).
+**Done so far:** 101 (v0.34.0), 102 (v0.35.0).
 
 ---
 
