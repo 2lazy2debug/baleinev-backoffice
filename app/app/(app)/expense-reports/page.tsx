@@ -92,7 +92,7 @@ export default async function ExpenseReportsPage() {
                 uploadProof: copy.expenseReports.uploadProof,
                 noProofRequired: copy.expenseReports.noProofRequired,
                 department: copy.expenseReports.department,
-                selectDepartment: copy.journal.selectDepartment,
+                selectDepartment: copy.expenseReports.selectDepartment,
               }}
             />
           </WritableEditionOnly>
