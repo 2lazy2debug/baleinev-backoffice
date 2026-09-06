@@ -41,8 +41,8 @@ type JournalEntry = {
   id: string;
   sequenceNumber: number;
   date: Date;
-  department: { name: string } | null;
-  departmentId: string | null;
+  budget: { name: string } | null;
+  budgetId: string | null;
   accountType: "CHARGES" | "PRODUITS";
   amount: string;
   label: string;
@@ -60,7 +60,7 @@ type JournalTableProps = {
   accountBalances: Record<string, number>;
   accountOpeningBalances: Record<string, number>;
   locale: Locale;
-  departments: Array<{ id: string; name: string }>;
+  budgets: Array<{ id: string; name: string }>;
   moneyAccounts: Array<{ id: string; name: string }>;
   costCenters: Array<{ id: string; code: string }>;
   /** Admins only — bulk edit rewrites the whole ledger in one go. */
@@ -70,7 +70,7 @@ type JournalTableProps = {
 /** The seven fields the journal is edited by, inline or in bulk. */
 type EntryDraft = {
   date: string;
-  departmentId: string;
+  budgetId: string;
   accountType: string;
   amount: string;
   label: string;
@@ -87,7 +87,7 @@ function typeLabel(type: string, locale: Locale) {
 function draftFromEntry(entry: JournalEntry): EntryDraft {
   return {
     date: entry.date.toISOString().slice(0, 10),
-    departmentId: entry.departmentId ?? "",
+    budgetId: entry.budgetId ?? "",
     accountType: entry.accountType,
     amount: Number(entry.amount).toFixed(2),
     label: entry.label,
@@ -101,14 +101,14 @@ function isDirty(entry: JournalEntry, draft: EntryDraft) {
   return (Object.keys(stored) as Array<keyof EntryDraft>).some((field) => stored[field] !== draft[field]);
 }
 
-export function JournalTable({ entries, accountBalances, accountOpeningBalances, locale, departments, moneyAccounts, costCenters, canBulkEdit }: JournalTableProps) {
+export function JournalTable({ entries, accountBalances, accountOpeningBalances, locale, budgets, moneyAccounts, costCenters, canBulkEdit }: JournalTableProps) {
   const copy = dictionaries[locale].journal;
   const shellCopy = dictionaries[locale].shell;
 
   const [filters, setFilters] = useState<Record<string, string>>({
     sequenceNumber: "",
     date: "",
-    department: "",
+    budget: "",
     type: "",
     amount: "",
     label: "",
@@ -202,7 +202,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
     if (filters.date && !entry.date.toISOString().slice(0, 10).includes(filters.date)) {
       return false;
     }
-    if (filters.department && entry.department?.name && !entry.department.name.toLowerCase().includes(filters.department.toLowerCase())) {
+    if (filters.budget && entry.budget?.name && !entry.budget.name.toLowerCase().includes(filters.budget.toLowerCase())) {
       return false;
     }
     if (filters.type && !entry.accountType.toLowerCase().includes(filters.type.toLowerCase())) {
@@ -242,9 +242,9 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
         aVal = a.date.getTime();
         bVal = b.date.getTime();
         break;
-      case "department":
-        aVal = a.department?.name ?? "";
-        bVal = b.department?.name ?? "";
+      case "budget":
+        aVal = a.budget?.name ?? "";
+        bVal = b.budget?.name ?? "";
         break;
       case "amount":
         aVal = Number(a.amount);
@@ -286,7 +286,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
 
     const formData = new FormData();
     formData.set("journalEntryId", editingId);
-    formData.set("departmentId", editDraft.departmentId);
+    formData.set("budgetId", editDraft.budgetId);
     formData.set("moneyAccountId", editDraft.moneyAccountId);
     formData.set("accountType", editDraft.accountType);
     formData.set("date", editDraft.date);
@@ -359,7 +359,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
     setEditDraft((current) => (current ? { ...current, ...patch } : current));
   }
 
-  const uniqueDepartments = [...new Set(entries.map((e) => e.department?.name).filter(Boolean))];
+  const uniqueBudgets = [...new Set(entries.map((e) => e.budget?.name).filter(Boolean))];
   const uniqueAccounts = [...new Set(entries.map((e) => e.moneyAccount.name))];
   const uniqueCostCenters = [...new Set(entries.map((e) => e.costCenter?.code).filter(Boolean))];
 
@@ -369,7 +369,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   const rows = sortedEntries.map((entry) => ({
     entry,
     dateLabel: entry.date.toISOString().slice(0, 10),
-    departmentName: entry.department?.name ?? "-",
+    budgetName: entry.budget?.name ?? "-",
     typeText: typeLabel(entry.accountType, locale),
     isProduits: entry.accountType === "PRODUITS",
     amountLabel: formatCurrency(Number(entry.amount.toString())),
@@ -446,8 +446,8 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
               <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("date")}>
                 {copy.date}
               </TH>
-              <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("department")}>
-                {copy.department}
+              <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("budget")}>
+                {copy.budget}
               </TH>
               <TH>{copy.type}</TH>
               <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("amount")}>
@@ -472,14 +472,14 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
               </TH>
               <TH>
                 <Select
-                  value={filters.department}
-                  onChange={(e) => handleFilterChange("department", e.target.value)}
+                  value={filters.budget}
+                  onChange={(e) => handleFilterChange("budget", e.target.value)}
                   size="sm"
                 >
                   <option value="">{copy.all}</option>
-                  {uniqueDepartments.map((dept) => (
-                    <option key={dept} value={dept}>
-                      {dept}
+                  {uniqueBudgets.map((budgetName) => (
+                    <option key={budgetName} value={budgetName}>
+                      {budgetName}
                     </option>
                   ))}
                 </Select>
@@ -575,15 +575,15 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                   <TD>
                     {draft ? (
                       <Select
-                        value={draft.departmentId}
-                        onChange={(e) => updateDraft(entry.id, { departmentId: e.target.value })}
+                        value={draft.budgetId}
+                        onChange={(e) => updateDraft(entry.id, { budgetId: e.target.value })}
                         size="sm"
                       >
                         <option value="">-</option>
-                        {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                        {budgets.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                       </Select>
                     ) : (
-                      row.departmentName
+                      row.budgetName
                     )}
                   </TD>
                   <TD>
@@ -797,14 +797,14 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                       <option value="PRODUITS">{dictionaries[locale].common.produits}</option>
                     </Select>
                   </CardletField>
-                  <CardletField label={copy.department} className="col-span-2">
+                  <CardletField label={copy.budget} className="col-span-2">
                     <Select
-                      value={draft.departmentId}
-                      onChange={(e) => updateDraft(row.entry.id, { departmentId: e.target.value })}
+                      value={draft.budgetId}
+                      onChange={(e) => updateDraft(row.entry.id, { budgetId: e.target.value })}
                       size="sm"
                     >
                       <option value="">-</option>
-                      {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                      {budgets.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                     </Select>
                   </CardletField>
                   <CardletField label={copy.account} className="col-span-2">
@@ -829,7 +829,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                 </CardletFields>
               ) : (
                 <CardletFields>
-                  <CardletField label={copy.department}>{row.departmentName}</CardletField>
+                  <CardletField label={copy.budget}>{row.budgetName}</CardletField>
                   <CardletField label={copy.account}>{row.entry.moneyAccount.name}</CardletField>
                   <CardletField label={copy.costCenter}>{row.costCenterCode}</CardletField>
                   <CardletField label={copy.counterpart}>{row.counterpart}</CardletField>
