@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
-import { Check, Minus, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowRightLeft, Check, Minus, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import {
@@ -27,6 +27,8 @@ import { type ActionState, initialActionState } from "@/lib/server-action-helper
 import { formatExpiry, formatPiece, formatTotal } from "@/lib/stock";
 
 import { adjustStockItemAction, removeStockItemAction, setStockItemQuantityAction } from "./actions";
+import type { StockPlaceOption } from "./stock-place-switcher";
+import { TransferStockModal } from "./transfer-stock-modal";
 
 export type StockRow = {
   id: string;
@@ -43,6 +45,8 @@ export type StockRow = {
 type Props = {
   locale: Locale;
   rows: StockRow[];
+  places: StockPlaceOption[];
+  currentPlaceId: string;
 };
 
 /** A shelf a month out or less is worth seeing before it is counted. */
@@ -71,7 +75,7 @@ function expiryTone(expireDate: string | null): "error" | "warning" | "neutral" 
  * being typed, and locking it again saves the whole correction as a single
  * movement, which is what a recount actually is.
  */
-export function StockClient({ locale, rows }: Props) {
+export function StockClient({ locale, rows, places, currentPlaceId }: Props) {
   const copy = dictionaries[locale].stock;
   const router = useRouter();
 
@@ -79,6 +83,8 @@ export function StockClient({ locale, rows }: Props) {
   // The row that is unlocked, and what is being typed into it: the count, and
   // the expiry date, which is as much a part of a lot as the number of pieces.
   const [editing, setEditing] = useState<{ id: string; quantity: string; expireDate: string } | null>(null);
+  const [transferring, setTransferring] = useState<StockRow | null>(null);
+  const destinations = places.filter((place) => place.id !== currentPlaceId);
 
   async function saveQuantity(previous: ActionState): Promise<ActionState> {
     if (!editing) {
@@ -216,6 +222,11 @@ export function StockClient({ locale, rows }: Props) {
             <Pencil />
           </IconButton>
         )}
+        {!draft && destinations.length > 0 ? (
+          <IconButton label={copy.transfer} onClick={() => setTransferring(row)}>
+            <ArrowRightLeft />
+          </IconButton>
+        ) : null}
         <form action={removeFormAction}>
           <input type="hidden" name="stockItemId" value={row.id} />
           <IconButton type="submit" tone="delete" label={copy.removeFromStock} disabled={isRemoving}>
@@ -277,7 +288,7 @@ export function StockClient({ locale, rows }: Props) {
 
       <Table frame={false} desktopOnly className="table-fixed">
         {/* The quantity column has to hold two 32px buttons and the count between
-            them, and the actions column two more; a column that shrinks under
+            them, and the actions column three more; a column that shrinks under
             them clips the last one. The item name takes whatever is left. */}
         <colgroup>
           <col />
@@ -285,7 +296,7 @@ export function StockClient({ locale, rows }: Props) {
           <col className="w-36" />
           <col className="w-40" />
           <col className="w-28" />
-          <col className="w-28" />
+          <col className="w-36" />
         </colgroup>
         <THead className="sticky top-0">
           <TR>
@@ -363,6 +374,14 @@ export function StockClient({ locale, rows }: Props) {
       {visible.length === 0 ? (
         <p className="py-6 text-sm text-[var(--muted)] sm:px-5">{rows.length === 0 ? copy.empty : copy.noMatch}</p>
       ) : null}
+
+      <TransferStockModal
+        key={transferring?.id ?? "none"}
+        locale={locale}
+        row={transferring}
+        destinations={destinations}
+        onClose={() => setTransferring(null)}
+      />
     </Panel>
   );
 }

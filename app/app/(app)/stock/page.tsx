@@ -135,6 +135,8 @@ export default async function StockPage() {
 
       <StockClient
         locale={locale}
+        places={options}
+        currentPlaceId={selected.id}
         rows={items.map((item) => ({
           id: item.id,
           name: item.element.name,
