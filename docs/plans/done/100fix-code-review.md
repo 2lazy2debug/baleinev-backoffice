@@ -1,7 +1,9 @@
 # 100fix — Code review of the cash-manager / POS chain
 
+> **Done** — every step applied and shipped in v0.41.0 on 2026-09-07.
+
 Review of the implementation of
-[100-cash-manager-pos.md](done/100-cash-manager-pos.md) and its seven subplans
+[100-cash-manager-pos.md](100-cash-manager-pos.md) and its seven subplans
 (101 → 107, shipped v0.34.0 → v0.40.0). This is a **code** review: schema,
 migrations, server actions, data flow and permission story. UI behaviour was not
 exercised and no tests were run.
@@ -45,7 +47,7 @@ mistake; they are gaps in individual steps.
 
 **Severity: must fix.** This is the only genuine hole found.
 
-[app/app/(app)/cash/page.tsx](../../app/app/(app)/cash/page.tsx) never calls
+[app/app/(app)/cash/page.tsx](../../../app/app/(app)/cash/page.tsx) never calls
 `requireMoneyAccountManager()`. It calls `getCurrentUserAccess()` only to compute
 `isAdmin(access)` for the booking button. `app/(app)/layout.tsx` guards
 *authentication*, not role.
@@ -85,7 +87,7 @@ Commit.
 
 107 step 2 said "export both `applyMovement` and the new function so the POS can
 call them inside its own transaction", and that is what
-[app/app/(app)/stock/actions.ts](../../app/app/(app)/stock/actions.ts) does —
+[app/app/(app)/stock/actions.ts](../../../app/app/(app)/stock/actions.ts) does —
 but that file starts with `"use server"`. In Next.js **every export of a
 `"use server"` module becomes a callable server-action endpoint**, reachable by
 action id with no authentication and no permission check inside it.
@@ -113,7 +115,7 @@ Commit.
 **Severity: should fix.**
 
 `deleteJournalEntryAction` in
-[app/app/(app)/journal/actions.ts:98](../../app/app/(app)/journal/actions.ts)
+[app/app/(app)/journal/actions.ts:98](../../../app/app/(app)/journal/actions.ts)
 refuses only opening entries and invoice-linked entries. It knows nothing about
 `cashRegisterId`, which 106 added.
 
@@ -157,7 +159,7 @@ Commit.
 
 `npm run check:i18n --dead` reports `pos.leaveSession` and `pos.noSessions` as
 orphaned, and the reason is real: `leavePosSessionAction`
-([session-actions.ts:156](../../app/app/(app)/pos/session-actions.ts)) is
+([session-actions.ts:156](../../../app/app/(app)/pos/session-actions.ts)) is
 implemented and tested but **no UI calls it**. Once a seller joins, the only ways
 back to the picker are joining another running session or having someone close
 theirs.
@@ -183,7 +185,7 @@ Commit.
 Each is a couple of lines; one commit for the lot is fine.
 
 1. **The count-sheet total has no label.** `Sheet()` in
-   [cash/client.tsx](../../app/app/(app)/cash/client.tsx) closes with a
+   [cash/client.tsx](../../../app/app/(app)/cash/client.tsx) closes with a
    `flex justify-between` row containing a *single* `<span>` — the total renders
    flush left with nothing beside it. `denomination-counter.tsx`'s footer does it
    correctly (`{copy.total}` then the amount); copy that shape.
@@ -246,4 +248,4 @@ Commit.
 
 Steps 1–3 are behaviour changes with no schema change; 4 and 5 are UI. One
 release at the end covering all of them, directive **`non-breaking`**, per the
-release protocol in [100-cash-manager-pos.md](done/100-cash-manager-pos.md).
+release protocol in [100-cash-manager-pos.md](100-cash-manager-pos.md).
