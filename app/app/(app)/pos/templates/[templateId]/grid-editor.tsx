@@ -1,12 +1,22 @@
 "use client";
 
-import { useActionState, useCallback, useState } from "react";
+import { useActionState, useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import { Button, Card, Field, IconButton, Input, Modal, Select, cn } from "@/components/ui";
+import {
+  Button,
+  Card,
+  Field,
+  IconButton,
+  Input,
+  Modal,
+  Suggest,
+  type SuggestOption,
+  cn,
+} from "@/components/ui";
 import { POS_PAGE_SLOTS } from "@/lib/cash";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
@@ -23,7 +33,7 @@ export type EditorCell = {
   price: string;
 };
 
-export type ArticleOption = { id: string; name: string };
+export type ArticleOption = { id: string; name: string; brand: string | null };
 
 type Props = {
   locale: Locale;
@@ -96,6 +106,20 @@ export function GridEditor({ locale, templateId, cells, articles, isReadOnly }: 
   const cellAt = new Map(cells.map((cell) => [cell.position, cell]));
   const articleName = new Map(articles.map((article) => [article.id, article.name]));
 
+  // The catalogue runs to hundreds of rows, so the picker is searched, not
+  // scrolled. It submits the article's `id`, never the text in the field: two
+  // articles can read the same name and only the brand tells them apart.
+  const articleOptions = useMemo<SuggestOption[]>(
+    () =>
+      articles.map((article) => ({
+        id: article.id,
+        value: article.name,
+        label: article.name,
+        hint: article.brand ?? undefined,
+      })),
+    [articles],
+  );
+
   // Pages come from the highest slot in use, not the tile count — a page may
   // have holes. One empty page past the last used one is always reachable:
   // paging right is how "add a page" works, so there is no button.
@@ -122,27 +146,46 @@ export function GridEditor({ locale, templateId, cells, articles, isReadOnly }: 
   // article-form-modal).
   const editingKey = editing ? `${editing.position}:${editing.cell?.id ?? "new"}` : null;
   const [formKey, setFormKey] = useState<string | null>(null);
-  const [form, setForm] = useState({ elementId: "", label: "", price: "" });
+  const [form, setForm] = useState({ elementId: "", articleQuery: "", label: "", price: "" });
 
   if (editingKey !== formKey) {
     setFormKey(editingKey);
     setForm(
       editing?.cell
-        ? { elementId: editing.cell.elementId, label: editing.cell.label, price: editing.cell.price }
-        : { elementId: "", label: "", price: "" },
+        ? {
+            elementId: editing.cell.elementId,
+            articleQuery: articleName.get(editing.cell.elementId) ?? "",
+            label: editing.cell.label,
+            price: editing.cell.price,
+          }
+        : { elementId: "", articleQuery: "", label: "", price: "" },
     );
   }
 
-  function pickArticle(elementId: string) {
+  function pickArticle(option: SuggestOption) {
+    const elementId = option.id ?? "";
     setForm((current) => {
       const previousName = articleName.get(current.elementId);
       const labelUntouched = current.label.trim() === "" || current.label === previousName;
+      const name = articleName.get(elementId) ?? option.value;
       return {
         ...current,
         elementId,
-        label: labelUntouched ? articleName.get(elementId) ?? "" : current.label,
+        articleQuery: name,
+        label: labelUntouched ? name : current.label,
       };
     });
+  }
+
+  // Typing past the picked row unpicks it. The article is a closed list, and a
+  // field reading "Bee" while the form still carries the last article saves the
+  // wrong tile silently — Save stays disabled until a row is picked again.
+  function searchArticles(query: string) {
+    setForm((current) => ({
+      ...current,
+      articleQuery: query,
+      elementId: query === articleName.get(current.elementId) ? current.elementId : "",
+    }));
   }
 
   return (
@@ -238,21 +281,16 @@ export function GridEditor({ locale, templateId, cells, articles, isReadOnly }: 
               <input type="hidden" name="position" value={editing.position} />
 
               <Field label={copy.article}>
-                <Select
-                  name="elementId"
-                  value={form.elementId}
-                  onChange={(event) => pickArticle(event.target.value)}
-                  required
-                >
-                  <option value="" disabled>
-                    {copy.article}
-                  </option>
-                  {articles.map((article) => (
-                    <option key={article.id} value={article.id}>
-                      {article.name}
-                    </option>
-                  ))}
-                </Select>
+                <input type="hidden" name="elementId" value={form.elementId} />
+                <Suggest
+                  value={form.articleQuery}
+                  onValueChange={searchArticles}
+                  onPick={pickArticle}
+                  options={articleOptions}
+                  openOnFocus
+                  maxOptions={10}
+                  placeholder={copy.searchArticles}
+                />
               </Field>
 
               <Field label={copy.tileLabel}>

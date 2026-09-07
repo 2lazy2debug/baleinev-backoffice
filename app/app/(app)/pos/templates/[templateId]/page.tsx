@@ -17,7 +17,9 @@ type Params = { params: Promise<{ templateId: string }> };
  * The grid editor: a paginated 3x3 of tiles, the ninth of every page a drawn
  * "custom sale" button. Every article is offered in the picker, including ones
  * with `tracksStock` off — that flag is exactly what makes a poured glass
- * sellable.
+ * sellable. The whole catalogue is handed over at once because the picker
+ * searches it here rather than asking the server per keystroke; the brand comes
+ * along as the only thing telling two same-named articles apart.
  */
 export default async function PosTemplateEditorPage({ params }: Params) {
   await requireAdmin();
@@ -40,7 +42,7 @@ export default async function PosTemplateEditorPage({ params }: Params) {
 
   const articles = await prisma.stockElement.findMany({
     orderBy: { name: "asc" },
-    select: { id: true, name: true },
+    select: { id: true, name: true, brand: true },
   });
 
   const cells: EditorCell[] = template.cells.map((cell) => ({

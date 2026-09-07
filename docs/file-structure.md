@@ -155,13 +155,15 @@ app/
 │   │       │                        confirm-guarded delete, one of each for the list
 │   │       ├── create-template-modal.tsx ← Header button + modal, one name field (the standard shape)
 │   │       └── [templateId]/
-│   │           ├── page.tsx      ← Loads the template's cells and every article for the picker
-│   │           │                    (`tracksStock` off included); `notFound()` when it is not in
-│   │           │                    the edition. Back link in the header
+│   │           ├── page.tsx      ← Loads the template's cells and the whole catalogue for the
+│   │           │                    picker — name + brand, `tracksStock` off included; `notFound()`
+│   │           │                    when it is not in the edition. Back link in the header
 │   │           └── grid-editor.tsx ← The 3×3 pager and grid. One tile dialog (add or edit, the
-│   │                                upsert) with an article picker that prefills the editable
-│   │                                label; "Remove from grid" when editing. Grid stays 3×3 at
-│   │                                every width; the ninth tile of each page is a drawn "custom sale"
+│   │                                upsert) with a searchable article picker (`<Suggest>` over the
+│   │                                catalogue, brand as the row hint, the id in a hidden field) that
+│   │                                prefills the editable label; "Remove from grid" when editing.
+│   │                                Grid stays 3×3 at every width; the ninth tile of each page is a
+│   │                                drawn "custom sale"
 │   │
 │   ├── expense-reports/
 │   │   ├── page.tsx              ← Header + history (data-fetching only)

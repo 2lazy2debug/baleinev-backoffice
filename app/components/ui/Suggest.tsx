@@ -14,6 +14,13 @@ export type SuggestOption = {
   label?: string;
   /** Secondary text on the row — the other half of a pair, a country for a prefix. */
   hint?: string;
+  /**
+   * The row's identity, for a field that reads as a name but submits an id.
+   * Carried through `onPick` untouched and used by nothing here: two rows may
+   * read exactly the same and still be different things, and matching the typed
+   * text back to a row cannot tell them apart.
+   */
+  id?: string;
 };
 
 type SuggestProps = Omit<
@@ -38,11 +45,16 @@ type SuggestProps = Omit<
 /**
  * A text field that *proposes* values without imposing them.
  *
- * Every use of it in this app is a field where a table of known values exists
+ * Most uses of it in this app are fields where a table of known values exists
  * but is not the whole world: a Swiss postal code proposes its localities, a
  * locality proposes its postal codes, a dialling prefix proposes its countries.
  * Typing anything else is always allowed — the field is an <Input>, and the
  * list only ever fills it in faster.
+ *
+ * A closed list borrows it too — the POS tile's article picker, where the
+ * catalogue *is* the whole world and scrolling it is the thing to avoid. There
+ * the screen keeps the picked row's `id` and drops it the moment the text stops
+ * matching: the field still only proposes, and the screen is what refuses.
  *
  * The dropdown renders into <body>, positioned from the input's own rect,
  * because these fields sit inside table cells and modals whose frames clip
@@ -238,7 +250,7 @@ export function Suggest({
               onMouseDown={(event) => event.preventDefault()}
             >
               {matches.map((option, index) => (
-                <li key={`${option.value}-${option.label ?? ""}-${option.hint ?? ""}`}>
+                <li key={option.id ?? `${option.value}-${option.label ?? ""}-${option.hint ?? ""}`}>
                   <button
                     type="button"
                     role="option"
