@@ -641,6 +641,10 @@ export const dictionaries = {
       methodTwint: "Twint",
       methodBank: "Bank",
       register: "Cash register",
+      stockPlace: "Sell out of",
+      noStockPlace: "Don't move stock",
+      stockPlaceHint:
+        "Every tracked article sold comes off this stock. It cannot be changed once the session is open.",
       statusOpen: "Open",
       statusPaused: "Paused",
       statusClosed: "Closed",
@@ -1627,6 +1631,10 @@ export const dictionaries = {
       methodTwint: "Twint",
       methodBank: "Banque",
       register: "Caisse",
+      stockPlace: "Vendre depuis",
+      noStockPlace: "Ne pas décompter le stock",
+      stockPlaceHint:
+        "Chaque article suivi vendu est décompté de ce stock. Ce choix est définitif une fois la session ouverte.",
       statusOpen: "Ouverte",
       statusPaused: "Suspendue",
       statusClosed: "Fermée",
