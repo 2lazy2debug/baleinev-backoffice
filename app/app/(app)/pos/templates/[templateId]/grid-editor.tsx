@@ -33,7 +33,13 @@ export type EditorCell = {
   price: string;
 };
 
-export type ArticleOption = { id: string; name: string; brand: string | null };
+export type ArticleOption = {
+  id: string;
+  name: string;
+  brand: string | null;
+  /** The size of one piece, already written out: "50 cl", "1.5 l". */
+  piece: string;
+};
 
 type Props = {
   locale: Locale;
@@ -108,14 +114,17 @@ export function GridEditor({ locale, templateId, cells, articles, isReadOnly }: 
 
   // The catalogue runs to hundreds of rows, so the picker is searched, not
   // scrolled. It submits the article's `id`, never the text in the field: two
-  // articles can read the same name and only the brand tells them apart.
+  // articles can read the same name, and the brand and the size of one piece are
+  // what tell them apart — the same beer in 33 cl and in 50 cl is two rows, and
+  // the tile has to point at the right one. Both are in the hint, so both are
+  // searchable: typing "50" finds the half-litre.
   const articleOptions = useMemo<SuggestOption[]>(
     () =>
       articles.map((article) => ({
         id: article.id,
         value: article.name,
         label: article.name,
-        hint: article.brand ?? undefined,
+        hint: [article.brand, article.piece].filter(Boolean).join(" · "),
       })),
     [articles],
   );

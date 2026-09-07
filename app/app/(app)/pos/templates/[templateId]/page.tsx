@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEdition } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
+import { formatPiece } from "@/lib/stock";
 import { decimalToNumber } from "@/lib/utils";
 
 import { GridEditor, type EditorCell } from "./grid-editor";
@@ -18,8 +19,9 @@ type Params = { params: Promise<{ templateId: string }> };
  * "custom sale" button. Every article is offered in the picker, including ones
  * with `tracksStock` off — that flag is exactly what makes a poured glass
  * sellable. The whole catalogue is handed over at once because the picker
- * searches it here rather than asking the server per keystroke; the brand comes
- * along as the only thing telling two same-named articles apart.
+ * searches it here rather than asking the server per keystroke; the brand and
+ * the size of one piece come along because they are what tell two rows reading
+ * the same name apart — the 33 cl and the 50 cl of the same beer.
  */
 export default async function PosTemplateEditorPage({ params }: Params) {
   await requireAdmin();
@@ -42,7 +44,7 @@ export default async function PosTemplateEditorPage({ params }: Params) {
 
   const articles = await prisma.stockElement.findMany({
     orderBy: { name: "asc" },
-    select: { id: true, name: true, brand: true },
+    select: { id: true, name: true, brand: true, unitQty: true, unit: { select: { name: true } } },
   });
 
   const cells: EditorCell[] = template.cells.map((cell) => ({
@@ -75,7 +77,12 @@ export default async function PosTemplateEditorPage({ params }: Params) {
         locale={locale}
         templateId={template.id}
         cells={cells}
-        articles={articles}
+        articles={articles.map((article) => ({
+          id: article.id,
+          name: article.name,
+          brand: article.brand,
+          piece: formatPiece(decimalToNumber(article.unitQty), article.unit.name),
+        }))}
         isReadOnly={Boolean(edition?.closedAt)}
       />
     </div>

@@ -692,8 +692,10 @@ Each article slot carries three things:
 - the **article** it points at (`StockElement`) — every article is offered, including ones with
   `tracksStock` off, because that flag is exactly what makes a poured glass sellable. The picker
   **searches the catalogue by name** instead of listing it: a `<Suggest>` over every article, the
-  brand as each row's hint, submitting the article's **id** so two articles reading the same name
-  stay distinguishable. Typing past a picked row unpicks it and disables Save — the article is a
+  brand and the size of one piece as each row's hint ("Feldschlösschen · 50 cl") because that is
+  what tells the 33 cl and the 50 cl of one beer apart, and both are searchable — typing "50" finds
+  the half-litre. It submits the article's **id**, so two articles reading the same name stay
+  distinguishable. Typing past a picked row unpicks it and disables Save — the article is a
   closed list, so a half-typed name must not save the article picked before it;
 - a **label**, snapshotted from the article's name when the tile is made and then free text — a bar
   tile says "Beer 3dl", not "Feldschlösschen Original 30cl", and renaming the article later does not
