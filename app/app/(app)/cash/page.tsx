@@ -3,7 +3,10 @@ import { CashCountKind, MoneyAccountType } from "@prisma/client";
 
 import { WritableEditionOnly } from "@/components/edition-read-only";
 import { EmptyPage, PageHeader, buttonClasses } from "@/components/ui";
+import { getCurrentUserAccess, isAdmin } from "@/lib/access";
+import { editionBudgets } from "@/lib/budgets";
 import { countTotal } from "@/lib/cash";
+import { plannedEntries, registerFigures } from "@/lib/cash-register";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
@@ -13,8 +16,9 @@ import OpenRegisterModal from "./open-register-modal";
 
 /**
  * A till is opened against a CASH money account by counting a float into it, and
- * closed later by counting what is left. Counting is not booking — nothing on
- * this screen touches the journal.
+ * closed later by counting what is left. Counting is not booking — closing
+ * writes nothing. An admin then books a closed register: three journal entries,
+ * once, from the figures this page computes for every closed unbooked register.
  */
 export default async function CashPage() {
   const locale = await getLocale();
@@ -29,6 +33,8 @@ export default async function CashPage() {
       </EmptyPage>
     );
   }
+
+  const access = await getCurrentUserAccess();
 
   const cashAccounts = await prisma.moneyAccount.findMany({
     where: { editionId, type: MoneyAccountType.CASH },
@@ -47,17 +53,35 @@ export default async function CashPage() {
     );
   }
 
-  const registers = await prisma.cashRegister.findMany({
-    where: { editionId },
-    // Open tills first (closedAt null), then the most recently opened.
-    orderBy: [{ closedAt: { sort: "asc", nulls: "first" } }, { openedAt: "desc" }],
-    include: {
-      moneyAccount: { select: { name: true } },
-      openedBy: { select: { name: true } },
-      closedBy: { select: { name: true } },
-      counts: { select: { kind: true, denomination: true, quantity: true } },
-    },
-  });
+  const [registers, budgets, costCenters] = await Promise.all([
+    prisma.cashRegister.findMany({
+      where: { editionId },
+      // Open tills first (closedAt null), then the most recently opened.
+      orderBy: [{ closedAt: { sort: "asc", nulls: "first" } }, { openedAt: "desc" }],
+      include: {
+        moneyAccount: { select: { name: true } },
+        openedBy: { select: { name: true } },
+        closedBy: { select: { name: true } },
+        journaledBy: { select: { name: true } },
+        counts: { select: { kind: true, denomination: true, quantity: true } },
+      },
+    }),
+    editionBudgets(editionId),
+    prisma.costCenter.findMany({
+      where: { editionId },
+      orderBy: { code: "asc" },
+      select: { id: true, code: true },
+    }),
+  ]);
+
+  // The figures for every closed, not-yet-booked register — in parallel, so the
+  // page waits on the slowest read once, not on a queue of them.
+  const bookable = registers.filter((register) => register.closedAt && !register.journaledAt);
+  const figuresById = new Map(
+    await Promise.all(
+      bookable.map(async (register) => [register.id, await registerFigures(prisma, register.id)] as const),
+    ),
+  );
 
   const rows: CashRegisterRow[] = registers.map((register) => {
     const openingCounts = register.counts
@@ -67,6 +91,8 @@ export default async function CashPage() {
       .filter((count) => count.kind === CashCountKind.CLOSING)
       .map((count) => ({ denomination: count.denomination, quantity: count.quantity }));
 
+    const figures = figuresById.get(register.id) ?? null;
+
     return {
       id: register.id,
       name: register.name,
@@ -75,10 +101,22 @@ export default async function CashPage() {
       openedBy: register.openedBy?.name ?? null,
       closedAt: register.closedAt ? register.closedAt.toISOString().slice(0, 10) : null,
       closedBy: register.closedBy?.name ?? null,
+      journaledAt: register.journaledAt ? register.journaledAt.toISOString().slice(0, 10) : null,
+      journaledBy: register.journaledBy?.name ?? null,
       floatTotal: countTotal(openingCounts),
       closingTotal: register.closedAt ? countTotal(closingCounts) : null,
       openingCounts,
       closingCounts,
+      booking: figures
+        ? {
+            figures,
+            entries: plannedEntries(figures).map((entry) => ({
+              kind: entry.kind,
+              accountType: entry.accountType,
+              amount: entry.amount,
+            })),
+          }
+        : null,
     };
   });
 
@@ -95,7 +133,13 @@ export default async function CashPage() {
         }
       />
 
-      <CashRegistersClient locale={locale} registers={rows} />
+      <CashRegistersClient
+        locale={locale}
+        registers={rows}
+        isAdmin={isAdmin(access)}
+        budgets={budgets}
+        costCenters={costCenters}
+      />
     </div>
   );
 }

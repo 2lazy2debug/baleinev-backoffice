@@ -32,7 +32,10 @@ vi.mock("@/lib/access", () => ({
 vi.mock("@/lib/budgets", () => ({
   assertBudgetInEdition: (...a: unknown[]) => assertBudgetInEdition(...a),
 }));
-vi.mock("@/lib/cash-register", () => ({
+// Keep the real plannedEntries — the whole point of the helper is that the
+// action and the modal share it. Only the DB-reading half is mocked.
+vi.mock("@/lib/cash-register", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/cash-register")>()),
   registerFigures: (...a: unknown[]) => registerFigures(...a),
 }));
 vi.mock("@/lib/edition-context", () => ({ resolveWritableEditionId: () => resolveWritableEditionId() }));

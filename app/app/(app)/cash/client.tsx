@@ -29,6 +29,7 @@ import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { formatCurrency } from "@/lib/utils";
 
 import CloseRegisterModal from "./close-register-modal";
+import JournalRegisterModal, { type RegisterBooking } from "./journal-register-modal";
 
 export type CountRow = { denomination: number; quantity: number };
 
@@ -40,12 +41,17 @@ export type CashRegisterRow = {
   openedBy: string | null;
   closedAt: string | null;
   closedBy: string | null;
+  /** Set once the three closing entries are written. */
+  journaledAt: string | null;
+  journaledBy: string | null;
   /** Rappen. */
   floatTotal: number;
   /** Rappen, or null while the register is open. */
   closingTotal: number | null;
   openingCounts: CountRow[];
   closingCounts: CountRow[];
+  /** The figures and the entries to preview — only for a closed, unbooked register. */
+  booking: RegisterBooking | null;
 };
 
 function Sheet({ title, counts, byName }: { title: string; counts: CountRow[]; byName: string | null }) {
@@ -77,18 +83,71 @@ function Sheet({ title, counts, byName }: { title: string; counts: CountRow[]; b
   );
 }
 
+type BudgetOption = { id: string; name: string };
+type CostCenterOption = { id: string; code: string };
+
 export function CashRegistersClient({
   locale,
   registers,
+  isAdmin,
+  budgets,
+  costCenters,
 }: {
   locale: Locale;
   registers: CashRegisterRow[];
+  isAdmin: boolean;
+  budgets: BudgetOption[];
+  costCenters: CostCenterOption[];
 }) {
   const copy = dictionaries[locale].cash;
   const shell = dictionaries[locale].shell;
   const isReadOnly = useEditionReadOnly();
   const [closing, setClosing] = useState<CashRegisterRow | null>(null);
   const [viewing, setViewing] = useState<CashRegisterRow | null>(null);
+  const [booking, setBooking] = useState<CashRegisterRow | null>(null);
+
+  function statusBadge(register: CashRegisterRow) {
+    if (!register.closedAt) {
+      return <Badge tone="success">{copy.statusOpen}</Badge>;
+    }
+    if (register.journaledAt) {
+      return <Badge tone="info">{copy.statusBooked}</Badge>;
+    }
+    return <Badge tone="neutral">{copy.statusClosed}</Badge>;
+  }
+
+  /** Close (open till) · Book + Sheets (closed, unbooked) · Sheets only (booked). */
+  function rowActions(register: CashRegisterRow) {
+    if (!register.closedAt) {
+      return isReadOnly ? null : (
+        <Button size="sm" onClick={() => setClosing(register)}>
+          {copy.close}
+        </Button>
+      );
+    }
+
+    return (
+      <div className="flex items-center justify-end gap-2">
+        {!register.journaledAt && isAdmin && !isReadOnly && register.booking ? (
+          <Button size="sm" onClick={() => setBooking(register)}>
+            {copy.book}
+          </Button>
+        ) : null}
+        <IconButton size="sm" label={copy.sheets} onClick={() => setViewing(register)}>
+          <Eye />
+        </IconButton>
+      </div>
+    );
+  }
+
+  function bookedLine(register: CashRegisterRow) {
+    if (!register.journaledAt) {
+      return null;
+    }
+    return copy.bookedOn
+      .replace("{date}", register.journaledAt)
+      .replace("{name}", register.journaledBy ?? "—");
+  }
 
   return (
     <>
@@ -129,21 +188,14 @@ export function CashRegistersClient({
                       {register.closingTotal === null ? "—" : formatCurrency(fromRappen(register.closingTotal))}
                     </TD>
                     <TD>
-                      <Badge tone={register.closedAt ? "neutral" : "success"}>
-                        {register.closedAt ? copy.statusClosed : copy.statusOpen}
-                      </Badge>
+                      <div className="space-y-0.5">
+                        {statusBadge(register)}
+                        {bookedLine(register) ? (
+                          <p className="text-3xs text-[var(--muted)]">{bookedLine(register)}</p>
+                        ) : null}
+                      </div>
                     </TD>
-                    <TD className="text-right">
-                      {register.closedAt ? (
-                        <IconButton size="sm" label={copy.sheets} onClick={() => setViewing(register)}>
-                          <Eye />
-                        </IconButton>
-                      ) : isReadOnly ? null : (
-                        <Button size="sm" onClick={() => setClosing(register)}>
-                          {copy.close}
-                        </Button>
-                      )}
-                    </TD>
+                    <TD className="text-right">{rowActions(register)}</TD>
                   </TR>
                 ))}
               </tbody>
@@ -152,14 +204,7 @@ export function CashRegistersClient({
             <CardletList>
               {registers.map((register) => (
                 <Cardlet key={register.id}>
-                  <CardletHeader
-                    title={register.name}
-                    action={
-                      <Badge tone={register.closedAt ? "neutral" : "success"}>
-                        {register.closedAt ? copy.statusClosed : copy.statusOpen}
-                      </Badge>
-                    }
-                  />
+                  <CardletHeader title={register.name} action={statusBadge(register)} />
                   <CardletFields>
                     <CardletField label={copy.cashAccount}>{register.cashAccount}</CardletField>
                     <CardletField label={copy.openedBy}>
@@ -170,18 +215,11 @@ export function CashRegistersClient({
                     <CardletField label={copy.counted}>
                       {register.closingTotal === null ? "—" : formatCurrency(fromRappen(register.closingTotal))}
                     </CardletField>
+                    {bookedLine(register) ? (
+                      <CardletField label={copy.statusBooked}>{bookedLine(register)}</CardletField>
+                    ) : null}
                   </CardletFields>
-                  <CardletActions inline>
-                    {register.closedAt ? (
-                      <IconButton size="sm" label={copy.sheets} onClick={() => setViewing(register)}>
-                        <Eye />
-                      </IconButton>
-                    ) : isReadOnly ? null : (
-                      <Button size="sm" onClick={() => setClosing(register)}>
-                        {copy.close}
-                      </Button>
-                    )}
-                  </CardletActions>
+                  <CardletActions inline>{rowActions(register)}</CardletActions>
                 </Cardlet>
               ))}
             </CardletList>
@@ -193,6 +231,14 @@ export function CashRegistersClient({
         locale={locale}
         register={closing}
         onClose={() => setClosing(null)}
+      />
+
+      <JournalRegisterModal
+        locale={locale}
+        register={booking}
+        budgets={budgets}
+        costCenters={costCenters}
+        onClose={() => setBooking(null)}
       />
 
       <Modal

@@ -1,12 +1,12 @@
 "use server";
 
-import { AccountType, CashCountKind, MoneyAccountType, PosSessionStatus } from "@prisma/client";
+import { CashCountKind, MoneyAccountType, PosSessionStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { canManageMoneyAccounts, getCurrentUserAccess, requireAdmin } from "@/lib/access";
 import { assertBudgetInEdition } from "@/lib/budgets";
 import { CASH_DENOMINATIONS, fromRappen } from "@/lib/cash";
-import { registerFigures } from "@/lib/cash-register";
+import { plannedEntries, registerFigures, type PlannedEntryKind } from "@/lib/cash-register";
 import { prisma } from "@/lib/db";
 import { resolveWritableEditionId } from "@/lib/edition-context";
 import { type ActionState, getRequiredString, toActionErrorMessage } from "@/lib/server-action-helpers";
@@ -233,24 +233,15 @@ export async function journalCashRegisterAction(_prevState: ActionState, formDat
 
     const figures = await registerFigures(prisma, registerId);
 
-    // Amounts are always positive in JournalEntry; the direction is accountType.
-    const planned = [
-      {
-        accountType: AccountType.CHARGES,
-        amount: figures.float,
-        label: `Register float — ${register.name}`,
-      },
-      {
-        accountType: figures.expected >= 0 ? AccountType.PRODUITS : AccountType.CHARGES,
-        amount: Math.abs(figures.expected),
-        label: `Register returned — ${register.name}`,
-      },
-      {
-        accountType: figures.gap > 0 ? AccountType.CHARGES : AccountType.PRODUITS,
-        amount: Math.abs(figures.gap),
-        label: `User correction — ${register.name}`,
-      },
-    ].filter((entry) => entry.amount > 0);
+    // Stored labels are English sentences, per the ground rules, and must not
+    // change when a reader switches language. The modal's preview localises its
+    // own rows; these are what lands in the ledger.
+    const labels: Record<PlannedEntryKind, string> = {
+      float: `Register float — ${register.name}`,
+      return: `Register returned — ${register.name}`,
+      correction: `User correction — ${register.name}`,
+    };
+    const planned = plannedEntries(figures);
 
     await prisma.$transaction(async (tx) => {
       // Same sequence discipline as createJournalEntryAction: take the
@@ -276,7 +267,7 @@ export async function journalCashRegisterAction(_prevState: ActionState, formDat
             accountType: entry.accountType,
             date,
             amount: fromRappen(entry.amount),
-            label: entry.label,
+            label: labels[entry.kind],
             costCenterId,
             cashRegisterId: registerId,
             enteredById: admin.id,

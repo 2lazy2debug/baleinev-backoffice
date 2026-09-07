@@ -1,4 +1,4 @@
-import { CashCountKind, PosPaymentMethod, type Prisma, type PrismaClient } from "@prisma/client";
+import { AccountType, CashCountKind, PosPaymentMethod, type Prisma, type PrismaClient } from "@prisma/client";
 
 import { countTotal, toRappen } from "@/lib/cash";
 
@@ -58,4 +58,40 @@ export async function registerFigures(
   const gap = expected - actual;
 
   return { float, cashTaken, expected, actual, gap, sessionCount };
+}
+
+/**
+ * The entries a register's booking writes, in order — the one place the "which
+ * account, how much, skip the zeros" rule lives, so the modal's preview and the
+ * action's writes cannot drift.
+ *
+ * `kind` is what the row *is*; the label is the caller's to word. The stored
+ * label is an English sentence (`actions.ts`); the modal's preview row is
+ * localised. `amount` is always positive rappen — the direction is `accountType`.
+ */
+export type PlannedEntryKind = "float" | "return" | "correction";
+
+export type PlannedEntry = {
+  kind: PlannedEntryKind;
+  accountType: AccountType;
+  /** Positive rappen. */
+  amount: number;
+};
+
+export function plannedEntries(figures: RegisterFigures): PlannedEntry[] {
+  return (
+    [
+      { kind: "float", accountType: AccountType.CHARGES, amount: figures.float },
+      {
+        kind: "return",
+        accountType: figures.expected >= 0 ? AccountType.PRODUITS : AccountType.CHARGES,
+        amount: Math.abs(figures.expected),
+      },
+      {
+        kind: "correction",
+        accountType: figures.gap > 0 ? AccountType.CHARGES : AccountType.PRODUITS,
+        amount: Math.abs(figures.gap),
+      },
+    ] satisfies PlannedEntry[]
+  ).filter((entry) => entry.amount > 0);
 }
