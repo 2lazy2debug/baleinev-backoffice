@@ -95,8 +95,10 @@ psql stopped there. Everything dropped before that line stayed dropped.
 | Sep 7 11:00 | **v0.42.0** ships the `tsconfig.json` fix. Gets past `next build` — and fails at `prisma migrate deploy`, exposing bug 2. |
 | Sep 7 11:05 | Auto-rollback to v0.34.0. Production healthy throughout. |
 | Sep 7 11:08 | Constraint loss confirmed: **3 foreign keys** where August backups had 47. Root cause traced to the two `SNAPSHOT RESTORE FAILED` lines. |
-| Sep 7 11:22 | Manual backup taken. Repair generated, rehearsed on a clone, applied. |
-| Sep 7 ~11:40 | **v0.43.0** ships the restore fix. Pipeline green. |
+| Sep 7 11:22 | Manual backup taken. Repair generated and rehearsed on a clone of production. |
+| Sep 7 11:24 | Repair applied to production in one transaction: **3 → 69 foreign keys, 29 → 39 primary keys, 33 → 113 indexes**. |
+| Sep 7 11:29 | The three pending migrations applied by hand. `prisma migrate diff` against `schema.prisma`: **"No difference detected"**. |
+| **Sep 7 11:34:37** | **v0.43.0 deploys successfully** — first green deploy in 17h35m. `{"status":"deployed","tag":"v0.43.0","message":"ok"}` |
 
 The eight failed deploys were not eight problems. The pipeline only ever compares
 the **highest** tag against `deployed-tag`, so v0.35.0–v0.41.0 were never
@@ -198,6 +200,31 @@ Verified against a clone with three tests:
 | Old code path, snapshot older than schema | Reproduced: `cannot drop constraint StockElement_pkey`, exit 3, **83 → 80 FKs destroyed** |
 | Fixed path, same inputs | Exit 0, database restored faithfully to the snapshot's exact state |
 | Fixed path, deliberately corrupt dump | Error raised, **83 FKs before and after** — full rollback, zero damage |
+
+---
+
+## Resolution — verified 2026-09-07 11:35 UTC
+
+| Check | Result |
+|---|---|
+| `deployed-tag` / checkout / `package.json` | `v0.43.0` on all three |
+| `last-deploy.json` | `{"status":"deployed","tag":"v0.43.0","message":"ok"}` |
+| Quarantine markers | none — `failed-v0.41.0` and `failed-v0.42.0` cleared |
+| Health, loopback | `{"status":"ok"}` |
+| Health, public HTTPS via Caddy | `{"status":"ok"}` |
+| Foreign keys / primary keys / indexes | 83 / 44 / 128 |
+| Migrations applied | 21 of 21, none unfinished or rolled back |
+| `prisma migrate diff` vs `schema.prisma` | **No difference detected** |
+| Fixed `restore_backup` on the box | `DROP SCHEMA` guard and `--single-transaction` both present |
+| Scratch databases | dropped |
+
+**Why v0.43.0 was tagged `non-breaking` rather than `requires-migration`.** The
+running updater reads its own script into memory before `git checkout` replaces
+it, so the deploy that *ships* the restore fix is still rolled back by the old,
+destructive one. A tag with nothing to migrate is a tag whose rollback never
+touches the database. The three migrations were therefore applied by hand first —
+against a rehearsed, verified script — and the release itself carried no database
+work at all. From v0.43.0 onward the fixed restore is the one that runs.
 
 ---
 
