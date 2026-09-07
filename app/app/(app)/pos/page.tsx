@@ -35,7 +35,7 @@ export default async function PosPage() {
     );
   }
 
-  const [sessions, templates, registers, me] = await Promise.all([
+  const [sessions, templates, registers, stockPlaces, me] = await Promise.all([
     prisma.posSession.findMany({
       where: { editionId, status: { not: PosSessionStatus.CLOSED } },
       orderBy: { openedAt: "desc" },
@@ -47,6 +47,7 @@ export default async function PosPage() {
         template: { select: { name: true } },
         methods: { select: { method: true } },
         cashRegister: { select: { name: true } },
+        stockPlace: { select: { name: true } },
         _count: { select: { sales: true } },
       },
     }),
@@ -60,6 +61,7 @@ export default async function PosPage() {
       orderBy: { openedAt: "desc" },
       select: { id: true, name: true },
     }),
+    prisma.stockPlace.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.user.findUnique({ where: { id: access.id }, select: { selectedPosSessionId: true } }),
   ]);
 
@@ -76,6 +78,7 @@ export default async function PosPage() {
     templateName: session.template.name,
     methods: orderMethods(session.methods.map((row) => row.method as PosMethod)),
     registerName: session.cashRegister?.name ?? null,
+    stockPlaceName: session.stockPlace?.name ?? null,
     saleCount: session._count.sales,
   }));
 
@@ -92,7 +95,13 @@ export default async function PosPage() {
 
   if (!joined) {
     return (
-      <SessionPicker locale={locale} sessions={sessionRows} templates={templateOptions} registers={registers} />
+      <SessionPicker
+        locale={locale}
+        sessions={sessionRows}
+        templates={templateOptions}
+        registers={registers}
+        stockPlaces={stockPlaces}
+      />
     );
   }
 
@@ -145,6 +154,7 @@ export default async function PosPage() {
               sessions={sessionRows}
               templates={templateOptions}
               registers={registers}
+              stockPlaces={stockPlaces}
               currentSessionId={joined.id}
             />
             {adminLinks}

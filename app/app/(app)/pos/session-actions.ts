@@ -3,6 +3,7 @@
 import { PosPaymentMethod, PosSessionStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
+import { removeFromPlace } from "@/app/(app)/stock/actions";
 import { getCurrentUserAccess } from "@/lib/access";
 import { type DenominationCount, makeChange } from "@/lib/cash";
 import { prisma } from "@/lib/db";
@@ -34,6 +35,7 @@ async function sessionInEdition(sessionId: string, editionId: string) {
       id: true,
       editionId: true,
       status: true,
+      stockPlaceId: true,
       methods: { select: { method: true } },
     },
   });
@@ -96,9 +98,21 @@ export async function openPosSessionAction(_prevState: ActionState, formData: Fo
       }
     }
 
+    // Optional, and fixed at open. A stock place is global, not edition-scoped,
+    // so the only thing to check is that it still exists.
+    const stockPlaceId = String(formData.get("stockPlaceId") ?? "").trim() || null;
+
+    if (stockPlaceId) {
+      const place = await prisma.stockPlace.findUnique({ where: { id: stockPlaceId }, select: { id: true } });
+
+      if (!place) {
+        throw new Error("That stock no longer exists.");
+      }
+    }
+
     await prisma.$transaction(async (tx) => {
       const session = await tx.posSession.create({
-        data: { editionId, templateId, cashRegisterId, name, openedById: access.id },
+        data: { editionId, templateId, cashRegisterId, stockPlaceId, name, openedById: access.id },
       });
 
       await tx.posSessionPayment.createMany({
@@ -333,9 +347,36 @@ export async function recordPosSaleAction(_prevState: ActionState, formData: For
           })),
         });
       }
+
+      // A sale moves stock only when the session names a shelf. Every tracked
+      // line then leaves that shelf as an ordinary Out, oldest expiry first —
+      // clamped at zero, never refused: a till that stops selling because a
+      // delivery was not filed is worse than a count that reads zero and says
+      // so. A custom sale (no `elementId`) and an untracked article
+      // (`tracksStock` off) move nothing; one query settles which lines count.
+      if (session.stockPlaceId && elementIds.length > 0) {
+        const tracked = await tx.stockElement.findMany({
+          where: { id: { in: elementIds }, tracksStock: true },
+          select: { id: true },
+        });
+        const tracksStock = new Set(tracked.map((element) => element.id));
+
+        for (const line of lines) {
+          if (line.elementId && tracksStock.has(line.elementId)) {
+            await removeFromPlace(
+              tx,
+              { stockPlaceId: session.stockPlaceId, elementId: line.elementId },
+              line.quantity,
+              access.id,
+            );
+          }
+        }
+      }
     });
 
     revalidatePath("/pos");
+    revalidatePath("/stock");
+    revalidatePath("/stock/history");
     return { error: null };
   } catch (err) {
     return { error: toActionErrorMessage(err) };

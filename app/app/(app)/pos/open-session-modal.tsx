@@ -16,6 +16,7 @@ import { openPosSessionAction } from "./session-actions";
 
 export type TemplateOption = { id: string; name: string; tileCount: number };
 export type RegisterOption = { id: string; name: string };
+export type StockPlaceOption = { id: string; name: string };
 
 const FORM_ID = "open-pos-session";
 
@@ -25,15 +26,22 @@ const FORM_ID = "open-pos-session";
  * reads and behaves the same wherever it is offered. The register `<Select>`
  * appears only once **Cash** is ticked: a session that takes no cash stores no
  * drawer.
+ *
+ * The stock place is optional and empty by default — a session that moves no
+ * stock is what every session does today — and is fixed at open: moving a
+ * running session to another shelf would make its earlier sales lie about where
+ * the stock came from.
  */
 export function OpenSessionModal({
   locale,
   templates,
   registers,
+  stockPlaces,
 }: {
   locale: Locale;
   templates: TemplateOption[];
   registers: RegisterOption[];
+  stockPlaces: StockPlaceOption[];
 }) {
   const copy = dictionaries[locale].pos;
   const router = useRouter();
@@ -128,6 +136,20 @@ export function OpenSessionModal({
                 </Select>
               </Field>
             )
+          ) : null}
+
+          {stockPlaces.length > 0 ? (
+            <Field label={copy.stockPlace}>
+              <Select name="stockPlaceId" defaultValue="">
+                <option value="">{copy.noStockPlace}</option>
+                {stockPlaces.map((place) => (
+                  <option key={place.id} value={place.id}>
+                    {place.name}
+                  </option>
+                ))}
+              </Select>
+              <span className="block text-xs text-[var(--muted)]">{copy.stockPlaceHint}</span>
+            </Field>
           ) : null}
         </form>
       </Modal>

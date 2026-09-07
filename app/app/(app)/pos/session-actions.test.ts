@@ -5,12 +5,15 @@ const getCurrentUserAccess = vi.fn();
 const resolveWritableEditionId = vi.fn();
 const revalidatePath = vi.fn();
 
+const removeFromPlace = vi.fn();
+
 const tx = {
   posSession: { create: vi.fn(), update: vi.fn() },
   posSessionPayment: { createMany: vi.fn() },
   posSale: { create: vi.fn() },
   posSaleLine: { createMany: vi.fn() },
   posSaleChange: { createMany: vi.fn() },
+  stockElement: { findMany: vi.fn() },
   user: { update: vi.fn(), updateMany: vi.fn() },
 };
 const prisma = {
@@ -18,11 +21,13 @@ const prisma = {
   posSession: { findUnique: vi.fn(), update: vi.fn() },
   cashRegister: { findUnique: vi.fn() },
   stockElement: { findMany: vi.fn() },
+  stockPlace: { findUnique: vi.fn() },
   user: { update: vi.fn(), updateMany: vi.fn() },
   $transaction: vi.fn(async (fn: (t: typeof tx) => unknown) => fn(tx)),
 };
 
 vi.mock("next/cache", () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
+vi.mock("@/app/(app)/stock/actions", () => ({ removeFromPlace: (...a: unknown[]) => removeFromPlace(...a) }));
 vi.mock("@/lib/access", () => ({ getCurrentUserAccess: () => getCurrentUserAccess() }));
 vi.mock("@/lib/edition-context", () => ({ resolveWritableEditionId: () => resolveWritableEditionId() }));
 vi.mock("@/lib/db", () => ({ prisma }));
@@ -45,6 +50,7 @@ const OPEN_SESSION = {
   id: "sess_1",
   editionId: "ed_1",
   status: "OPEN",
+  stockPlaceId: null,
   methods: [{ method: "CASH" }, { method: "TWINT" }],
 };
 
@@ -56,6 +62,8 @@ beforeEach(() => {
   prisma.cashRegister.findUnique.mockResolvedValue({ editionId: "ed_1", closedAt: null });
   prisma.posSession.findUnique.mockResolvedValue(OPEN_SESSION);
   prisma.stockElement.findMany.mockResolvedValue([{ id: "el_1" }]);
+  prisma.stockPlace.findUnique.mockResolvedValue({ id: "place_1" });
+  tx.stockElement.findMany.mockResolvedValue([{ id: "el_1" }]);
   tx.posSession.create.mockResolvedValue({ id: "sess_1" });
   tx.posSale.create.mockResolvedValue({ id: "sale_1" });
   prisma.$transaction.mockImplementation(async (fn: (t: typeof tx) => unknown) => fn(tx));
@@ -108,9 +116,40 @@ describe("openPosSessionAction", () => {
   it("forces the register to null when cash is not a method", async () => {
     await openPosSessionAction({ error: null }, form([...base, ["methods", "TWINT"], ["cashRegisterId", "reg_1"]]));
     expect(tx.posSession.create).toHaveBeenCalledWith({
-      data: { editionId: "ed_1", templateId: "tpl_1", cashRegisterId: null, name: "Bar 1", openedById: "u_1" },
+      data: {
+        editionId: "ed_1",
+        templateId: "tpl_1",
+        cashRegisterId: null,
+        stockPlaceId: null,
+        name: "Bar 1",
+        openedById: "u_1",
+      },
     });
     expect(prisma.cashRegister.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("an empty stock place is stored as null and never looked up", async () => {
+    await openPosSessionAction({ error: null }, form([...base, ["methods", "TWINT"], ["stockPlaceId", ""]]));
+    expect(tx.posSession.create.mock.calls[0][0].data.stockPlaceId).toBeNull();
+    expect(prisma.stockPlace.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("refuses a stock place that no longer exists", async () => {
+    prisma.stockPlace.findUnique.mockResolvedValue(null);
+    const result = await openPosSessionAction(
+      { error: null },
+      form([...base, ["methods", "TWINT"], ["stockPlaceId", "place_gone"]]),
+    );
+    expect(result.error).toMatch(/no longer exists/i);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("stores a stock place that exists", async () => {
+    await openPosSessionAction(
+      { error: null },
+      form([...base, ["methods", "TWINT"], ["stockPlaceId", "place_1"]]),
+    );
+    expect(tx.posSession.create.mock.calls[0][0].data.stockPlaceId).toBe("place_1");
   });
 
   it("creates the session, its payment rows, and joins the opener", async () => {
@@ -120,7 +159,14 @@ describe("openPosSessionAction", () => {
     );
     expect(result).toEqual({ error: null });
     expect(tx.posSession.create).toHaveBeenCalledWith({
-      data: { editionId: "ed_1", templateId: "tpl_1", cashRegisterId: "reg_1", name: "Bar 1", openedById: "u_1" },
+      data: {
+        editionId: "ed_1",
+        templateId: "tpl_1",
+        cashRegisterId: "reg_1",
+        stockPlaceId: null,
+        name: "Bar 1",
+        openedById: "u_1",
+      },
     });
     const rows = tx.posSessionPayment.createMany.mock.calls[0][0].data;
     expect(rows.map((r: { method: string }) => r.method).sort()).toEqual(["BANK", "CASH"]);
@@ -285,5 +331,62 @@ describe("recordPosSaleAction", () => {
       { saleId: "sale_1", elementId: "el_1", label: "Beer 3dl", unitPrice: "4.50", quantity: 2 },
       { saleId: "sale_1", elementId: null, label: "Custom", unitPrice: "4.45", quantity: 1 },
     ]);
+  });
+
+  describe("moving stock", () => {
+    const onPlace = { ...OPEN_SESSION, stockPlaceId: "place_1" };
+
+    it("moves nothing when the session has no stock place", async () => {
+      await recordPosSaleAction(
+        { error: null },
+        form([["sessionId", "sess_1"], ["method", "TWINT"], ["lines", cart]]),
+      );
+      expect(removeFromPlace).not.toHaveBeenCalled();
+    });
+
+    it("takes each tracked line off the session's shelf, oldest first", async () => {
+      prisma.posSession.findUnique.mockResolvedValue(onPlace);
+      await recordPosSaleAction(
+        { error: null },
+        form([["sessionId", "sess_1"], ["method", "TWINT"], ["lines", cart]]),
+      );
+      // The tracked line (el_1 × 2) moves; the custom line (elementId null) does not.
+      expect(removeFromPlace).toHaveBeenCalledTimes(1);
+      expect(removeFromPlace).toHaveBeenCalledWith(
+        tx,
+        { stockPlaceId: "place_1", elementId: "el_1" },
+        2,
+        "u_1",
+      );
+    });
+
+    it("moves nothing for an article with tracksStock off", async () => {
+      prisma.posSession.findUnique.mockResolvedValue(onPlace);
+      tx.stockElement.findMany.mockResolvedValue([]); // el_1 is sold but not counted
+      await recordPosSaleAction(
+        { error: null },
+        form([["sessionId", "sess_1"], ["method", "TWINT"], ["lines", cart]]),
+      );
+      expect(removeFromPlace).not.toHaveBeenCalled();
+    });
+
+    it("moves nothing for an all-custom sale even with a shelf set", async () => {
+      prisma.posSession.findUnique.mockResolvedValue(onPlace);
+      const custom = JSON.stringify([{ elementId: null, label: "Tip", unitPrice: 100, quantity: 1 }]);
+      await recordPosSaleAction(
+        { error: null },
+        form([["sessionId", "sess_1"], ["method", "TWINT"], ["lines", custom]]),
+      );
+      expect(removeFromPlace).not.toHaveBeenCalled();
+    });
+
+    it("still refreshes the stock screen", async () => {
+      prisma.posSession.findUnique.mockResolvedValue(onPlace);
+      await recordPosSaleAction(
+        { error: null },
+        form([["sessionId", "sess_1"], ["method", "TWINT"], ["lines", cart]]),
+      );
+      expect(revalidatePath).toHaveBeenCalledWith("/stock");
+    });
   });
 });

@@ -39,6 +39,7 @@ export default async function PosSessionDetailPage({ params }: Params) {
           openedBy: { select: { name: true } },
           template: { select: { name: true } },
           cashRegister: { select: { name: true } },
+          stockPlace: { select: { name: true } },
           methods: { select: { method: true } },
           sales: {
             orderBy: { soldAt: "desc" },
@@ -92,7 +93,13 @@ export default async function PosSessionDetailPage({ params }: Params) {
       <PageHeader
         eyebrow={copy.pos.sessionsTitle}
         title={session.name}
-        description={`${session.template.name}${session.cashRegister ? ` · ${session.cashRegister.name}` : ""}`}
+        description={[
+          session.template.name,
+          session.cashRegister?.name,
+          session.stockPlace ? `${copy.pos.stockPlace} ${session.stockPlace.name}` : null,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
         actions={
           <Link
             href="/pos/sessions"

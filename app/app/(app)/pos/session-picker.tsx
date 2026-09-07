@@ -7,7 +7,7 @@ import { FormError } from "@/components/form-error";
 import { Badge, Button, Card, CardGrid, PageHeader, SectionTitle } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 
-import { OpenSessionModal, type RegisterOption, type TemplateOption } from "./open-session-modal";
+import { OpenSessionModal, type RegisterOption, type StockPlaceOption, type TemplateOption } from "./open-session-modal";
 import { methodLabel, type PosMethod } from "./pos-methods";
 import { joinPosSessionAction } from "./session-actions";
 
@@ -18,6 +18,7 @@ export type PickerSession = {
   templateName: string;
   methods: PosMethod[];
   registerName: string | null;
+  stockPlaceName: string | null;
   saleCount: number;
 };
 
@@ -32,11 +33,13 @@ export function SessionPicker({
   sessions,
   templates,
   registers,
+  stockPlaces,
 }: {
   locale: Locale;
   sessions: PickerSession[];
   templates: TemplateOption[];
   registers: RegisterOption[];
+  stockPlaces: StockPlaceOption[];
 }) {
   const copy = dictionaries[locale].pos;
   const router = useRouter();
@@ -59,7 +62,14 @@ export function SessionPicker({
         eyebrow={copy.title}
         title={copy.pickSession}
         description={copy.pickSessionHint}
-        actions={<OpenSessionModal locale={locale} templates={templates} registers={registers} />}
+        actions={
+          <OpenSessionModal
+            locale={locale}
+            templates={templates}
+            registers={registers}
+            stockPlaces={stockPlaces}
+          />
+        }
       />
 
       {error ? <FormError message={error} /> : null}
@@ -87,6 +97,11 @@ export function SessionPicker({
                   {session.registerName ? `${session.registerName} · ` : ""}
                   {session.saleCount} {copy.sales}
                 </p>
+                {session.stockPlaceName ? (
+                  <p className="text-2xs text-[var(--muted)]">
+                    {copy.stockPlace} {session.stockPlaceName}
+                  </p>
+                ) : null}
               </div>
               <Button variant="primary" className="w-full" onClick={() => join(session.id)} disabled={pending}>
                 {copy.joinSession}

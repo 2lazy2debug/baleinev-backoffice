@@ -10,7 +10,7 @@ import { Badge, Button, IconButton, Modal, cn, nestedSurfaceClasses } from "@/co
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 
-import { OpenSessionModal, type RegisterOption, type TemplateOption } from "./open-session-modal";
+import { OpenSessionModal, type RegisterOption, type StockPlaceOption, type TemplateOption } from "./open-session-modal";
 import { type PickerSession } from "./session-picker";
 import { methodLabel } from "./pos-methods";
 import { joinPosSessionAction, setPosSessionStatusAction } from "./session-actions";
@@ -28,12 +28,14 @@ export function SessionsModal({
   sessions,
   templates,
   registers,
+  stockPlaces,
   currentSessionId,
 }: {
   locale: Locale;
   sessions: PickerSession[];
   templates: TemplateOption[];
   registers: RegisterOption[];
+  stockPlaces: StockPlaceOption[];
   currentSessionId: string;
 }) {
   const copy = dictionaries[locale].pos;
@@ -72,7 +74,12 @@ export function SessionsModal({
 
       <Modal open={open} onClose={() => setOpen(false)} title={copy.sessions} size="lg" mobileFullScreen>
         <div className="space-y-4">
-          <OpenSessionModal locale={locale} templates={templates} registers={registers} />
+          <OpenSessionModal
+            locale={locale}
+            templates={templates}
+            registers={registers}
+            stockPlaces={stockPlaces}
+          />
 
           <FormError message={joinError ?? statusState.error} />
 
@@ -98,6 +105,11 @@ export function SessionsModal({
                       <Badge key={method}>{methodLabel(copy, method)}</Badge>
                     ))}
                     {session.registerName ? <span>· {session.registerName}</span> : null}
+                    {session.stockPlaceName ? (
+                      <span>
+                        · {copy.stockPlace} {session.stockPlaceName}
+                      </span>
+                    ) : null}
                     <span>
                       · {session.saleCount} {copy.sales}
                     </span>
