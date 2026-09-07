@@ -301,7 +301,25 @@ describe("journalCashRegisterAction", () => {
     expect(net).toBeCloseTo(260); // actual 360 − float 100
   });
 
-  it("adds a 'short' correction as CHARGES, net movement = actual - float", async () => {
+  it("books a shortage as CHARGES — a missing CHF 10 is a loss, not a produit", async () => {
+    prisma.cashRegister.findUnique.mockResolvedValue(closedUnbooked);
+    // float 100, cash sales 250 → the drawer should hold 350; it holds 340, so it
+    // is CHF 10 short. That shortage is money lost, so entry 3 is a CHARGES.
+    registerFigures.mockResolvedValue(figures(10000, 25000, 34000));
+
+    const result = await journalCashRegisterAction({ error: null }, journalForm());
+    const rows = writtenEntries();
+    expect(rows.map((row) => [row.accountType, row.amount])).toEqual([
+      ["CHARGES", 100], // float out
+      ["PRODUITS", 350], // returned in
+      ["CHARGES", 10], // shortage — a loss, booked out
+    ]);
+    const net = rows.reduce((sum, row) => sum + (row.accountType === "PRODUITS" ? row.amount : -row.amount), 0);
+    expect(net).toBeCloseTo(240); // actual 340 − float 100
+    expect(result).toEqual({ error: null });
+  });
+
+  it("adds a larger 'short' correction the same way", async () => {
     prisma.cashRegister.findUnique.mockResolvedValue(closedUnbooked);
     // float 100, cash sales 250, counted back 330 → expected 350, gap +20 (short)
     registerFigures.mockResolvedValue(figures(10000, 25000, 33000));

@@ -89,8 +89,8 @@ Entry 2 with a negative `expected` (a till that gave out more than it took) flip
 to `CHARGES` with `abs(expected)`, and entry 1 with a zero float is skipped the
 same way entry 3 is. Handle both; a bar that only refunds deposits is a real bar.
 
-Net effect on the account: `-float + expected - gap = actual`. That identity is
-the thing to assert in a test.
+Net effect on the account: `-float + expected - gap = actual - float`. That
+identity is the thing to assert in a test.
 
 ---
 
@@ -319,10 +319,14 @@ add up by hand:
 - Float CHF 100.00, no sales, counted back CHF 100.00 → two entries
   (charges 100, produits 100), **no correction entry**.
 - Float CHF 100.00, cash sales totalling CHF 250.00, counted back CHF 340.00 →
-  charges 100, produits 350, produits 10 (over). The cash account's balance moves
-  by exactly +240.00.
+  charges 100, produits 350, **charges 10 (short — the drawer is CHF 10 under the
+  CHF 350 it should hold, and a shortage is a loss, so it books as a charge)**.
+  The cash account's balance moves by exactly +240.00.
 - Same but counted back CHF 330.00 → charges 100, produits 350, charges 20
   (short).
+- Counted back CHF 360.00 → charges 100, produits 350, produits 10 (over — the
+  drawer holds CHF 10 more than expected; an unexplained surplus books as a
+  produit). Balance moves by +260.00.
 - A Twint sale in the session does **not** move any of these figures.
 - A negative-total cash sale lowers `expected`.
 - Press the button twice → the second press is refused and the journal still has
