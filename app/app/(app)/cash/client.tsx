@@ -246,14 +246,14 @@ export function CashRegistersClient({
         register A's error is still on screen when the dialog reopens on B.
       */}
       <CloseRegisterModal
-        key={closing?.id ?? "none"}
+        key={`close-${closing?.id ?? "none"}`}
         locale={locale}
         register={closing}
         onClose={() => setClosing(null)}
       />
 
       <JournalRegisterModal
-        key={booking?.id ?? "none"}
+        key={`journal-${booking?.id ?? "none"}`}
         locale={locale}
         register={booking}
         budgets={budgets}
