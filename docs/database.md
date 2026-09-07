@@ -37,6 +37,7 @@ CashRegister ─── MoneyAccount (a CASH account, Restrict)
 
 PosSession ─── PosTemplate (Restrict)
            ─── CashRegister? (Restrict, set only when CASH is accepted)
+           ─── StockPlace? (SetNull, fixed at open; each tracked line sold writes an Out of it)
            ─── User (openedBy, SetNull; usersSelecting = phones in the session)
            ─< PosSessionPayment  (accepted methods, fixed at open)
            ─< PosSale ─< PosSaleLine >─ StockElement? (SetNull, snapshot label/price)
@@ -59,6 +60,7 @@ City                              (global lookup table, no relations)
 
 StockUnit ─< StockElement         (global, not Edition-scoped)
 StockPlace ─< StockItem >─ StockElement
+StockPlace ─< PosSession           (SetNull; the shelf a session sells out of)
 StockMovement ─ StockPlace / StockElement / StockItem? / User?
 ```
 
@@ -465,7 +467,9 @@ edition closes.
 | `name` | String | Unique |
 
 `User.selectedStockPlaceId` points here (`SetNull`) — which stock a user works in is a preference on
-the user, exactly like `selectedEditionId`.
+the user, exactly like `selectedEditionId`. `PosSession.stockPlaceId` points here too (`SetNull`):
+a point-of-sale session may sell out of a place, and deleting the place must not take a night's
+sales with it.
 
 ### `StockUnit`
 The unit an item is measured in. A table rather than an enum, so an admin adds one without shipping
@@ -648,6 +652,7 @@ pause, resume, close and sell; every write goes through `resolveWritableEditionI
 | `editionId` | String | FK → Edition, `Cascade` |
 | `templateId` | String | FK → PosTemplate, **`Restrict`** — a template a session has used cannot be deleted |
 | `cashRegisterId` | String? | FK → CashRegister, **`Restrict`**. Set exactly when `CASH` is accepted, and at most one |
+| `stockPlaceId` | String? | FK → StockPlace, **`SetNull`**. Optional and fixed at open. While set, every tracked line sold writes an Out of this place (oldest expiry first, clamped at zero, never refused). Null → the session moves no stock |
 | `name` | String | Not unique |
 | `status` | `PosSessionStatus` | `OPEN` \| `PAUSED` \| `CLOSED`. Default `OPEN`. `CLOSED` is terminal |
 | `openedById` | String? | FK → User, `SetNull` |
@@ -657,7 +662,7 @@ pause, resume, close and sell; every write goes through `resolveWritableEditionI
 | `sales` | `PosSale[]` | Every transaction rung up |
 | `usersSelecting` | `User[]` | Phones currently in this session; closing clears all of them |
 
-Indexes: `(editionId, status)`, `(cashRegisterId)`.
+Indexes: `(editionId, status)`, `(cashRegisterId)`, `(stockPlaceId)`.
 
 ### `PosSessionPayment`
 One accepted payment method on a session. Unique on `(sessionId, method)`.
@@ -739,8 +744,9 @@ an edition must not delete the users who were looking at it.
   because of a budget.
 - Edition delete cascades to its Budget records, those to their BudgetLine records, and each
   journal entry's `budgetId` is set null on the way (SetNull, so the cascade cannot deadlock).
-- StockPlace delete cascades to its items and movements; StockElement delete is *refused* while it
-  is stocked anywhere.
+- StockPlace delete cascades to its items and movements, and sets `PosSession.stockPlaceId` null on
+  any session that sold out of it (the sales themselves stay); StockElement delete is *refused*
+  while it is stocked anywhere.
 
 ### Decimal precision
 Monetary amounts use `Prisma.Decimal` / PostgreSQL `DECIMAL` to avoid floating-point rounding. The helper `decimalToNumber()` in `lib/utils.ts` converts for display.

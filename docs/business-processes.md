@@ -508,6 +508,9 @@ Four gestures, one log:
   **single** movement, which is what a recount is.
 - **New entry** and **take out of stock** are a movement each, in and out.
 - **Moving stock between places** is two movements, an Out and an In — see above.
+- **A point-of-sale sale** is an Out per sold line, when the session behind it names this stock —
+  see [A sale moves stock](#a-sale-moves-stock). `/stock/history` showing removals nobody typed is
+  that, working as intended.
 
 A date is not a quantity and logs nothing on its own. The exception is the one that matters: a shelf
 is an article *at a date*, so typing a date the shelf already carries makes the two lots one — that
@@ -703,8 +706,12 @@ nothing.
   Tick cash and a register field appears: it must be an **open** register in the edition. Untick
   cash and any register is dropped — a session that takes no cash stores no drawer. Opening a
   session joins it.
-- **The payment methods are fixed at open.** There is no editing them afterwards; open another
-  session instead.
+- **A stock place is optional.** Name one and every tracked article the session sells comes off
+  that shelf (see [A sale moves stock](#a-sale-moves-stock) below); leave it empty — the default,
+  and what every session did before this existed — and the session moves no stock at all.
+- **The payment methods and the stock place are fixed at open.** There is no editing them
+  afterwards; open another session instead. Moving a running session to another shelf would make
+  its earlier sales lie about where the stock came from.
 - **Pausing** stops selling — the till refuses a sale — without ending the session. Resuming lifts
   it.
 - **Closing is terminal.** It sets `closedAt`, drops **every** phone that was in the session back to
@@ -743,8 +750,29 @@ trusted**: the server re-reads every line, recomputes the total in integer rappe
 cash sale where less than the total was given. `total`, `cashGiven` and `changeDue` may all be
 negative or zero — an all-refund sale is money going *out* of the drawer, recorded like any other.
 
-**A sale does not move stock yet** — that is a later part of this chain and needs a stock place a
-session does not carry.
+### A sale moves stock
+
+A session that names a **stock place** takes what it sells off that shelf. While the place is set,
+every sale writes ordinary `StockMovement`s — one **Out** per line whose article is
+[counted in stock](#11-articles), through the same `applyMovement()` every other stock screen goes
+through, so `/stock/history` reads a POS sale exactly like a hand-typed removal (with the seller's
+name on it). A session with **no** stock place moves nothing, which is what every session did before
+this existed.
+
+- **Oldest expiry first.** A line for three of something draws the earliest-dated shelf row down
+  first and dips into the next when it empties — two rows, two movements. Undated rows go last: a
+  row with a date on it is the one to sell before it turns.
+- **A custom sale moves nothing** — there is no article behind it.
+- **An untracked article moves nothing** — a poured glass of beer is sold and never shelved; that
+  is the whole point of the `tracksStock` flag.
+- **A short shelf never refuses a sale.** Taking out more than is there lands the row on zero and
+  the movement records what actually left — exactly as the +/− buttons clamp. A till that stopped
+  selling because a delivery was not filed is worse than a stock count that reads zero and says so.
+  Nothing goes negative and nothing is blocked.
+
+The movements are written **inside the same transaction as the sale**, so a genuine database
+failure rolls the whole sale back, but nothing about stock can *refuse* a sale that the money side
+accepted.
 
 ### History
 

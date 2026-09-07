@@ -95,10 +95,15 @@ app/
 │   │   │                            `recordPosSaleAction`. Every write `getCurrentUserAccess()` +
 │   │   │                            `resolveWritableEditionId()`; the sale recomputes the total in
 │   │   │                            rappen, stores the greedy change sheet, forces cash fields null
-│   │   │                            on non-cash. Closing a session clears every seller's selection
+│   │   │                            on non-cash, and — when the session names a stock place —
+│   │   │                            calls `removeFromPlace` (stock/`actions.ts`) per tracked line,
+│   │   │                            in the sale transaction. Closing a session clears every
+│   │   │                            seller's selection
 │   │   ├── open-session-modal.tsx ← Header button + modal (the standard create shape): name,
 │   │   │                            template, payment-method checkboxes; the register `<Select>`
-│   │   │                            appears only once Cash is ticked. Shared by picker and manager
+│   │   │                            appears only once Cash is ticked, and an optional stock-place
+│   │   │                            `<Select>` (empty = "Don't move stock"). Shared by picker and
+│   │   │                            manager
 │   │   ├── session-picker.tsx    ← The "no session joined" screen, in the `StockPlacePicker` shape:
 │   │   │                            a card per running session with a Join button, plus the open button
 │   │   ├── sessions-modal.tsx    ← The "list icon" sessions manager: every running session with
@@ -216,8 +221,10 @@ app/
 │   │   └── actions.ts            ← Server actions: add/adjust/set/remove stock, the place/unit
 │   │                                configuration, and `lookupBarcodeAction()` — the read behind a
 │   │                                scan. The scan-to-create path still writes a `StockElement`
-│   │                                here. Every quantity change goes through one helper that writes
-│   │                                the row and its movement together
+│   │                                here. Every quantity change goes through one helper
+│   │                                (`applyMovement`) that writes the row and its movement
+│   │                                together; it and `removeFromPlace` (take pieces off a shelf,
+│   │                                oldest expiry first) are exported for the POS sale transaction
 │   │
 │   ├── templates/
 │   │   ├── page.tsx              ← Document template manager (admin only, data-fetching only)
