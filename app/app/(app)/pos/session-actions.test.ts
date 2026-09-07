@@ -27,7 +27,7 @@ const prisma = {
 };
 
 vi.mock("next/cache", () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
-vi.mock("@/app/(app)/stock/actions", () => ({ removeFromPlace: (...a: unknown[]) => removeFromPlace(...a) }));
+vi.mock("@/lib/stock-movements", () => ({ removeFromPlace: (...a: unknown[]) => removeFromPlace(...a) }));
 vi.mock("@/lib/access", () => ({ getCurrentUserAccess: () => getCurrentUserAccess() }));
 vi.mock("@/lib/edition-context", () => ({ resolveWritableEditionId: () => resolveWritableEditionId() }));
 vi.mock("@/lib/db", () => ({ prisma }));

@@ -3,13 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // `removeFromPlace` is the piece 107 added: the POS calls it once per sold line
 // inside its own sale transaction. It never refuses and never goes negative —
 // oldest expiry first, clamped at zero exactly as the +/- buttons are.
-const prisma = {};
-
-vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("@/lib/access", () => ({ getCurrentUserAccess: vi.fn(), requireAdmin: vi.fn() }));
-vi.mock("@/lib/db", () => ({ prisma }));
-
-const { removeFromPlace } = await import("./actions");
+//
+// Nothing is mocked: the helper takes the caller's transaction client, so a fake
+// one is the whole fixture.
+import { removeFromPlace } from "./stock-movements";
 
 /** A fake transaction client that keeps each row's quantity in step with the writes. */
 function txWithRows(rows: Array<{ id: string; expireDate: Date | null; quantity: number }>) {

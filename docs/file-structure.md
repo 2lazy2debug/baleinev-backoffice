@@ -100,7 +100,7 @@ app/
 │   │   │                            `resolveWritableEditionId()`; the sale recomputes the total in
 │   │   │                            rappen, stores the greedy change sheet, forces cash fields null
 │   │   │                            on non-cash, and — when the session names a stock place —
-│   │   │                            calls `removeFromPlace` (stock/`actions.ts`) per tracked line,
+│   │   │                            calls `removeFromPlace` (`lib/stock-movements.ts`) per line,
 │   │   │                            in the sale transaction. Closing a session clears every
 │   │   │                            seller's selection
 │   │   ├── open-session-modal.tsx ← Header button + modal (the standard create shape): name,
@@ -225,10 +225,9 @@ app/
 │   │   └── actions.ts            ← Server actions: add/adjust/set/remove stock, the place/unit
 │   │                                configuration, and `lookupBarcodeAction()` — the read behind a
 │   │                                scan. The scan-to-create path still writes a `StockElement`
-│   │                                here. Every quantity change goes through one helper
-│   │                                (`applyMovement`) that writes the row and its movement
-│   │                                together; it and `removeFromPlace` (take pieces off a shelf,
-│   │                                oldest expiry first) are exported for the POS sale transaction
+│   │                                here. Every quantity change goes through `applyMovement()` /
+│   │                                `addToPlace()` in `lib/stock-movements.ts` — a plain module,
+│   │                                not an action file, because the POS calls the same helpers
 │   │
 │   ├── templates/
 │   │   ├── page.tsx              ← Document template manager (admin only, data-fetching only)
@@ -390,6 +389,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `totp.ts` | TOTP primitives over `otpauth`: `generateTotpCode`/`assertValidTotpSeed` for the Passwords vault, plus `generateTotpSecret`/`buildTotpUri`/`verifyTotpCode` for account enrolment |
 | `two-factor.ts` | Account 2FA: seals/opens the seed on `User` (`sealTwoFactorSecret`, `verifyUserTwoFactorCode`) and builds the enrolment QR (`buildTwoFactorEnrolment`). Keyed by `PASSWORD_VAULT_KEY` via `secret-crypto.ts` |
 | `stock.ts` | `formatPiece()` / `formatTotal()` / `formatQuantity()` / `formatExpiry()` / `toDateInputValue()` — the two numbers a stock row carries (pieces, and what they add up to) written the same way everywhere — plus `normalizeBarcode()` / `isValidBarcode()`, so a camera and a typed field are checked by the same GTIN rule, and `convertQuantity()` / `formatFactor()` for the unit conversions. Import-free, like `addresses.ts` |
+| `stock-movements.ts` | `applyMovement()` / `addToPlace()` / `removeFromPlace()` — the only three ways a `StockItem.quantity` changes, each writing the row and its `StockMovement` together. Each takes the caller's `Prisma.TransactionClient`, so the stock actions and `recordPosSaleAction` move stock inside their own transaction. Plain module on purpose: every export of a `"use server"` file is a callable endpoint, and a helper two modules share is not one |
 | `open-food-facts.ts` | `fetchProductByBarcode()` — what a scanned EAN says about a product (name, brand, size of one piece), from the open catalogue keyed by that code. The name is read `fr` → `en` → `de` → generic, one fixed order for everyone, since the item it fills in is shared. Server-only, best-effort: a miss, a timeout or a half-empty product all mean "type the rest yourself" |
 | `addresses.ts` | `addressDisplayName()` / `addressNameBlock()` / `addressPersonName()` / `formatPhone()` / `formatPostalLine()` and `DEFAULT_COUNTRY`. Import-free on purpose — the table, the pickers and the actions all read the same rules without dragging Prisma into a browser bundle |
 | `articles.ts` | `elementFieldsFrom()` / `assertBarcodeFree()` — the `StockElement` fields both writing forms post (articles' own dialog, and the stock app's "new item" half) and the "one barcode, one article" check, shared so the two paths cannot drift |

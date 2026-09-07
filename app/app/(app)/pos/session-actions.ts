@@ -3,12 +3,12 @@
 import { PosPaymentMethod, PosSessionStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
-import { removeFromPlace } from "@/app/(app)/stock/actions";
 import { getCurrentUserAccess } from "@/lib/access";
 import { type DenominationCount, makeChange } from "@/lib/cash";
 import { prisma } from "@/lib/db";
 import { resolveWritableEditionId } from "@/lib/edition-context";
 import { type ActionState, getRequiredString, toActionErrorMessage } from "@/lib/server-action-helpers";
+import { removeFromPlace } from "@/lib/stock-movements";
 
 /**
  * The selling side of the POS. Kept apart from 103's `actions.ts`, which is
