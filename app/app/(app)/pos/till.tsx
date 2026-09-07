@@ -24,6 +24,7 @@ import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
 
 import { methodLabel, orderMethods, type PosMethod } from "./pos-methods";
+import { COLUMN_CHOICES, columnClasses, normalizeColumns, useTillColumns } from "./till-columns";
 import { recordPosSaleAction } from "./session-actions";
 
 export type Tile = {
@@ -53,6 +54,7 @@ function TileButton({
   return (
     <Card
       as="div"
+      span="auto"
       role="button"
       aria-label={label}
       tabIndex={disabled ? -1 : 0}
@@ -98,6 +100,7 @@ export function Till({
   const keyRef = useRef(0);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [page, setPage] = useState(0);
+  const { columns, chooseColumns } = useTillColumns();
 
   const [listOpen, setListOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -208,33 +211,47 @@ export function Till({
         <p className="text-3xl font-semibold tabular-nums">{formatCurrency(fromRappen(total))}</p>
       </Card>
 
-      {totalPages > 1 ? (
-        <div className="flex items-center justify-center gap-3">
-          <IconButton
-            size="sm"
-            tone="neutral"
-            label={copy.previousPage}
-            disabled={page === 0}
-            onClick={() => setPage((current) => Math.max(0, current - 1))}
-          >
-            <ChevronLeft />
-          </IconButton>
-          <span className="text-sm tabular-nums text-[var(--muted)]">
-            {copy.pageOf.replace("{page}", String(page + 1)).replace("{total}", String(totalPages))}
-          </span>
-          <IconButton
-            size="sm"
-            tone="neutral"
-            label={copy.nextPage}
-            disabled={page >= totalPages - 1}
-            onClick={() => setPage((current) => current + 1)}
-          >
-            <ChevronRight />
-          </IconButton>
-        </div>
-      ) : null}
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+        {totalPages > 1 ? (
+          <div className="flex items-center gap-3">
+            <IconButton
+              size="sm"
+              tone="neutral"
+              label={copy.previousPage}
+              disabled={page === 0}
+              onClick={() => setPage((current) => Math.max(0, current - 1))}
+            >
+              <ChevronLeft />
+            </IconButton>
+            <span className="text-sm tabular-nums text-[var(--muted)]">
+              {copy.pageOf.replace("{page}", String(page + 1)).replace("{total}", String(totalPages))}
+            </span>
+            <IconButton
+              size="sm"
+              tone="neutral"
+              label={copy.nextPage}
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage((current) => current + 1)}
+            >
+              <ChevronRight />
+            </IconButton>
+          </div>
+        ) : null}
 
-      <div className="grid grid-cols-3 gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+            {copy.columns}
+          </span>
+          <SegmentedControl
+            size="sm"
+            options={COLUMN_CHOICES.map((count) => ({ value: String(count), label: String(count) }))}
+            value={String(columns)}
+            onChange={(value) => chooseColumns(normalizeColumns(value))}
+          />
+        </div>
+      </div>
+
+      <div className={cn("grid gap-2", columnClasses[columns])}>
         {Array.from({ length: 9 }, (_, slot) => {
           if (slot === POS_PAGE_SLOTS) {
             return (
@@ -249,7 +266,7 @@ export function Till({
           const tile = tileByPosition.get(position);
 
           if (!tile) {
-            return <Card key={position} as="div" dashed className="min-h-24" />;
+            return <Card key={position} as="div" span="auto" dashed className="min-h-24" />;
           }
 
           return (

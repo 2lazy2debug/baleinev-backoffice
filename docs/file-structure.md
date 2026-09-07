@@ -116,9 +116,13 @@ app/
 │   │   │                            standing in, next to "You're here" — it is the only way back to
 │   │   │                            the picker. Holds the open-session button too
 │   │   ├── till.tsx              ← The selling screen. Client-side cart (nothing written until
-│   │   │                            checkout), running total, 3×3 grid + pager, custom-sale modal,
-│   │   │                            a List modal with +/−/bin, and a checkout modal that shows the
-│   │   │                            live change sheet from `makeChange()` for a cash sale
+│   │   │                            checkout), running total, the grid + pager + column picker,
+│   │   │                            custom-sale modal, a List modal with +/−/bin, and a checkout
+│   │   │                            modal that shows the live change sheet from `makeChange()`
+│   │   ├── till-columns.ts       ← How wide *this device* draws the grid (2–6, default 3), kept in
+│   │   │                            `localStorage` and read through `useSyncExternalStore` so it
+│   │   │                            hydrates. Never a template or session setting: a phone and an
+│   │   │                            iPad on the same session pick their own density
 │   │   ├── pos-methods.ts        ← `PosMethod`, `orderMethods()`, `methodLabel()` — shared by the
 │   │   │                            client screens so method order and labels never drift
 │   │   ├── actions.ts            ← `createPosTemplateAction` / `renamePosTemplateAction` /

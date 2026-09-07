@@ -752,10 +752,17 @@ session the moment the edition closed.
 
 ### Selling
 
-The till is the joined session's screen: a big running total, the template's **3×3 grid** (the same
-3×3 at every width), a pager when the template has more than one page, and **List** / **Checkout**.
-The ninth tile of every page is **Custom sale** — a label and an amount, negatives allowed, no
-article behind it.
+The till is the joined session's screen: a big running total, the template's grid, a pager when the
+template has more than one page, a **column picker**, and **List** / **Checkout**. The ninth tile of
+every page is **Custom sale** — a label and an amount, negatives allowed, no article behind it.
+
+**Columns are a device setting, not a template or session one.** A page is always the template's
+eight slots plus Custom sale; the picker (2 to 6, default 3) only says how wide to lay those nine
+tiles out, and it never moves a tile to another page. The choice is kept in that browser's
+`localStorage` (`pos:columns`, read through a `useSyncExternalStore` in
+`app/app/(app)/pos/till-columns.ts`), so a phone in the crowd can sell at 3 while an iPad on the
+counter sells the **same session** at 6, and neither sees the other's choice. The template editor
+stays a 3×3 — it is authoring the pages, not the density.
 
 **The cart lives in the browser and nowhere else** until checkout succeeds. A refresh loses an
 unfinished sale, and that is correct — an unfinished sale is not a sale. The **List** dialog edits

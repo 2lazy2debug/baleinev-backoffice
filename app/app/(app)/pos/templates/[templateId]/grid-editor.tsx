@@ -58,6 +58,7 @@ function Tile({
   return (
     <Card
       as="div"
+      span="auto"
       dashed={dashed}
       role={onActivate ? "button" : undefined}
       tabIndex={onActivate ? 0 : undefined}

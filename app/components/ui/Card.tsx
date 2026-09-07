@@ -1,6 +1,6 @@
 import { cn } from "./cn";
 
-type CardSpan = "1/4" | "1/3" | "1/2" | "2/3" | "full";
+type CardSpan = "1/4" | "1/3" | "1/2" | "2/3" | "full" | "auto";
 
 // Working area = body minus sidebar. Cards sit in a 12-col grid; span picks the fraction.
 const spanClasses: Record<CardSpan, string> = {
@@ -9,6 +9,10 @@ const spanClasses: Record<CardSpan, string> = {
   "1/2": "col-span-12 lg:col-span-6",
   "2/3": "col-span-12 lg:col-span-8",
   full: "col-span-12",
+  // For a Card used as a tile in a grid that is not <CardGrid> — the POS till
+  // lays 9 of them out in `grid-cols-N`, where a 12-track span makes the browser
+  // grow the grid to 12 columns and every tile ends up on a row of its own.
+  auto: "col-span-1",
 };
 
 type CardProps = React.HTMLAttributes<HTMLElement> & {
