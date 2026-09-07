@@ -312,8 +312,17 @@ Each of these is here because the symptom does not name the cause.
   --package-lock-only` after every dependency change.
 - **`next build` must not need a devDependency.** `typescript`, `@types/*`, `tailwindcss`,
   `@tailwindcss/postcss`, `prisma` and `tsx` are in `dependencies` for exactly this reason;
-  only `eslint` and `eslint-config-next` are dev deps. `install.sh` installs `--omit=dev`
-  deliberately, so the trap springs on a machine someone is watching.
+  only `eslint`, `eslint-config-next` and `vitest` are dev deps. `install.sh` installs
+  `--omit=dev` deliberately, so the trap springs on a machine someone is watching.
+- **`next build` type-checks the whole tree, tests included — so test files must not
+  import a devDependency the build can see.** `next build` runs `tsc` over everything
+  `tsconfig.json` includes, and `vitest.config.ts` plus every `*.test.ts` import from
+  `vitest`, a dev dep the server does not install. The build then dies at "Running
+  TypeScript" with `Cannot find module 'vitest/config'` — which is what quarantined
+  every tag from v0.35.0 to v0.41.0. The fix is `tsconfig.json`'s `exclude`:
+  `vitest.config.ts`, `**/*.test.ts`, `**/*.test.tsx`. `vitest run` finds tests through
+  `vitest.config.ts`, not tsconfig, so the suite is unaffected; the build simply stops
+  type-checking files it has no dependencies for.
 - **A Postgres volume keeps its original credentials.** `POSTGRES_*` only initialise an
   *empty* volume. Pointing a fresh `.env` at a pre-existing one fails as "Postgres never
   became ready", never as an auth error.
