@@ -75,7 +75,10 @@ export function SessionPicker({
       {error ? <FormError message={error} /> : null}
 
       {sessions.length === 0 ? (
-        <Card dashed>{copy.noSessionsHint}</Card>
+        <Card dashed className="space-y-1">
+          <SectionTitle>{copy.noSessions}</SectionTitle>
+          <p className="text-sm text-[var(--muted)]">{copy.noSessionsHint}</p>
+        </Card>
       ) : (
         <CardGrid>
           {sessions.map((session) => (

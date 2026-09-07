@@ -111,8 +111,10 @@ app/
 │   │   ├── session-picker.tsx    ← The "no session joined" screen, in the `StockPlacePicker` shape:
 │   │   │                            a card per running session with a Join button, plus the open button
 │   │   ├── sessions-modal.tsx    ← The "list icon" sessions manager: every running session with
-│   │   │                            join / pause-resume / close (close confirmed, copy says nothing
-│   │   │                            is booked to the journal). Holds the open-session button too
+│   │   │                            join / leave / pause-resume / close (close confirmed, copy says
+│   │   │                            nothing is booked to the journal). Leave sits on the row you are
+│   │   │                            standing in, next to "You're here" — it is the only way back to
+│   │   │                            the picker. Holds the open-session button too
 │   │   ├── till.tsx              ← The selling screen. Client-side cart (nothing written until
 │   │   │                            checkout), running total, 3×3 grid + pager, custom-sale modal,
 │   │   │                            a List modal with +/−/bin, and a checkout modal that shows the

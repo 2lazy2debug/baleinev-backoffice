@@ -735,6 +735,9 @@ nothing.
 - **The payment methods and the stock place are fixed at open.** There is no editing them
   afterwards; open another session instead. Moving a running session to another shelf would make
   its earlier sales lie about where the stock came from.
+- **Leaving** puts one person back at the picker and touches nothing else — the session keeps
+  running for everyone else in it. The button is in the sessions dialog, on the row of the session
+  you are standing in; without it the only way out would be someone else closing your till.
 - **Pausing** stops selling — the till refuses a sale — without ending the session. Resuming lifts
   it.
 - **Closing is terminal.** It sets `closedAt`, drops **every** phone that was in the session back to

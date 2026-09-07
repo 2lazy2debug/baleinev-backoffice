@@ -13,12 +13,16 @@ import { initialActionState } from "@/lib/server-action-helpers";
 import { OpenSessionModal, type RegisterOption, type StockPlaceOption, type TemplateOption } from "./open-session-modal";
 import { type PickerSession } from "./session-picker";
 import { methodLabel } from "./pos-methods";
-import { joinPosSessionAction, setPosSessionStatusAction } from "./session-actions";
+import { joinPosSessionAction, leavePosSessionAction, setPosSessionStatusAction } from "./session-actions";
 
 /**
  * The "list icon top right" — every running session in one dialog, with the
- * buttons to join, pause/resume and close each. Closing asks for confirmation
- * and the copy says plainly that nothing is booked to the journal by it.
+ * buttons to join, leave, pause/resume and close each. Closing asks for
+ * confirmation and the copy says plainly that nothing is booked to the journal
+ * by it.
+ *
+ * Leaving lives here because this is where the sessions are: the only other way
+ * back to the picker would be someone else closing the till you are standing at.
  *
  * It also carries the "Open a session" button, so a seller can spin up another
  * till without leaving the one they are on.
@@ -41,18 +45,19 @@ export function SessionsModal({
   const copy = dictionaries[locale].pos;
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [joinPending, setJoinPending] = useState(false);
-  const [joinError, setJoinError] = useState<string | null>(null);
+  // Joining and leaving are the same move — one busy flag, one error line.
+  const [movePending, setMovePending] = useState(false);
+  const [moveError, setMoveError] = useState<string | null>(null);
   const [statusState, statusAction, statusPending] = useActionState(setPosSessionStatusAction, initialActionState);
   const markStatus = useCloseOnSuccess(statusState, statusPending, () => router.refresh());
 
-  async function join(sessionId: string) {
-    setJoinError(null);
-    setJoinPending(true);
-    const result = await joinPosSessionAction(sessionId);
-    setJoinPending(false);
+  async function move(action: () => Promise<{ error: string | null }>) {
+    setMoveError(null);
+    setMovePending(true);
+    const result = await action();
+    setMovePending(false);
     if (result.error) {
-      setJoinError(result.error);
+      setMoveError(result.error);
       return;
     }
     router.refresh();
@@ -81,7 +86,7 @@ export function SessionsModal({
             stockPlaces={stockPlaces}
           />
 
-          <FormError message={joinError ?? statusState.error} />
+          <FormError message={moveError ?? statusState.error} />
 
           <div className="space-y-2">
             {sessions.map((session) => {
@@ -117,12 +122,22 @@ export function SessionsModal({
 
                   <div className="flex flex-wrap items-center gap-2">
                     {isCurrent ? (
-                      <span className="inline-flex items-center gap-1 text-2xs font-semibold text-[var(--accent)]">
-                        <Check className="h-3.5 w-3.5" />
-                        {copy.youAreHere}
-                      </span>
+                      <>
+                        <span className="inline-flex items-center gap-1 text-2xs font-semibold text-[var(--accent)]">
+                          <Check className="h-3.5 w-3.5" />
+                          {copy.youAreHere}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => move(leavePosSessionAction)}
+                          disabled={movePending}
+                        >
+                          {copy.leaveSession}
+                        </Button>
+                      </>
                     ) : (
-                      <Button size="sm" onClick={() => join(session.id)} disabled={joinPending}>
+                      <Button size="sm" onClick={() => move(() => joinPosSessionAction(session.id))} disabled={movePending}>
                         {copy.joinSession}
                       </Button>
                     )}
