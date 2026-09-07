@@ -6,7 +6,7 @@ there. Then work from that file and this one only. Do not read 101–105 or 107;
 their context is not yours.
 
 **Needs 102** (cash registers) and **104** (POS sessions and sales). Everything
-you need to know about them is stated below.
+you need to know about them is stated below. Again, don't open those plans. 
 
 ## What this builds
 
