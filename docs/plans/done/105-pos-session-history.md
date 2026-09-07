@@ -1,6 +1,8 @@
 # 105 — POS session history
 
-**Read [100-cash-manager-pos.md](100-cash-manager-pos.md) first** — the shared
+> **Done** — shipped in v0.38.0 on 2026-09-07.
+
+**Read [../100-cash-manager-pos.md](../100-cash-manager-pos.md) first** — the shared
 context, the ground rules, the delegation policy and the release protocol live
 there. Then work from that file and this one only. Do not read 101–104, 106 or
 107; their context is not yours.
@@ -186,7 +188,7 @@ Commit anything this changed.
 
 ## Step 7 — Release
 
-Follow **Release protocol** in [100-cash-manager-pos.md](100-cash-manager-pos.md).
+Follow **Release protocol** in [../100-cash-manager-pos.md](../100-cash-manager-pos.md).
 Directive: **`non-breaking`** — this plan adds no migration, and a tag that claims
 one makes the box run `prisma migrate deploy` for nothing. Do not monitor the
 deployment.
