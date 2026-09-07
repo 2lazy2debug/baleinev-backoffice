@@ -3,7 +3,7 @@ import { CashCountKind, MoneyAccountType } from "@prisma/client";
 
 import { WritableEditionOnly } from "@/components/edition-read-only";
 import { EmptyPage, PageHeader, buttonClasses } from "@/components/ui";
-import { getCurrentUserAccess, isAdmin } from "@/lib/access";
+import { isAdmin, requireMoneyAccountManager } from "@/lib/access";
 import { editionBudgets } from "@/lib/budgets";
 import { countTotal } from "@/lib/cash";
 import { plannedEntries, registerFigures } from "@/lib/cash-register";
@@ -21,6 +21,12 @@ import OpenRegisterModal from "./open-register-modal";
  * once, from the figures this page computes for every closed unbooked register.
  */
 export default async function CashPage() {
+  // Hiding /cash from the sidebar is not access control: the screen carries
+  // every register's counts and, for an admin, the edition's budgets and
+  // cost-centre codes. The same role that may open a till may read the page.
+  const access = await requireMoneyAccountManager();
+  const admin = isAdmin(access);
+
   const locale = await getLocale();
   const copy = getDictionary(locale);
 
@@ -33,8 +39,6 @@ export default async function CashPage() {
       </EmptyPage>
     );
   }
-
-  const access = await getCurrentUserAccess();
 
   const cashAccounts = await prisma.moneyAccount.findMany({
     where: { editionId, type: MoneyAccountType.CASH },
@@ -53,6 +57,8 @@ export default async function CashPage() {
     );
   }
 
+  // Only an admin can open the booking modal, so only an admin is shipped the
+  // lists it needs.
   const [registers, budgets, costCenters] = await Promise.all([
     prisma.cashRegister.findMany({
       where: { editionId },
@@ -66,12 +72,14 @@ export default async function CashPage() {
         counts: { select: { kind: true, denomination: true, quantity: true } },
       },
     }),
-    editionBudgets(editionId),
-    prisma.costCenter.findMany({
-      where: { editionId },
-      orderBy: { code: "asc" },
-      select: { id: true, code: true },
-    }),
+    admin ? editionBudgets(editionId) : [],
+    admin
+      ? prisma.costCenter.findMany({
+          where: { editionId },
+          orderBy: { code: "asc" },
+          select: { id: true, code: true },
+        })
+      : [],
   ]);
 
   // The figures for every closed, not-yet-booked register — in parallel, so the
@@ -136,7 +144,7 @@ export default async function CashPage() {
       <CashRegistersClient
         locale={locale}
         registers={rows}
-        isAdmin={isAdmin(access)}
+        isAdmin={admin}
         budgets={budgets}
         costCenters={costCenters}
       />

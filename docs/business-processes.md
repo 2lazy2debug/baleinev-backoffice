@@ -579,8 +579,13 @@ closed later by counting what is left. Both ends are a sheet of the twelve Swiss
 
 Opening and closing a register is for whoever may already touch money accounts: an **admin**, or a
 member of the **accounting department** for an edition they belong to (`canManageMoneyAccounts`). No
-new role. The `/cash` link shows for exactly those people, and a closed edition hides the "Open a
-register" button and makes both actions refuse.
+new role. The `/cash` link shows for exactly those people **and the page itself refuses everyone
+else** — `requireMoneyAccountManager()` is the first line of it, because the screen carries every
+register's counts. A closed edition hides the "Open a register" button and makes both actions
+refuse.
+
+The budgets and cost-centre codes the booking modal needs are read only when the reader is an
+**admin**: a cash manager who cannot book has no use for them and is not sent them.
 
 ### Opening
 

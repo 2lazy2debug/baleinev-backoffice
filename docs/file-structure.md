@@ -61,9 +61,13 @@ app/
 │   ├── cash/                    ← Cash manager: open a till on a CASH money account with a counted
 │   │   │                            float, close it with a counted count, then (admin) book the
 │   │   │                            closed register — three journal entries, once
-│   │   ├── page.tsx              ← List of registers (open first), data-fetching only; builds the
-│   │   │                            one row array both the table and the cardlets read, and calls
-│   │   │                            `registerFigures` for every closed unbooked register in parallel
+│   │   ├── page.tsx              ← List of registers (open first), data-fetching only; gated by
+│   │   │                            `requireMoneyAccountManager()` and reads budgets/cost centres
+│   │   │                            only for an admin. Builds the one row array both the table and
+│   │   │                            the cardlets read, and calls `registerFigures` for every closed
+│   │   │                            unbooked register in parallel
+│   │   ├── page.test.ts          ← The page's gate: who is refused, and what a non-admin manager
+│   │   │                            is not sent
 │   │   ├── client.tsx            ← Table above `sm`, cardlets below. Owns the close dialog, the
 │   │   │                            book dialog and the read-only "both sheets side by side"
 │   │   │                            dialog, one of each for the whole list
