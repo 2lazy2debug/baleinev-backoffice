@@ -355,10 +355,11 @@ export async function recordPosSaleAction(_prevState: ActionState, formData: For
       }
 
       // A sale moves stock only when the session names a shelf. Every tracked
-      // line then leaves that shelf as an ordinary Out, oldest expiry first —
-      // clamped at zero, never refused: a till that stops selling because a
-      // delivery was not filed is worse than a count that reads zero and says
-      // so. A custom sale (no `elementId`) and an untracked article
+      // line then leaves that shelf as an ordinary Out, oldest expiry first and
+      // never refused — what the shelf could not cover goes *below zero* rather
+      // than being swallowed: the pieces left the building either way, and a
+      // count reading -3 is the app saying somebody miscounted or a delivery was
+      // never filed. A custom sale (no `elementId`) and an untracked article
       // (`tracksStock` off) move nothing; one query settles which lines count.
       if (session.stockPlaceId && elementIds.length > 0) {
         const tracked = await tx.stockElement.findMany({

@@ -524,7 +524,7 @@ One element, in one place, at one expiry date, counted in **pieces**.
 | `id` | String (cuid) | |
 | `stockPlaceId` | String | FK → StockPlace, `Cascade` |
 | `elementId` | String | FK → StockElement, `Restrict` |
-| `quantity` | Int | Pieces. The total is `quantity × element.unitQty` |
+| `quantity` | Int | Pieces. The total is `quantity × element.unitQty`. **May be negative**: a POS sale of pieces the shelf did not have writes the shortfall onto the undated row rather than refusing, so a count below zero is the record of a miscount or an unfiled delivery |
 | `expireDate` | Date? | NULL when the element does not expire, or the date is unknown |
 
 Unique on `(stockPlaceId, elementId, expireDate)`: two rows of the same item in the same place exist
@@ -652,7 +652,7 @@ pause, resume, close and sell; every write goes through `resolveWritableEditionI
 | `editionId` | String | FK → Edition, `Cascade` |
 | `templateId` | String | FK → PosTemplate, **`Restrict`** — a template a session has used cannot be deleted |
 | `cashRegisterId` | String? | FK → CashRegister, **`Restrict`**. Set exactly when `CASH` is accepted, and at most one |
-| `stockPlaceId` | String? | FK → StockPlace, **`SetNull`**. Optional and fixed at open. While set, every tracked line sold writes an Out of this place (oldest expiry first, clamped at zero, never refused). Null → the session moves no stock |
+| `stockPlaceId` | String? | FK → StockPlace, **`SetNull`**. Optional and fixed at open. While set, every tracked line sold writes an Out of this place (oldest expiry first, never refused; a shortfall takes the undated row below zero). Null → the session moves no stock |
 | `name` | String | Not unique |
 | `status` | `PosSessionStatus` | `OPEN` \| `PAUSED` \| `CLOSED`. Default `OPEN`. `CLOSED` is terminal |
 | `openedById` | String? | FK → User, `SetNull` |

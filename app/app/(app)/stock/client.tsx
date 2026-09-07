@@ -21,6 +21,7 @@ import {
   THead,
   TR,
   Table,
+  cn,
 } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
@@ -29,6 +30,15 @@ import { formatExpiry, formatPiece, formatTotal } from "@/lib/stock";
 import { adjustStockItemAction, removeStockItemAction, setStockItemQuantityAction } from "./actions";
 import type { StockPlaceOption } from "./stock-place-switcher";
 import { TransferStockModal } from "./transfer-stock-modal";
+
+/**
+ * A count below zero is not stock, it is a discrepancy: the till sold pieces the
+ * shelf did not have on file. It reads in rose everywhere a quantity is drawn so
+ * the row that needs a recount is the one that catches the eye.
+ */
+function countTone(quantity: number) {
+  return quantity < 0 ? "text-rose-300" : undefined;
+}
 
 export type StockRow = {
   id: string;
@@ -191,7 +201,9 @@ export function StockClient({ locale, rows, places, currentPlaceId, eyebrow, tit
             }}
           />
         ) : (
-          <span className="w-16 text-center text-sm font-semibold tabular-nums">{row.quantity}</span>
+          <span className={cn("w-16 text-center text-sm font-semibold tabular-nums", countTone(row.quantity))}>
+            {row.quantity}
+          </span>
         )}
 
         {draft ? (
@@ -342,7 +354,9 @@ export function StockClient({ locale, rows, places, currentPlaceId, eyebrow, tit
                 <TD className="text-[var(--muted)]">{formatPiece(row.unitQty, row.unitName)}</TD>
                 <TD>{expiryCell(row)}</TD>
                 <TD>{stepper(row)}</TD>
-                <TD className="font-semibold tabular-nums">{formatTotal(row.quantity, row.unitQty, row.unitName)}</TD>
+                <TD className={cn("font-semibold tabular-nums", countTone(row.quantity))}>
+                  {formatTotal(row.quantity, row.unitQty, row.unitName)}
+                </TD>
                 <TD>{rowActions(row)}</TD>
               </TR>
             ))}
@@ -366,7 +380,9 @@ export function StockClient({ locale, rows, places, currentPlaceId, eyebrow, tit
               />
               <CardletFields>
                 <CardletField label={copy.piece}>{formatPiece(row.unitQty, row.unitName)}</CardletField>
-                <CardletField label={copy.total}>{formatTotal(row.quantity, row.unitQty, row.unitName)}</CardletField>
+                <CardletField label={copy.total}>
+                  <span className={countTone(row.quantity)}>{formatTotal(row.quantity, row.unitQty, row.unitName)}</span>
+                </CardletField>
                 {/* The date takes the whole width while it is being typed: the
                     header slot next to the name is a badge's worth of room. */}
                 {editing?.id === row.id && row.expireable ? (

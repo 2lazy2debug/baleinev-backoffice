@@ -24,20 +24,27 @@ import type { Prisma } from "@prisma/client";
  * history reads even after the row is gone. A zero delta writes nothing at all —
  * clicking + and then - should leave two movements, but re-saving an unchanged
  * quantity should leave none.
+ *
+ * **Counting clamps at zero; selling does not.** Somebody counting a shelf is
+ * looking at it, and a shelf cannot hold less than nothing — a "-" past the last
+ * piece is a slip, and it is absorbed. The till passes `allowNegative`, because
+ * what it reports is not a count: the beer left the building whether or not the
+ * delivery was ever filed, and a row reading -3 is the only record that says so.
  */
 export async function applyMovement(
   tx: Prisma.TransactionClient,
   item: { id: string; stockPlaceId: string; elementId: string; expireDate: Date | null; quantity: number },
   delta: number,
   userId: string,
+  options: { allowNegative?: boolean } = {},
 ): Promise<number> {
   if (delta === 0) {
     return item.quantity;
   }
 
-  // Taking out more than is there is a miscount, not an error worth blocking on:
-  // the shelf goes to zero and the movement records what actually left it.
-  const applied = Math.max(delta, -item.quantity);
+  // Clamped: never past zero, and never *back* towards it either — a row already
+  // below zero absorbs a further Out whole rather than counting up.
+  const applied = options.allowNegative ? delta : Math.max(delta, Math.min(0, -item.quantity));
 
   if (applied === 0) {
     return item.quantity;
@@ -98,15 +105,59 @@ export async function addToPlace(
 }
 
 /**
+ * The pieces a sale took that the shelf did not have.
+ *
+ * They land on the **undated** row for that element — created below zero when
+ * there is none — as an ordinary Out, so `/stock/history` reads it like any
+ * other removal and the count itself says how short it is.
+ *
+ * Undated rather than on the dated row it just emptied, for two reasons: pieces
+ * that do not exist cannot turn, so a date on them would be a lie; and a
+ * delivery filed later with a date of its own lands on its own row, leaving the
+ * debt standing where somebody can see it instead of quietly swallowing it.
+ */
+async function recordShortfall(
+  tx: Prisma.TransactionClient,
+  where: { stockPlaceId: string; elementId: string },
+  quantity: number,
+  userId: string,
+) {
+  const undated = await tx.stockItem.findFirst({ where: { ...where, expireDate: null } });
+
+  if (undated) {
+    await applyMovement(tx, undated, -quantity, userId, { allowNegative: true });
+    return;
+  }
+
+  const created = await tx.stockItem.create({ data: { ...where, expireDate: null, quantity: -quantity } });
+  await tx.stockMovement.create({
+    data: {
+      stockPlaceId: where.stockPlaceId,
+      elementId: where.elementId,
+      stockItemId: created.id,
+      expireDate: null,
+      delta: quantity,
+      isIn: false,
+      createdById: userId,
+    },
+  });
+}
+
+/**
  * Takes pieces off a shelf, oldest expiry date first.
  *
  * Undated rows are last: something with a date on it is the thing to sell before
  * it turns, and a row with no date has nothing to be late for.
  *
- * Returns how many pieces were actually taken, which is less than `quantity`
- * when the shelf was short. It never refuses and never goes negative —
- * `applyMovement` already clamps, and a miscount is a count to fix, not a sale
- * to block. Rows that reach zero are left where they are: the stock screens
+ * **It never refuses, and what the shelf could not cover goes negative.** A till
+ * that stopped selling because a delivery was never filed is worse than a count
+ * that is wrong, and the pieces left the building either way — so the shortfall
+ * is written down rather than swallowed (see `recordShortfall`). A shelf reading
+ * -3 is not a number to trust: it is the app saying somebody miscounted or a
+ * delivery is missing, and it stays there until a person fixes it.
+ *
+ * Returns how many pieces the shelf actually held, so `quantity - result` is the
+ * shortfall. Rows that reach zero are left where they are: the stock screens
  * already show a zero row, and a sale is not the moment to tidy the shelf.
  *
  * The POS calls it once per sold line inside the sale transaction — see
@@ -133,6 +184,10 @@ export async function removeFromPlace(
     const take = Math.min(remaining, row.quantity);
     await applyMovement(tx, row, -take, userId);
     remaining -= take;
+  }
+
+  if (remaining > 0) {
+    await recordShortfall(tx, where, remaining, userId);
   }
 
   return quantity - remaining;

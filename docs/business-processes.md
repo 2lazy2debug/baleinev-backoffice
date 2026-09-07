@@ -810,10 +810,19 @@ this existed.
 - **A custom sale moves nothing** — there is no article behind it.
 - **An untracked article moves nothing** — a poured glass of beer is sold and never shelved; that
   is the whole point of the `tracksStock` flag.
-- **A short shelf never refuses a sale.** Taking out more than is there lands the row on zero and
-  the movement records what actually left — exactly as the +/− buttons clamp. A till that stopped
-  selling because a delivery was not filed is worse than a stock count that reads zero and says so.
-  Nothing goes negative and nothing is blocked.
+- **A short shelf never refuses a sale, and the shortfall goes negative.** The dated rows are
+  drained first; whatever is still owed lands on the element's **undated** row for that place —
+  created below zero when there is none — as an ordinary Out. So selling five with two on the shelf
+  leaves the dated row at 0 and an undated row at −3, and `/stock/history` reads both legs like any
+  other removal. A till that stopped selling because a delivery was never filed is worse than a
+  count that is wrong, and the beer left the building either way: **a negative count is not stock,
+  it is the app saying somebody miscounted or a delivery is missing**, and it stays until a person
+  fixes it. The stock screen draws a negative count in rose for exactly that reason. The debt is
+  undated because pieces that do not exist cannot turn, and because a delivery filed later carries
+  its own date — the two rows net out without the shortfall quietly disappearing.
+- **Counting still clamps.** Only the till writes below zero. The +/− buttons and a recount are
+  somebody looking at a shelf, and a shelf cannot hold less than nothing, so they stop at 0 as they
+  always have (`applyMovement`'s `allowNegative`, which only `removeFromPlace` passes).
 
 The movements are written **inside the same transaction as the sale**, so a genuine database
 failure rolls the whole sale back, but nothing about stock can *refuse* a sale that the money side
