@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutGrid } from "lucide-react";
+import { History, LayoutGrid } from "lucide-react";
 import { PosSessionStatus } from "@prisma/client";
 
 import { EmptyPage, PageHeader, buttonClasses, compactOnMobileWidths } from "@/components/ui";
@@ -109,17 +109,28 @@ export default async function PosPage() {
     unitPrice: toRappen(cell.price),
   }));
 
-  const templatesLink =
+  const adminLinks =
     access.role === "ADMIN" ? (
-      <Link
-        href="/pos/templates"
-        title={copy.pos.templatesTitle}
-        aria-label={copy.pos.templatesTitle}
-        className={buttonClasses("secondary", "md", compactOnMobileWidths.md)}
-      >
-        <LayoutGrid />
-        <span className="hidden lg:inline">{copy.pos.templatesTitle}</span>
-      </Link>
+      <>
+        <Link
+          href="/pos/sessions"
+          title={copy.pos.viewSessions}
+          aria-label={copy.pos.viewSessions}
+          className={buttonClasses("secondary", "md", compactOnMobileWidths.md)}
+        >
+          <History />
+          <span className="hidden lg:inline">{copy.pos.viewSessions}</span>
+        </Link>
+        <Link
+          href="/pos/templates"
+          title={copy.pos.templatesTitle}
+          aria-label={copy.pos.templatesTitle}
+          className={buttonClasses("secondary", "md", compactOnMobileWidths.md)}
+        >
+          <LayoutGrid />
+          <span className="hidden lg:inline">{copy.pos.templatesTitle}</span>
+        </Link>
+      </>
     ) : null;
 
   return (
@@ -136,7 +147,7 @@ export default async function PosPage() {
               registers={registers}
               currentSessionId={joined.id}
             />
-            {templatesLink}
+            {adminLinks}
           </>
         }
       />

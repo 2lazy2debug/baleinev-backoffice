@@ -16,8 +16,12 @@ import { toRappen } from "@/lib/cash";
 export type SaleForTotals = {
   method: PosPaymentMethod;
   total: { toString(): string } | number;
-  /** Cash sales only; null on every other method. */
-  changeDue: { toString(): string } | number | null;
+  /**
+   * Cash sales only; null on every other method. Optional so the session list,
+   * which never shows `changeGiven`, can skip selecting it — `changeGiven` is
+   * then `0`.
+   */
+  changeDue?: { toString(): string } | number | null;
 };
 
 export type PosTotals = {

@@ -1,5 +1,8 @@
+import Link from "next/link";
+import { History } from "lucide-react";
+
 import { WritableEditionOnly } from "@/components/edition-read-only";
-import { EmptyPage, PageHeader } from "@/components/ui";
+import { EmptyPage, PageHeader, buttonClasses, compactOnMobileWidths } from "@/components/ui";
 import { POS_PAGE_SLOTS } from "@/lib/cash";
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
@@ -50,10 +53,29 @@ export default async function PosTemplatesPage() {
     ),
   }));
 
+  const sessionsLink = (
+    <Link
+      href="/pos/sessions"
+      title={copy.pos.viewSessions}
+      aria-label={copy.pos.viewSessions}
+      className={buttonClasses("secondary", "md", compactOnMobileWidths.md)}
+    >
+      <History />
+      <span className="hidden lg:inline">{copy.pos.viewSessions}</span>
+    </Link>
+  );
+
   const createButton = (
     <WritableEditionOnly>
       <CreateTemplateModal locale={locale} />
     </WritableEditionOnly>
+  );
+
+  const headerActions = (
+    <>
+      {sessionsLink}
+      {createButton}
+    </>
   );
 
   if (rows.length === 0) {
@@ -70,7 +92,7 @@ export default async function PosTemplatesPage() {
         eyebrow={copy.pos.title}
         title={copy.pos.templatesTitle}
         description={copy.pos.templatesSubtitle}
-        actions={createButton}
+        actions={headerActions}
       />
 
       <PosTemplatesClient locale={locale} templates={rows} />
