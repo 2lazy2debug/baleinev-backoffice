@@ -125,7 +125,11 @@ make_backup() {
 }
 
 # Restore a snapshot archive into the db container. Refuses a truncated dump —
-# a half-loaded database is worse than a migrated one.
+# a half-loaded database is worse than a migrated one, and so is a half-restored
+# one: the two guards below are what make "the restore failed" survivable rather
+# than destructive. Both were written after 2026-09-06, when this function ran
+# without either and silently gutted production.
+# docs/incidents/2026-09-06-restore-constraint-loss.md.
 restore_backup() {
   local zip="$1" user db work
   user="$(env_val POSTGRES_USER)"
@@ -137,8 +141,26 @@ restore_backup() {
     rm -rf "$work"
     return 1
   fi
-  ( cd "$PROJECT_ROOT" && docker compose exec -T db \
-      psql -U "$user" -d "$db" -v ON_ERROR_STOP=1 --quiet ) < "$work/dump.sql"
+  # --single-transaction is the difference between a failed restore and a
+  # destroyed database. Without it psql autocommits every statement it got
+  # through before the error, and a pg_dump --clean script leads with its DROP
+  # section: on 2026-09-06 a restore died on statement ~90 and left the database
+  # with 80 foreign keys, 53 indexes and 10 primary keys dropped and never
+  # recreated. The data was untouched and /api/health stayed green, so nothing
+  # noticed for twenty hours. Either the whole restore lands or none of it does.
+  #
+  # Emptying the schema first is what stops that error happening at all. The
+  # snapshot predates the migration being rolled back, so its own
+  # `DROP CONSTRAINT IF EXISTS` statements do not mention the objects that
+  # migration created — `DROP CONSTRAINT "User_pkey"` then fails on the
+  # brand-new FK depending on it, and IF EXISTS cannot save it because the
+  # constraint really does exist. A dropped-and-recreated schema leaves the
+  # dump nothing to trip over, and CASCADE settles the dependency order. It is
+  # in the same transaction as the load, so a failure still restores nothing
+  # rather than emptying the database.
+  { printf 'DROP SCHEMA public CASCADE;\nCREATE SCHEMA public;\n'; cat "$work/dump.sql"; } \
+    | ( cd "$PROJECT_ROOT" && docker compose exec -T db \
+          psql -U "$user" -d "$db" -v ON_ERROR_STOP=1 --quiet --single-transaction )
   local rc=$?
   rm -rf "$work"
   return $rc

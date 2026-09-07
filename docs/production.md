@@ -152,8 +152,10 @@ the old schema and the app starts throwing at runtime, not at build time.
   real `SELECT 1` through Prisma, so a green check proves the app reached Postgres. It is
   in `proxy.ts`'s early-return list, so it answers 200 rather than a 307 to `/login`.
   It proves connectivity and nothing about the *schema*: it touches no table a migration
-  would have added, so it stays green on a database several migrations behind. The gate is
-  the last line of defence, never the first — the step checks above are what catch that.
+  would have added, so it stays green on a database several migrations behind. It says
+  nothing about *constraints* either — on 2026-09-06 it stayed green for twenty hours on a
+  database that had lost every foreign key it had. The gate is the last line of defence,
+  never the first — the step checks above are what catch that.
 - **Every build step is checked.** `git checkout`, `npm ci`, `prisma generate`,
   `prisma migrate deploy`, `next build`, the restart and the health gate each abort the
   deploy on a non-zero exit, and the step's name lands in the journal and in
@@ -323,6 +325,22 @@ Each of these is here because the symptom does not name the cause.
   `vitest.config.ts`, `**/*.test.ts`, `**/*.test.tsx`. `vitest run` finds tests through
   `vitest.config.ts`, not tsconfig, so the suite is unaffected; the build simply stops
   type-checking files it has no dependencies for.
+- **A failed rollback restore used to be worse than no restore at all.** `restore_backup`
+  runs the snapshot through `psql`, and a `pg_dump --clean` script leads with its whole
+  DROP section. Without `--single-transaction`, psql autocommits every statement it got
+  through before an error — so a restore that died partway left the database with its
+  constraints dropped and never recreated, data intact, `/api/health` green. That is what
+  happened on 2026-09-06: 80 foreign keys, 53 indexes and 10 primary keys gone, unnoticed
+  for twenty hours. The restore now empties the schema and loads the dump inside **one
+  transaction**, so a failure changes nothing. Never remove either guard; the reasoning is
+  in the function and the full story is
+  [docs/incidents/2026-09-06-restore-constraint-loss.md](incidents/2026-09-06-restore-constraint-loss.md).
+- **A snapshot cannot un-migrate a schema by itself.** The pre-deploy snapshot is taken
+  *before* `prisma migrate deploy`, so its `DROP CONSTRAINT IF EXISTS` statements do not
+  name anything the migration went on to create. `IF EXISTS` does not help — the object
+  exists, it is the *dependency* that is new — so the drop fails with "cannot drop
+  constraint X because other objects depend on it". Emptying the schema first is what
+  makes a rollback restore work at all, not a tidiness measure.
 - **A Postgres volume keeps its original credentials.** `POSTGRES_*` only initialise an
   *empty* volume. Pointing a fresh `.env` at a pre-existing one fails as "Postgres never
   became ready", never as an auth error.
