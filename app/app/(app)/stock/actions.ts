@@ -103,8 +103,12 @@ function sameDate(left: Date | null, right: Date | null): boolean {
  * history reads even after the row is gone. A zero delta writes nothing at all —
  * clicking + and then - should leave two movements, but re-saving an unchanged
  * quantity should leave none.
+ *
+ * Exported for the POS: a sale out of a session's stock place calls this inside
+ * its own sale transaction, so a sold beer is an ordinary Out and not a
+ * movement of some new kind.
  */
-async function applyMovement(
+export async function applyMovement(
   tx: Prisma.TransactionClient,
   item: { id: string; stockPlaceId: string; elementId: string; expireDate: Date | null; quantity: number },
   delta: number,
@@ -174,6 +178,47 @@ async function addToPlace(
   });
 
   return created.id;
+}
+
+/**
+ * Takes pieces off a shelf, oldest expiry date first.
+ *
+ * Undated rows are last: something with a date on it is the thing to sell before
+ * it turns, and a row with no date has nothing to be late for.
+ *
+ * Returns how many pieces were actually taken, which is less than `quantity`
+ * when the shelf was short. It never refuses and never goes negative —
+ * `applyMovement` already clamps, and a miscount is a count to fix, not a sale
+ * to block. Rows that reach zero are left where they are: the stock screens
+ * already show a zero row, and a sale is not the moment to tidy the shelf.
+ *
+ * Exported for the POS, which calls it once per sold line inside the sale
+ * transaction — see `recordPosSaleAction`.
+ */
+export async function removeFromPlace(
+  tx: Prisma.TransactionClient,
+  where: { stockPlaceId: string; elementId: string },
+  quantity: number,
+  userId: string,
+): Promise<number> {
+  const rows = await tx.stockItem.findMany({
+    where: { ...where, quantity: { gt: 0 } },
+    orderBy: { expireDate: { sort: "asc", nulls: "last" } },
+  });
+
+  let remaining = quantity;
+
+  for (const row of rows) {
+    if (remaining <= 0) {
+      break;
+    }
+
+    const take = Math.min(remaining, row.quantity);
+    await applyMovement(tx, row, -take, userId);
+    remaining -= take;
+  }
+
+  return quantity - remaining;
 }
 
 // ---------------------------------------------------------------------------
