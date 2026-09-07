@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { FormError } from "@/components/form-error";
@@ -43,17 +43,21 @@ export function SessionPicker({
 }) {
   const copy = dictionaries[locale].pos;
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  // Busy for the whole round-trip, not only for the refresh after it — the same
+  // shape `SessionsModal` uses, and what keeps a double tap from joining twice.
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function join(sessionId: string) {
     setError(null);
+    setPending(true);
     const result = await joinPosSessionAction(sessionId);
     if (result.error) {
+      setPending(false);
       setError(result.error);
       return;
     }
-    startTransition(() => router.refresh());
+    router.refresh();
   }
 
   return (

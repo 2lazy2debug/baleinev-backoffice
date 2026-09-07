@@ -16,8 +16,9 @@ import { removeFromPlace } from "@/lib/stock-movements";
  * join, pause and close a session and ring up sales. The money is already
  * fenced by the cash register somebody with the money-account role had to open.
  *
- * Every write still goes through `resolveWritableEditionId()`: a closed edition
- * sells nothing, and neither opens, joins, pauses nor closes a session.
+ * Every write that touches edition data goes through `resolveWritableEditionId()`:
+ * a closed edition sells nothing, and neither opens, joins, pauses nor closes a
+ * session. Leaving is the exception — it writes only the seller's own selection.
  */
 
 const PAYMENT_METHODS = Object.values(PosPaymentMethod);
@@ -152,11 +153,16 @@ export async function joinPosSessionAction(sessionId: string): Promise<ActionSta
   }
 }
 
-/** Step off the till — back to the picker. */
+/**
+ * Step off the till — back to the picker.
+ *
+ * The one session write with **no** edition check: leaving touches only
+ * `User.selectedPosSessionId`, which is not edition data, and closing an edition
+ * would otherwise strand every seller in a session with no way out.
+ */
 export async function leavePosSessionAction(): Promise<ActionState> {
   try {
     const access = await getCurrentUserAccess();
-    await resolveWritableEditionId();
 
     await prisma.user.update({ where: { id: access.id }, data: { selectedPosSessionId: null } });
 

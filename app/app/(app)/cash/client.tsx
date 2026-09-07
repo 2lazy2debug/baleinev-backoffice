@@ -54,7 +54,17 @@ export type CashRegisterRow = {
   booking: RegisterBooking | null;
 };
 
-function Sheet({ title, counts, byName }: { title: string; counts: CountRow[]; byName: string | null }) {
+function Sheet({
+  title,
+  totalLabel,
+  counts,
+  byName,
+}: {
+  title: string;
+  totalLabel: string;
+  counts: CountRow[];
+  byName: string | null;
+}) {
   const present = CASH_DENOMINATIONS.map((denomination) => ({
     denomination,
     quantity: counts.find((count) => count.denomination === denomination)?.quantity ?? 0,
@@ -76,6 +86,7 @@ function Sheet({ title, counts, byName }: { title: string; counts: CountRow[]; b
         ))
       )}
       <div className="flex items-center justify-between gap-3 border-t border-[var(--line)] pt-1 text-sm font-semibold">
+        <span>{totalLabel}</span>
         <span>{formatCurrency(fromRappen(countTotal(counts)))}</span>
       </div>
       {byName ? <p className="text-xs text-[var(--muted)]">{byName}</p> : null}
@@ -229,13 +240,20 @@ export function CashRegistersClient({
         )}
       </Panel>
 
+      {/*
+        One dialog for the whole list, driven by a row prop — so it is keyed to
+        that row. Without the key its `useActionState` survives the switch and
+        register A's error is still on screen when the dialog reopens on B.
+      */}
       <CloseRegisterModal
+        key={closing?.id ?? "none"}
         locale={locale}
         register={closing}
         onClose={() => setClosing(null)}
       />
 
       <JournalRegisterModal
+        key={booking?.id ?? "none"}
         locale={locale}
         register={booking}
         budgets={budgets}
@@ -251,8 +269,18 @@ export function CashRegistersClient({
       >
         {viewing ? (
           <div className="grid gap-4 sm:grid-cols-2">
-            <Sheet title={copy.float} counts={viewing.openingCounts} byName={viewing.openedBy} />
-            <Sheet title={copy.counted} counts={viewing.closingCounts} byName={viewing.closedBy} />
+            <Sheet
+              title={copy.float}
+              totalLabel={copy.total}
+              counts={viewing.openingCounts}
+              byName={viewing.openedBy}
+            />
+            <Sheet
+              title={copy.counted}
+              totalLabel={copy.total}
+              counts={viewing.closingCounts}
+              byName={viewing.closedBy}
+            />
           </div>
         ) : null}
       </Modal>

@@ -131,7 +131,6 @@ export default async function CashPage() {
   return (
     <div className="space-y-4 lg:space-y-8">
       <PageHeader
-        eyebrow={copy.cash.title}
         title={copy.cash.title}
         description={copy.cash.subtitle}
         actions={

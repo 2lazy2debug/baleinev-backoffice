@@ -722,8 +722,10 @@ idea as the selected stock place.
 **Any signed-in user may open, join, pause, resume and close a session, and may sell.** That is the
 bar staff; the money they touch is already fenced by a register that someone with the money-account
 role had to open first. Templates stay admin-only and registers stay behind `canManageMoneyAccounts`.
-Every session write still goes through `resolveWritableEditionId()` — a closed edition sells
-nothing.
+Every session write that touches edition data goes through `resolveWritableEditionId()` — a closed
+edition sells nothing. **Leaving is the one exception**: it writes only the seller's own
+`selectedPosSessionId`, which is not edition data, and gating it would strand every seller in their
+session the moment the edition closed.
 
 - **Opening** needs a name, a template **with at least one tile**, and at least one payment method.
   Tick cash and a register field appears: it must be an **open** register in the edition. Untick
@@ -775,6 +777,12 @@ a custom sale) and, cash only, its `PosSaleChange` sheet. **The client's arithme
 trusted**: the server re-reads every line, recomputes the total in integer rappen, and refuses a
 cash sale where less than the total was given. `total`, `cashGiven` and `changeDue` may all be
 negative or zero — an all-refund sale is money going *out* of the drawer, recorded like any other.
+
+What the server recomputes is the **total**, not the **unit prices** it recomputes it from: a line's
+`unitPrice` comes from the client and is never checked against the template cell. That is deliberate.
+The custom-sale tile takes an arbitrary label and an arbitrary amount, so checking the tiles would
+change nothing about what a seller can ring up, and the till is operated by trusted staff. What a
+sale is *for* is the snapshot it stores, not a price list it can be audited against.
 
 ### A sale moves stock
 

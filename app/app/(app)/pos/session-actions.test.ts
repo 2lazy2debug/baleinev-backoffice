@@ -73,7 +73,6 @@ describe("a closed edition refuses every session and sale action", () => {
   it.each([
     ["open", () => openPosSessionAction({ error: null }, form([["name", "Bar"], ["templateId", "tpl_1"], ["methods", "TWINT"]]))],
     ["join", () => joinPosSessionAction("sess_1")],
-    ["leave", () => leavePosSessionAction()],
     ["status", () => setPosSessionStatusAction({ error: null }, form([["sessionId", "sess_1"], ["status", "PAUSED"]]))],
     ["sale", () => recordPosSaleAction({ error: null }, form([["sessionId", "sess_1"], ["method", "TWINT"], ["lines", "[]"]]))],
   ])("%s", async (_name, run) => {
@@ -201,6 +200,16 @@ describe("leavePosSessionAction", () => {
       where: { id: "u_1" },
       data: { selectedPosSessionId: null },
     });
+  });
+
+  // The one session action with no edition check: closing an edition must not
+  // strand every seller in a session with no way out.
+  it("still works in a closed edition", async () => {
+    resolveWritableEditionId.mockRejectedValue(new Error("This edition is closed. Reopen it to make changes."));
+
+    expect(await leavePosSessionAction()).toEqual({ error: null });
+    expect(resolveWritableEditionId).not.toHaveBeenCalled();
+    expect(prisma.user.update).toHaveBeenCalled();
   });
 });
 

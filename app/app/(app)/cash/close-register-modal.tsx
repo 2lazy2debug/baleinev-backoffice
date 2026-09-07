@@ -32,16 +32,10 @@ export default function CloseRegisterModal({ locale, register, onClose }: Props)
     router.refresh();
   });
 
-  // The count sheet follows the register the dialog points at: opening it on
-  // another register starts from a blank sheet. Reset during render rather than
-  // in an effect (see article-form-modal for the same pattern).
+  // The count sheet — and the action state above it — follow the register the
+  // dialog points at: the list keys this component on `register.id`, so opening
+  // it on another register mounts a fresh one and starts from a blank sheet.
   const [sheet, setSheet] = useState<Record<number, number>>({});
-  const [sheetFor, setSheetFor] = useState<string | null>(null);
-  const registerId = register?.id ?? null;
-  if (sheetFor !== registerId) {
-    setSheetFor(registerId);
-    setSheet({});
-  }
 
   const total = countTotal(
     CASH_DENOMINATIONS.map((denomination) => ({ denomination, quantity: sheet[denomination] ?? 0 })),

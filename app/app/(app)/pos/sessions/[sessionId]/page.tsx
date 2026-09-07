@@ -93,13 +93,7 @@ export default async function PosSessionDetailPage({ params }: Params) {
       <PageHeader
         eyebrow={copy.pos.sessionsTitle}
         title={session.name}
-        description={[
-          session.template.name,
-          session.cashRegister?.name,
-          session.stockPlace ? `${copy.pos.stockPlace} ${session.stockPlace.name}` : null,
-        ]
-          .filter(Boolean)
-          .join(" · ")}
+        description={[session.template.name, session.cashRegister?.name].filter(Boolean).join(" · ")}
         actions={
           <Link
             href="/pos/sessions"
@@ -131,7 +125,18 @@ export default async function PosSessionDetailPage({ params }: Params) {
         ))}
       </CardGrid>
 
+      {/*
+        The facts about the session itself, at every width — `PageHeader
+        description` is desktop-only, and where a session sold from is not a
+        desktop detail.
+      */}
       <div className="space-y-2">
+        {session.stockPlace ? (
+          <p className="text-xs text-[var(--muted)]">
+            <span className="font-medium text-[var(--ink)]">{copy.pos.stockPlace}</span> ·{" "}
+            {session.stockPlace.name}
+          </p>
+        ) : null}
         <p className="text-xs text-[var(--muted)]">
           <span className="font-medium text-[var(--ink)]">{copy.pos.opened}</span> · {openedLine}
         </p>
