@@ -23,3 +23,4 @@ export * from "./Badge";
 export * from "./SegmentedControl";
 export * from "./Table";
 export * from "./Cardlet";
+export * from "./Markdown";

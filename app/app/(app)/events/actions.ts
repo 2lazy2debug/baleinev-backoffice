@@ -257,6 +257,29 @@ export async function updateEventAction(_prevState: ActionState, formData: FormD
   }
 }
 
+/**
+ * The event's info page — free-form Markdown behind the header's info button.
+ *
+ * Admin-only and edition-writable like every other write on an event, and
+ * empty is a legitimate value: clearing the box puts the event back to having
+ * no information rather than storing a blank page.
+ */
+export async function updateEventInfoAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    const id = getRequiredString(formData, "id");
+    await requireWritableEvent(id);
+
+    const info = String(formData.get("info") ?? "").trim() || null;
+    await prisma.event.update({ where: { id }, data: { info } });
+
+    revalidatePath("/events");
+    return { error: null, saved: true };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
 export async function deleteEventAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();

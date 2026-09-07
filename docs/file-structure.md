@@ -257,14 +257,19 @@ app/
 │   │   │                            the anchor `#event-<id>`, copied by the header's link button and
 │   │   │                            scrolled to (below the top bar) on arrival
 │   │   ├── create-event-modal.tsx ← Header button + create modal (dates bounded by the edition)
+│   │   ├── event-info-modal.tsx  ← The event's info page: the header's ⓘ opens a full-screen modal —
+│   │   │                            a Markdown editor with a Write/Preview toggle for an admin,
+│   │   │                            the rendered page for everyone else (who only see the button
+│   │   │                            once there is something to read)
+│   │   ├── duplicate-day-modal.tsx ← Copies one day's shifts onto other days of the same event
 │   │   ├── shift-fields.tsx      ← The four fields a shift is made of + the overlap check, shared
 │   │   │                            by the add row and the inline editor
 │   │   ├── add-shift-form.tsx    ← The add-a-shift row under a day
 │   │   ├── edit-shift-form.tsx   ← The same fields prefilled, in place of the row's labels
 │   │   ├── settings/             ← Event types (admin only): create button + edit dialog; delete is
 │   │   │                            refused while a type is in use
-│   │   └── actions.ts            ← Server actions: event type / event / day / shift CRUD, sign-up,
-│   │                                withdraw, admin assign
+│   │   └── actions.ts            ← Server actions: event type / event / day / shift CRUD, the info
+│   │                                page, sign-up, withdraw, admin assign
 │   │
 │   ├── users/
 │   │   ├── page.tsx              ← User management (admin only, data-fetching only)
@@ -380,7 +385,8 @@ which. Nothing here should be re-implemented inline in a page.
 | `Table.tsx` | `<Table frame dense desktopOnly>` + `<THead>` `<TFoot>` `<TR>` `<TH>` `<TD>` |
 | `Cardlet.tsx` | `<CardletList>` `<Cardlet>` `<CardletHeader>` `<CardletFields>` `<CardletField>` `<CardletActions>` — a wide table's rows as cards below `sm` |
 | `Menu.tsx` | `<Menu label icon options onSelect>` — a short list of *actions* hanging off one icon button (the unit conversions, today). Not a `<Select>`: nothing is being held, picking a row does something and the menu is gone. Portals from the trigger's rect, like `<Suggest>`, anchored by its **right** edge because its trigger is the last control in a row. "Click outside" means outside the list *and* the trigger — the list is a portal, so a closer that only knows the trigger unmounts the row being clicked |
-| `Modal.tsx` | `<Modal open onClose title size mobileFullScreen footer>` — the only dialog implementation. Renders into `<body>`: its trigger usually sits in the `sticky z-20` header, whose stacking context would otherwise pin the dialog under the mobile bottom bar |
+| `Modal.tsx` | `<Modal open onClose title size mobileFullScreen footer>` — the only dialog implementation. Renders into `<body>`: its trigger usually sits in the `sticky z-20` header, whose stacking context would otherwise pin the dialog under the mobile bottom bar. Title and footer are pinned and only the body scrolls, so a long dialog never scrolls its own close button or Save out of reach; `mobileFullScreen` drops the size caps below `sm` so a full-screen dialog really is the screen |
+| `Markdown.tsx` | `<Markdown source>` — rendered Markdown for the free-form text the app stores (an event's info page). Parses with `lib/markdown.ts` and renders React elements, never an HTML string, so nothing in the source can become markup and there is no sanitizer to keep in sync |
 | `Alert.tsx`, `Badge.tsx`, `Chip.tsx` | Inline messages, status pills, removable tokens |
 | `scroll.ts` | `scrollToBelowTopBar(target)` — scrolls an element clear of the sticky mobile top bar, measuring `<PageHeader>` rather than guessing at a `scroll-mt-*`, since the bar's height depends on what the screen put in it |
 | `cn.ts` | Three-line class joiner used by every component |
@@ -418,6 +424,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `edition-carry-over.ts` | `carryOverEdition(tx, source, target)` — copies budgets with their lines and department attachments, cost centers and money accounts into another edition and writes each account's closing balance as a locked opening entry |
 | `edition-context.ts` | The single answer to "which edition is this request in", read from `User.selectedEditionId`: `resolveEditionIdOrNull()` (pages), `resolveEditionId()` (write paths, throws), `resolveWritableEditionId()` (write paths, also refuses a closed edition), `requireWritableEdition(id)` (guards a write against a named edition), `resolveEdition()` (the record), `ensureUserEdition()` (the only writer of the seed) |
 | `server-action-helpers.ts` | Shared helpers for server actions: `getRequiredString()`, plus the `ActionState` type (`{ error: string \| null }`), `initialActionState`, and `toActionErrorMessage()` used by every action to report validation failures instead of throwing. Kept free of server-only imports — client components import `initialActionState` from here |
+| `markdown.ts` | `parseMarkdown()` — headings, paragraphs, lists, quotes, fenced code, rules and inline bold/italic/code/links as a node tree for `<Markdown>`; `safeHref()` is the link allowlist (http/https/mailto/tel and this app's own paths). Anything it does not know about, raw HTML included, survives as literal text |
 | `utils.ts` | `formatCurrency()`, `decimalToNumber()`, `incrementEditionName()` |
 
 ---

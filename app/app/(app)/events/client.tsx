@@ -18,6 +18,7 @@ import {
 } from "./actions";
 import AddShiftForm from "./add-shift-form";
 import DuplicateDayModal from "./duplicate-day-modal";
+import EventInfoModal from "./event-info-modal";
 import EditShiftForm from "./edit-shift-form";
 
 /**
@@ -72,6 +73,7 @@ type EventItem = {
   startDate: Date | string;
   endDate: Date | string;
   notes: string | null;
+  info: string | null;
   eventType: { name: string; color: string | null };
   days: EventDayItem[];
 };
@@ -104,6 +106,12 @@ type EventsCopy = {
   duplicateDayDescription: string;
   duplicateDayEmpty: string;
   duplicateDayHasShifts: string;
+  eventInfo: string;
+  eventInfoEmpty: string;
+  eventInfoPlaceholder: string;
+  write: string;
+  preview: string;
+  nothingToPreview: string;
 };
 
 type Props = {
@@ -306,6 +314,24 @@ export default function EventsPageClient({
                 <div className="shrink-0 sm:hidden">{collapseButton}</div>
               </div>
               <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto">
+                {/* The event's information page. Readers only see the button
+                    once there is something to read; an admin always does. */}
+                <EventInfoModal
+                  eventId={event.id}
+                  eventName={event.name}
+                  info={event.info}
+                  canEdit={canManageEvents}
+                  copy={{
+                    eventInfo: copy.eventInfo,
+                    eventInfoEmpty: copy.eventInfoEmpty,
+                    eventInfoPlaceholder: copy.eventInfoPlaceholder,
+                    write: copy.write,
+                    preview: copy.preview,
+                    nothingToPreview: copy.nothingToPreview,
+                    save: shellCopy.save,
+                    cancel: shellCopy.cancel,
+                  }}
+                />
                 <Button
                   type="button"
                   variant="secondary"
