@@ -1,6 +1,8 @@
 # 104 — POS sessions and selling
 
-**Read [100-cash-manager-pos.md](100-cash-manager-pos.md) first** — the shared
+> **Done** — shipped in v0.37.0 on 2026-09-07.
+
+**Read [../100-cash-manager-pos.md](../100-cash-manager-pos.md) first** — the shared
 context, the ground rules, the delegation policy and the release protocol live
 there. Then work from that file and this one only. Do not read 101, 102, 103 or
 105–107; their context is not yours.
@@ -497,5 +499,5 @@ Commit anything this changed.
 
 ## Step 11 — Release
 
-Follow **Release protocol** in [100-cash-manager-pos.md](100-cash-manager-pos.md).
+Follow **Release protocol** in [../100-cash-manager-pos.md](../100-cash-manager-pos.md).
 Directive: **`requires-migration`**. Do not monitor the deployment.
