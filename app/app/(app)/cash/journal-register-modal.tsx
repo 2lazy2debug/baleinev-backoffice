@@ -103,7 +103,9 @@ export default function JournalRegisterModal({ locale, register, budgets, costCe
           <p className="text-sm text-[var(--muted)]">
             <span className="font-medium text-[var(--ink)]">{register.name}</span>
             {booking.figures.sessionCount > 0
-              ? ` · ${cash.takenFrom.replace("{count}", String(booking.figures.sessionCount))}`
+              ? ` · ${booking.figures.sessionCount} ${
+                  booking.figures.sessionCount === 1 ? cash.session : cash.sessions
+                }`
               : ""}
           </p>
 
@@ -145,7 +147,7 @@ export default function JournalRegisterModal({ locale, register, budgets, costCe
             <Field label={cash.budget}>
               <Select name="budgetId" required defaultValue="">
                 <option value="" disabled>
-                  {cash.budget}
+                  {copy.journal.selectBudget}
                 </option>
                 {budgets.map((budget) => (
                   <option key={budget.id} value={budget.id}>

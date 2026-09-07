@@ -216,7 +216,9 @@ export function CashRegistersClient({
                       {register.closingTotal === null ? "—" : formatCurrency(fromRappen(register.closingTotal))}
                     </CardletField>
                     {bookedLine(register) ? (
-                      <CardletField label={copy.statusBooked}>{bookedLine(register)}</CardletField>
+                      <CardletField label={copy.bookedBy} className="col-span-2">
+                        {bookedLine(register)}
+                      </CardletField>
                     ) : null}
                   </CardletFields>
                   <CardletActions inline>{rowActions(register)}</CardletActions>
