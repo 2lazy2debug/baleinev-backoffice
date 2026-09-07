@@ -704,3 +704,31 @@ negative or zero — an all-refund sale is money going *out* of the drawer, reco
 
 **A sale does not move stock yet** — that is a later part of this chain and needs a stock place a
 session does not carry.
+
+### History
+
+Two read-only, **admin-only** screens sit under the till, reached from a "Session history" link
+in the `/pos` and `/pos/templates` headers (no fourth sidebar entry — `/pos` is the app).
+
+- **`/pos/sessions`** lists every session in the edition, closed ones included, newest first: its
+  template, its register, who opened it and when, its status, its sale count, and what it took
+  split **cash / Twint / bank** plus a total. A method the session accepts but never used shows
+  `CHF 0.00`, not a blank — "Twint took nothing tonight" is an answer. A method the session does
+  not accept shows `—`. A footer row sums every column across the sessions shown; that row is the
+  reason the screen exists.
+- **`/pos/sessions/[sessionId]`** shows one session's transactions in order — time, seller,
+  payment method, total — each opening to its lines and, for a cash sale, the amount given, the
+  change due and the change sheet coin for coin. A summary band above the list gives the total
+  taken, the sale count, the change handed back, and one figure per accepted method.
+
+Every roll-up on both screens is the same helper (`app/lib/pos.ts`), summing in **integer
+rappen** — every accepted method present, the total free to go negative, the change total taken
+from `changeDue` across the cash sales.
+
+**Labels and prices are the snapshots the sale was rung up on.** Re-pricing the template
+afterwards does not touch recorded history, and deleting an article leaves its sold lines intact
+(the line's `elementId` goes null; the label and price it was sold under stay). The screens never
+"correct" a line by looking the article up again.
+
+**Nothing here books anything.** A session's takings reach the journal only when the *cash
+register* behind it is closed — that is the register-close flow's job, not this one's.

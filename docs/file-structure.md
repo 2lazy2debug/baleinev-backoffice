@@ -112,6 +112,21 @@ app/
 │   │   │                            Each `requireAdmin()` + `resolveWritableEditionId()` and
 │   │   │                            re-checks the template is in the edition. Prices take a comma
 │   │   │                            decimal and allow negatives and zero
+│   │   ├── sessions/            ← Read side of the POS, admin-only. No sidebar entry — reached
+│   │   │   │                        from a "Session history" link in the /pos and /pos/templates headers
+│   │   │   ├── page.tsx          ← The session list (data-fetching only): `requireAdmin()`, every
+│   │   │   │                        session in the edition newest first, closed included. Selects
+│   │   │   │                        only `method` + `total` per sale — never the lines. Roll-up via
+│   │   │   │                        `lib/pos.ts`
+│   │   │   ├── client.tsx        ← Table above `sm`, cardlets below off one array; a `<TFoot>`
+│   │   │   │                        summing every column across the sessions shown
+│   │   │   └── [sessionId]/
+│   │   │       ├── page.tsx      ← One session: `requireAdmin()`, `notFound()` when it is not in
+│   │   │       │                    the edition. Loads the sales `soldAt` desc with their lines and
+│   │   │       │                    change rows; a summary band of `<Card>`s over the list
+│   │   │       └── client.tsx    ← The transaction list; each sale opens a `<Modal>` with its
+│   │   │                            lines (snapshot label + price, custom sales flagged) and, for a
+│   │   │                            cash sale, the amount given and the change sheet coin for coin
 │   │   └── templates/
 │   │       ├── page.tsx          ← The list (data-fetching only): name, tile count, page count
 │   │       │                        (from the highest slot, holes and all). `<EmptyPage>` with the
@@ -363,6 +378,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `addresses.ts` | `addressDisplayName()` / `addressNameBlock()` / `addressPersonName()` / `formatPhone()` / `formatPostalLine()` and `DEFAULT_COUNTRY`. Import-free on purpose — the table, the pickers and the actions all read the same rules without dragging Prisma into a browser bundle |
 | `articles.ts` | `elementFieldsFrom()` / `assertBarcodeFree()` — the `StockElement` fields both writing forms post (articles' own dialog, and the stock app's "new item" half) and the "one barcode, one article" check, shared so the two paths cannot drift |
 | `cash.ts` | `CASH_DENOMINATIONS` (the twelve Swiss denominations, rappen, largest first), `POS_PAGE_SLOTS` (`8` — article tiles per POS grid page, the ninth being the drawn "custom sale"), plus `toRappen()` / `fromRappen()` / `formatDenomination()` / `countTotal()` / `makeChange()` (greedy Swiss change, largest first — the 1-2-5 set makes greedy optimal). Every amount in the cash and POS apps is integer rappen; this is where the conversion, the denomination list and the grid constant live so nothing downstream re-derives them. Import-free |
+| `pos.ts` | `totalsFor(sales, methods)` → `PosTotals` — the per-method roll-up both POS history screens share, summed in integer rappen: every accepted method present (0 if unused), total free to go negative, `changeGiven` from `changeDue` across the cash sales. Import-free |
 | `city-book.ts` | `rememberCity()` — files a postal code / locality pair the user actually saved, so the seeded Swiss list grows into whatever the address book turns out to need |
 | `countries.ts` | `countryOptions(locale)` / `countryName()` — countries and international dialling prefixes from libphonenumber-js + `Intl.DisplayNames`. Built on the server and passed down as props; the phone metadata has no business in a browser bundle that only needs "+41" |
 | `db.ts` | Singleton Prisma client (re-used across hot reloads in dev) |
