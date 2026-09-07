@@ -154,6 +154,20 @@ Each entry gets an auto-incrementing `sequenceNumber` within the edition. This p
 ### Locked entries
 Entries with `isOpeningEntry = true` were imported from a previous edition's closing balance. They cannot be edited or deleted — they are permanent anchor points for the ledger.
 
+Entries with a `cashRegisterId` were written by a cash-register closing (§12). They
+are **half locked**, on all three writing paths:
+
+- **They cannot be deleted.** `CashRegister.journaledAt` stays set and there is no
+  un-book action, so deleting one leg would leave `/cash` reading **Booked** over a
+  ledger short a movement — and re-booking is refused. Refusing beats clearing
+  `journaledAt`, which would leave the other two legs in place to be doubled.
+- **Their amount, direction (`accountType`) and money account cannot be changed** —
+  those three are the identity §12 asserts, that the net effect on the cash account
+  is exactly counted − float.
+- **Everything else is fair game**: label, date, budget and cost centre change no
+  money. `cashRegisterId` is on the row precisely so "where did this line come from?"
+  survives a re-worded label.
+
 ### Editing entries
 Three paths write an existing entry, and they share the same seven fields — date,
 budget, type, amount, label, money account, cost centre:
@@ -652,6 +666,10 @@ The modal shows all five figures (the difference in red when it is non-zero) and
 exact entries before anything is written — a one-press irreversible write shows what it is about to
 do. Once booked, the register's row shows a **Booked** badge and the date and person instead of the
 button.
+
+**The three entries are then half locked in the journal** (§3, "Locked entries"): they cannot be
+deleted, and their amount, direction and money account cannot be edited, because `journaledAt`
+stays set and there is no un-book action. Their label, date, budget and cost centre stay editable.
 
 ## 13. Point of Sale
 

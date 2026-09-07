@@ -13,6 +13,40 @@ import {
   toActionErrorMessage,
 } from "@/lib/server-action-helpers";
 import { resolvePendingTask } from "@/lib/tasks";
+import { decimalToNumber } from "@/lib/utils";
+
+/**
+ * The three entries a closed cash register books carry `cashRegisterId`, and the
+ * register's `journaledAt` stays set forever — there is no un-book action. So a
+ * booked entry cannot be deleted, and the three fields that make up the identity
+ * `/cash` asserts (net effect on the account is exactly counted − float) cannot
+ * be edited: delete one leg and the ledger silently loses a movement while the
+ * row still reads **Booked**.
+ *
+ * Everything else is fair game. 106 put `cashRegisterId` on these rows precisely
+ * so "where did this line come from?" survives a re-worded label, and a corrected
+ * label, date, budget or cost centre changes no money.
+ */
+const REGISTER_ENTRY_LOCKED = "This entry was written by a cash register closing. It cannot be deleted on its own.";
+const REGISTER_ENTRY_FIELDS_LOCKED =
+  "This entry was written by a cash register closing. Its amount, direction and account cannot be changed — the label, date, budget and cost centre can.";
+
+function assertRegisterMoneyUnchanged(
+  entry: { cashRegisterId: string | null; amount: { toString(): string }; accountType: AccountType; moneyAccountId: string },
+  next: { amount: number; accountType: AccountType; moneyAccountId: string },
+) {
+  if (!entry.cashRegisterId) {
+    return;
+  }
+
+  if (
+    decimalToNumber(entry.amount) !== next.amount ||
+    entry.accountType !== next.accountType ||
+    entry.moneyAccountId !== next.moneyAccountId
+  ) {
+    throw new Error(REGISTER_ENTRY_FIELDS_LOCKED);
+  }
+}
 
 function toPositiveAmount(raw: string) {
   const normalized = raw.replace(",", ".").trim();
@@ -102,7 +136,12 @@ export async function deleteJournalEntryAction(_prevState: ActionState, formData
 
     const entry = await prisma.journalEntry.findUnique({
       where: { id: journalEntryId },
-      select: { editionId: true, isOpeningEntry: true, linkedInvoice: { select: { id: true } } },
+      select: {
+        editionId: true,
+        isOpeningEntry: true,
+        cashRegisterId: true,
+        linkedInvoice: { select: { id: true } },
+      },
     });
 
     if (!entry) {
@@ -117,6 +156,12 @@ export async function deleteJournalEntryAction(_prevState: ActionState, formData
 
     if (entry.linkedInvoice) {
       throw new Error("This journal entry is linked to a paid invoice. Set the invoice as unpaid first.");
+    }
+
+    // Refusing beats clearing `journaledAt`: the other two legs would still be
+    // in the ledger, and re-booking would double them.
+    if (entry.cashRegisterId) {
+      throw new Error(REGISTER_ENTRY_LOCKED);
     }
 
     await prisma.journalEntry.delete({ where: { id: journalEntryId } });
@@ -144,7 +189,14 @@ export async function updateJournalEntryAction(_prevState: ActionState, formData
 
     const entry = await prisma.journalEntry.findUnique({
       where: { id: journalEntryId },
-      select: { editionId: true, isOpeningEntry: true },
+      select: {
+        editionId: true,
+        isOpeningEntry: true,
+        cashRegisterId: true,
+        amount: true,
+        accountType: true,
+        moneyAccountId: true,
+      },
     });
 
     if (!entry) {
@@ -164,6 +216,8 @@ export async function updateJournalEntryAction(_prevState: ActionState, formData
 
     const amount = toPositiveAmount(amountRaw);
     const costCenterId = String(formData.get("costCenterId") ?? "").trim() || null;
+
+    assertRegisterMoneyUnchanged(entry, { amount, accountType, moneyAccountId });
 
     await assertBudgetInEdition(budgetId, entry.editionId);
 
@@ -255,7 +309,15 @@ export async function bulkUpdateJournalEntriesAction(_prevState: ActionState, fo
 
     const stored = await prisma.journalEntry.findMany({
       where: { id: { in: updates.map((update) => update.id) } },
-      select: { id: true, editionId: true, isOpeningEntry: true },
+      select: {
+        id: true,
+        editionId: true,
+        isOpeningEntry: true,
+        cashRegisterId: true,
+        amount: true,
+        accountType: true,
+        moneyAccountId: true,
+      },
     });
 
     if (stored.length !== updates.length) {
@@ -264,6 +326,13 @@ export async function bulkUpdateJournalEntriesAction(_prevState: ActionState, fo
 
     if (stored.some((entry) => entry.isOpeningEntry)) {
       throw new Error("Opening entries are locked and cannot be edited.");
+    }
+
+    // The grid edits the same seven fields as the inline editor, so it can reach
+    // a booked entry's money the same way — same rule, applied row by row.
+    const storedById = new Map(stored.map((entry) => [entry.id, entry]));
+    for (const update of updates) {
+      assertRegisterMoneyUnchanged(storedById.get(update.id)!, update);
     }
 
     // One ledger, one edition — a payload spanning two would need two writability
