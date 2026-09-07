@@ -25,6 +25,37 @@ export default async function PosPage() {
   const locale = await getLocale();
   const copy = getDictionary(locale);
 
+  const isAdmin = access.role === "ADMIN";
+
+  // Both links live above every early return: the screen an admin sees when
+  // there is no template yet is the one that most needs a way to the editor.
+  const templatesLink = isAdmin ? (
+    <Link
+      href="/pos/templates"
+      title={copy.pos.templatesTitle}
+      aria-label={copy.pos.templatesTitle}
+      className={buttonClasses("secondary", "md", compactOnMobileWidths.md)}
+    >
+      <LayoutGrid />
+      <span className="hidden lg:inline">{copy.pos.templatesTitle}</span>
+    </Link>
+  ) : null;
+
+  const adminLinks = isAdmin ? (
+    <>
+      <Link
+        href="/pos/sessions"
+        title={copy.pos.viewSessions}
+        aria-label={copy.pos.viewSessions}
+        className={buttonClasses("secondary", "md", compactOnMobileWidths.md)}
+      >
+        <History />
+        <span className="hidden lg:inline">{copy.pos.viewSessions}</span>
+      </Link>
+      {templatesLink}
+    </>
+  ) : null;
+
   const editionId = await resolveEditionIdOrNull();
 
   if (!editionId) {
@@ -82,11 +113,12 @@ export default async function PosPage() {
     saleCount: session._count.sales,
   }));
 
-  // No template → nobody can open a session. An admin builds one first.
+  // No template → nobody can open a session. An admin builds one first, and
+  // gets the link to do it right here rather than having to guess the URL.
   if (templateOptions.length === 0) {
     return (
-      <EmptyPage eyebrow={copy.pos.title} title={copy.pos.noTemplates}>
-        {copy.pos.noTemplatesHintUser}
+      <EmptyPage eyebrow={copy.pos.title} title={copy.pos.noTemplates} actions={templatesLink}>
+        {isAdmin ? copy.pos.noTemplatesHint : copy.pos.noTemplatesHintUser}
       </EmptyPage>
     );
   }
@@ -101,6 +133,7 @@ export default async function PosPage() {
         templates={templateOptions}
         registers={registers}
         stockPlaces={stockPlaces}
+        actions={adminLinks}
       />
     );
   }
@@ -117,30 +150,6 @@ export default async function PosPage() {
     label: cell.label,
     unitPrice: toRappen(cell.price),
   }));
-
-  const adminLinks =
-    access.role === "ADMIN" ? (
-      <>
-        <Link
-          href="/pos/sessions"
-          title={copy.pos.viewSessions}
-          aria-label={copy.pos.viewSessions}
-          className={buttonClasses("secondary", "md", compactOnMobileWidths.md)}
-        >
-          <History />
-          <span className="hidden lg:inline">{copy.pos.viewSessions}</span>
-        </Link>
-        <Link
-          href="/pos/templates"
-          title={copy.pos.templatesTitle}
-          aria-label={copy.pos.templatesTitle}
-          className={buttonClasses("secondary", "md", compactOnMobileWidths.md)}
-        >
-          <LayoutGrid />
-          <span className="hidden lg:inline">{copy.pos.templatesTitle}</span>
-        </Link>
-      </>
-    ) : null;
 
   return (
     <div className="space-y-4 lg:space-y-8">

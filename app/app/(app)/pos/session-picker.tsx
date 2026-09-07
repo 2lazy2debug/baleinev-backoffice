@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
 import { FormError } from "@/components/form-error";
@@ -34,12 +34,15 @@ export function SessionPicker({
   templates,
   registers,
   stockPlaces,
+  actions,
 }: {
   locale: Locale;
   sessions: PickerSession[];
   templates: TemplateOption[];
   registers: RegisterOption[];
   stockPlaces: StockPlaceOption[];
+  /** The admin links the page builds — templates and session history. */
+  actions?: ReactNode;
 }) {
   const copy = dictionaries[locale].pos;
   const router = useRouter();
@@ -67,12 +70,15 @@ export function SessionPicker({
         title={copy.pickSession}
         description={copy.pickSessionHint}
         actions={
-          <OpenSessionModal
-            locale={locale}
-            templates={templates}
-            registers={registers}
-            stockPlaces={stockPlaces}
-          />
+          <>
+            <OpenSessionModal
+              locale={locale}
+              templates={templates}
+              registers={registers}
+              stockPlaces={stockPlaces}
+            />
+            {actions}
+          </>
         }
       />
 

@@ -635,7 +635,7 @@ export const dictionaries = {
       noSessionsHint: "Open one to start selling, or wait for someone else to.",
       pickSession: "Join a session",
       pickSessionHint: "Pick the session you are selling in. You will land straight on the till next time.",
-      noTemplatesHintUser: "No till layout has been built yet. An admin sets one up under templates.",
+      noTemplatesHintUser: "No till layout has been built yet. Ask an admin to build one before you can sell.",
       paymentMethods: "Payment methods",
       methodCash: "Cash",
       methodTwint: "Twint",
@@ -1625,7 +1625,7 @@ export const dictionaries = {
       pickSession: "Rejoindre une session",
       pickSessionHint:
         "Choisis la session dans laquelle tu vends. Tu arriveras directement sur la caisse la prochaine fois.",
-      noTemplatesHintUser: "Aucune grille de caisse n'a encore été créée. Un admin en met une en place dans les grilles.",
+      noTemplatesHintUser: "Aucune grille de caisse n'a encore été créée. Demande à un admin d'en composer une avant de pouvoir vendre.",
       paymentMethods: "Moyens de paiement",
       methodCash: "Espèces",
       methodTwint: "Twint",
