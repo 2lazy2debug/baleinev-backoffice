@@ -5,7 +5,7 @@ context, the ground rules, the delegation policy and the release protocol live
 there. Then work from that file and this one only. Do not read 101–104, 106 or
 107; their context is not yours.
 
-**Needs 104**, which already records everything this plan draws. **This plan adds
+**Needs 104, still no reason to read the plan**, which already records everything this plan draws. **This plan adds
 no schema and no write action.** It is the read side, and if you find yourself
 reaching for a migration you have misread it.
 
