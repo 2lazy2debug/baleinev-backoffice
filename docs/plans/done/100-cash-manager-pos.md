@@ -1,5 +1,10 @@
 # 100 — Cash manager & point of sale (master)
 
+> **Done** — the whole chain shipped: 101 (v0.34.0) → 102 (v0.35.0) → 103 (v0.36.0)
+> → 104 (v0.37.0) → 105 (v0.38.0), 106 (v0.39.0), 107 (v0.40.0). This file and
+> `015-cash-manager.md` now live in `done/` alongside every subplan; the links
+> below are same-directory.
+
 The intranet already keeps a **journal**, **money accounts** and a **stock** with
 a catalogue behind it. What it cannot do is take money at a bar: open a till with
 a counted float, sell things from a grid, hand back change, and book the result
@@ -11,13 +16,13 @@ the other subplans — not reading them is the entire point of the split.
 
 | # | Subplan | What it delivers | Needs |
 |---|---|---|---|
-| 101 | [Articles app](done/101-articles-app.md) ✅ | The catalogue leaves `/stock/items` and becomes its own `/articles` app, with a `tracksStock` flag | — |
-| 102 | [Cash registers](done/102-cash-registers.md) ✅ | Open a till on a cash account with a counted float, close it with a counted count. No journal writes. | — |
-| 103 | [POS templates](done/103-pos-templates.md) ✅ | A 3x3 paginated grid of articles and prices, saved as a reusable template | 101 |
-| 104 | [POS sessions & selling](done/104-pos-sessions.md) ✅ | Open/pause/close a session, sell from the grid, take cash or Twint or bank, compute change, record every sale | 102, 103 |
-| 105 | [Session history](done/105-pos-session-history.md) ✅ | The read side: what each session sold, by payment method, with the change handed back | 104 |
-| 106 | [Closing a register into the journal](done/106-register-close-journal.md) ✅ | The three journal entries a closed till produces, including the user-correction gap | 104 |
-| 107 | [A sale moves stock](done/107-pos-stock-movements.md) ✅ | Selling an article with `tracksStock` on writes a `StockMovement` | 104 |
+| 101 | [Articles app](101-articles-app.md) ✅ | The catalogue leaves `/stock/items` and becomes its own `/articles` app, with a `tracksStock` flag | — |
+| 102 | [Cash registers](102-cash-registers.md) ✅ | Open a till on a cash account with a counted float, close it with a counted count. No journal writes. | — |
+| 103 | [POS templates](103-pos-templates.md) ✅ | A 3x3 paginated grid of articles and prices, saved as a reusable template | 101 |
+| 104 | [POS sessions & selling](104-pos-sessions.md) ✅ | Open/pause/close a session, sell from the grid, take cash or Twint or bank, compute change, record every sale | 102, 103 |
+| 105 | [Session history](105-pos-session-history.md) ✅ | The read side: what each session sold, by payment method, with the change handed back | 104 |
+| 106 | [Closing a register into the journal](106-register-close-journal.md) ✅ | The three journal entries a closed till produces, including the user-correction gap | 104 |
+| 107 | [A sale moves stock](107-pos-stock-movements.md) ✅ | Selling an article with `tracksStock` on writes a `StockMovement` | 104 |
 
 **The chain is 101 → 102 → 103 → 104 → {105, 106, 107}.** 101 and 102 are
 independent of each other and may be done in either order. 105, 106 and 107 are
