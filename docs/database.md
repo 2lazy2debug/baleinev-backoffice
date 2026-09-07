@@ -28,10 +28,12 @@ Edition
 JournalEntry ─── Budget (optional)
              ─── MoneyAccount
              ─── CostCenter (optional)
+             ─── CashRegister? (SetNull, set on the three entries a booked register writes)
 
 CashRegister ─── MoneyAccount (a CASH account, Restrict)
             ─< CashCount      (OPENING / CLOSING denomination sheets)
-            ─── User (openedBy / closedBy, SetNull)
+            ─< JournalEntry   (the three entries booking it wrote)
+            ─── User (openedBy / closedBy / journaledBy, SetNull)
 
 PosSession ─── PosTemplate (Restrict)
            ─── CashRegister? (Restrict, set only when CASH is accepted)
@@ -281,6 +283,7 @@ A single accounting entry (debit or credit) in the general ledger.
 | `budgetId` | String? | FK → Budget (onDelete: SetNull); a budget with lines is kept from deletion by the delete action, not the FK |
 | `moneyAccountId` | String | FK → MoneyAccount |
 | `costCenterId` | String? | FK → CostCenter (optional) |
+| `cashRegisterId` | String? | FK → [`CashRegister`](#cashregister) (onDelete: SetNull). Set on the three entries a booked register produces, so a re-worded label still traces back |
 | `editionId` | String | FK → Edition (onDelete: Cascade) |
 
 ---
@@ -553,8 +556,8 @@ them to describe (and a place can only be deleted once its contents have been mo
 ### `CashRegister`
 One till, opened on one `CASH` [`MoneyAccount`](#moneyaccount) for one stretch of work, from
 `/cash`. It holds two count sheets and no amount of its own. Counting is not booking: closing a
-register writes nothing to the journal — those entries are produced later, by an admin, from the two
-counts and what the point of sale sold.
+register writes nothing to the journal. An admin books it later — three [`JournalEntry`](#journalentry)
+rows from the two counts and what the point of sale sold.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -566,10 +569,18 @@ counts and what the point of sale sold.
 | `openedAt` | DateTime | Defaults to now |
 | `closedById` | String? | FK → User, `SetNull` |
 | `closedAt` | DateTime? | Null while the register is open; set once, never re-set |
+| `journaledAt` | DateTime? | When the three closing entries were written. Null = counted but not yet booked; a register is booked exactly once |
+| `journaledById` | String? | FK → User, `SetNull` — who pressed **Book to the journal** |
 
 Opening and closing require `canManageMoneyAccounts` (admin or the accounting department) and a
 writable edition. A register can only be closed once, and **not** while an `OPEN` or `PAUSED`
 [`PosSession`](#possession) is still on it (`posSessions` back-relation, FK `Restrict`).
+
+**Booking** is **admin-only** and needs a writable edition: it refuses a second press
+(`journaledAt` already set), and refuses while any session on the register is not `CLOSED`. It
+writes three entries on `moneyAccountId` (`journalEntries` back-relation), each tagged with
+`cashRegisterId`, and sets `journaledAt` / `journaledById`. The net effect on the cash account is
+exactly `counted − float`.
 
 ---
 

@@ -59,23 +59,28 @@ app/
 │   │   └── actions.ts            ← Server actions: create/update/delete cost centers
 │   │
 │   ├── cash/                    ← Cash manager: open a till on a CASH money account with a counted
-│   │   │                            float, close it with a counted count. No journal writes — that
-│   │   │                            is the POS closing flow's job
+│   │   │                            float, close it with a counted count, then (admin) book the
+│   │   │                            closed register — three journal entries, once
 │   │   ├── page.tsx              ← List of registers (open first), data-fetching only; builds the
-│   │   │                            one row array both the table and the cardlets read
-│   │   ├── client.tsx            ← Table above `sm`, cardlets below. Owns the close dialog and the
-│   │   │                            read-only "both sheets side by side" dialog, one of each for
-│   │   │                            the whole list
+│   │   │                            one row array both the table and the cardlets read, and calls
+│   │   │                            `registerFigures` for every closed unbooked register in parallel
+│   │   ├── client.tsx            ← Table above `sm`, cardlets below. Owns the close dialog, the
+│   │   │                            book dialog and the read-only "both sheets side by side"
+│   │   │                            dialog, one of each for the whole list
 │   │   ├── denomination-counter.tsx ← The twelve-denomination count sheet with a live running
 │   │   │                            total — the number the person counting checks against the cash
-│   │   │                            in their hand. Used by both modals
+│   │   │                            in their hand. Used by both count modals
 │   │   ├── open-register-modal.tsx  ← Header button + modal: pick a cash account, name it, count
 │   │   │                            the float (`canManageMoneyAccounts`, writable edition)
 │   │   ├── close-register-modal.tsx ← Count what came back. Shows the float, never a computed
 │   │   │                            "expected"; an empty sheet needs an explicit confirmation
-│   │   └── actions.ts            ← `openCashRegisterAction` / `closeCashRegisterAction` — the
-│   │                                permission and edition guards, denomination parsing, the
-│   │                                one-transaction write. Closing is not idempotent
+│   │   ├── journal-register-modal.tsx ← Row action on a closed, unbooked register (admin, writable
+│   │   │                            edition): the five figures, a preview of the exact two or three
+│   │   │                            entries, then budget / cost centre / date. One irreversible press
+│   │   └── actions.ts            ← `openCashRegisterAction` / `closeCashRegisterAction` /
+│   │                                `journalCashRegisterAction` — the permission and edition guards,
+│   │                                denomination parsing, the one-transaction writes. Closing is not
+│   │                                idempotent; booking happens exactly once
 │   │
 │   ├── pos/                     ← Point of sale. `page.tsx` is the till itself; `templates/` is the
 │   │   │                            admin-only layout editor. Edition-scoped
@@ -379,6 +384,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `articles.ts` | `elementFieldsFrom()` / `assertBarcodeFree()` — the `StockElement` fields both writing forms post (articles' own dialog, and the stock app's "new item" half) and the "one barcode, one article" check, shared so the two paths cannot drift |
 | `cash.ts` | `CASH_DENOMINATIONS` (the twelve Swiss denominations, rappen, largest first), `POS_PAGE_SLOTS` (`8` — article tiles per POS grid page, the ninth being the drawn "custom sale"), plus `toRappen()` / `fromRappen()` / `formatDenomination()` / `countTotal()` / `makeChange()` (greedy Swiss change, largest first — the 1-2-5 set makes greedy optimal). Every amount in the cash and POS apps is integer rappen; this is where the conversion, the denomination list and the grid constant live so nothing downstream re-derives them. Import-free |
 | `pos.ts` | `totalsFor(sales, methods)` → `PosTotals` — the per-method roll-up both POS history screens share, summed in integer rappen: every accepted method present (0 if unused), total free to go negative, `changeGiven` from `changeDue` across the cash sales. Import-free |
+| `cash-register.ts` | `registerFigures(db, registerId)` → `RegisterFigures` (float / cashTaken / expected / actual / gap / sessionCount, all rappen) and `plannedEntries(figures)` → the two or three `JournalEntry` rows a booking writes, zeros skipped. Takes a Prisma client so the `/cash` screen reads it outside a transaction and `journalCashRegisterAction` reads it inside one — one definition of `expected`, one of "which account", shared so the preview and the write cannot drift |
 | `city-book.ts` | `rememberCity()` — files a postal code / locality pair the user actually saved, so the seeded Swiss list grows into whatever the address book turns out to need |
 | `countries.ts` | `countryOptions(locale)` / `countryName()` — countries and international dialling prefixes from libphonenumber-js + `Intl.DisplayNames`. Built on the server and passed down as props; the phone metadata has no business in a browser bundle that only needs "+41" |
 | `db.ts` | Singleton Prisma client (re-used across hot reloads in dev) |

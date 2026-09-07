@@ -599,10 +599,51 @@ is refused rather than silently replacing the first.
 ### Counting is not booking
 
 Closing a register writes **nothing to the journal**. A `CashRegister` carries only its two count
-sheets; a till counted tonight may be booked next week. The journal entries a closed till produces —
-the float returned, the takings, and the gap a user correction leaves — are written later by an
-admin, from the two counts and what the point of sale recorded (documented with the POS closing
-flow).
+sheets; a till counted tonight may be booked next week. The journal entries a closed till produces
+are written later, by an admin — see **Booking a register** below.
+
+### Booking a register
+
+The last step of a till's life. An **admin** (not the accounting department — this writes to the
+journal, and the journal is admin territory everywhere else) opens a closed, not-yet-booked
+register, checks three numbers, picks a budget, and presses **Book to the journal**. Booking needs a
+**writable edition** and happens **exactly once** — a second press is refused so the ledger is never
+doubled. Every point-of-sale session on the register must be **closed** first; a running session
+means the cash figure is not yet final.
+
+Five figures, all integer rappen, all from `registerFigures()` in `app/lib/cash-register.ts` so the
+screen that shows them and the action that books them cannot disagree:
+
+| Figure | How it is derived |
+|---|---|
+| **Float** | `countTotal` of the OPENING count sheet — what went into the drawer |
+| **Taken in cash** | Σ `total` of every **CASH** `PosSale` in every session on this register. The sale *total*, not `cashGiven` minus `changeDue` — same number, fewer chances to be wrong. A negative-total sale (a deposit handed back) correctly subtracts |
+| **Expected** | float + taken in cash — what the drawer should hold |
+| **Counted** | `countTotal` of the CLOSING count sheet — what was actually counted back |
+| **Difference** | expected − counted — **positive means the till came back short**, negative means it came back over |
+
+Three journal entries, all on the register's cash `MoneyAccount`, all dated its `closedAt` unless
+the admin picks another date, all tagged with `cashRegisterId` so "where did this line come from?"
+survives a re-worded label:
+
+| # | Direction | Amount | Stored label (English, always) |
+|---|---|---|---|
+| 1 | `CHARGES` | float | `Register float — <name>` |
+| 2 | `PRODUITS` (or `CHARGES` if expected is negative) | \|expected\| | `Register returned — <name>` |
+| 3 | `CHARGES` if short, `PRODUITS` if over | \|difference\| | `User correction — <name>` |
+
+**Any entry whose amount is zero is skipped** — a correction of nothing is noise, and a till that
+opened on a zero float could not have opened at all, but a refund-only bar that ends `expected` at
+zero is real. Amounts are always positive in `JournalEntry`; the direction is `accountType`.
+
+The **net effect on the cash account is exactly `counted − float`**: what was counted back, less
+what went in. The three entries carry consecutive `sequenceNumber`s allocated under the same
+per-edition advisory lock `createJournalEntryAction` uses.
+
+The modal shows all five figures (the difference in red when it is non-zero) and a preview of the
+exact entries before anything is written — a one-press irreversible write shows what it is about to
+do. Once booked, the register's row shows a **Booked** badge and the date and person instead of the
+button.
 
 ## 13. Point of Sale
 
