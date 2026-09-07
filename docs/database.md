@@ -103,9 +103,9 @@ the same `PASSWORD_VAULT_KEY` as the Passwords vault (`app/lib/secret-crypto.ts`
 that key makes every enrolled account's 2FA unverifiable — see [`auth.md`](./auth.md).
 
 **Role enum:** `ADMIN` can access all routes and all admin actions. `DEPARTMENT` is blocked by
-middleware from admin routes (editions, journal, cost centers, invoices, templates, departments,
-users) and redirected to `/budget`; budget, tasks, calendar, events, and expense reports remain
-accessible. Money accounts are a special case: `DEPARTMENT` users in the `"Comptabilité"`
+middleware from admin routes (editions, journal, cost centers, invoices, templates, `pos/templates`,
+departments, users) and redirected to `/budget`; budget, tasks, calendar, events, expense reports
+and the point-of-sale till (`/pos`) remain accessible. Money accounts are a special case: `DEPARTMENT` users in the `"Comptabilité"`
 department can access and manage them like an `ADMIN` would — see [`auth.md`](./auth.md).
 
 ---

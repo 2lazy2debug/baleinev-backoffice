@@ -103,7 +103,8 @@ The middleware protects the entire `(app)` route group. It checks two things:
 1. **Is the user authenticated?** If not, redirect to `/login`.
 2. **Is the user a `DEPARTMENT` role trying to access an admin route?**
    - Blocked routes for `DEPARTMENT`: `/`, `/editions`, `/journal`, `/cost-centers`,
-     `/invoices`, `/templates`, `/departments`, `/users` — these redirect to `/budget`.
+     `/invoices`, `/templates`, `/pos/templates`, `/departments`, `/users` — these redirect to
+     `/budget`. Note `/pos` itself (the till) is **not** blocked: any signed-in user may sell.
    - `/money-accounts` is a special case: blocked for `DEPARTMENT` users **unless** their
      `departmentNames` includes `"Comptabilité"` (the accounting department name is read
      straight off the JWT, no DB round-trip — see `lib/money-account-roles.ts`).
