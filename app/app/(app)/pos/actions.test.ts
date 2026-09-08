@@ -8,9 +8,21 @@ const revalidatePath = vi.fn();
 
 const prisma = {
   posTemplate: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
-  posTemplateCell: { upsert: vi.fn(), deleteMany: vi.fn() },
+  posTemplateCell: {
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+  },
   posSession: { count: vi.fn() },
   stockElement: { findUnique: vi.fn() },
+  // The reorder and remove paths rewrite positions inside a transaction. The
+  // callback form is what the actions use, and the same mock client stands in
+  // for `tx` — every write it makes is on the same spies the tests read.
+  $transaction: vi.fn(),
 };
 
 vi.mock("next/cache", () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
@@ -22,8 +34,10 @@ const {
   createPosTemplateAction,
   renamePosTemplateAction,
   deletePosTemplateAction,
-  setPosTemplateCellAction,
-  clearPosTemplateCellAction,
+  addPosTemplateCellAction,
+  updatePosTemplateCellAction,
+  removePosTemplateCellAction,
+  reorderPosTemplateCellsAction,
 } = await import("./actions");
 
 function form(overrides: Record<string, string> = {}): FormData {
@@ -35,7 +49,6 @@ function form(overrides: Record<string, string> = {}): FormData {
 function cellForm(overrides: Record<string, string> = {}): FormData {
   return form({
     templateId: "tpl_1",
-    position: "0",
     elementId: "el_1",
     label: "Beer 3dl",
     price: "4.50",
@@ -51,10 +64,16 @@ beforeEach(() => {
   prisma.posTemplate.create.mockResolvedValue({ id: "tpl_1" });
   prisma.posTemplate.update.mockResolvedValue({ id: "tpl_1" });
   prisma.posTemplate.delete.mockResolvedValue({ id: "tpl_1" });
-  prisma.posTemplateCell.upsert.mockResolvedValue({ id: "cell_1" });
-  prisma.posTemplateCell.deleteMany.mockResolvedValue({ count: 1 });
+  prisma.posTemplateCell.findUnique.mockResolvedValue({ id: "cell_1", templateId: "tpl_1", position: 0 });
+  prisma.posTemplateCell.findMany.mockResolvedValue([{ id: "cell_1" }, { id: "cell_2" }]);
+  prisma.posTemplateCell.create.mockResolvedValue({ id: "cell_1" });
+  prisma.posTemplateCell.update.mockResolvedValue({ id: "cell_1" });
+  prisma.posTemplateCell.updateMany.mockResolvedValue({ count: 2 });
+  prisma.posTemplateCell.delete.mockResolvedValue({ id: "cell_1" });
+  prisma.posTemplateCell.count.mockResolvedValue(3);
   prisma.posSession.count.mockResolvedValue(0);
   prisma.stockElement.findUnique.mockResolvedValue({ id: "el_1" });
+  prisma.$transaction.mockImplementation((run: (tx: typeof prisma) => unknown) => run(prisma));
 });
 
 /** For the cell actions, the template-belongs-to-edition lookup has to pass. */
@@ -67,16 +86,20 @@ describe("every POS template action is admin-only", () => {
     ["create", () => createPosTemplateAction({ error: null }, form({ name: "Bar 1" }))],
     ["rename", () => renamePosTemplateAction({ error: null }, form({ templateId: "tpl_1", name: "Bar 2" }))],
     ["delete", () => deletePosTemplateAction({ error: null }, form({ templateId: "tpl_1" }))],
-    ["set cell", () => setPosTemplateCellAction({ error: null }, cellForm())],
-    ["clear cell", () => clearPosTemplateCellAction({ error: null }, form({ templateId: "tpl_1", position: "0" }))],
+    ["add cell", () => addPosTemplateCellAction({ error: null }, cellForm())],
+    ["update cell", () => updatePosTemplateCellAction({ error: null }, cellForm({ cellId: "cell_1" }))],
+    ["remove cell", () => removePosTemplateCellAction({ error: null }, form({ templateId: "tpl_1", cellId: "cell_1" }))],
+    ["reorder cells", () => reorderPosTemplateCellsAction("tpl_1", ["cell_2", "cell_1"])],
   ])("%s refuses a non-admin", async (_name, run) => {
     requireAdmin.mockRejectedValue(new Error("Unauthorized."));
     expect(await run()).toEqual({ error: "Unauthorized." });
     expect(prisma.posTemplate.create).not.toHaveBeenCalled();
     expect(prisma.posTemplate.update).not.toHaveBeenCalled();
     expect(prisma.posTemplate.delete).not.toHaveBeenCalled();
-    expect(prisma.posTemplateCell.upsert).not.toHaveBeenCalled();
-    expect(prisma.posTemplateCell.deleteMany).not.toHaveBeenCalled();
+    expect(prisma.posTemplateCell.create).not.toHaveBeenCalled();
+    expect(prisma.posTemplateCell.update).not.toHaveBeenCalled();
+    expect(prisma.posTemplateCell.updateMany).not.toHaveBeenCalled();
+    expect(prisma.posTemplateCell.delete).not.toHaveBeenCalled();
   });
 });
 
@@ -148,63 +171,167 @@ describe("deletePosTemplateAction", () => {
   });
 });
 
-describe("setPosTemplateCellAction", () => {
+describe("addPosTemplateCellAction", () => {
   beforeEach(templateIsInEdition);
 
-  it("refuses a non-integer / negative slot", async () => {
-    expect((await setPosTemplateCellAction({ error: null }, cellForm({ position: "2.5" }))).error).toMatch(/not valid/i);
-    expect((await setPosTemplateCellAction({ error: null }, cellForm({ position: "-1" }))).error).toMatch(/not valid/i);
-    expect(prisma.posTemplateCell.upsert).not.toHaveBeenCalled();
-  });
-
   it("refuses a price that is not a number", async () => {
-    const result = await setPosTemplateCellAction({ error: null }, cellForm({ price: "free" }));
+    const result = await addPosTemplateCellAction({ error: null }, cellForm({ price: "free" }));
     expect(result.error).toMatch(/price must be a number/i);
-    expect(prisma.posTemplateCell.upsert).not.toHaveBeenCalled();
+    expect(prisma.posTemplateCell.create).not.toHaveBeenCalled();
   });
 
   it("refuses an article that no longer exists", async () => {
     prisma.stockElement.findUnique.mockResolvedValue(null);
-    const result = await setPosTemplateCellAction({ error: null }, cellForm());
+    const result = await addPosTemplateCellAction({ error: null }, cellForm());
     expect(result.error).toMatch(/no longer exists/i);
-    expect(prisma.posTemplateCell.upsert).not.toHaveBeenCalled();
+    expect(prisma.posTemplateCell.create).not.toHaveBeenCalled();
   });
 
-  it("upserts the cell, accepting a comma decimal", async () => {
-    const result = await setPosTemplateCellAction({ error: null }, cellForm({ price: "4,5" }));
+  it("appends at the end of the stack, accepting a comma decimal", async () => {
+    const result = await addPosTemplateCellAction({ error: null }, cellForm({ price: "4,5" }));
     expect(result).toEqual({ error: null });
-    expect(prisma.posTemplateCell.upsert).toHaveBeenCalledWith({
-      where: { templateId_position: { templateId: "tpl_1", position: 0 } },
-      create: { templateId: "tpl_1", position: 0, elementId: "el_1", label: "Beer 3dl", price: "4.50" },
-      update: { elementId: "el_1", label: "Beer 3dl", price: "4.50" },
+    expect(prisma.posTemplateCell.create).toHaveBeenCalledWith({
+      data: {
+        templateId: "tpl_1",
+        position: 3, // the three tiles already there
+        kind: "ARTICLE",
+        elementId: "el_1",
+        label: "Beer 3dl",
+        price: "4.50",
+      },
     });
     expect(revalidatePath).toHaveBeenCalledWith("/pos/templates/tpl_1");
   });
 
   it("accepts a negative price — a deposit handed back", async () => {
-    await setPosTemplateCellAction({ error: null }, cellForm({ price: "-2", label: "Deposit back" }));
-    expect(prisma.posTemplateCell.upsert.mock.calls[0][0].create.price).toBe("-2.00");
+    await addPosTemplateCellAction({ error: null }, cellForm({ price: "-2", label: "Deposit back" }));
+    expect(prisma.posTemplateCell.create.mock.calls[0][0].data.price).toBe("-2.00");
   });
 
   it("accepts a zero price", async () => {
-    await setPosTemplateCellAction({ error: null }, cellForm({ price: "0" }));
-    expect(prisma.posTemplateCell.upsert.mock.calls[0][0].create.price).toBe("0.00");
+    await addPosTemplateCellAction({ error: null }, cellForm({ price: "0" }));
+    expect(prisma.posTemplateCell.create.mock.calls[0][0].data.price).toBe("0.00");
+  });
+
+  it("stores a spacer with no article, no label and no price, whatever the form carried", async () => {
+    const result = await addPosTemplateCellAction(
+      { error: null },
+      cellForm({ kind: "SPACER", elementId: "el_1", label: "Beer 3dl", price: "4.50" }),
+    );
+    expect(result).toEqual({ error: null });
+    expect(prisma.posTemplateCell.create).toHaveBeenCalledWith({
+      data: { templateId: "tpl_1", position: 3, kind: "SPACER", elementId: null, label: "", price: "0.00" },
+    });
+    // A spacer points at nothing, so the catalogue is never consulted.
+    expect(prisma.stockElement.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("refuses a template from another edition", async () => {
+    prisma.posTemplate.findUnique.mockResolvedValue({ id: "tpl_1", editionId: "ed_other" });
+    const result = await addPosTemplateCellAction({ error: null }, cellForm());
+    expect(result.error).toMatch(/no longer exists/i);
+    expect(prisma.posTemplateCell.create).not.toHaveBeenCalled();
   });
 });
 
-describe("clearPosTemplateCellAction", () => {
-  it("refuses a template from another edition", async () => {
-    prisma.posTemplate.findUnique.mockResolvedValue({ id: "tpl_1", editionId: "ed_other" });
-    const result = await clearPosTemplateCellAction({ error: null }, form({ templateId: "tpl_1", position: "0" }));
+describe("updatePosTemplateCellAction", () => {
+  beforeEach(templateIsInEdition);
+
+  it("refuses a tile that belongs to another template", async () => {
+    prisma.posTemplateCell.findUnique.mockResolvedValue({ id: "cell_1", templateId: "tpl_other", position: 0 });
+    const result = await updatePosTemplateCellAction({ error: null }, cellForm({ cellId: "cell_1" }));
     expect(result.error).toMatch(/no longer exists/i);
-    expect(prisma.posTemplateCell.deleteMany).not.toHaveBeenCalled();
+    expect(prisma.posTemplateCell.update).not.toHaveBeenCalled();
   });
 
-  it("clears the slot without complaining when it is already empty", async () => {
-    templateIsInEdition();
-    prisma.posTemplateCell.deleteMany.mockResolvedValue({ count: 0 });
-    const result = await clearPosTemplateCellAction({ error: null }, form({ templateId: "tpl_1", position: "3" }));
+  it("edits the tile in place and leaves its position alone", async () => {
+    const result = await updatePosTemplateCellAction({ error: null }, cellForm({ cellId: "cell_1", price: "5" }));
     expect(result).toEqual({ error: null });
-    expect(prisma.posTemplateCell.deleteMany).toHaveBeenCalledWith({ where: { templateId: "tpl_1", position: 3 } });
+    expect(prisma.posTemplateCell.update).toHaveBeenCalledWith({
+      where: { id: "cell_1" },
+      data: { kind: "ARTICLE", elementId: "el_1", label: "Beer 3dl", price: "5.00" },
+    });
+  });
+
+  it("turns a tile into a spacer", async () => {
+    await updatePosTemplateCellAction({ error: null }, cellForm({ cellId: "cell_1", kind: "SPACER" }));
+    expect(prisma.posTemplateCell.update).toHaveBeenCalledWith({
+      where: { id: "cell_1" },
+      data: { kind: "SPACER", elementId: null, label: "", price: "0.00" },
+    });
+  });
+});
+
+describe("removePosTemplateCellAction", () => {
+  beforeEach(templateIsInEdition);
+
+  it("refuses a tile that belongs to another template", async () => {
+    prisma.posTemplateCell.findUnique.mockResolvedValue({ id: "cell_1", templateId: "tpl_other", position: 0 });
+    const result = await removePosTemplateCellAction({ error: null }, form({ templateId: "tpl_1", cellId: "cell_1" }));
+    expect(result.error).toMatch(/no longer exists/i);
+    expect(prisma.posTemplateCell.delete).not.toHaveBeenCalled();
+  });
+
+  it("deletes the tile and closes the gap it leaves", async () => {
+    prisma.posTemplateCell.findMany.mockResolvedValue([{ id: "cell_2" }, { id: "cell_3" }]);
+
+    const result = await removePosTemplateCellAction({ error: null }, form({ templateId: "tpl_1", cellId: "cell_1" }));
+
+    expect(result).toEqual({ error: null });
+    expect(prisma.posTemplateCell.delete).toHaveBeenCalledWith({ where: { id: "cell_1" } });
+    // Parked out of the way first, then renumbered from zero — the unique index
+    // on (templateId, position) is checked row by row.
+    expect(prisma.posTemplateCell.updateMany).toHaveBeenCalledWith({
+      where: { templateId: "tpl_1" },
+      data: { position: { increment: 1_000_000 } },
+    });
+    expect(prisma.posTemplateCell.update.mock.calls.map((call) => call[0])).toEqual([
+      { where: { id: "cell_2" }, data: { position: 0 } },
+      { where: { id: "cell_3" }, data: { position: 1 } },
+    ]);
+  });
+});
+
+describe("reorderPosTemplateCellsAction", () => {
+  beforeEach(templateIsInEdition);
+
+  it("refuses an order that is missing a tile", async () => {
+    const result = await reorderPosTemplateCellsAction("tpl_1", ["cell_1"]);
+    expect(result.error).toMatch(/out of date/i);
+    expect(prisma.posTemplateCell.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("refuses an order naming a tile that is not on the template", async () => {
+    const result = await reorderPosTemplateCellsAction("tpl_1", ["cell_1", "cell_9"]);
+    expect(result.error).toMatch(/out of date/i);
+    expect(prisma.posTemplateCell.update).not.toHaveBeenCalled();
+  });
+
+  it("refuses an order that names the same tile twice", async () => {
+    const result = await reorderPosTemplateCellsAction("tpl_1", ["cell_1", "cell_1"]);
+    expect(result.error).toMatch(/out of date/i);
+    expect(prisma.posTemplateCell.update).not.toHaveBeenCalled();
+  });
+
+  it("refuses a template from another edition", async () => {
+    prisma.posTemplate.findUnique.mockResolvedValue({ id: "tpl_1", editionId: "ed_other" });
+    const result = await reorderPosTemplateCellsAction("tpl_1", ["cell_2", "cell_1"]);
+    expect(result.error).toMatch(/no longer exists/i);
+    expect(prisma.posTemplateCell.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("parks the stack, then writes the given order back as 0..n-1", async () => {
+    const result = await reorderPosTemplateCellsAction("tpl_1", ["cell_2", "cell_1"]);
+
+    expect(result).toEqual({ error: null });
+    expect(prisma.posTemplateCell.updateMany).toHaveBeenCalledWith({
+      where: { templateId: "tpl_1" },
+      data: { position: { increment: 1_000_000 } },
+    });
+    expect(prisma.posTemplateCell.update.mock.calls.map((call) => call[0])).toEqual([
+      { where: { id: "cell_2" }, data: { position: 0 } },
+      { where: { id: "cell_1" }, data: { position: 1 } },
+    ]);
+    expect(revalidatePath).toHaveBeenCalledWith("/pos/templates/tpl_1");
   });
 });

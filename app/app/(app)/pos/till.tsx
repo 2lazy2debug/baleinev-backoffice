@@ -18,8 +18,9 @@ import {
   cn,
   nestedSurfaceClasses,
 } from "@/components/ui";
-import { POS_PAGE_SLOTS, formatDenomination, fromRappen, makeChange } from "@/lib/cash";
+import { formatDenomination, fromRappen, makeChange } from "@/lib/cash";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
+import { drawnSlots, pageCount, tilesOnPage } from "@/lib/pos-layout";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
 
@@ -28,7 +29,9 @@ import { COLUMN_CHOICES, columnClasses, normalizeColumns, useTillColumns } from 
 import { recordPosSaleAction } from "./session-actions";
 
 export type Tile = {
-  position: number;
+  id: string;
+  /** A SPACER is blank space the template author put in the stack — drawn as air. */
+  kind: "ARTICLE" | "SPACER";
   elementId: string | null;
   label: string;
   /** Rappen — converted once from the cell's `Decimal` when the page built its props. */
@@ -124,8 +127,13 @@ export function Till({
 
   const total = cart.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0);
 
-  const tileByPosition = new Map(tiles.map((tile) => [tile.position, tile]));
-  const totalPages = tiles.reduce((max, tile) => Math.max(max, Math.floor(tile.position / POS_PAGE_SLOTS) + 1), 1);
+  // The template is one stack; the page break comes from how wide *this* device
+  // is selling, so re-picking the column count re-pages it. A page that no
+  // longer exists after a widening lands the seller on the last one there is.
+  const totalPages = pageCount(tiles.length, columns);
+  const currentPage = Math.min(page, totalPages - 1);
+  const pageTiles = tilesOnPage(tiles, currentPage, columns);
+  const slots = drawnSlots(pageTiles.length, columns);
 
   function addLine(part: Omit<CartLine, "key" | "quantity">) {
     setCart((current) => {
@@ -218,20 +226,20 @@ export function Till({
               size="sm"
               tone="neutral"
               label={copy.previousPage}
-              disabled={page === 0}
-              onClick={() => setPage((current) => Math.max(0, current - 1))}
+              disabled={currentPage === 0}
+              onClick={() => setPage(Math.max(0, currentPage - 1))}
             >
               <ChevronLeft />
             </IconButton>
             <span className="text-sm tabular-nums text-[var(--muted)]">
-              {copy.pageOf.replace("{page}", String(page + 1)).replace("{total}", String(totalPages))}
+              {copy.pageOf.replace("{page}", String(currentPage + 1)).replace("{total}", String(totalPages))}
             </span>
             <IconButton
               size="sm"
               tone="neutral"
               label={copy.nextPage}
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage((current) => current + 1)}
+              disabled={currentPage >= totalPages - 1}
+              onClick={() => setPage(currentPage + 1)}
             >
               <ChevronRight />
             </IconButton>
@@ -251,9 +259,13 @@ export function Till({
         </div>
       </div>
 
+      {/* Custom sale is the last slot of every page, so it is in the same corner
+          whatever the width — a bar hits it without looking. Everything between
+          the last tile and it is air: a spacer the template author placed, or
+          the tail of a page that is not full. */}
       <div className={cn("grid gap-2", columnClasses[columns])}>
-        {Array.from({ length: 9 }, (_, slot) => {
-          if (slot === POS_PAGE_SLOTS) {
+        {Array.from({ length: slots }, (_, slot) => {
+          if (slot === slots - 1) {
             return (
               <TileButton key="custom" label={copy.customSale} disabled={paused} onClick={() => setCustomOpen(true)}>
                 <Plus className="h-4 w-4" />
@@ -262,16 +274,15 @@ export function Till({
             );
           }
 
-          const position = page * POS_PAGE_SLOTS + slot;
-          const tile = tileByPosition.get(position);
+          const tile = pageTiles[slot];
 
-          if (!tile) {
-            return <Card key={position} as="div" span="auto" dashed className="min-h-24" />;
+          if (!tile || tile.kind === "SPACER") {
+            return <div key={tile?.id ?? `blank-${slot}`} className="min-h-24" />;
           }
 
           return (
             <TileButton
-              key={position}
+              key={tile.id}
               label={tile.label}
               disabled={paused}
               onClick={() => addLine({ elementId: tile.elementId, label: tile.label, unitPrice: tile.unitPrice })}

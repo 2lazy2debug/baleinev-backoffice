@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { History, LayoutGrid } from "lucide-react";
-import { PosSessionStatus } from "@prisma/client";
+import { PosCellKind, PosSessionStatus } from "@prisma/client";
 
 import { EmptyPage, PageHeader, buttonClasses, compactOnMobileWidths } from "@/components/ui";
 import { getCurrentUserAccess } from "@/lib/access";
@@ -85,7 +85,12 @@ export default async function PosPage() {
     prisma.posTemplate.findMany({
       where: { editionId },
       orderBy: { name: "asc" },
-      select: { id: true, name: true, _count: { select: { cells: true } } },
+      // Sellable tiles only — a template of nothing but spacers cannot be opened on.
+      select: {
+        id: true,
+        name: true,
+        _count: { select: { cells: { where: { kind: PosCellKind.ARTICLE } } } },
+      },
     }),
     prisma.cashRegister.findMany({
       where: { editionId, closedAt: null },
@@ -138,14 +143,17 @@ export default async function PosPage() {
     );
   }
 
+  // The whole stack, in order. Where the pages fall is the till's business —
+  // it depends on the column count this device sells at.
   const cells = await prisma.posTemplateCell.findMany({
     where: { templateId: joined.templateId },
     orderBy: { position: "asc" },
-    select: { position: true, elementId: true, label: true, price: true },
+    select: { id: true, kind: true, elementId: true, label: true, price: true },
   });
 
   const tiles: Tile[] = cells.map((cell) => ({
-    position: cell.position,
+    id: cell.id,
+    kind: cell.kind,
     elementId: cell.elementId,
     label: cell.label,
     unitPrice: toRappen(cell.price),

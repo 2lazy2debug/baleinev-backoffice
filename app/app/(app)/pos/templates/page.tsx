@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { History } from "lucide-react";
 
+import { PosCellKind } from "@prisma/client";
+
 import { WritableEditionOnly } from "@/components/edition-read-only";
 import { EmptyPage, PageHeader, buttonClasses, compactOnMobileWidths } from "@/components/ui";
-import { POS_PAGE_SLOTS } from "@/lib/cash";
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
@@ -13,9 +14,13 @@ import { PosTemplatesClient, type PosTemplateRow } from "./client";
 import { CreateTemplateModal } from "./create-template-modal";
 
 /**
- * The templates a bar can open on for the night: a paginated 3x3 grid of
- * articles and prices. Admin-only and per edition — a template is configuration.
+ * The templates a bar can open on for the night: an ordered stack of articles
+ * and prices. Admin-only and per edition — a template is configuration.
  * Nothing sells anything here; that is the selling app (104).
+ *
+ * There is no page count on this list any more. A template is a stack, and how
+ * many pages it makes depends on the width of whatever device opens it — that
+ * is a fact about a phone, not about a template.
  */
 export default async function PosTemplatesPage() {
   await requireAdmin();
@@ -35,11 +40,14 @@ export default async function PosTemplatesPage() {
   const templates = await prisma.posTemplate.findMany({
     where: { editionId },
     orderBy: { name: "asc" },
-    include: {
-      _count: { select: { cells: true } },
-      // The page count comes from the highest slot in use, not the tile count —
-      // a page may have holes, so eight tiles can still span two pages.
-      cells: { select: { position: true } },
+    select: {
+      id: true,
+      name: true,
+      _count: {
+        select: {
+          cells: { where: { kind: PosCellKind.ARTICLE } },
+        },
+      },
     },
   });
 
@@ -47,10 +55,6 @@ export default async function PosTemplatesPage() {
     id: template.id,
     name: template.name,
     tileCount: template._count.cells,
-    pageCount: template.cells.reduce(
-      (max, cell) => Math.max(max, Math.floor(cell.position / POS_PAGE_SLOTS) + 1),
-      1,
-    ),
   }));
 
   const sessionsLink = (

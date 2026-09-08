@@ -6,6 +6,8 @@ import { requireAdmin } from "@/lib/access";
 import { assertBarcodeFree, elementFieldsFrom } from "@/lib/articles";
 import { prisma } from "@/lib/db";
 import { type ActionState, getRequiredString, toActionErrorMessage } from "@/lib/server-action-helpers";
+import { formatPiece } from "@/lib/stock";
+import { decimalToNumber } from "@/lib/utils";
 
 /**
  * The catalogue's own writes. The articles app is admin-only, so every action
@@ -23,15 +25,38 @@ function revalidateArticles() {
   revalidatePath("/stock");
 }
 
-export async function createArticleAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+/**
+ * What a successful create hands back. A picker that opened this form to add
+ * the article it was missing has to select it straight away, and it needs the
+ * id to do that — the name is not an identity, two rows may read the same.
+ */
+export type CreateArticleState = ActionState & {
+  created?: { id: string; name: string; brand: string | null; piece: string };
+};
+
+export async function createArticleAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<CreateArticleState> {
   try {
     await requireAdmin();
     const data = elementFieldsFrom(formData);
     await assertBarcodeFree(prisma, data.barcode);
-    await prisma.stockElement.create({ data });
+    const created = await prisma.stockElement.create({
+      data,
+      select: { id: true, name: true, brand: true, unitQty: true, unit: { select: { name: true } } },
+    });
 
     revalidateArticles();
-    return { error: null };
+    return {
+      error: null,
+      created: {
+        id: created.id,
+        name: created.name,
+        brand: created.brand,
+        piece: formatPiece(decimalToNumber(created.unitQty), created.unit.name),
+      },
+    };
   } catch (err) {
     return { error: toActionErrorMessage(err) };
   }

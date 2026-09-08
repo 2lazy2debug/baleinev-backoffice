@@ -12,7 +12,9 @@ import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
 import { lookupBarcodeAction } from "../stock/actions";
-import { createArticleAction, updateArticleAction } from "./actions";
+import { createArticleAction, updateArticleAction, type CreateArticleState } from "./actions";
+
+export type CreatedArticle = NonNullable<CreateArticleState["created"]>;
 
 export type { ConversionOption, UnitOption };
 
@@ -35,6 +37,19 @@ type Props = {
   onClose: () => void;
   /** The article being edited, or null to create one. */
   item: ArticleDraft | null;
+  /**
+   * What a new article's name starts as. For a picker that offered "New
+   * article \u201cRhum arrangé\u201d" — the word was already typed, and asking for it
+   * again is the dialog going back on what its own row said. Ignored when
+   * editing: an article keeps the name it has.
+   */
+  defaultName?: string;
+  /**
+   * Called with the article a successful *create* made, before the dialog
+   * closes. For a picker that opened this form to add the article it was
+   * missing and has to select it — see the POS tile editor.
+   */
+  onCreated?: (article: CreatedArticle) => void;
 };
 
 const FORM_ID = "article-form";
@@ -61,7 +76,7 @@ type Scanned = {
  * dialog — and on a new article it brings the name, brand and size along with it
  * when Open Food Facts knows the product.
  */
-export function ArticleFormModal({ locale, units, conversions, open, onClose, item }: Props) {
+export function ArticleFormModal({ locale, units, conversions, open, onClose, item, onCreated, defaultName }: Props) {
   const copy = dictionaries[locale].articles;
   const shellCopy = dictionaries[locale].shell;
 
@@ -70,11 +85,11 @@ export function ArticleFormModal({ locale, units, conversions, open, onClose, it
   const [scanNote, setScanNote] = useState<string | null>(null);
   const [looking, startLookup] = useTransition();
 
-  async function submit(previous: ActionState, formData: FormData): Promise<ActionState> {
+  async function submit(previous: ActionState, formData: FormData): Promise<CreateArticleState> {
     return item ? updateArticleAction(previous, formData) : createArticleAction(previous, formData);
   }
 
-  const [state, formAction, pending] = useActionState(submit, initialActionState);
+  const [state, formAction, pending] = useActionState<CreateArticleState, FormData>(submit, initialActionState);
 
   const close = useCallback(() => {
     setScanning(false);
@@ -83,7 +98,16 @@ export function ArticleFormModal({ locale, units, conversions, open, onClose, it
     onClose();
   }, [onClose]);
 
-  const markSubmitted = useCloseOnSuccess(state, pending, close);
+  // `useCloseOnSuccess` fires this exactly once per successful submit, which is
+  // also the one moment the created article is on hand to hand over.
+  const finish = useCallback(() => {
+    if (state.created) {
+      onCreated?.(state.created);
+    }
+    close();
+  }, [state.created, onCreated, close]);
+
+  const markSubmitted = useCloseOnSuccess(state, pending, finish);
 
   const handleScanned = useCallback(
     (barcode: string) => {
@@ -119,7 +143,7 @@ export function ArticleFormModal({ locale, units, conversions, open, onClose, it
   );
 
   const values = {
-    name: scanned?.name ?? item?.name ?? "",
+    name: scanned?.name ?? item?.name ?? defaultName ?? "",
     brand: scanned?.brand ?? item?.brand ?? "",
     barcode: scanned?.barcode ?? item?.barcode ?? "",
     unitQty: scanned?.unitQty || item?.unitQty || "1",
@@ -129,7 +153,7 @@ export function ArticleFormModal({ locale, units, conversions, open, onClose, it
   // The size is the one pair of fields the convert button rewrites, so it is
   // held here rather than left to the DOM. It follows the form's identity: a
   // different row, or a fresh scan, is a different size to start from.
-  const formKey = `${item?.id ?? "new"}-${scanned?.barcode ?? ""}`;
+  const formKey = `${item?.id ?? "new"}-${scanned?.barcode ?? ""}-${defaultName ?? ""}`;
   const [size, setSize] = useState({ key: formKey, unitQty: values.unitQty, unitId: values.unitId });
 
   if (size.key !== formKey) {
@@ -163,7 +187,7 @@ export function ArticleFormModal({ locale, units, conversions, open, onClose, it
           brought back. Hidden rather than unmounted while the camera is up, so
           nothing already typed is thrown away. */}
       <form
-        key={`${item?.id ?? "new"}-${scanned?.barcode ?? ""}`}
+        key={formKey}
         id={FORM_ID}
         action={formAction}
         onSubmit={markSubmitted}

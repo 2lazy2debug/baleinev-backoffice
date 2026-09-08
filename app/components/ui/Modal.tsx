@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "./cn";
@@ -47,19 +47,37 @@ type ModalProps = {
 // `sticky z-20`, which is a stacking context: a `z-40` overlay inside it still
 // paints below the `z-30` mobile bottom bar. Out at the body there is nothing to
 // be trapped by.
+// Which dialogs are open, oldest first. A dialog may be opened from inside
+// another one — the POS tile editor opens the article form over itself — and
+// both would otherwise answer the same Escape and close together. Only the last
+// one in this stack listens.
+const openModals: string[] = [];
+
 export function Modal({ open, onClose, title, size = "md", mobileFullScreen = false, children, footer }: ModalProps) {
+  const id = useId();
+
   useEffect(() => {
     if (!open) {
       return;
     }
+
+    openModals.push(id);
+
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && openModals[openModals.length - 1] === id) {
         onClose();
       }
     }
+
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      const index = openModals.lastIndexOf(id);
+      if (index >= 0) {
+        openModals.splice(index, 1);
+      }
+    };
+  }, [open, onClose, id]);
 
   if (!open || typeof document === "undefined") {
     return null;

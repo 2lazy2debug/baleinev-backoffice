@@ -1,6 +1,6 @@
 "use server";
 
-import { PosPaymentMethod, PosSessionStatus } from "@prisma/client";
+import { PosCellKind, PosPaymentMethod, PosSessionStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { getCurrentUserAccess } from "@/lib/access";
@@ -58,7 +58,9 @@ export async function openPosSessionAction(_prevState: ActionState, formData: Fo
 
     const template = await prisma.posTemplate.findUnique({
       where: { id: templateId },
-      select: { editionId: true, _count: { select: { cells: true } } },
+      // Spacers are blank space, not something to sell: a template of nothing
+      // but whitespace opens on a till with no tiles on it.
+      select: { editionId: true, _count: { select: { cells: { where: { kind: PosCellKind.ARTICLE } } } } },
     });
 
     if (!template || template.editionId !== editionId) {

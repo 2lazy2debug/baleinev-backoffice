@@ -2,21 +2,21 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
+import { DEFAULT_COLUMNS, normalizeColumns, type TillColumns } from "@/lib/pos-layout";
+
 /**
  * How many columns the till draws its grid in — a **device** setting, never a
  * template or session one. The same session is served to a phone in the crowd
  * and an iPad on the counter, and those two want different densities, so the
  * choice lives in this browser's `localStorage` and reaches nobody else.
  *
- * The page itself is still `POS_PAGE_SLOTS` articles plus the custom-sale tile:
- * columns change the layout, never which tile sits on which page.
+ * Since a template is a stack rather than a grid, columns decide the page
+ * break too: the page is `columns × POS_ROWS` slots, so a wider device fits
+ * more of the same stack on one page. The arithmetic is `lib/pos-layout.ts`;
+ * this file is only where the choice is remembered.
  */
-export const COLUMN_CHOICES = [2, 3, 4, 5, 6] as const;
 
-export type TillColumns = (typeof COLUMN_CHOICES)[number];
-
-/** The 3x3 the template is authored as. */
-export const DEFAULT_COLUMNS: TillColumns = 3;
+export { COLUMN_CHOICES, DEFAULT_COLUMNS, normalizeColumns, type TillColumns } from "@/lib/pos-layout";
 
 export const COLUMNS_STORAGE_KEY = "pos:columns";
 
@@ -31,17 +31,6 @@ export const columnClasses: Record<TillColumns, string> = {
   5: "grid-cols-5",
   6: "grid-cols-6",
 };
-
-/**
- * Whatever came out of `localStorage` — a string, `null`, or something a past
- * version wrote — narrowed to a count we can draw. Anything else is the default.
- */
-export function normalizeColumns(value: unknown): TillColumns {
-  const parsed = typeof value === "number" ? value : Number(value);
-  return (COLUMN_CHOICES as readonly number[]).includes(parsed)
-    ? (parsed as TillColumns)
-    : DEFAULT_COLUMNS;
-}
 
 // --- the store -------------------------------------------------------------
 // `localStorage` is not React state, so it is read through a store rather than

@@ -31,6 +31,14 @@ type SuggestProps = Omit<
   onValueChange: (value: string) => void;
   /** A closed list, filtered here on value + label + hint. */
   options?: SuggestOption[];
+  /**
+   * Rows that are always offered, above the matches and never filtered out —
+   * the list's own *actions* rather than its contents. The POS tile picker
+   * puts "Whitespace" and "Create an article" there: both have to stay
+   * reachable exactly when what was typed matches nothing, which is when a
+   * filtered row would have disappeared.
+   */
+  pinnedOptions?: SuggestOption[];
   /** An open list, fetched per query. Debounced, and stale answers are dropped. */
   loadOptions?: (query: string) => Promise<SuggestOption[]>;
   /** Called with the picked row, for a field that fills another one alongside it. */
@@ -65,6 +73,7 @@ export function Suggest({
   value,
   onValueChange,
   options,
+  pinnedOptions,
   loadOptions,
   onPick,
   size = "md",
@@ -97,7 +106,12 @@ export function Suggest({
     return matches.slice(0, maxOptions);
   }, [options, value, maxOptions]);
 
-  const matches = staticMatches ?? loaded;
+  // Pinned rows sit outside the cap: they are actions, and dropping one because
+  // the catalogue filled the list would take the only way to add what is missing.
+  const matches = useMemo(
+    () => [...(pinnedOptions ?? []), ...(staticMatches ?? loaded)],
+    [pinnedOptions, staticMatches, loaded],
+  );
 
   // The async list. A counter, not an AbortController: the caller may not be
   // fetching at all, and what matters is only that an older answer never
@@ -181,6 +195,13 @@ export function Suggest({
     onKeyDown?.(event);
 
     if (event.key === "Escape") {
+      // Only when there is a list to dismiss: this field lives inside dialogs
+      // that close on Escape too, and one keypress may not do both. React
+      // attaches at the root, so stopping here keeps the native event from
+      // reaching <Modal>'s window listener.
+      if (isOpen) {
+        event.stopPropagation();
+      }
       close();
       return;
     }

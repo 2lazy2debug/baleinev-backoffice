@@ -77,6 +77,15 @@ enum PosPaymentMethod {
   BANK
 }
 
+/// What a tile on a POS template *is*. `SPACER` is a tile with nothing behind
+/// it — blank space the author drops into the stack to push what follows onto
+/// the next row or the next page. It carries no article, no label and no price,
+/// and the till draws it as air.
+enum PosCellKind {
+  ARTICLE
+  SPACER
+}
+
 model User {
   id                   String   @id @default(cuid())
   email                String   @unique
@@ -937,24 +946,29 @@ model PosTemplate {
   @@index([editionId])
 }
 
-/// One tile. `position` is a 0-based slot index across the whole template;
-/// eight slots make a page and the ninth tile of every page is the "custom
-/// sale" button, which is drawn rather than stored.
+/// One tile. `position` is a **dense 0-based index into the template's stack**:
+/// the tiles are one ordered list, and where the pages fall is decided when the
+/// till draws them, from the column count that device sells at. Nothing here
+/// knows about pages.
 ///
 /// `label` is a snapshot taken from the article when the tile was made and is
 /// then free text: a bar tile says "Beer 3dl", not "Feldschlösschen Original
 /// 30cl". Renaming the article later does not rewrite the tile.
+///
+/// A `SPACER` tile holds a place in the stack and nothing else: `elementId` is
+/// null, `label` is "" and `price` is 0.
 model PosTemplateCell {
-  id         String  @id @default(cuid())
+  id         String      @id @default(cuid())
   templateId String
   position   Int
-  elementId  String
+  kind       PosCellKind @default(ARTICLE)
+  elementId  String?
   label      String
   /// Negative is allowed and meaningful — a deposit handed back.
-  price      Decimal @db.Decimal(10, 2)
+  price      Decimal     @db.Decimal(10, 2)
 
-  template PosTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  element  StockElement @relation(fields: [elementId], references: [id], onDelete: Restrict)
+  template PosTemplate   @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  element  StockElement? @relation(fields: [elementId], references: [id], onDelete: Restrict)
 
   @@unique([templateId, position])
   @@index([elementId])

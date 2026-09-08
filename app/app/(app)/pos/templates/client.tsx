@@ -39,7 +39,6 @@ export type PosTemplateRow = {
   id: string;
   name: string;
   tileCount: number;
-  pageCount: number;
 };
 
 const RENAME_FORM_ID = "rename-pos-template";
@@ -111,7 +110,6 @@ export function PosTemplatesClient({ locale, templates }: { locale: Locale; temp
             <TR>
               <TH>{copy.templateName}</TH>
               <TH>{copy.tiles}</TH>
-              <TH>{copy.pages}</TH>
               <TH aria-label={copy.editGrid} />
             </TR>
           </THead>
@@ -124,7 +122,6 @@ export function PosTemplatesClient({ locale, templates }: { locale: Locale; temp
                   </Link>
                 </TD>
                 <TD className="tabular-nums">{template.tileCount}</TD>
-                <TD className="tabular-nums">{template.pageCount}</TD>
                 <TD>{rowActions(template)}</TD>
               </TR>
             ))}
@@ -143,7 +140,6 @@ export function PosTemplatesClient({ locale, templates }: { locale: Locale; temp
               />
               <CardletFields>
                 <CardletField label={copy.tiles}>{template.tileCount}</CardletField>
-                <CardletField label={copy.pages}>{template.pageCount}</CardletField>
               </CardletFields>
               <CardletActions inline>{rowActions(template)}</CardletActions>
             </Cardlet>
