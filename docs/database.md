@@ -605,7 +605,7 @@ rappen/franc conversion live in [`app/lib/cash.ts`](./file-structure.md).
 ---
 
 ### `PosTemplate`
-A saved till layout: which articles a bar sells, at what price, in what order on the grid. Per
+A saved till layout: which articles a bar sells, at what price, and in what **order**. Per
 edition, managed at `/pos/templates`, admin-only. Holds only its cells — nothing points at a
 template yet (selling is a later part of the POS chain).
 
@@ -620,23 +620,29 @@ Unique on `(editionId, name)` — one template name per edition, caught in the a
 index can throw.
 
 ### `PosTemplateCell`
-One tile. `position` is a 0-based slot index across the whole template; eight slots
-(`POS_PAGE_SLOTS` in [`app/lib/cash.ts`](./file-structure.md)) make a page and the ninth tile of
-every page is the "custom sale" button, which the renderer draws and this table never stores. A
-page may have holes — removing a tile frees its slot and leaves the rest in place.
+One tile of the stack. `position` is a **dense 0-based index into the template's order** and stays
+dense: adding appends, removing closes the gap, and a reorder rewrites the whole run. Nothing here
+knows about pages — where the page breaks fall is decided when the till draws it, from the column
+count that device sells at (`app/lib/pos-layout.ts`).
 
 | Field | Type | Notes |
 |---|---|---|
 | `id` | String (cuid) | |
 | `templateId` | String | FK → PosTemplate, `Cascade` |
-| `position` | Int | 0-based slot index. `page = position / 8`, `slot = position % 8` |
-| `elementId` | String | FK → StockElement, **`Restrict`** — an article a template sells cannot be deleted under it |
-| `label` | String | Snapshot of the article's name when the tile was made, then free text. Renaming the article does not rewrite it |
-| `price` | Decimal(10,2) | On the cell, never on the article. **Negative is legal** — a deposit handed back |
+| `position` | Int | Dense 0-based order index — no holes |
+| `kind` | `PosCellKind` | `ARTICLE` (default) or `SPACER` — blank space that holds a slot so what follows starts on the next row or page |
+| `elementId` | String? | FK → StockElement, **`Restrict`** — an article a template sells cannot be deleted under it. Null on a `SPACER` |
+| `label` | String | Snapshot of the article's name when the tile was made, then free text. Renaming the article does not rewrite it. `""` on a `SPACER` |
+| `price` | Decimal(10,2) | On the cell, never on the article. **Negative is legal** — a deposit handed back. `0` on a `SPACER` |
 
-Unique on `(templateId, position)` — one tile per slot, which is what makes the "set a cell" action
-a clean upsert. Prisma's `Restrict` on `elementId` is backed by an explicit count check in
-`deleteArticleAction`, so the user gets a sentence rather than a raw constraint error.
+Unique on `(templateId, position)` — one tile per place in the order. It is a plain, non-deferrable
+index, so PostgreSQL checks it row by row inside an `UPDATE`: every renumbering (the reorder action,
+the remove action, and the migration that made positions dense) **parks the whole template above
+`1000000` first**, then writes the final positions into free space. Shifting in place would collide
+with the rows that had not moved yet.
+
+Prisma's `Restrict` on `elementId` is backed by an explicit count check in `deleteArticleAction`, so
+the user gets a sentence rather than a raw constraint error.
 
 ---
 

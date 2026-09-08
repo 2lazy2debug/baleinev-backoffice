@@ -122,13 +122,20 @@ app/
 │   │   ├── till-columns.ts       ← How wide *this device* draws the grid (2–6, default 3), kept in
 │   │   │                            `localStorage` and read through `useSyncExternalStore` so it
 │   │   │                            hydrates. Never a template or session setting: a phone and an
-│   │   │                            iPad on the same session pick their own density
+│   │   │                            iPad on the same session pick their own density — and since a
+│   │   │                            page is `columns × 4` slots, their own pagination. The
+│   │   │                            arithmetic is `lib/pos-layout.ts`; this file only remembers
 │   │   ├── pos-methods.ts        ← `PosMethod`, `orderMethods()`, `methodLabel()` — shared by the
 │   │   │                            client screens so method order and labels never drift
 │   │   ├── actions.ts            ← `createPosTemplateAction` / `renamePosTemplateAction` /
 │   │   │                            `deletePosTemplateAction` (refuses a template a session has used) /
-│   │   │                            `setPosTemplateCellAction` (an upsert on `(templateId, position)`) /
-│   │   │                            `clearPosTemplateCellAction`.
+│   │   │                            `addPosTemplateCellAction` (appends) / `updatePosTemplateCellAction`
+│   │   │                            (by cell id) / `removePosTemplateCellAction` (closes the gap) /
+│   │   │                            `reorderPosTemplateCellsAction` (called direct, not through a
+│   │   │                            form — a drag is not a submit; refuses an order that is not
+│   │   │                            exactly the template's tiles). `renumber()` parks the stack
+│   │   │                            above 1000000 before writing positions back, because the unique
+│   │   │                            index is checked row by row.
 │   │   │                            Each `requireAdmin()` + `resolveWritableEditionId()` and
 │   │   │                            re-checks the template is in the edition. Prices take a comma
 │   │   │                            decimal and allow negatives and zero
@@ -148,24 +155,33 @@ app/
 │   │   │                            lines (snapshot label + price, custom sales flagged) and, for a
 │   │   │                            cash sale, the amount given and the change sheet coin for coin
 │   │   └── templates/
-│   │       ├── page.tsx          ← The list (data-fetching only): name, tile count, page count
-│   │       │                        (from the highest slot, holes and all). `<EmptyPage>` with the
-│   │       │                        create button when there are none
+│   │       ├── page.tsx          ← The list (data-fetching only): name and tile count. No page
+│   │       │                        count — that is a fact about the device that opens the stack.
+│   │       │                        `<EmptyPage>` with the create button when there are none
 │   │       ├── client.tsx        ← Table above `sm`, cardlets below; the rename modal and the
 │   │       │                        confirm-guarded delete, one of each for the list
 │   │       ├── create-template-modal.tsx ← Header button + modal, one name field (the standard shape)
 │   │       └── [templateId]/
-│   │           ├── page.tsx      ← Loads the template's cells and the whole catalogue for the
-│   │           │                    picker — name, brand and the size of one piece, `tracksStock`
-│   │           │                    off included; `notFound()` when it is not in the edition. Back
-│   │           │                    link in the header
-│   │           └── grid-editor.tsx ← The 3×3 pager and grid. One tile dialog (add or edit, the
-│   │                                upsert) with a searchable article picker (`<Suggest>` over the
-│   │                                catalogue, "brand · 50 cl" as the row hint so the two sizes of
-│   │                                one beer are told apart, the id in a hidden field) that
-│   │                                prefills the editable label; "Remove from grid" when editing.
-│   │                                Grid stays 3×3 at every width; the ninth tile of each page is a
-│   │                                drawn "custom sale"
+│   │           ├── page.tsx      ← Loads the template's cells in order, the whole catalogue for the
+│   │           │                    picker (name, brand and the size of one piece, `tracksStock`
+│   │           │                    off included) and the units + conversions the on-the-fly
+│   │           │                    article dialog needs; `notFound()` when it is not in the
+│   │           │                    edition. Renders nothing itself — the editor owns the header
+│   │           ├── stack-editor.tsx ← The whole editor: its own `<PageHeader>` (back, Preview, Add
+│   │           │                    a tile), the ordered list, and the preview. Reordering is one
+│   │           │                    `move()` behind drag, the row arrows, and the preview's
+│   │           │                    tap-to-pick/tap-to-place; the local order runs ahead of the
+│   │           │                    server and re-seeds when the server sends a different stack.
+│   │           │                    Preview draws the till's grid at this device's own
+│   │           │                    `pos:columns`, so it is the seller's screen, not a mock-up
+│   │           └── tile-form-modal.tsx ← One tile dialog (add or edit) with a searchable article
+│   │                                picker (`<Suggest>` over the catalogue, "brand · 50 cl" as the
+│   │                                row hint so the two sizes of one beer are told apart, the id in
+│   │                                a hidden field) that prefills the editable label. Two pinned
+│   │                                rows are not articles: **Whitespace** turns the tile into a
+│   │                                spacer, and **New article** opens `<ArticleFormModal>` over
+│   │                                this dialog seeded with what was typed, then selects what it
+│   │                                creates
 │   │
 │   ├── expense-reports/
 │   │   ├── page.tsx              ← Header + history (data-fetching only)
@@ -409,7 +425,8 @@ which. Nothing here should be re-implemented inline in a page.
 | `open-food-facts.ts` | `fetchProductByBarcode()` — what a scanned EAN says about a product (name, brand, size of one piece), from the open catalogue keyed by that code. The name is read `fr` → `en` → `de` → generic, one fixed order for everyone, since the item it fills in is shared. Server-only, best-effort: a miss, a timeout or a half-empty product all mean "type the rest yourself" |
 | `addresses.ts` | `addressDisplayName()` / `addressNameBlock()` / `addressPersonName()` / `formatPhone()` / `formatPostalLine()` and `DEFAULT_COUNTRY`. Import-free on purpose — the table, the pickers and the actions all read the same rules without dragging Prisma into a browser bundle |
 | `articles.ts` | `elementFieldsFrom()` / `assertBarcodeFree()` — the `StockElement` fields both writing forms post (articles' own dialog, and the stock app's "new item" half) and the "one barcode, one article" check, shared so the two paths cannot drift |
-| `cash.ts` | `CASH_DENOMINATIONS` (the twelve Swiss denominations, rappen, largest first), `POS_PAGE_SLOTS` (`8` — article tiles per POS grid page, the ninth being the drawn "custom sale"), plus `toRappen()` / `fromRappen()` / `formatDenomination()` / `countTotal()` / `makeChange()` (greedy Swiss change, largest first — the 1-2-5 set makes greedy optimal). Every amount in the cash and POS apps is integer rappen; this is where the conversion, the denomination list and the grid constant live so nothing downstream re-derives them. Import-free |
+| `cash.ts` | `CASH_DENOMINATIONS` (the twelve Swiss denominations, rappen, largest first) plus `toRappen()` / `fromRappen()` / `formatDenomination()` / `countTotal()` / `makeChange()` (greedy Swiss change, largest first — the 1-2-5 set makes greedy optimal). Every amount in the cash and POS apps is integer rappen; this is where the conversion and the denomination list live so nothing downstream re-derives them. Import-free |
+| `pos-layout.ts` | `POS_ROWS` (`4`), `COLUMN_CHOICES` / `DEFAULT_COLUMNS` / `normalizeColumns()`, `slotsPerPage()` / `tilesPerPage()` / `pageCount()` / `tilesOnPage()` / `drawnSlots()` — how a template's stack falls into pages. A page is `columns × POS_ROWS` slots, the last of which is the drawn "custom sale", so pagination is a function of the *device's* width and not a property of the template. `drawnSlots()` is what keeps a half-empty page whole rows short instead of padding it out. The till and the editor's Preview share exactly this arithmetic. Import-free |
 | `pos.ts` | `totalsFor(sales, methods)` → `PosTotals` — the per-method roll-up both POS history screens share, summed in integer rappen: every accepted method present (0 if unused), total free to go negative, `changeGiven` from `changeDue` across the cash sales. Import-free |
 | `cash-register.ts` | `registerFigures(db, registerId)` → `RegisterFigures` (float / cashTaken / expected / actual / gap / sessionCount, all rappen) and `plannedEntries(figures)` → the two or three `JournalEntry` rows a booking writes, zeros skipped. Takes a Prisma client so the `/cash` screen reads it outside a transaction and `journalCashRegisterAction` reads it inside one — one definition of `expected`, one of "which account", shared so the preview and the write cannot drift |
 | `city-book.ts` | `rememberCity()` — files a postal code / locality pair the user actually saved, so the seeded Swiss list grows into whatever the address book turns out to need |

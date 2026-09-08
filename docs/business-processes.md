@@ -679,15 +679,26 @@ piece is the **template** — the saved layout a bar opens on for the night.
 ### Templates
 
 A **template** is a saved till layout, at `/pos/templates`. It is **per edition** and
-**admin-only**: composing the grid of what a bar sells, and at what price, is configuration.
+**admin-only**: composing what a bar sells, and at what price, is configuration.
 
-The grid is a **paginated 3×3**. Eight of the nine tiles on a page are article slots; the
-**bottom-right tile of every page is always "Custom sale"** and is drawn by the renderer, never
-stored — same tile, same place, every page, so a bar hits it without looking. A cell's `position`
-is a 0-based slot index across the whole template: `page = Math.floor(position / 8)`,
-`slot = position % 8`. The `8` is `POS_PAGE_SLOTS` in `app/lib/cash.ts`; nothing hardcodes it.
+**A template is a stack, not a grid.** It is one ordered list of tiles, and nothing stored knows
+about pages — a cell's `position` is a dense 0-based index into that order. Where the page breaks
+fall is decided when the **till** draws it, from the column count that device is selling at
+(`app/lib/pos-layout.ts`): a page is `columns × POS_ROWS` slots, `POS_ROWS` is **4**, and the last
+slot of every page is "Custom sale". So the same template gives a phone at 3 columns eleven tiles a
+page and a counter tablet at 6 columns twenty-three, and neither is more correct than the other.
+That is exactly why the author does not get to decide the page break, and why the editor stopped
+being a grid.
 
-Each article slot carries three things:
+A tile is one of two things:
+
+- an **article tile** — the three fields below;
+- a **spacer** (`kind = SPACER`): blank space that holds a slot so what follows starts on the next
+  row or the next page. It has no article, no label and no price, and the till draws it as air. It
+  is offered as a row in the tile dialog's article picker, because "what goes in this tile" is the
+  question that field already asks.
+
+Each article tile carries three things:
 
 - the **article** it points at (`StockElement`) — every article is offered, including ones with
   `tracksStock` off, because that flag is exactly what makes a poured glass sellable. The picker
@@ -696,7 +707,11 @@ Each article slot carries three things:
   what tells the 33 cl and the 50 cl of one beer apart, and both are searchable — typing "50" finds
   the half-litre. It submits the article's **id**, so two articles reading the same name stay
   distinguishable. Typing past a picked row unpicks it and disables Save — the article is a
-  closed list, so a half-typed name must not save the article picked before it;
+  closed list, so a half-typed name must not save the article picked before it. The picker also
+  offers **"New article"**, which opens the catalogue's own dialog *over* the tile dialog — same
+  form, same rules, barcode scan included — seeded with whatever was typed, and selects the article
+  it creates. A bar being set up the night before finds the missing article here rather than three
+  screens away;
 - a **label**, snapshotted from the article's name when the tile is made and then free text — a bar
   tile says "Beer 3dl", not "Feldschlösschen Original 30cl", and renaming the article later does not
   rewrite the tile;
@@ -705,11 +720,16 @@ Each article slot carries three things:
   bottle deposit handed back is a tile that takes money out of the till — so nothing validates a
   price for positivity.
 
-A page **may have holes**. Removing a tile frees its slot and leaves the others where they are —
-muscle memory beats compaction, so there is no drag-to-reorder and no auto-fill. The page count of
-a template comes from the highest slot in use, not the tile count: eight tiles with a hole can
-still span two pages. Adding a page is just paging right into an empty one — there is no "add page"
-button and no page record.
+**The order is dense and editable.** Adding appends to the end; removing closes the gap; and tiles
+**reorder** — drag them, or use the arrows on a row, in either of the editor's two views. The list
+is the authoring view; **Preview** is the grid, drawn at this device's own column count (it reads
+the same `pos:columns` the till does, so it is the seller's screen, not an approximation of it), and
+tiles can be dragged there too — or tapped once to pick up and once again to place, which is the
+same move on a touchscreen. A template is more often laid out on the tablet it will be sold from
+than on a desk.
+
+There is no page count on the template list any more: how many pages a stack makes is a fact about
+the device that opens it, not about the template.
 
 An article a template sells **cannot be deleted** until it is taken off every template
 (`PosTemplateCell.elementId` is `Restrict`); the articles app says so in a sentence. A closed
@@ -733,7 +753,8 @@ edition sells nothing. **Leaving is the one exception**: it writes only the sell
 `selectedPosSessionId`, which is not edition data, and gating it would strand every seller in their
 session the moment the edition closed.
 
-- **Opening** needs a name, a template **with at least one tile**, and at least one payment method.
+- **Opening** needs a name, a template **with at least one article tile** (a template of nothing but
+  spacers sells nothing), and at least one payment method.
   Tick cash and a register field appears: it must be an **open** register in the edition. Untick
   cash and any register is dropped — a session that takes no cash stores no drawer. Opening a
   session joins it.
@@ -758,17 +779,22 @@ session the moment the edition closed.
 
 ### Selling
 
-The till is the joined session's screen: a big running total, the template's grid, a pager when the
-template has more than one page, a **column picker**, and **List** / **Checkout**. The ninth tile of
-every page is **Custom sale** — a label and an amount, negatives allowed, no article behind it.
+The till is the joined session's screen: a big running total, the template's stack laid out as a
+grid, a pager when it runs past one page, a **column picker**, and **List** / **Checkout**. The
+**last slot of every page is Custom sale** — a label and an amount, negatives allowed, no article
+behind it — so it is always in the grid's bottom-right corner and a bar hits it without looking.
 
-**Columns are a device setting, not a template or session one.** A page is always the template's
-eight slots plus Custom sale; the picker (2 to 6, default 3) only says how wide to lay those nine
-tiles out, and it never moves a tile to another page. The choice is kept in that browser's
-`localStorage` (`pos:columns`, read through a `useSyncExternalStore` in
-`app/app/(app)/pos/till-columns.ts`), so a phone in the crowd can sell at 3 while an iPad on the
-counter sells the **same session** at 6, and neither sees the other's choice. The template editor
-stays a 3×3 — it is authoring the pages, not the density.
+**Columns are a device setting, not a template or session one — and they decide the page break.**
+The picker (2 to 6, default 3) sets the width; the page is then `columns × 4` slots, one of which
+is Custom sale. The choice is kept in that browser's `localStorage` (`pos:columns`, read through a
+`useSyncExternalStore` in `app/app/(app)/pos/till-columns.ts`), so a phone in the crowd sells the
+**same session** at 3 across two pages while an iPad on the counter sells it at 6 on one, and
+neither sees the other's choice. Re-picking the width re-pages the stack under the seller's hands;
+a page that no longer exists lands them on the last one there is.
+
+A page that is not full is drawn **short, in whole rows**, rather than padded out with empty ones —
+Custom sale stays in the corner of the grid that is actually drawn. A **spacer** the template author
+placed is drawn as air, which is how it pushes what follows onto the next row or page.
 
 **The cart lives in the browser and nowhere else** until checkout succeeds. A refresh loses an
 unfinished sale, and that is correct — an unfinished sale is not a sale. The **List** dialog edits
