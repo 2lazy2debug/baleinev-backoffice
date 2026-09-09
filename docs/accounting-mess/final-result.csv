@@ -20,32 +20,32 @@ sequenceNumber,date,moneyAccount,accountType,amount,counterparty,label,costCente
 633,2025-12-06,Coffre,PRODUITS,1356.75,BLV,"MDN 06.12 : caisse comptée, rentrée au coffre",MDN,Compta_MDN_2025.xlsx · FDC
 634,2025-12-07,Coffre,CHARGES,956.75,BLV,MDN 07.12 : fonds de caisse sorti,MDN,Compta_MDN_2025.xlsx · FDC
 635,2025-12-07,Coffre,PRODUITS,1037.80,BLV,"MDN 07.12 : caisse comptée, rentrée au coffre",MDN,Compta_MDN_2025.xlsx · FDC
-636,2025-12-15,Coffre,CHARGES,192.50,BLV,SVC Chéseaux 15.12 : fonds de caisse sorti,,Compta_SVC_2025.xlsx · FDC CHESEAUX
-637,2025-12-15,Coffre,PRODUITS,289.50,BLV,"SVC Chéseaux 15.12 : caisse comptée, rentrée au coffre",,Compta_SVC_2025.xlsx · FDC CHESEAUX
-638,2025-12-15,Coffre,CHARGES,190.00,BLV,SVC St-Roch 15.12 : fonds de caisse sorti,,Compta_SVC_2025.xlsx · FDC ST ROCH
-639,2025-12-15,Coffre,PRODUITS,254.00,BLV,"SVC St-Roch 15.12 : caisse comptée, rentrée au coffre",,Compta_SVC_2025.xlsx · FDC ST ROCH
-640,2025-12-16,Coffre,CHARGES,289.50,BLV,SVC Chéseaux 16.12 : fonds de caisse sorti,,Compta_SVC_2025.xlsx · FDC CHESEAUX
-641,2025-12-16,Coffre,PRODUITS,443.50,BLV,"SVC Chéseaux 16.12 : caisse comptée, rentrée au coffre",,Compta_SVC_2025.xlsx · FDC CHESEAUX
-642,2025-12-16,Coffre,CHARGES,254.00,BLV,SVC St-Roch 16.12 : fonds de caisse sorti,,Compta_SVC_2025.xlsx · FDC ST ROCH
-643,2025-12-16,Coffre,PRODUITS,306.00,BLV,"SVC St-Roch 16.12 : caisse comptée, rentrée au coffre",,Compta_SVC_2025.xlsx · FDC ST ROCH
-644,2025-12-17,Coffre,CHARGES,443.50,BLV,SVC Chéseaux 17.12 : fonds de caisse sorti,,Compta_SVC_2025.xlsx · FDC CHESEAUX
-645,2025-12-17,Coffre,PRODUITS,744.50,BLV,"SVC Chéseaux 17.12 : caisse comptée, rentrée au coffre",,Compta_SVC_2025.xlsx · FDC CHESEAUX
-646,2025-12-17,Coffre,CHARGES,306.00,BLV,SVC St-Roch 17.12 : fonds de caisse sorti,,Compta_SVC_2025.xlsx · FDC ST ROCH
-647,2025-12-17,Coffre,PRODUITS,340.20,BLV,"SVC St-Roch 17.12 : caisse comptée, rentrée au coffre",,Compta_SVC_2025.xlsx · FDC ST ROCH
-648,2025-12-18,Coffre,CHARGES,504.50,BLV,SVC Chéseaux 18.12 : fonds de caisse sorti,,Compta_SVC_2025.xlsx · FDC CHESEAUX
-649,2025-12-18,Coffre,PRODUITS,1111.30,BLV,"SVC Chéseaux 18.12 : caisse comptée, rentrée au coffre",,Compta_SVC_2025.xlsx · FDC CHESEAUX
-650,2025-12-18,Coffre,CHARGES,340.20,BLV,SVC St-Roch 18.12 : fonds de caisse sorti,,Compta_SVC_2025.xlsx · FDC ST ROCH
-651,2025-12-18,Coffre,PRODUITS,393.60,BLV,"SVC St-Roch 18.12 : caisse comptée, rentrée au coffre",,Compta_SVC_2025.xlsx · FDC ST ROCH
-652,2025-12-19,Coffre,CHARGES,393.60,BLV,SVC St-Roch 19.12 : fonds de caisse sorti,,Compta_SVC_2025.xlsx · FDC ST ROCH
-653,2025-12-19,Coffre,PRODUITS,426.10,BLV,"SVC St-Roch 19.12 : caisse comptée, rentrée au coffre",,Compta_SVC_2025.xlsx · FDC ST ROCH
+636,2025-12-15,Coffre,CHARGES,192.50,BLV,SVC Chéseaux 15.12 : fonds de caisse sorti,SVC,Compta_SVC_2025.xlsx · FDC CHESEAUX
+637,2025-12-15,Coffre,PRODUITS,289.50,BLV,"SVC Chéseaux 15.12 : caisse comptée, rentrée au coffre",SVC,Compta_SVC_2025.xlsx · FDC CHESEAUX
+638,2025-12-15,Coffre,CHARGES,190.00,BLV,SVC St-Roch 15.12 : fonds de caisse sorti,SVC,Compta_SVC_2025.xlsx · FDC ST ROCH
+639,2025-12-15,Coffre,PRODUITS,254.00,BLV,"SVC St-Roch 15.12 : caisse comptée, rentrée au coffre",SVC,Compta_SVC_2025.xlsx · FDC ST ROCH
+640,2025-12-16,Coffre,CHARGES,289.50,BLV,SVC Chéseaux 16.12 : fonds de caisse sorti,SVC,Compta_SVC_2025.xlsx · FDC CHESEAUX
+641,2025-12-16,Coffre,PRODUITS,443.50,BLV,"SVC Chéseaux 16.12 : caisse comptée, rentrée au coffre",SVC,Compta_SVC_2025.xlsx · FDC CHESEAUX
+642,2025-12-16,Coffre,CHARGES,254.00,BLV,SVC St-Roch 16.12 : fonds de caisse sorti,SVC,Compta_SVC_2025.xlsx · FDC ST ROCH
+643,2025-12-16,Coffre,PRODUITS,306.00,BLV,"SVC St-Roch 16.12 : caisse comptée, rentrée au coffre",SVC,Compta_SVC_2025.xlsx · FDC ST ROCH
+644,2025-12-17,Coffre,CHARGES,443.50,BLV,SVC Chéseaux 17.12 : fonds de caisse sorti,SVC,Compta_SVC_2025.xlsx · FDC CHESEAUX
+645,2025-12-17,Coffre,PRODUITS,744.50,BLV,"SVC Chéseaux 17.12 : caisse comptée, rentrée au coffre",SVC,Compta_SVC_2025.xlsx · FDC CHESEAUX
+646,2025-12-17,Coffre,CHARGES,306.00,BLV,SVC St-Roch 17.12 : fonds de caisse sorti,SVC,Compta_SVC_2025.xlsx · FDC ST ROCH
+647,2025-12-17,Coffre,PRODUITS,340.20,BLV,"SVC St-Roch 17.12 : caisse comptée, rentrée au coffre",SVC,Compta_SVC_2025.xlsx · FDC ST ROCH
+648,2025-12-18,Coffre,CHARGES,504.50,BLV,SVC Chéseaux 18.12 : fonds de caisse sorti,SVC,Compta_SVC_2025.xlsx · FDC CHESEAUX
+649,2025-12-18,Coffre,PRODUITS,1111.30,BLV,"SVC Chéseaux 18.12 : caisse comptée, rentrée au coffre",SVC,Compta_SVC_2025.xlsx · FDC CHESEAUX
+650,2025-12-18,Coffre,CHARGES,340.20,BLV,SVC St-Roch 18.12 : fonds de caisse sorti,SVC,Compta_SVC_2025.xlsx · FDC ST ROCH
+651,2025-12-18,Coffre,PRODUITS,393.60,BLV,"SVC St-Roch 18.12 : caisse comptée, rentrée au coffre",SVC,Compta_SVC_2025.xlsx · FDC ST ROCH
+652,2025-12-19,Coffre,CHARGES,393.60,BLV,SVC St-Roch 19.12 : fonds de caisse sorti,SVC,Compta_SVC_2025.xlsx · FDC ST ROCH
+653,2025-12-19,Coffre,PRODUITS,426.10,BLV,"SVC St-Roch 19.12 : caisse comptée, rentrée au coffre",SVC,Compta_SVC_2025.xlsx · FDC ST ROCH
 654,2026-02-28,Coffre,PRODUITS,348.65,BLV,Équilibrage après comptage du coffre,INTERNE,écart du comptage du 2026-03-30
 655,2026-03-31,Coffre,CHARGES,1.20,BLV,Équilibrage après comptage du coffre,INTERNE,écart du comptage du 2026-04-12
-656,2026-04-12,Coffre,PRODUITS,141.65,BLV,Vidange crousille,,historique_fond_de_caisse.xlsx · Comptage caisse (machine)
-657,2026-04-12,Coffre,PRODUITS,465.00,BLV,Vidange caisse St-Roch,,historique_fond_de_caisse.xlsx · Comptage caisse (machine)
-658,2026-04-12,Coffre,PRODUITS,504.60,BLV,Vidange caisse Chéseaux,,historique caisse partiel.txt + historique_fond_de_caisse.xlsx · Comptage caisse (machine)
-659,2026-04-13,Coffre,CHARGES,495.00,BLV,Sortie du coffre vers la caisse,,historique caisse partiel.txt
-660,2026-04-16,Coffre,PRODUITS,1870.00,BLV,Entrées dans le coffre,,historique caisse partiel.txt
+656,2026-04-12,Coffre,PRODUITS,141.65,BLV,Vidange crousille,INTERNE,historique_fond_de_caisse.xlsx · Comptage caisse (machine)
+657,2026-04-12,Coffre,PRODUITS,465.00,BLV,Vidange caisse St-Roch,SVC,historique_fond_de_caisse.xlsx · Comptage caisse (machine)
+658,2026-04-12,Coffre,PRODUITS,504.60,BLV,Vidange caisse Chéseaux,SVC,historique caisse partiel.txt + historique_fond_de_caisse.xlsx · Comptage caisse (machine)
+659,2026-04-13,Coffre,CHARGES,495.00,BLV,Sortie du coffre vers la caisse,SEGRILL2,historique caisse partiel.txt
+660,2026-04-16,Coffre,PRODUITS,1870.00,BLV,Entrées dans le coffre,SEGRILL2,historique caisse partiel.txt
 661,2026-04-30,Coffre,CHARGES,468.90,BLV,Équilibrage après comptage du coffre,INTERNE,écart du comptage du 2026-05-05
 662,2026-05-31,Coffre,PRODUITS,1755.95,BLV,Équilibrage après comptage du coffre,INTERNE,écart du comptage du 2026-06-30
-663,2026-06-30,Coffre,PRODUITS,382.20,BLV,Entrée dans le coffre,,historique caisse partiel.txt
-664,2026-06-30,Coffre,PRODUITS,70.00,BLV,Entrée dans le coffre,,historique caisse partiel.txt
+663,2026-06-30,Coffre,PRODUITS,382.20,BLV,Entrée dans le coffre,SEGRILL3,historique caisse partiel.txt
+664,2026-06-30,Coffre,PRODUITS,70.00,BLV,Entrée dans le coffre,SEGRILL3,historique caisse partiel.txt

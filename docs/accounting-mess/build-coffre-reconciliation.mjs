@@ -101,33 +101,33 @@ const SOURCED = [
   ...tillDay("2025-12-07", 956.75, 1037.8, "MDN 07.12", "MDN", MDN),
 
   // Semaine du Vin Chaud, two stands running in parallel.
-  ...tillDay("2025-12-15", 192.5, 289.5, "SVC Chéseaux 15.12", "", SVC_CHZ),
-  ...tillDay("2025-12-16", 289.5, 443.5, "SVC Chéseaux 16.12", "", SVC_CHZ),
-  ...tillDay("2025-12-17", 443.5, 744.5, "SVC Chéseaux 17.12", "", SVC_CHZ),
-  ...tillDay("2025-12-18", 504.5, 1111.3, "SVC Chéseaux 18.12", "", SVC_CHZ),
+  ...tillDay("2025-12-15", 192.5, 289.5, "SVC Chéseaux 15.12", "SVC", SVC_CHZ),
+  ...tillDay("2025-12-16", 289.5, 443.5, "SVC Chéseaux 16.12", "SVC", SVC_CHZ),
+  ...tillDay("2025-12-17", 443.5, 744.5, "SVC Chéseaux 17.12", "SVC", SVC_CHZ),
+  ...tillDay("2025-12-18", 504.5, 1111.3, "SVC Chéseaux 18.12", "SVC", SVC_CHZ),
 
-  ...tillDay("2025-12-15", 190, 254, "SVC St-Roch 15.12", "", SVC_STR),
-  ...tillDay("2025-12-16", 254, 306, "SVC St-Roch 16.12", "", SVC_STR),
-  ...tillDay("2025-12-17", 306, 340.2, "SVC St-Roch 17.12", "", SVC_STR),
-  ...tillDay("2025-12-18", 340.2, 393.6, "SVC St-Roch 18.12", "", SVC_STR),
+  ...tillDay("2025-12-15", 190, 254, "SVC St-Roch 15.12", "SVC", SVC_STR),
+  ...tillDay("2025-12-16", 254, 306, "SVC St-Roch 16.12", "SVC", SVC_STR),
+  ...tillDay("2025-12-17", 306, 340.2, "SVC St-Roch 17.12", "SVC", SVC_STR),
+  ...tillDay("2025-12-18", 340.2, 393.6, "SVC St-Roch 18.12", "SVC", SVC_STR),
   // The note dates this fifth St-Roch day 15.12, which cannot be right: its
   // float (393.60) is the 18.12 closing count. The workbook column carries
   // Excel serial 46010 = 19.12.2025, so that is the date used here.
-  ...tillDay("2025-12-19", 393.6, 426.1, "SVC St-Roch 19.12", "", SVC_STR),
+  ...tillDay("2025-12-19", 393.6, 426.1, "SVC St-Roch 19.12", "SVC", SVC_STR),
 
   // 12.04.2026 — the tills and the donation tin were emptied into the box on
   // the day it was counted. The note only carries the Chéseaux till; the other
   // two come from the counting sheet, and all three together land within a
   // couple of centimes of the count instead of hundreds of francs short.
-  { date: "2026-04-12", sign: +1, cents: c(141.65), label: "Vidange crousille", costCenter: "", source: FDC },
-  { date: "2026-04-12", sign: +1, cents: c(465), label: "Vidange caisse St-Roch", costCenter: "", source: FDC },
-  { date: "2026-04-12", sign: +1, cents: c(504.6), label: "Vidange caisse Chéseaux", costCenter: "", source: `${TXT} + ${FDC}` },
+  { date: "2026-04-12", sign: +1, cents: c(141.65), label: "Vidange crousille", costCenter: "INTERNE", source: FDC },
+  { date: "2026-04-12", sign: +1, cents: c(465), label: "Vidange caisse St-Roch", costCenter: "SVC", source: FDC },
+  { date: "2026-04-12", sign: +1, cents: c(504.6), label: "Vidange caisse Chéseaux", costCenter: "SVC", source: `${TXT} + ${FDC}` },
 
-  { date: "2026-04-13", sign: -1, cents: c(495), label: "Sortie du coffre vers la caisse", costCenter: "", source: TXT },
-  { date: "2026-04-16", sign: +1, cents: c(1870), label: "Entrées dans le coffre", costCenter: "", source: TXT },
+  { date: "2026-04-13", sign: -1, cents: c(495), label: "Sortie du coffre vers la caisse", costCenter: "SEGRILL2", source: TXT },
+  { date: "2026-04-16", sign: +1, cents: c(1870), label: "Entrées dans le coffre", costCenter: "SEGRILL2", source: TXT },
 
-  { date: "2026-06-30", sign: +1, cents: c(382.2), label: "Entrée dans le coffre", costCenter: "", source: TXT },
-  { date: "2026-06-30", sign: +1, cents: c(70), label: "Entrée dans le coffre", costCenter: "", source: TXT },
+  { date: "2026-06-30", sign: +1, cents: c(382.2), label: "Entrée dans le coffre", costCenter: "SEGRILL3", source: TXT },
+  { date: "2026-06-30", sign: +1, cents: c(70), label: "Entrée dans le coffre", costCenter: "SEGRILL3", source: TXT },
 ];
 
 /**
@@ -557,9 +557,10 @@ ${ledgerRows}
         tombe à ${chf(intervals[3].gap)} au lieu de ${chf(WHAT_IF.chzoVidangeOnly)} — c'est ce qui prouve que les trois lignes sont réelles.</li>
         <li><strong>Les sorties et rentrées de caisse sont passées en brut</strong>, une charge le matin et un produit
         le soir, et non en net. Le journal montre ainsi le fonds de caisse réellement sorti du coffre chaque jour.</li>
-        <li><strong>Pas de centre de charge pour la Semaine du Vin Chaud</strong> — il n'en existe pas dans l'édition.
-        Les lignes MDN portent <code>MDN</code>, les équilibrages <code>INTERNE</code> (comme la correction existante,
-        séquence 52). Créer un centre <code>SVC</code> reste possible avant l'import.</li>
+        <li><strong>Trois centres de charge créés</strong> — <code>SVC</code> (Semaine du Vin Chaud),
+        <code>SEGRILL2</code> (13-17 avril) et <code>SEGRILL3</code> (fin juin), dans les deux éditions.
+        Les vidanges des caisses Chéseaux et St-Roch du 12.04 portent <code>SVC</code> : ce sont les deux
+        stands du Vin Chaud, vidés le jour du comptage. La crousille porte <code>INTERNE</code>.</li>
       </ul>
     </div>
   </div>
