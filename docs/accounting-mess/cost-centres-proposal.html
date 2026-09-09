@@ -1,0 +1,1238 @@
+<title>Centres de charge — proposition</title>
+<style>
+  :root {
+    --page:#0f171f; --panel:#152330; --panel-strong:#1c2d3d; --line:#2e4256;
+    --ink:#eaf1f8; --muted:#9cb0c4; --accent:#00a68c; --rose:#fda4af;
+    --amber:#fcd34d; --amber-bg:rgba(120,53,15,.28); --amber-line:rgba(252,211,77,.28);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px 20px 64px;background:var(--page);color:var(--ink);
+    font:13px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+  .wrap{max-width:1180px;margin:0 auto}
+  .eyebrow{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  h1{font-size:28px;margin:4px 0 8px;letter-spacing:-.01em}
+  h2{font-size:17px;margin:0}
+  p{margin:0 0 10px;color:var(--muted);max-width:78ch}
+  p strong,li strong{color:var(--ink)}
+  section{margin-top:28px}
+  .panel{border:1px solid var(--line);background:var(--panel);border-radius:10px;overflow:hidden}
+  .panel-head{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;
+    align-items:baseline;flex-wrap:wrap}
+  .panel-head .hint{font-size:11px;color:var(--muted)}
+  .panel-head .net{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:600}
+  .panel-body{padding:16px}
+  .scroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:12px}
+  th,td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  thead th{position:sticky;top:0;background:var(--panel-strong);color:var(--muted);font-size:10px;
+    letter-spacing:.08em;text-transform:uppercase;font-weight:600;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:0}
+  .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .date{white-space:nowrap;font-variant-numeric:tabular-nums}
+  .dow{color:var(--muted);font-size:10px;margin-left:5px}
+  .in{color:var(--accent)} .out{color:var(--rose)}
+  .lbl,.src{color:var(--muted);font-size:11px}
+  .tag{display:inline-block;padding:1px 7px;border-radius:999px;font-size:10px;white-space:nowrap;
+    border:1px solid rgba(0,166,140,.45);color:var(--accent)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+  .card{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:12px 14px}
+  .card .k{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+  .card .v{font-size:21px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+  .card .n{font-size:11px;color:var(--muted);margin-top:2px}
+  .warn{border:1px solid var(--amber-line);background:var(--amber-bg);border-radius:10px;
+    padding:12px 14px;margin-bottom:12px}
+  .warn h3{margin:0 0 6px;font-size:13px;color:var(--amber)}
+  .warn p{color:var(--ink)}
+  ul{margin:0;padding-left:18px;color:var(--muted)} li{margin-bottom:6px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;
+    background:var(--panel-strong);padding:1px 5px;border-radius:3px;color:var(--ink)}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Baleinev · édition 2025-2026 · compte courant</div>
+  <h1>Centres de charge — proposition</h1>
+  <p><strong>Rien n'est écrit.</strong> Cette page propose un centre de charge pour les écritures
+  bancaires qui n'en ont pas, à partir du calendrier des événements. Les 73 écritures du coffre sont
+  déjà réparties et ne sont pas touchées ; une écriture qui porte déjà un centre de charge n'est
+  jamais réécrite.</p>
+</header>
+
+<section>
+  <div class="cards">
+    <div class="card"><div class="k">Bloc A — fenêtres</div><div class="v">62</div><div class="n">écritures dans une semaine d'événement</div></div>
+    <div class="card"><div class="k">Bloc B — billetterie</div><div class="v">3</div><div class="n">recettes Weezevent d'avril → FESTIVAL</div></div>
+    <div class="card"><div class="k">Bloc C — jeudis</div><div class="v">24</div><div class="n">encaissements du jeudi → AFTER</div></div>
+    <div class="card"><div class="k">Laissées vides</div><div class="v">309</div><div class="n">dont 13 écartées dans une fenêtre</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="warn">
+    <h3>Avril 2026 : le festival tombe dans la semaine grillades</h3>
+    <p>Le festival 2026 a eu lieu autour du 17 avril — cachets d'artistes, SUISA, Weezevent,
+    Soldout Productions — et la semaine grillades 2 que vous datez du 13 au 17 avril couvre
+    exactement les mêmes jours. La proposition tranche ainsi : <strong>les encaissements carte et
+    les courses de ces cinq jours vont à SEGRILL2</strong>, tout le reste (SUISA 1'539, subvention
+    Commune 8'000, HEIG-VD, cachets) reste sans centre de charge en attendant votre arbitrage.</p>
+    <p>Si c'était en réalité le festival qui encaissait ces jours-là, dites-le et je bascule le
+    bloc SEGRILL2 d'avril sur <code>FESTIVAL</code> — c'est une ligne à changer.</p>
+  </div>
+
+  <div class="warn">
+    <h3>Une écriture porte « SG 3 » en décembre</h3>
+    <p>La séquence 319 du 02.12.2025, 72.00 à Maxime Magnenat, est libellée <strong>« pizzas SG 3 »</strong>.
+    Le libellé nomme donc SEGRILL3, que vous datez de fin juin. Soit la numérotation des soirées
+    grillades ne suit pas l'ordre que je lui prête, soit ce libellé désigne autre chose. Elle est
+    laissée sans centre de charge en attendant — un libellé qui contredit sa date ne se tranche pas
+    tout seul.</p>
+  </div>
+</section>
+
+<section>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Semaine grillades 1</h2>
+      <span class="hint"><code>SEGRILL1</code> · 15.09.2025 → 19.09.2025 · 8 écritures</span>
+      <span class="net in">+658,29</span>
+    </div>
+    <div class="scroll"><table>
+  <thead><tr><th class="num">Séq.</th><th>Date</th><th>Contrepartie</th><th>Libellé</th>
+  <th class="num">Entrée</th><th class="num">Sortie</th><th>CC</th><th>Règle</th></tr></thead>
+  <tbody><tr>
+      <td class="num">225</td>
+      <td class="date">15.09.2025<span class="dow">lun</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZÜRICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">14,80</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL1</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 1</td>
+    </tr>
+<tr>
+      <td class="num">226</td>
+      <td class="date">15.09.2025<span class="dow">lun</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZÜRICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">15,78</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL1</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 1</td>
+    </tr>
+<tr>
+      <td class="num">227</td>
+      <td class="date">15.09.2025<span class="dow">lun</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZÜRICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">33,56</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL1</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 1</td>
+    </tr>
+<tr>
+      <td class="num">228</td>
+      <td class="date">15.09.2025<span class="dow">lun</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZÜRICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">93,75</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL1</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 1</td>
+    </tr>
+<tr>
+      <td class="num">230</td>
+      <td class="date">17.09.2025<span class="dow">mer</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZÜRICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">146,03</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL1</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 1</td>
+    </tr>
+<tr>
+      <td class="num">232</td>
+      <td class="date">18.09.2025<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZÜRICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">139,13</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL1</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 1</td>
+    </tr>
+<tr>
+      <td class="num">233</td>
+      <td class="date">19.09.2025<span class="dow">ven</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZÜRICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">236,84</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL1</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 1</td>
+    </tr>
+<tr>
+      <td class="num">234</td>
+      <td class="date">19.09.2025<span class="dow">ven</span></td>
+      <td>LANDI NORD VAUDOIS VENOG 1401 YVERDON</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">21,60</td>
+      <td><span class="tag">SEGRILL1</span></td>
+      <td class="src">Achat commerce pendant Semaine grillades 1</td>
+    </tr></tbody>
+</table></div>
+  </div>
+</section>
+<section>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Marché de Noël</h2>
+      <span class="hint"><code>MDN</code> · 29.11.2025 → 07.12.2025 · 17 écritures</span>
+      <span class="net in">+2 493,39</span>
+    </div>
+    <div class="scroll"><table>
+  <thead><tr><th class="num">Séq.</th><th>Date</th><th>Contrepartie</th><th>Libellé</th>
+  <th class="num">Entrée</th><th class="num">Sortie</th><th>CC</th><th>Règle</th></tr></thead>
+  <tbody><tr>
+      <td class="num">310</td>
+      <td class="date">01.12.2025<span class="dow">lun</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">0,99</td>
+      <td class="num out"></td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Encaissement carte pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">311</td>
+      <td class="date">01.12.2025<span class="dow">lun</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">1,98</td>
+      <td class="num out"></td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Encaissement carte pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">312</td>
+      <td class="date">01.12.2025<span class="dow">lun</span></td>
+      <td>SUMUP PAYMENTS LIMITED 16-20 SHORTS GARDENS</td>
+      <td class="lbl">SUMUP PID1443133 PAYOUT 011225</td>
+      <td class="num in">316,63</td>
+      <td class="num out"></td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Encaissement carte pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">314</td>
+      <td class="date">02.12.2025<span class="dow">mar</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">0,99</td>
+      <td class="num out"></td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Encaissement carte pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">315</td>
+      <td class="date">02.12.2025<span class="dow">mar</span></td>
+      <td>SUMUP PAYMENTS LIMITED 16-20 SHORTS GARDENS</td>
+      <td class="lbl">SUMUP PID1444556 PAYOUT 021225</td>
+      <td class="num in">123,11</td>
+      <td class="num out"></td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Encaissement carte pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">316</td>
+      <td class="date">02.12.2025<span class="dow">mar</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">414,00</td>
+      <td class="num out"></td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Encaissement carte pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">317</td>
+      <td class="date">02.12.2025<span class="dow">mar</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">560,54</td>
+      <td class="num out"></td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Encaissement carte pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">320</td>
+      <td class="date">02.12.2025<span class="dow">mar</span></td>
+      <td>SARAH MALLET 2053 CERNIER</td>
+      <td class="lbl">Achats MDN (jambon)</td>
+      <td class="num in"></td>
+      <td class="num out">64,20</td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Le libellé nomme l'événement : « Achats MDN (jambon) »</td>
+    </tr>
+<tr>
+      <td class="num">321</td>
+      <td class="date">03.12.2025<span class="dow">mer</span></td>
+      <td>SUMUP PAYMENTS LIMITED 16-20 SHORTS GARDENS</td>
+      <td class="lbl">SUMUP PID1446083 PAYOUT 031225</td>
+      <td class="num in">160,54</td>
+      <td class="num out"></td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Encaissement carte pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">322</td>
+      <td class="date">03.12.2025<span class="dow">mer</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">347,37</td>
+      <td class="num out"></td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Encaissement carte pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">323</td>
+      <td class="date">03.12.2025<span class="dow">mer</span></td>
+      <td>DENNER DISCOUNT 1741 YVE 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">3,40</td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Achat commerce pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">324</td>
+      <td class="date">04.12.2025<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">226,95</td>
+      <td class="num out"></td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Encaissement carte pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">325</td>
+      <td class="date">05.12.2025<span class="dow">ven</span></td>
+      <td>SUMUP PAYMENTS LIMITED 16-20 SHORTS GARDENS</td>
+      <td class="lbl">SUMUP PID1449210 PAYOUT 051225</td>
+      <td class="num in">95,54</td>
+      <td class="num out"></td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Encaissement carte pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">326</td>
+      <td class="date">05.12.2025<span class="dow">ven</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">515,15</td>
+      <td class="num out"></td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Encaissement carte pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">327</td>
+      <td class="date">05.12.2025<span class="dow">ven</span></td>
+      <td>ALIGRO CHAVANNES 0000 CHAVANNES-PRE</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">103,05</td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Achat commerce pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">328</td>
+      <td class="date">07.12.2025<span class="dow">dim</span></td>
+      <td>SHELL YVERDON 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">30,00</td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Achat commerce pendant Marché de Noël</td>
+    </tr>
+<tr>
+      <td class="num">329</td>
+      <td class="date">07.12.2025<span class="dow">dim</span></td>
+      <td>COOP-2262 CRISSIER 1023 CRISSIER</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">69,75</td>
+      <td><span class="tag">MDN</span></td>
+      <td class="src">Achat commerce pendant Marché de Noël</td>
+    </tr></tbody>
+</table></div>
+  </div>
+</section>
+<section>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Semaine du Vin Chaud</h2>
+      <span class="hint"><code>SVC</code> · 15.12.2025 → 19.12.2025 · 13 écritures</span>
+      <span class="net in">+1 640,00</span>
+    </div>
+    <div class="scroll"><table>
+  <thead><tr><th class="num">Séq.</th><th>Date</th><th>Contrepartie</th><th>Libellé</th>
+  <th class="num">Entrée</th><th class="num">Sortie</th><th>CC</th><th>Règle</th></tr></thead>
+  <tbody><tr>
+      <td class="num">341</td>
+      <td class="date">15.12.2025<span class="dow">lun</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">0,99</td>
+      <td class="num out"></td>
+      <td><span class="tag">SVC</span></td>
+      <td class="src">Encaissement carte pendant Semaine du Vin Chaud</td>
+    </tr>
+<tr>
+      <td class="num">342</td>
+      <td class="date">17.12.2025<span class="dow">mer</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">130,27</td>
+      <td class="num out"></td>
+      <td><span class="tag">SVC</span></td>
+      <td class="src">Encaissement carte pendant Semaine du Vin Chaud</td>
+    </tr>
+<tr>
+      <td class="num">343</td>
+      <td class="date">17.12.2025<span class="dow">mer</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">162,81</td>
+      <td class="num out"></td>
+      <td><span class="tag">SVC</span></td>
+      <td class="src">Encaissement carte pendant Semaine du Vin Chaud</td>
+    </tr>
+<tr>
+      <td class="num">344</td>
+      <td class="date">17.12.2025<span class="dow">mer</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">185,53</td>
+      <td class="num out"></td>
+      <td><span class="tag">SVC</span></td>
+      <td class="src">Encaissement carte pendant Semaine du Vin Chaud</td>
+    </tr>
+<tr>
+      <td class="num">345</td>
+      <td class="date">17.12.2025<span class="dow">mer</span></td>
+      <td>LANDI NORD VAUDOIS VENOG 1401 YVERDON</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">168,00</td>
+      <td><span class="tag">SVC</span></td>
+      <td class="src">Achat commerce pendant Semaine du Vin Chaud</td>
+    </tr>
+<tr>
+      <td class="num">346</td>
+      <td class="date">18.12.2025<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">173,72</td>
+      <td class="num out"></td>
+      <td><span class="tag">SVC</span></td>
+      <td class="src">Encaissement carte pendant Semaine du Vin Chaud</td>
+    </tr>
+<tr>
+      <td class="num">347</td>
+      <td class="date">18.12.2025<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">299,96</td>
+      <td class="num out"></td>
+      <td><span class="tag">SVC</span></td>
+      <td class="src">Encaissement carte pendant Semaine du Vin Chaud</td>
+    </tr>
+<tr>
+      <td class="num">348</td>
+      <td class="date">18.12.2025<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">308,90</td>
+      <td class="num out"></td>
+      <td><span class="tag">SVC</span></td>
+      <td class="src">Encaissement carte pendant Semaine du Vin Chaud</td>
+    </tr>
+<tr>
+      <td class="num">349</td>
+      <td class="date">18.12.2025<span class="dow">jeu</span></td>
+      <td>MIGROS MMM YVERDON 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">27,30</td>
+      <td><span class="tag">SVC</span></td>
+      <td class="src">Achat commerce pendant Semaine du Vin Chaud</td>
+    </tr>
+<tr>
+      <td class="num">350</td>
+      <td class="date">18.12.2025<span class="dow">jeu</span></td>
+      <td>LANDI NORD VAUDOIS VENOG 1401 YVERDON</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">52,50</td>
+      <td><span class="tag">SVC</span></td>
+      <td class="src">Achat commerce pendant Semaine du Vin Chaud</td>
+    </tr>
+<tr>
+      <td class="num">351</td>
+      <td class="date">19.12.2025<span class="dow">ven</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">114,47</td>
+      <td class="num out"></td>
+      <td><span class="tag">SVC</span></td>
+      <td class="src">Encaissement carte pendant Semaine du Vin Chaud</td>
+    </tr>
+<tr>
+      <td class="num">352</td>
+      <td class="date">19.12.2025<span class="dow">ven</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">185,52</td>
+      <td class="num out"></td>
+      <td><span class="tag">SVC</span></td>
+      <td class="src">Encaissement carte pendant Semaine du Vin Chaud</td>
+    </tr>
+<tr>
+      <td class="num">353</td>
+      <td class="date">19.12.2025<span class="dow">ven</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">325,63</td>
+      <td class="num out"></td>
+      <td><span class="tag">SVC</span></td>
+      <td class="src">Encaissement carte pendant Semaine du Vin Chaud</td>
+    </tr></tbody>
+</table></div>
+  </div>
+</section>
+<section>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Semaine grillades 2</h2>
+      <span class="hint"><code>SEGRILL2</code> · 13.04.2026 → 17.04.2026 · 22 écritures</span>
+      <span class="net in">+1 299,36</span>
+    </div>
+    <div class="scroll"><table>
+  <thead><tr><th class="num">Séq.</th><th>Date</th><th>Contrepartie</th><th>Libellé</th>
+  <th class="num">Entrée</th><th class="num">Sortie</th><th>CC</th><th>Règle</th></tr></thead>
+  <tbody><tr>
+      <td class="num">487</td>
+      <td class="date">13.04.2026<span class="dow">lun</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">0,99</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">488</td>
+      <td class="date">13.04.2026<span class="dow">lun</span></td>
+      <td>DENNER DISCOUNT 1741 YVE 0140 YVERDON-LES-B</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">29,40</td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Achat commerce pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">490</td>
+      <td class="date">14.04.2026<span class="dow">mar</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">34,54</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">491</td>
+      <td class="date">14.04.2026<span class="dow">mar</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">51,32</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">492</td>
+      <td class="date">14.04.2026<span class="dow">mar</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">93,77</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">493</td>
+      <td class="date">14.04.2026<span class="dow">mar</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">260,56</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">494</td>
+      <td class="date">14.04.2026<span class="dow">mar</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">790,53</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">495</td>
+      <td class="date">14.04.2026<span class="dow">mar</span></td>
+      <td>LANDI NORD VAUDOIS VENOG 1401 YVERDON</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">119,15</td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Achat commerce pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">496</td>
+      <td class="date">15.04.2026<span class="dow">mer</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">29,61</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">497</td>
+      <td class="date">15.04.2026<span class="dow">mer</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">64,15</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">498</td>
+      <td class="date">15.04.2026<span class="dow">mer</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">195,42</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">499</td>
+      <td class="date">15.04.2026<span class="dow">mer</span></td>
+      <td>MIGROS MMM YVERDON 0140 YVERDON-LES-B</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">42,25</td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Achat commerce pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">500</td>
+      <td class="date">15.04.2026<span class="dow">mer</span></td>
+      <td>MIGROS MMM YVERDON 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">43,40</td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Achat commerce pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">501</td>
+      <td class="date">16.04.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">64,15</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">502</td>
+      <td class="date">16.04.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">124,84</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">503</td>
+      <td class="date">16.04.2026<span class="dow">jeu</span></td>
+      <td>LANDI NORD VAUDOIS VENOG 1401 YVERDON</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">10,50</td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Achat commerce pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">504</td>
+      <td class="date">16.04.2026<span class="dow">jeu</span></td>
+      <td>ALIGRO CHAVANNES 0000 CHAVANNES-PRE</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">489,80</td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Achat commerce pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">507</td>
+      <td class="date">17.04.2026<span class="dow">ven</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">29,61</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">508</td>
+      <td class="date">17.04.2026<span class="dow">ven</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">131,24</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">509</td>
+      <td class="date">17.04.2026<span class="dow">ven</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">255,63</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">512</td>
+      <td class="date">17.04.2026<span class="dow">ven</span></td>
+      <td>LANDI NORD VAUDOIS VENOG 0140 YVERDON</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">43,70</td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Achat commerce pendant Semaine grillades 2</td>
+    </tr>
+<tr>
+      <td class="num">513</td>
+      <td class="date">17.04.2026<span class="dow">ven</span></td>
+      <td>DENNER DISCOUNT 1741 YVE 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">48,80</td>
+      <td><span class="tag">SEGRILL2</span></td>
+      <td class="src">Achat commerce pendant Semaine grillades 2</td>
+    </tr></tbody>
+</table></div>
+  </div>
+</section>
+<section>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Semaine grillades 3</h2>
+      <span class="hint"><code>SEGRILL3</code> · 22.06.2026 → 30.06.2026 · 2 écritures</span>
+      <span class="net in">+3,94</span>
+    </div>
+    <div class="scroll"><table>
+  <thead><tr><th class="num">Séq.</th><th>Date</th><th>Contrepartie</th><th>Libellé</th>
+  <th class="num">Entrée</th><th class="num">Sortie</th><th>CC</th><th>Règle</th></tr></thead>
+  <tbody><tr>
+      <td class="num">604</td>
+      <td class="date">24.06.2026<span class="dow">mer</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">1,97</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL3</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 3</td>
+    </tr>
+<tr>
+      <td class="num">605</td>
+      <td class="date">25.06.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">1,97</td>
+      <td class="num out"></td>
+      <td><span class="tag">SEGRILL3</span></td>
+      <td class="src">Encaissement carte pendant Semaine grillades 3</td>
+    </tr></tbody>
+</table></div>
+  </div>
+</section>
+
+<section>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Bloc B — billetterie d'avril</h2>
+      <span class="hint"><code>FESTIVAL</code> · 3 écritures</span>
+      <span class="net in">+20 312,64</span>
+    </div>
+    <div class="scroll"><table>
+  <thead><tr><th class="num">Séq.</th><th>Date</th><th>Contrepartie</th><th>Libellé</th>
+  <th class="num">Entrée</th><th class="num">Sortie</th><th>CC</th><th>Règle</th></tr></thead>
+  <tbody><tr>
+      <td class="num">466</td>
+      <td class="date">07.04.2026<span class="dow">mar</span></td>
+      <td>WEEZEVENT SWITZERLAND SARL RUE PRE-DU-MARCHE LAUSANNE CH</td>
+      <td class="lbl">Weezevent E1727589 baleinev festival 2026</td>
+      <td class="num in">1 710,17</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Recette Weezevent en avril — billetterie</td>
+    </tr>
+<tr>
+      <td class="num">521</td>
+      <td class="date">20.04.2026<span class="dow">lun</span></td>
+      <td>WEEZEVENT SWITZERLAND SARL RUE PRE-DU-MARCHE LAUSANNE CH</td>
+      <td class="lbl">Weezevent E1727589 baleinev festival 2026</td>
+      <td class="num in">2 602,47</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Recette Weezevent en avril — billetterie</td>
+    </tr>
+<tr>
+      <td class="num">544</td>
+      <td class="date">24.04.2026<span class="dow">ven</span></td>
+      <td>WEEZEVENT SWITZERLAND SARL RUE PRE-DU-MARCHE LAUSANNE CH</td>
+      <td class="lbl">CASHLESS V145006994E1727589O401421</td>
+      <td class="num in">16 000,00</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Recette Weezevent en avril — cashless (recharges bar), pas de la billetterie</td>
+    </tr></tbody>
+</table></div>
+  </div>
+</section>
+
+<section>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Bloc C — encaissements du jeudi</h2>
+      <span class="hint"><code>AFTER</code> · 24 écritures · <strong>à confirmer séparément</strong></span>
+      <span class="net in">+1 558,98</span>
+    </div>
+    <div class="panel-body"><p>Votre règle est « si c'est un jeudi soir, c'est l'after ». Un relevé
+    bancaire ne porte pas d'heure, donc la règle est appliquée au seul type de ligne qui peut être
+    la recette d'une soirée : les encaissements TWINT et SumUp datés d'un jeudi, hors de toute
+    semaine d'événement. Les <em>achats</em> du jeudi ne sont pas inclus — un passage à la Landi le
+    jeudi n'est pas forcément le stock du bar. Ce bloc a son propre fichier,
+    <code>cost-centres-extra.sql</code>, pour que vous puissiez le refuser sans perdre le reste.</p></div>
+    <div class="scroll"><table>
+  <thead><tr><th class="num">Séq.</th><th>Date</th><th>Contrepartie</th><th>Libellé</th>
+  <th class="num">Entrée</th><th class="num">Sortie</th><th>CC</th><th>Règle</th></tr></thead>
+  <tbody><tr>
+      <td class="num">240</td>
+      <td class="date">02.10.2025<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZÜRICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">156,90</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">265</td>
+      <td class="date">30.10.2025<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZÜRICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">22,69</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">266</td>
+      <td class="date">30.10.2025<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZÜRICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">132,24</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">304</td>
+      <td class="date">27.11.2025<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">81,91</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">335</td>
+      <td class="date">11.12.2025<span class="dow">jeu</span></td>
+      <td>SUMUP PAYMENTS LIMITED 16-20 SHORTS GARDENS</td>
+      <td class="lbl">SUMUP PID1457948 PAYOUT 111225</td>
+      <td class="num in">15,60</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">372</td>
+      <td class="date">08.01.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">97,70</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">392</td>
+      <td class="date">19.02.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">75,97</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">408</td>
+      <td class="date">05.03.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">8,88</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">409</td>
+      <td class="date">05.03.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">40,46</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">410</td>
+      <td class="date">05.03.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">88,81</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">425</td>
+      <td class="date">12.03.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">17,77</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">426</td>
+      <td class="date">12.03.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">88,83</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">427</td>
+      <td class="date">12.03.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">89,82</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">436</td>
+      <td class="date">19.03.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">33,55</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">437</td>
+      <td class="date">19.03.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">86,84</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">438</td>
+      <td class="date">19.03.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">138,16</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">449</td>
+      <td class="date">26.03.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">0,99</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">455</td>
+      <td class="date">02.04.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">1,97</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">456</td>
+      <td class="date">02.04.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">3,95</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">457</td>
+      <td class="date">02.04.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">146,04</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">548</td>
+      <td class="date">30.04.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">3,95</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">593</td>
+      <td class="date">04.06.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">61,17</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">601</td>
+      <td class="date">11.06.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">4,93</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr>
+<tr>
+      <td class="num">602</td>
+      <td class="date">11.06.2026<span class="dow">jeu</span></td>
+      <td>TWINT ACQUIRING AG STAUFFACHERSTRASSE ZURICH CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">159,85</td>
+      <td class="num out"></td>
+      <td><span class="tag">AFTER</span></td>
+      <td class="src">Encaissement carte un jeudi, hors fenêtre événement</td>
+    </tr></tbody>
+</table></div>
+  </div>
+</section>
+
+<section>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Écartées alors qu'elles tombent dans une fenêtre</h2>
+      <span class="hint">13 écritures · laissées sans centre de charge</span>
+    </div>
+    <div class="scroll"><table>
+  <thead><tr><th class="num">Séq.</th><th>Date</th><th>Contrepartie</th><th>Libellé</th>
+  <th class="num">Entrée</th><th class="num">Sortie</th><th>Raison</th></tr></thead>
+  <tbody><tr>
+      <td class="num">229</td>
+      <td class="date">15.09.2025<span class="dow">lun</span></td>
+      <td>ASSOCIATION UNILIVE 1000 LAUSANNE</td>
+      <td class="lbl">—</td>
+      <td class="num in">334,00</td>
+      <td class="num out"></td>
+      
+      <td class="src">Dans la fenêtre Semaine grillades 1, mais niveau association</td>
+    </tr>
+<tr>
+      <td class="num">231</td>
+      <td class="date">17.09.2025<span class="dow">mer</span></td>
+      <td>COMMUNE DE CHESEAUX-NOREAZ 2 ROUTE DU GYMNASE 1400 CHESEAUX-NOREAZ</td>
+      <td class="lbl">Baleinev - location refuge 03.10.20 25</td>
+      <td class="num in"></td>
+      <td class="num out">500,00</td>
+      
+      <td class="src">Dans la fenêtre Semaine grillades 1, mais niveau association</td>
+    </tr>
+<tr>
+      <td class="num">313</td>
+      <td class="date">01.12.2025<span class="dow">lun</span></td>
+      <td>MAXIME MAGNENAT 11B ROUTE DE SULLENS 1303 PENTHAZ</td>
+      <td class="lbl">remboursement refuge inter assoc</td>
+      <td class="num in"></td>
+      <td class="num out">370,00</td>
+      
+      <td class="src">Dans la fenêtre Marché de Noël, mais ni encaissement ni achat commerce</td>
+    </tr>
+<tr>
+      <td class="num">318</td>
+      <td class="date">02.12.2025<span class="dow">mar</span></td>
+      <td>CSEFALVAY OLIVIER 2065 SAVAGNIER</td>
+      <td class="lbl">Remboursement Prodega</td>
+      <td class="num in"></td>
+      <td class="num out">99,20</td>
+      
+      <td class="src">Dans la fenêtre Marché de Noël, mais ni encaissement ni achat commerce</td>
+    </tr>
+<tr>
+      <td class="num">319</td>
+      <td class="date">02.12.2025<span class="dow">mar</span></td>
+      <td>MAXIME MAGNENAT 11B ROUTE DE SULLENS 1303 PENTHAZ</td>
+      <td class="lbl">pizzas SG 3</td>
+      <td class="num in"></td>
+      <td class="num out">72,00</td>
+      
+      <td class="src">Dans la fenêtre Marché de Noël, mais ni encaissement ni achat commerce</td>
+    </tr>
+<tr>
+      <td class="num">354</td>
+      <td class="date">19.12.2025<span class="dow">ven</span></td>
+      <td>SARAH MALLET 2053 CERNIER</td>
+      <td class="lbl">cadeau aide cuisine</td>
+      <td class="num in"></td>
+      <td class="num out">73,00</td>
+      
+      <td class="src">Dans la fenêtre Semaine du Vin Chaud, mais ni encaissement ni achat commerce</td>
+    </tr>
+<tr>
+      <td class="num">355</td>
+      <td class="date">19.12.2025<span class="dow">ven</span></td>
+      <td>SARAH MALLET 2053 CERNIER</td>
+      <td class="lbl">KM Cernier</td>
+      <td class="num in"></td>
+      <td class="num out">320,00</td>
+      
+      <td class="src">Dans la fenêtre Semaine du Vin Chaud, mais ni encaissement ni achat commerce</td>
+    </tr>
+<tr>
+      <td class="num">356</td>
+      <td class="date">19.12.2025<span class="dow">ven</span></td>
+      <td>SARAH MALLET 2053 CERNIER</td>
+      <td class="lbl">KM Aligro</td>
+      <td class="num in"></td>
+      <td class="num out">220,00</td>
+      
+      <td class="src">Dans la fenêtre Semaine du Vin Chaud, mais ni encaissement ni achat commerce</td>
+    </tr>
+<tr>
+      <td class="num">489</td>
+      <td class="date">13.04.2026<span class="dow">lun</span></td>
+      <td>SUISA 82 BELLARIASTRASSE 8038 ZURICH</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">1 539,00</td>
+      
+      <td class="src">Dans la fenêtre Semaine grillades 2, mais niveau association</td>
+    </tr>
+<tr>
+      <td class="num">505</td>
+      <td class="date">16.04.2026<span class="dow">jeu</span></td>
+      <td>DOUBLE R KERNINON ET B. 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in">1 300,00</td>
+      <td class="num out"></td>
+      
+      <td class="src">Dans la fenêtre Semaine grillades 2, mais niveau association</td>
+    </tr>
+<tr>
+      <td class="num">506</td>
+      <td class="date">16.04.2026<span class="dow">jeu</span></td>
+      <td>COMMUNE D'YVERDON 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">23.03.2026 2026-0324-01</td>
+      <td class="num in">8 000,00</td>
+      <td class="num out"></td>
+      
+      <td class="src">Dans la fenêtre Semaine grillades 2, mais niveau association</td>
+    </tr>
+<tr>
+      <td class="num">510</td>
+      <td class="date">17.04.2026<span class="dow">ven</span></td>
+      <td>BLV</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">1 050,00</td>
+      
+      <td class="src">Dans la fenêtre Semaine grillades 2, mais ni encaissement ni achat commerce</td>
+    </tr>
+<tr>
+      <td class="num">606</td>
+      <td class="date">26.06.2026<span class="dow">ven</span></td>
+      <td>SARAH MALLET 1 IMPASSE DES CHARMES 2053 CERNIER</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">280,00</td>
+      
+      <td class="src">Dans la fenêtre Semaine grillades 3, mais ni encaissement ni achat commerce</td>
+    </tr></tbody>
+</table></div>
+  </div>
+</section>
+
+<section>
+  <div class="panel">
+    <div class="panel-head"><h2>Pour appliquer</h2></div>
+    <div class="panel-body">
+      <ul>
+        <li><code>cost-centres.sql</code> — blocs A et B, 65 écritures.</li>
+        <li><code>cost-centres-extra.sql</code> — bloc C, 24 écritures, à part.</li>
+        <li>Chaque <code>UPDATE</code> est conditionné à <code>costCenterId IS NULL</code> : rejouer
+        le fichier ne peut pas écraser une décision prise entre-temps dans l'application.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</div>
