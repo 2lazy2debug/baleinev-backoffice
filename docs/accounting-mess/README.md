@@ -28,6 +28,20 @@ Tout a été appliqué en production le 09.09.2026.
 | SEGRILL3 | 4 | +456.14 |
 | GM · JACC · EVTCHILL | 4 | +255.70 |
 
+| Budget | Écritures | Net |
+|---|---:|---:|
+| EVENTS | 221 | +21'079.56 |
+| ADMINISTRATION | 17 | −1'148.49 |
+| COMMUNICATION | 3 | −744.38 |
+| TECHNIQUE | 2 | −9'440.32 |
+
+Les budgets suivent les centres de charge : tout ce qui en porte un va sur EVENTS,
+sauf INTERNE — corrections de caisse et pizzas de séance — qui est de
+l'administration, au même titre que les frais bancaires et les locations de refuge
+et de chalet. Elia Nicolo et les flyers vont sur COMMUNICATION, Impact Vision sur
+TECHNIQUE, et ces deux règles passent avant celle des événements : le remboursement
+de mai d'Elia Nicolo porte le centre FESTIVAL et reste de la communication.
+
 231 écritures restent sans centre de charge : l'année ordinaire de l'association,
 qui n'appartient à aucun événement, plus les 7 virements entre le compte et le
 coffre — un mouvement interne n'est ni une charge ni une recette.
@@ -42,6 +56,7 @@ Chaque chiffre publié est calculé par un script, y compris les comparaisons
 | `build-coffre-reconciliation.mjs` | `final-result.html` (page de revue) et `final-result.csv` (les 50 écritures) |
 | `emit-production-sql.mjs` | `apply.sql` et `rollback.sql` — écrit le coffre, recalcule le report 2026-2027 |
 | `propose-cost-centres.mjs` | `cost-centres-proposal.html`, `cost-centres.sql`, `cost-centres-extra.sql`, `cost-centres-rollback.sql` |
+| `assign-budgets.mjs` | `budgets.sql` et `budgets-rollback.sql` — le budget déduit du centre de charge |
 
 `apply.sql` est rejouable : chaque id est dérivé du numéro de séquence et les
 insertions sont `ON CONFLICT DO NOTHING`. Les fichiers de centres de charge ne

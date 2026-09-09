@@ -16,6 +16,30 @@
   --muted: #9cb0c4;
   --accent: #00a68c;
   --accent-strong: #008a74;
+
+  /* Categorical chart palette — for telling series apart, never for status.
+     Eight fixed slots, assigned in this order and never cycled: a ninth
+     category folds into "Other" (--chart-other), because a generated ninth hue
+     is indistinguishable from an existing one under colour-blindness.
+
+     Stepped for this app's dark surfaces and validated as a set against
+     --page: every slot clears the L 0.48–0.67 band, the 0.1 chroma floor, 3:1
+     contrast, an adjacent CVD ΔE of 8.4 (protan, ≥8 target) and an adjacent
+     normal-vision ΔE of 19.3 (≥15 floor). Changing one value invalidates the
+     set — re-run the check before touching them. */
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
+  --chart-6: #008300;
+  --chart-7: #9085e9;
+  --chart-8: #e66767;
+  /* The de-emphasis slot for a folded tail — deliberately below the chroma
+     floor the eight hues above must clear, because "Other" is meant to read as
+     grey rather than as a ninth category. Kept neutral, not blue-grey: a
+     blue-grey sits too close to slots 1 and 7 to tell apart in a ring. */
+  --chart-other: #7f8079;
 }
 
 @theme inline {

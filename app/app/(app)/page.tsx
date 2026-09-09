@@ -1,7 +1,8 @@
 import { AccountType, TaskType } from "@prisma/client";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
-import { Card, CardGrid, EmptyPage, PageHeader, Panel, PanelHeader, SectionTitle, TD, TFoot, TH, THead, TR, Table, buttonClasses } from "@/components/ui";
+import { Card, CardGrid, DonutChart, colourOrder, EmptyPage, PageHeader, Panel, PanelHeader, SectionTitle, TD, TFoot, TH, THead, TR, Table, buttonClasses } from "@/components/ui";
+import type { DonutSlice } from "@/components/ui";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
@@ -11,6 +12,31 @@ import { decimalToNumber, formatCurrency } from "@/lib/utils";
 
 function sumAmounts<T extends { amount: { toString(): string } }>(items: T[]) {
   return items.reduce((total, item) => total + decimalToNumber(item.amount), 0);
+}
+
+type Bucket = { name: string; journalEntries: { accountType: AccountType; amount: { toString(): string } }[] };
+
+/**
+ * The association as its own counterparty — how the bank-statement import spells
+ * a move between our own accounts (see `scripts/import-bank-statement.ts`). Such
+ * a move is booked twice, a charge on the account it leaves and an earning on the
+ * one it reaches, so counting it would inflate both sides of these charts by the
+ * same amount without a franc having been earned or spent.
+ */
+const SELF_COUNTERPARTY = "BLV";
+
+/**
+ * One side of the ledger, split across buckets, for a donut. Entries with no
+ * bucket get their own slice rather than being dropped: a chart that says
+ * "earnings by budget" while silently leaving out everything unbudgeted shows a
+ * total that matches nothing.
+ */
+function slicesBy(buckets: Bucket[], loose: number, side: AccountType, unassignedLabel: string): DonutSlice[] {
+  const slices = buckets.map((bucket) => ({
+    label: bucket.name,
+    value: sumAmounts(bucket.journalEntries.filter((entry) => entry.accountType === side)),
+  }));
+  return loose > 0 ? [...slices, { label: unassignedLabel, value: loose }] : slices;
 }
 
 export default async function DashboardPage() {
@@ -27,6 +53,10 @@ export default async function DashboardPage() {
       budgets: {
         orderBy: { name: "asc" },
         include: { budgetLines: true, journalEntries: true },
+      },
+      costCenters: {
+        orderBy: { code: "asc" },
+        include: { journalEntries: true },
       },
       moneyAccounts: {
         orderBy: { name: "asc" },
@@ -81,6 +111,69 @@ export default async function DashboardPage() {
   );
   const totalDelta = totals.actualResult - totals.budgetResult;
 
+  // What is booked but unbudgeted / unattributed. Two kinds of entry are left
+  // out because neither is a spending or an earning: an opening entry, which is
+  // a carried balance, and a transfer between our own accounts. Both are
+  // unattributed by nature, so this is the only place they could have crept in —
+  // an entry that carries a budget or a cost center is real money either way.
+  const unattributed = async (field: "budgetId" | "costCenterId") => {
+    const sums = await prisma.journalEntry.groupBy({
+      by: ["accountType"],
+      where: {
+        editionId: activeEdition.id,
+        isOpeningEntry: false,
+        counterparty: { not: SELF_COUNTERPARTY },
+        [field]: null,
+      },
+      _sum: { amount: true },
+    });
+    const of = (side: AccountType) =>
+      decimalToNumber(sums.find((row) => row.accountType === side)?._sum.amount ?? 0);
+    return { produits: of(AccountType.PRODUITS), charges: of(AccountType.CHARGES) };
+  };
+  const [looseBudget, looseCostCenter] = await Promise.all([
+    unattributed("budgetId"),
+    unattributed("costCenterId"),
+  ]);
+
+  const costCenterBuckets = activeEdition.costCenters.map((costCenter) => ({
+    name: costCenter.code,
+    journalEntries: costCenter.journalEntries,
+  }));
+
+  // One colour order per dimension, shared by that dimension's two donuts, so a
+  // budget keeps its colour between "earnings" and "spendings" instead of being
+  // repainted by how it happens to rank on each side.
+  const donutPair = (
+    buckets: Bucket[],
+    loose: { produits: number; charges: number },
+    earningsTitle: string,
+    expensesTitle: string,
+  ) => {
+    const earnings = slicesBy(buckets, loose.produits, AccountType.PRODUITS, copy.dashboard.unassigned);
+    const expenses = slicesBy(buckets, loose.charges, AccountType.CHARGES, copy.dashboard.unassigned);
+    const order = colourOrder([...earnings, ...expenses]);
+    return [
+      { title: earningsTitle, slices: earnings, order },
+      { title: expensesTitle, slices: expenses, order },
+    ];
+  };
+
+  const donuts = [
+    ...donutPair(
+      activeEdition.budgets,
+      looseBudget,
+      copy.dashboard.earningsByBudget,
+      copy.dashboard.expensesByBudget,
+    ),
+    ...donutPair(
+      costCenterBuckets,
+      looseCostCenter,
+      copy.dashboard.earningsByCostCenter,
+      copy.dashboard.expensesByCostCenter,
+    ),
+  ];
+
   const moneyAccountCards = activeEdition.moneyAccounts.map((account) => {
     const balance = account.journalEntries.reduce((total, entry) => {
       const amount = decimalToNumber(entry.amount);
@@ -110,6 +203,22 @@ export default async function DashboardPage() {
             </Card>
           ))
         )}
+      </CardGrid>
+
+      <CardGrid>
+        {donuts.map((donut) => (
+          <Card key={donut.title} span="1/2">
+            <SectionTitle>{donut.title}</SectionTitle>
+            <DonutChart
+              className="mt-4"
+              data={donut.slices}
+              order={donut.order}
+              format={formatCurrency}
+              otherLabel={copy.dashboard.otherSlice}
+              emptyLabel={copy.dashboard.nothingBooked}
+            />
+          </Card>
+        ))}
       </CardGrid>
 
       <Panel>

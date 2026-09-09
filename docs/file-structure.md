@@ -28,7 +28,7 @@ app/
 │
 ├── (app)/                        ← Protected group (needs a valid session)
 │   ├── layout.tsx                ← Fetches active user, renders <AppShell>
-│   ├── page.tsx                  ← Dashboard (budget vs actuals + money account balances)
+│   ├── page.tsx                  ← Dashboard (budget vs actuals, money account balances, earnings/spendings donuts)
 │   │
 │   ├── budget/
 │   │   ├── page.tsx              ← Queries the edition's budgets (visible-to-me filtered), one card each

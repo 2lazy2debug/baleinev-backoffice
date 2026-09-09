@@ -135,6 +135,27 @@ The dashboard (`app/(app)/page.tsx`) reads the edition's `Budget` rows: each row
 the sum of its budget lines, and its actual side is the sum of the journal entries booked against
 it. The difference is the remaining (or overspent) budget.
 
+### Where the money came from and went (dashboard donuts)
+Four donuts split earnings and spendings by budget and by cost center. Three rules
+decide what they count, and each exists because breaking it made the chart lie:
+
+- **Entries with no budget / no cost center get their own "unassigned" slice.** A chart
+  headed "earnings by budget" that silently drops everything unbudgeted shows a total
+  matching nothing else on the page.
+- **Transfers between our own accounts are excluded** — an entry whose counterparty is
+  the association itself (`BLV`, the spelling `scripts/import-bank-statement.ts` uses).
+  Such a move is booked twice, a charge leaving one account and an earning reaching
+  another, and counting it inflated both sides of the 2025-2026 charts by CHF 12'974.25
+  without a franc being earned or spent.
+- **Opening entries are excluded** — a carried balance is not this year's activity, and
+  the budget-vs-actuals table above does not count them either.
+
+Colour comes from the eight `--chart-*` tokens, assigned per *dimension* rather than per
+chart: a budget keeps its colour between its earnings and its spendings donut. The
+palette was validated on adjacent pairs only, so the ring is drawn in that fixed slot
+order — which is why a legend can sit slightly out of value order. See
+`components/ui/DonutChart.tsx`.
+
 ---
 
 ## 3. Journal Entries
