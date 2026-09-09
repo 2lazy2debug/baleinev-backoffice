@@ -1,0 +1,24 @@
+sequenceNumber|d|acct|accountType|amount|counterparty|label|referenceNumber|isOpeningEntry|code
+1|2025-09-11|Coffre|PRODUITS|24.00|BLV|Entrée cash journéée d''accueil||f|JACC
+5|2025-09-15|Coffre|PRODUITS|60.00|BLV|SG1 15.09  : Recette lundi midi CASH||f|SEGRILL1
+6|2025-09-15|Coffre|PRODUITS|38.00|BLV|SG1 15.09 : Recette lundi après-midi CASH||f|SEGRILL1
+7|2025-09-16|Coffre|PRODUITS|101.85|BLV|AL : Entrées au 16.09 (beer money)||f|AFTER
+8|2025-09-16|Coffre|PRODUITS|23.00|BLV|SG1 16.09 : Recette CASH||f|SEGRILL1
+17|2025-09-16|Coffre|PRODUITS|23.00|BLV|SG 16.09 : Recette CASH||f|SEGRILL1
+18|2025-09-18|Coffre|PRODUITS|104.00|BLV|AL 18.09 : Recette CASH||f|AFTER
+19|2025-09-19|Coffre|PRODUITS|3.00|BLV|SG 19.09 : Recette CASH||f|SEGRILL1
+25|2025-09-18|Coffre|CHARGES|20.50|Thomas Brêchet|SG1 : Courses Hot Dogs||f|SEGRILL1
+26|2025-09-18|Coffre|CHARGES|47.25|Thomas Brêchet|SG1 : Courses Hot Dogs||f|SEGRILL1
+33|2025-10-08|Coffre|CHARGES|47.05|Thomas Brêchet|DrawOnMe : croques monsieur||f|EVTCHILL
+49|2025-10-09|Coffre|PRODUITS|166.60|BLV|Revenus GM Cash||f|GM
+50|2025-10-09|Coffre|PRODUITS|120.00|BLV|Revenu after 9.10||f|AFTER
+51|2025-10-09|Coffre|PRODUITS|112.15|BLV|Cash Courses event chillout||f|EVTCHILL
+52|2025-09-25|Coffre|CHARGES|591.40|BLV|Correction après comptage caisse||f|INTERNE
+53|2025-11-25|Coffre|PRODUITS|65.67|BLV|Entrées afters||f|AFTER
+296|2025-11-25|Coffre|PRODUITS|400.00|BLV|||f|
+300|2025-11-27|Coffre|CHARGES|300.00|BLV|||f|
+302|2025-11-27|Coffre|CHARGES|263.90|BLV|||f|
+306|2025-11-27|Coffre|PRODUITS|700.00|BLV|||f|
+511|2026-04-17|Coffre|PRODUITS|1050.00|BLV|||f|
+574|2026-05-21|Coffre|CHARGES|9390.00|BLV|||f|
+576|2026-05-21|Coffre|CHARGES|870.35|BLV|||f|

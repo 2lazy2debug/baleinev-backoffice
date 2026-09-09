@@ -1,0 +1,1103 @@
+<title>Coffre 2025-2026 — reconstitution</title>
+<style>
+  :root {
+    --page: #0f171f; --panel: #152330; --panel-strong: #1c2d3d; --line: #2e4256;
+    --ink: #eaf1f8; --muted: #9cb0c4; --accent: #00a68c; --accent-strong: #008a74;
+    --rose: #fda4af; --rose-bg: rgba(76, 5, 25, .35); --rose-line: rgba(251, 113, 133, .3);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 20px 64px; background: var(--page); color: var(--ink);
+    font: 13px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  header { margin-bottom: 24px; }
+  .eyebrow { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-size: 28px; margin: 4px 0 8px; letter-spacing: -.01em; }
+  h2 { font-size: 17px; margin: 0; }
+  p { margin: 0 0 10px; color: var(--muted); max-width: 78ch; }
+  p strong, li strong { color: var(--ink); }
+  section { margin-top: 28px; }
+  .panel { border: 1px solid var(--line); background: var(--panel); border-radius: 10px; overflow: hidden; }
+  .panel-head { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+  .panel-head .hint { font-size: 11px; color: var(--muted); }
+  .panel-body { padding: 16px; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; }
+  th, td { padding: 5px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  thead th {
+    position: sticky; top: 0; background: var(--panel-strong); color: var(--muted);
+    font-size: 10px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .date { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .in { color: var(--accent); }
+  .out { color: var(--rose); }
+  .bal { font-weight: 600; }
+  .bal.neg { color: var(--rose); }
+  .cc, .src { color: var(--muted); font-size: 11px; }
+  tr.booked td { opacity: .62; }
+  tr.balancing { background: rgba(0, 166, 140, .07); }
+  tr.balancing td { font-weight: 500; }
+  .tag {
+    display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 10px;
+    white-space: nowrap; border: 1px solid var(--line); color: var(--muted);
+  }
+  .tag.sourced { border-color: rgba(0, 166, 140, .45); color: var(--accent); }
+  .tag.balancing { border-color: var(--accent); color: var(--ink); background: rgba(0, 166, 140, .18); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+  .card { border: 1px solid var(--line); background: var(--panel); border-radius: 10px; padding: 12px 14px; }
+  .card .k { font-size: 10px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  .card .v { font-size: 21px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .card .n { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .ok { border-color: rgba(0, 166, 140, .45); }
+  .ok .v { color: var(--accent); }
+  .alert { border: 1px solid var(--rose-line); background: var(--rose-bg); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+  .alert h3 { margin: 0 0 6px; font-size: 13px; color: var(--rose); }
+  .alert p, .alert li { color: var(--ink); margin: 0 0 4px; }
+  ul { margin: 0; padding-left: 18px; color: var(--muted); }
+  li { margin-bottom: 6px; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; background: var(--panel-strong); padding: 1px 5px; border-radius: 3px; color: var(--ink); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: var(--muted); margin-top: 10px; }
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Baleinev · édition 2025-2026 · compte Coffre</div>
+  <h1>Reconstitution du coffre</h1>
+  <p>Le compte bancaire est complet et juste — il vient du relevé BCV. Le coffre ne l'est pas :
+  23 écritures seulement avaient été passées sur l'année. Cette page rejoue tous les mouvements
+  retrouvés dans <code>historique caisse partiel.txt</code>, <code>historique_fond_de_caisse.xlsx</code>
+  et les deux classeurs Marché de Noël / Semaine du Vin Chaud, puis comble chaque écart contre un
+  comptage physique par une écriture d'<strong>équilibrage datée d'une fin de mois</strong>.</p>
+</header>
+
+<section>
+  <div class="cards">
+    <div class="card"><div class="k">Solde d'ouverture</div><div class="v">1 995,65</div><div class="n">28.07.2025, compté</div></div>
+    <div class="card"><div class="k">Écritures existantes</div><div class="v">23</div><div class="n">inchangées</div></div>
+    <div class="card"><div class="k">Écritures à créer</div><div class="v">50</div><div class="n">dont 6 équilibrages · séq. 615-664</div></div>
+    <div class="card ok"><div class="k">Solde final reconstitué</div><div class="v">937,80</div><div class="n">= comptage du 30.06.2026 ✓</div></div>
+  </div>
+</section>
+
+
+
+<section>
+  <div class="alert">
+    <h3>Solde négatif du 21.05.2026 au 31.05.2026</h3>
+    <p>Les 10 260,35 versés à la banque le 21.05.2026 dépassent les 8 990,00 comptés le 05.05.2026 :
+    la recette cash du festival est bien entrée au coffre entre ces deux dates, mais aucune source ne la date.
+    L'équilibrage de 1 755,95 est donc daté du <strong>31.05.2026</strong> (dernière fin de mois avant
+    le comptage final) et non du 30.06 — ce qui ramène la période négative de cinq semaines à dix jours.
+    Le solde plonge malgré tout à -1 270,35 du 21.05 au 31.05.</p>
+    <p><strong>Si vous retrouvez la date du dépôt des recettes du festival au coffre</strong>, remplacez cet
+    équilibrage par une entrée datée et la période négative disparaît.</p>
+  </div>
+</section>
+
+<section>
+  <div class="panel">
+    <div class="panel-head"><h2>Écart par période</h2><span class="hint">entre deux comptages physiques</span></div>
+    <div class="scroll"><table>
+      <thead><tr>
+        <th>Période</th><th class="num">Solde compté au départ</th><th class="num">Mouvements (journal + sourcés)</th>
+        <th class="num">Net</th><th class="num">Solde reconstitué</th><th class="num">Solde compté</th>
+        <th class="num">Écart à équilibrer</th><th>Écriture datée du</th>
+      </tr></thead>
+      <tbody><tr>
+      <td class="date">28.07.2025 → 09.11.2025</td>
+      <td class="num">1 995,65</td>
+      <td class="num">15 + 1</td>
+      <td class="num out">-330,60</td>
+      <td class="num">1 665,05</td>
+      <td class="num">1 851,30</td>
+      <td class="num in"><strong>+186,25</strong></td>
+      <td class="date">31.10.2025</td>
+    </tr>
+<tr>
+      <td class="date">09.11.2025 → 08.12.2025</td>
+      <td class="num">1 851,30</td>
+      <td class="num">5 + 18</td>
+      <td class="num in">+2 587,57</td>
+      <td class="num">4 438,87</td>
+      <td class="num">4 180,30</td>
+      <td class="num out"><strong>-258,57</strong></td>
+      <td class="date">30.11.2025</td>
+    </tr>
+<tr>
+      <td class="date">08.12.2025 → 30.03.2026</td>
+      <td class="num">4 180,30</td>
+      <td class="num">0 + 18</td>
+      <td class="num in">+1 394,90</td>
+      <td class="num">5 575,20</td>
+      <td class="num">5 923,85</td>
+      <td class="num in"><strong>+348,65</strong></td>
+      <td class="date">28.02.2026</td>
+    </tr>
+<tr>
+      <td class="date">30.03.2026 → 12.04.2026</td>
+      <td class="num">5 923,85</td>
+      <td class="num">0 + 3</td>
+      <td class="num in">+1 111,25</td>
+      <td class="num">7 035,10</td>
+      <td class="num">7 033,90</td>
+      <td class="num out"><strong>-1,20</strong></td>
+      <td class="date">31.03.2026</td>
+    </tr>
+<tr>
+      <td class="date">12.04.2026 → 05.05.2026</td>
+      <td class="num">7 033,90</td>
+      <td class="num">1 + 2</td>
+      <td class="num in">+2 425,00</td>
+      <td class="num">9 458,90</td>
+      <td class="num">8 990,00</td>
+      <td class="num out"><strong>-468,90</strong></td>
+      <td class="date">30.04.2026</td>
+    </tr>
+<tr>
+      <td class="date">05.05.2026 → 30.06.2026</td>
+      <td class="num">8 990,00</td>
+      <td class="num">2 + 2</td>
+      <td class="num out">-9 808,15</td>
+      <td class="num">-818,15</td>
+      <td class="num">937,80</td>
+      <td class="num in"><strong>+1 755,95</strong></td>
+      <td class="date">31.05.2026</td>
+    </tr></tbody>
+    </table></div>
+  </div>
+</section>
+
+<section>
+  <div class="panel">
+    <div class="panel-head"><h2>Les 6 écritures d'équilibrage</h2><span class="hint">« Équilibrage après comptage du coffre » · centre de charge INTERNE</span></div>
+    <div class="scroll"><table>
+      <thead><tr><th class="num">Séq.</th><th>Date</th><th>Sens</th><th class="num">Montant</th><th>Libellé</th></tr></thead>
+      <tbody><tr>
+      <td class="num"><em>616</em></td>
+      <td class="date">31.10.2025</td>
+      <td>PRODUITS</td>
+      <td class="num in"><strong>186,25</strong></td>
+      <td>Équilibrage après comptage du coffre</td>
+    </tr>
+<tr>
+      <td class="num"><em>621</em></td>
+      <td class="date">30.11.2025</td>
+      <td>CHARGES</td>
+      <td class="num out"><strong>258,57</strong></td>
+      <td>Équilibrage après comptage du coffre</td>
+    </tr>
+<tr>
+      <td class="num"><em>654</em></td>
+      <td class="date">28.02.2026</td>
+      <td>PRODUITS</td>
+      <td class="num in"><strong>348,65</strong></td>
+      <td>Équilibrage après comptage du coffre</td>
+    </tr>
+<tr>
+      <td class="num"><em>655</em></td>
+      <td class="date">31.03.2026</td>
+      <td>CHARGES</td>
+      <td class="num out"><strong>1,20</strong></td>
+      <td>Équilibrage après comptage du coffre</td>
+    </tr>
+<tr>
+      <td class="num"><em>661</em></td>
+      <td class="date">30.04.2026</td>
+      <td>CHARGES</td>
+      <td class="num out"><strong>468,90</strong></td>
+      <td>Équilibrage après comptage du coffre</td>
+    </tr>
+<tr>
+      <td class="num"><em>662</em></td>
+      <td class="date">31.05.2026</td>
+      <td>PRODUITS</td>
+      <td class="num in"><strong>1 755,95</strong></td>
+      <td>Équilibrage après comptage du coffre</td>
+    </tr></tbody>
+    </table></div>
+  </div>
+</section>
+
+<section>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Journal du coffre</h2>
+      <span class="hint">73 lignes, par date, solde courant à droite</span>
+    </div>
+    <div class="scroll"><table>
+      <thead><tr>
+        <th class="num">Séq.</th><th>Date</th><th>Libellé</th><th>CC</th>
+        <th class="num">Entrée</th><th class="num">Sortie</th><th class="num">Solde</th><th>Source</th><th></th>
+      </tr></thead>
+      <tbody>
+        <tr class="booked"><td class="num">—</td><td class="date">28.07.2025</td><td><strong>Solde d'ouverture</strong></td><td class="cc">—</td><td class="num"></td><td class="num"></td><td class="num bal">1 995,65</td><td class="src">MoneyAccount.openingBalance</td><td><span class="tag">ouverture</span></td></tr>
+<tr class="sourced">
+      <td class="num"><em>615</em></td>
+      <td class="date">10.09.2025</td>
+      <td>Manque à gagner constaté au coffre</td>
+      <td class="cc">INTERNE</td>
+      <td class="num in"></td>
+      <td class="num out">400,00</td>
+      <td class="num bal">1 595,65</td>
+      <td class="src">historique caisse partiel.txt</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">1</td>
+      <td class="date">11.09.2025</td>
+      <td>Entrée cash journéée d'accueil</td>
+      <td class="cc">JACC</td>
+      <td class="num in">24,00</td>
+      <td class="num out"></td>
+      <td class="num bal">1 619,65</td>
+      <td class="src">journal, séquence 1</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">5</td>
+      <td class="date">15.09.2025</td>
+      <td>SG1 15.09  : Recette lundi midi CASH</td>
+      <td class="cc">SEGRILL1</td>
+      <td class="num in">60,00</td>
+      <td class="num out"></td>
+      <td class="num bal">1 679,65</td>
+      <td class="src">journal, séquence 5</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">6</td>
+      <td class="date">15.09.2025</td>
+      <td>SG1 15.09 : Recette lundi après-midi CASH</td>
+      <td class="cc">SEGRILL1</td>
+      <td class="num in">38,00</td>
+      <td class="num out"></td>
+      <td class="num bal">1 717,65</td>
+      <td class="src">journal, séquence 6</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">7</td>
+      <td class="date">16.09.2025</td>
+      <td>AL : Entrées au 16.09 (beer money)</td>
+      <td class="cc">AFTER</td>
+      <td class="num in">101,85</td>
+      <td class="num out"></td>
+      <td class="num bal">1 819,50</td>
+      <td class="src">journal, séquence 7</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">8</td>
+      <td class="date">16.09.2025</td>
+      <td>SG1 16.09 : Recette CASH</td>
+      <td class="cc">SEGRILL1</td>
+      <td class="num in">23,00</td>
+      <td class="num out"></td>
+      <td class="num bal">1 842,50</td>
+      <td class="src">journal, séquence 8</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">17</td>
+      <td class="date">16.09.2025</td>
+      <td>SG 16.09 : Recette CASH</td>
+      <td class="cc">SEGRILL1</td>
+      <td class="num in">23,00</td>
+      <td class="num out"></td>
+      <td class="num bal">1 865,50</td>
+      <td class="src">journal, séquence 17</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">18</td>
+      <td class="date">18.09.2025</td>
+      <td>AL 18.09 : Recette CASH</td>
+      <td class="cc">AFTER</td>
+      <td class="num in">104,00</td>
+      <td class="num out"></td>
+      <td class="num bal">1 969,50</td>
+      <td class="src">journal, séquence 18</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">25</td>
+      <td class="date">18.09.2025</td>
+      <td>SG1 : Courses Hot Dogs</td>
+      <td class="cc">SEGRILL1</td>
+      <td class="num in"></td>
+      <td class="num out">20,50</td>
+      <td class="num bal">1 949,00</td>
+      <td class="src">journal, séquence 25</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">26</td>
+      <td class="date">18.09.2025</td>
+      <td>SG1 : Courses Hot Dogs</td>
+      <td class="cc">SEGRILL1</td>
+      <td class="num in"></td>
+      <td class="num out">47,25</td>
+      <td class="num bal">1 901,75</td>
+      <td class="src">journal, séquence 26</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">19</td>
+      <td class="date">19.09.2025</td>
+      <td>SG 19.09 : Recette CASH</td>
+      <td class="cc">SEGRILL1</td>
+      <td class="num in">3,00</td>
+      <td class="num out"></td>
+      <td class="num bal">1 904,75</td>
+      <td class="src">journal, séquence 19</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">52</td>
+      <td class="date">25.09.2025</td>
+      <td>Correction après comptage caisse</td>
+      <td class="cc">INTERNE</td>
+      <td class="num in"></td>
+      <td class="num out">591,40</td>
+      <td class="num bal">1 313,35</td>
+      <td class="src">journal, séquence 52</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">33</td>
+      <td class="date">08.10.2025</td>
+      <td>DrawOnMe : croques monsieur</td>
+      <td class="cc">EVTCHILL</td>
+      <td class="num in"></td>
+      <td class="num out">47,05</td>
+      <td class="num bal">1 266,30</td>
+      <td class="src">journal, séquence 33</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">49</td>
+      <td class="date">09.10.2025</td>
+      <td>Revenus GM Cash</td>
+      <td class="cc">GM</td>
+      <td class="num in">166,60</td>
+      <td class="num out"></td>
+      <td class="num bal">1 432,90</td>
+      <td class="src">journal, séquence 49</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">50</td>
+      <td class="date">09.10.2025</td>
+      <td>Revenu after 9.10</td>
+      <td class="cc">AFTER</td>
+      <td class="num in">120,00</td>
+      <td class="num out"></td>
+      <td class="num bal">1 552,90</td>
+      <td class="src">journal, séquence 50</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">51</td>
+      <td class="date">09.10.2025</td>
+      <td>Cash Courses event chillout</td>
+      <td class="cc">EVTCHILL</td>
+      <td class="num in">112,15</td>
+      <td class="num out"></td>
+      <td class="num bal">1 665,05</td>
+      <td class="src">journal, séquence 51</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="balancing">
+      <td class="num"><em>616</em></td>
+      <td class="date">31.10.2025</td>
+      <td>Équilibrage après comptage du coffre</td>
+      <td class="cc">INTERNE</td>
+      <td class="num in">186,25</td>
+      <td class="num out"></td>
+      <td class="num bal">1 851,30</td>
+      <td class="src">écart du comptage du 2025-11-09</td>
+      <td><span class="tag balancing">équilibrage</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">53</td>
+      <td class="date">25.11.2025</td>
+      <td>Entrées afters</td>
+      <td class="cc">AFTER</td>
+      <td class="num in">65,67</td>
+      <td class="num out"></td>
+      <td class="num bal">1 916,97</td>
+      <td class="src">journal, séquence 53</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">296</td>
+      <td class="date">25.11.2025</td>
+      <td>(sans libellé) — contrepartie BLV</td>
+      <td class="cc">—</td>
+      <td class="num in">400,00</td>
+      <td class="num out"></td>
+      <td class="num bal">2 316,97</td>
+      <td class="src">journal, séquence 296</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">300</td>
+      <td class="date">27.11.2025</td>
+      <td>(sans libellé) — contrepartie BLV</td>
+      <td class="cc">—</td>
+      <td class="num in"></td>
+      <td class="num out">300,00</td>
+      <td class="num bal">2 016,97</td>
+      <td class="src">journal, séquence 300</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">302</td>
+      <td class="date">27.11.2025</td>
+      <td>(sans libellé) — contrepartie BLV</td>
+      <td class="cc">—</td>
+      <td class="num in"></td>
+      <td class="num out">263,90</td>
+      <td class="num bal">1 753,07</td>
+      <td class="src">journal, séquence 302</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">306</td>
+      <td class="date">27.11.2025</td>
+      <td>(sans libellé) — contrepartie BLV</td>
+      <td class="cc">—</td>
+      <td class="num in">700,00</td>
+      <td class="num out"></td>
+      <td class="num bal">2 453,07</td>
+      <td class="src">journal, séquence 306</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>617</em></td>
+      <td class="date">29.11.2025</td>
+      <td>MDN 29.11 : fonds de caisse sorti</td>
+      <td class="cc">MDN</td>
+      <td class="num in"></td>
+      <td class="num out">1 390,00</td>
+      <td class="num bal">1 063,07</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>618</em></td>
+      <td class="date">29.11.2025</td>
+      <td>MDN 29.11 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">MDN</td>
+      <td class="num in">1 954,00</td>
+      <td class="num out"></td>
+      <td class="num bal">3 017,07</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>619</em></td>
+      <td class="date">30.11.2025</td>
+      <td>MDN 30.11 : fonds de caisse sorti</td>
+      <td class="cc">MDN</td>
+      <td class="num in"></td>
+      <td class="num out">1 114,00</td>
+      <td class="num bal">1 903,07</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>620</em></td>
+      <td class="date">30.11.2025</td>
+      <td>MDN 30.11 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">MDN</td>
+      <td class="num in">1 242,00</td>
+      <td class="num out"></td>
+      <td class="num bal">3 145,07</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="balancing">
+      <td class="num"><em>621</em></td>
+      <td class="date">30.11.2025</td>
+      <td>Équilibrage après comptage du coffre</td>
+      <td class="cc">INTERNE</td>
+      <td class="num in"></td>
+      <td class="num out">258,57</td>
+      <td class="num bal">2 886,50</td>
+      <td class="src">écart du comptage du 2025-12-08</td>
+      <td><span class="tag balancing">équilibrage</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>622</em></td>
+      <td class="date">01.12.2025</td>
+      <td>MDN 01.12 : fonds de caisse sorti</td>
+      <td class="cc">MDN</td>
+      <td class="num in"></td>
+      <td class="num out">1 002,00</td>
+      <td class="num bal">1 884,50</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>623</em></td>
+      <td class="date">01.12.2025</td>
+      <td>MDN 01.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">MDN</td>
+      <td class="num in">1 122,00</td>
+      <td class="num out"></td>
+      <td class="num bal">3 006,50</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>624</em></td>
+      <td class="date">02.12.2025</td>
+      <td>MDN 02.12 : fonds de caisse sorti</td>
+      <td class="cc">MDN</td>
+      <td class="num in"></td>
+      <td class="num out">962,00</td>
+      <td class="num bal">2 044,50</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>625</em></td>
+      <td class="date">02.12.2025</td>
+      <td>MDN 02.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">MDN</td>
+      <td class="num in">1 033,60</td>
+      <td class="num out"></td>
+      <td class="num bal">3 078,10</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>626</em></td>
+      <td class="date">03.12.2025</td>
+      <td>MDN 03.12 : fonds de caisse sorti</td>
+      <td class="cc">MDN</td>
+      <td class="num in"></td>
+      <td class="num out">953,60</td>
+      <td class="num bal">2 124,50</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>627</em></td>
+      <td class="date">03.12.2025</td>
+      <td>MDN 03.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">MDN</td>
+      <td class="num in">942,80</td>
+      <td class="num out"></td>
+      <td class="num bal">3 067,30</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>628</em></td>
+      <td class="date">04.12.2025</td>
+      <td>MDN 04.12 : fonds de caisse sorti</td>
+      <td class="cc">MDN</td>
+      <td class="num in"></td>
+      <td class="num out">822,80</td>
+      <td class="num bal">2 244,50</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>629</em></td>
+      <td class="date">04.12.2025</td>
+      <td>MDN 04.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">MDN</td>
+      <td class="num in">882,80</td>
+      <td class="num out"></td>
+      <td class="num bal">3 127,30</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>630</em></td>
+      <td class="date">05.12.2025</td>
+      <td>MDN 05.12 : fonds de caisse sorti</td>
+      <td class="cc">MDN</td>
+      <td class="num in"></td>
+      <td class="num out">1 002,80</td>
+      <td class="num bal">2 124,50</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>631</em></td>
+      <td class="date">05.12.2025</td>
+      <td>MDN 05.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">MDN</td>
+      <td class="num in">1 660,35</td>
+      <td class="num out"></td>
+      <td class="num bal">3 784,85</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>632</em></td>
+      <td class="date">06.12.2025</td>
+      <td>MDN 06.12 : fonds de caisse sorti</td>
+      <td class="cc">MDN</td>
+      <td class="num in"></td>
+      <td class="num out">1 042,35</td>
+      <td class="num bal">2 742,50</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>633</em></td>
+      <td class="date">06.12.2025</td>
+      <td>MDN 06.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">MDN</td>
+      <td class="num in">1 356,75</td>
+      <td class="num out"></td>
+      <td class="num bal">4 099,25</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>634</em></td>
+      <td class="date">07.12.2025</td>
+      <td>MDN 07.12 : fonds de caisse sorti</td>
+      <td class="cc">MDN</td>
+      <td class="num in"></td>
+      <td class="num out">956,75</td>
+      <td class="num bal">3 142,50</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>635</em></td>
+      <td class="date">07.12.2025</td>
+      <td>MDN 07.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">MDN</td>
+      <td class="num in">1 037,80</td>
+      <td class="num out"></td>
+      <td class="num bal">4 180,30</td>
+      <td class="src">Compta_MDN_2025.xlsx · FDC</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>636</em></td>
+      <td class="date">15.12.2025</td>
+      <td>SVC Chéseaux 15.12 : fonds de caisse sorti</td>
+      <td class="cc">—</td>
+      <td class="num in"></td>
+      <td class="num out">192,50</td>
+      <td class="num bal">3 987,80</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC CHESEAUX</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>637</em></td>
+      <td class="date">15.12.2025</td>
+      <td>SVC Chéseaux 15.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">—</td>
+      <td class="num in">289,50</td>
+      <td class="num out"></td>
+      <td class="num bal">4 277,30</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC CHESEAUX</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>638</em></td>
+      <td class="date">15.12.2025</td>
+      <td>SVC St-Roch 15.12 : fonds de caisse sorti</td>
+      <td class="cc">—</td>
+      <td class="num in"></td>
+      <td class="num out">190,00</td>
+      <td class="num bal">4 087,30</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC ST ROCH</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>639</em></td>
+      <td class="date">15.12.2025</td>
+      <td>SVC St-Roch 15.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">—</td>
+      <td class="num in">254,00</td>
+      <td class="num out"></td>
+      <td class="num bal">4 341,30</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC ST ROCH</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>640</em></td>
+      <td class="date">16.12.2025</td>
+      <td>SVC Chéseaux 16.12 : fonds de caisse sorti</td>
+      <td class="cc">—</td>
+      <td class="num in"></td>
+      <td class="num out">289,50</td>
+      <td class="num bal">4 051,80</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC CHESEAUX</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>641</em></td>
+      <td class="date">16.12.2025</td>
+      <td>SVC Chéseaux 16.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">—</td>
+      <td class="num in">443,50</td>
+      <td class="num out"></td>
+      <td class="num bal">4 495,30</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC CHESEAUX</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>642</em></td>
+      <td class="date">16.12.2025</td>
+      <td>SVC St-Roch 16.12 : fonds de caisse sorti</td>
+      <td class="cc">—</td>
+      <td class="num in"></td>
+      <td class="num out">254,00</td>
+      <td class="num bal">4 241,30</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC ST ROCH</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>643</em></td>
+      <td class="date">16.12.2025</td>
+      <td>SVC St-Roch 16.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">—</td>
+      <td class="num in">306,00</td>
+      <td class="num out"></td>
+      <td class="num bal">4 547,30</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC ST ROCH</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>644</em></td>
+      <td class="date">17.12.2025</td>
+      <td>SVC Chéseaux 17.12 : fonds de caisse sorti</td>
+      <td class="cc">—</td>
+      <td class="num in"></td>
+      <td class="num out">443,50</td>
+      <td class="num bal">4 103,80</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC CHESEAUX</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>645</em></td>
+      <td class="date">17.12.2025</td>
+      <td>SVC Chéseaux 17.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">—</td>
+      <td class="num in">744,50</td>
+      <td class="num out"></td>
+      <td class="num bal">4 848,30</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC CHESEAUX</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>646</em></td>
+      <td class="date">17.12.2025</td>
+      <td>SVC St-Roch 17.12 : fonds de caisse sorti</td>
+      <td class="cc">—</td>
+      <td class="num in"></td>
+      <td class="num out">306,00</td>
+      <td class="num bal">4 542,30</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC ST ROCH</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>647</em></td>
+      <td class="date">17.12.2025</td>
+      <td>SVC St-Roch 17.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">—</td>
+      <td class="num in">340,20</td>
+      <td class="num out"></td>
+      <td class="num bal">4 882,50</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC ST ROCH</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>648</em></td>
+      <td class="date">18.12.2025</td>
+      <td>SVC Chéseaux 18.12 : fonds de caisse sorti</td>
+      <td class="cc">—</td>
+      <td class="num in"></td>
+      <td class="num out">504,50</td>
+      <td class="num bal">4 378,00</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC CHESEAUX</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>649</em></td>
+      <td class="date">18.12.2025</td>
+      <td>SVC Chéseaux 18.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">—</td>
+      <td class="num in">1 111,30</td>
+      <td class="num out"></td>
+      <td class="num bal">5 489,30</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC CHESEAUX</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>650</em></td>
+      <td class="date">18.12.2025</td>
+      <td>SVC St-Roch 18.12 : fonds de caisse sorti</td>
+      <td class="cc">—</td>
+      <td class="num in"></td>
+      <td class="num out">340,20</td>
+      <td class="num bal">5 149,10</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC ST ROCH</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>651</em></td>
+      <td class="date">18.12.2025</td>
+      <td>SVC St-Roch 18.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">—</td>
+      <td class="num in">393,60</td>
+      <td class="num out"></td>
+      <td class="num bal">5 542,70</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC ST ROCH</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>652</em></td>
+      <td class="date">19.12.2025</td>
+      <td>SVC St-Roch 19.12 : fonds de caisse sorti</td>
+      <td class="cc">—</td>
+      <td class="num in"></td>
+      <td class="num out">393,60</td>
+      <td class="num bal">5 149,10</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC ST ROCH</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>653</em></td>
+      <td class="date">19.12.2025</td>
+      <td>SVC St-Roch 19.12 : caisse comptée, rentrée au coffre</td>
+      <td class="cc">—</td>
+      <td class="num in">426,10</td>
+      <td class="num out"></td>
+      <td class="num bal">5 575,20</td>
+      <td class="src">Compta_SVC_2025.xlsx · FDC ST ROCH</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="balancing">
+      <td class="num"><em>654</em></td>
+      <td class="date">28.02.2026</td>
+      <td>Équilibrage après comptage du coffre</td>
+      <td class="cc">INTERNE</td>
+      <td class="num in">348,65</td>
+      <td class="num out"></td>
+      <td class="num bal">5 923,85</td>
+      <td class="src">écart du comptage du 2026-03-30</td>
+      <td><span class="tag balancing">équilibrage</span></td>
+    </tr>
+<tr class="balancing">
+      <td class="num"><em>655</em></td>
+      <td class="date">31.03.2026</td>
+      <td>Équilibrage après comptage du coffre</td>
+      <td class="cc">INTERNE</td>
+      <td class="num in"></td>
+      <td class="num out">1,20</td>
+      <td class="num bal">5 922,65</td>
+      <td class="src">écart du comptage du 2026-04-12</td>
+      <td><span class="tag balancing">équilibrage</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>656</em></td>
+      <td class="date">12.04.2026</td>
+      <td>Vidange crousille</td>
+      <td class="cc">—</td>
+      <td class="num in">141,65</td>
+      <td class="num out"></td>
+      <td class="num bal">6 064,30</td>
+      <td class="src">historique_fond_de_caisse.xlsx · Comptage caisse (machine)</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>657</em></td>
+      <td class="date">12.04.2026</td>
+      <td>Vidange caisse St-Roch</td>
+      <td class="cc">—</td>
+      <td class="num in">465,00</td>
+      <td class="num out"></td>
+      <td class="num bal">6 529,30</td>
+      <td class="src">historique_fond_de_caisse.xlsx · Comptage caisse (machine)</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>658</em></td>
+      <td class="date">12.04.2026</td>
+      <td>Vidange caisse Chéseaux</td>
+      <td class="cc">—</td>
+      <td class="num in">504,60</td>
+      <td class="num out"></td>
+      <td class="num bal">7 033,90</td>
+      <td class="src">historique caisse partiel.txt + historique_fond_de_caisse.xlsx · Comptage caisse (machine)</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>659</em></td>
+      <td class="date">13.04.2026</td>
+      <td>Sortie du coffre vers la caisse</td>
+      <td class="cc">—</td>
+      <td class="num in"></td>
+      <td class="num out">495,00</td>
+      <td class="num bal">6 538,90</td>
+      <td class="src">historique caisse partiel.txt</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>660</em></td>
+      <td class="date">16.04.2026</td>
+      <td>Entrées dans le coffre</td>
+      <td class="cc">—</td>
+      <td class="num in">1 870,00</td>
+      <td class="num out"></td>
+      <td class="num bal">8 408,90</td>
+      <td class="src">historique caisse partiel.txt</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">511</td>
+      <td class="date">17.04.2026</td>
+      <td>(sans libellé) — contrepartie BLV</td>
+      <td class="cc">—</td>
+      <td class="num in">1 050,00</td>
+      <td class="num out"></td>
+      <td class="num bal">9 458,90</td>
+      <td class="src">journal, séquence 511</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="balancing">
+      <td class="num"><em>661</em></td>
+      <td class="date">30.04.2026</td>
+      <td>Équilibrage après comptage du coffre</td>
+      <td class="cc">INTERNE</td>
+      <td class="num in"></td>
+      <td class="num out">468,90</td>
+      <td class="num bal">8 990,00</td>
+      <td class="src">écart du comptage du 2026-05-05</td>
+      <td><span class="tag balancing">équilibrage</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">574</td>
+      <td class="date">21.05.2026</td>
+      <td>(sans libellé) — contrepartie BLV</td>
+      <td class="cc">—</td>
+      <td class="num in"></td>
+      <td class="num out">9 390,00</td>
+      <td class="num bal neg">-400,00</td>
+      <td class="src">journal, séquence 574</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="booked">
+      <td class="num">576</td>
+      <td class="date">21.05.2026</td>
+      <td>(sans libellé) — contrepartie BLV</td>
+      <td class="cc">—</td>
+      <td class="num in"></td>
+      <td class="num out">870,35</td>
+      <td class="num bal neg">-1 270,35</td>
+      <td class="src">journal, séquence 576</td>
+      <td><span class="tag booked">déjà au journal</span></td>
+    </tr>
+<tr class="balancing">
+      <td class="num"><em>662</em></td>
+      <td class="date">31.05.2026</td>
+      <td>Équilibrage après comptage du coffre</td>
+      <td class="cc">INTERNE</td>
+      <td class="num in">1 755,95</td>
+      <td class="num out"></td>
+      <td class="num bal">485,60</td>
+      <td class="src">écart du comptage du 2026-06-30</td>
+      <td><span class="tag balancing">équilibrage</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>663</em></td>
+      <td class="date">30.06.2026</td>
+      <td>Entrée dans le coffre</td>
+      <td class="cc">—</td>
+      <td class="num in">382,20</td>
+      <td class="num out"></td>
+      <td class="num bal">867,80</td>
+      <td class="src">historique caisse partiel.txt</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+<tr class="sourced">
+      <td class="num"><em>664</em></td>
+      <td class="date">30.06.2026</td>
+      <td>Entrée dans le coffre</td>
+      <td class="cc">—</td>
+      <td class="num in">70,00</td>
+      <td class="num out"></td>
+      <td class="num bal">937,80</td>
+      <td class="src">historique caisse partiel.txt</td>
+      <td><span class="tag sourced">à créer</span></td>
+    </tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="legend">
+    <span><span class="tag">déjà au journal</span> existant en production, non modifié</span>
+    <span><span class="tag sourced">à créer</span> retrouvé dans une source, à passer</span>
+    <span><span class="tag balancing">équilibrage</span> écart non documenté, fin de mois</span>
+  </div>
+</section>
+
+<section>
+  <div class="panel">
+    <div class="panel-head"><h2>Décisions prises sur des données ambiguës</h2><span class="hint">à valider avant mise en production</span></div>
+    <div class="panel-body">
+      <ul>
+        <li><strong>Cinquième jour St-Roch daté au 19.12.2025.</strong> Le relevé manuscrit le date du 15.12, mais
+        son fonds de caisse (393.60) est exactement le comptage de clôture du 18.12, et la colonne du classeur
+        porte le sérial Excel 46010 = 19.12.2025. Sans effet sur les comptages : les deux dates tombent dans la
+        même période.</li>
+        <li><strong>Les 400.00 de « manque à gagner » au 10.09.2025 sont passés en charge séparée.</strong>
+        Sans cette écriture, l'équilibrage du 31.10.2025 passerait de 186,25 (produit) à -213,75 (charge).
+        Le total de la période est identique dans les deux cas ; c'est le détail qui change.</li>
+        <li><strong>Deux vidanges du 12.04.2026 ajoutées depuis le classeur</strong> (crousille 141.65, caisse St-Roch 465.00),
+        absentes du relevé manuscrit qui ne portait que la caisse Chéseaux. Avec les trois, l'équilibrage du 31.03.2026
+        tombe à -1,20 au lieu de 605,45 — c'est ce qui prouve que les trois lignes sont réelles.</li>
+        <li><strong>Les sorties et rentrées de caisse sont passées en brut</strong>, une charge le matin et un produit
+        le soir, et non en net. Le journal montre ainsi le fonds de caisse réellement sorti du coffre chaque jour.</li>
+        <li><strong>Pas de centre de charge pour la Semaine du Vin Chaud</strong> — il n'en existe pas dans l'édition.
+        Les lignes MDN portent <code>MDN</code>, les équilibrages <code>INTERNE</code> (comme la correction existante,
+        séquence 52). Créer un centre <code>SVC</code> reste possible avant l'import.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="panel">
+    <div class="panel-head"><h2>Lignes écartées</h2><span class="hint">présentes dans les sources, volontairement non passées</span></div>
+    <div class="panel-body"><ul>
+      <li><strong>Ligne &quot;Crousille&quot; 88.85 (sans date, entre les comptages du 30.03 et du 12.04)</strong><br>L'ajouter porterait l'équilibrage du 31.03 de -1,20 à -90,05. Le montant est vraisemblablement déjà dans un des comptages.</li>
+      <li><strong>Lignes &quot;gains stroch cash&quot; 40.00 et &quot;gains chzo cash&quot; 325.00 (sans date, entre le 12.04 et le 05.05)</strong><br>Les ajouter porterait l'équilibrage du 30.04 de -468,90 à -833,90. Vraisemblablement déjà compris dans les 1'870.00 du 16.04.</li>
+      <li><strong>Colonne &quot;Gains 280.00&quot; de la feuille FDC ST ROCH (serial 46011 = 20.12.2025, fonds de caisse à 0)</strong><br>La feuille contient des colonnes résiduelles copiées du Marché de Noël (1'042.35 / 1'356.75 …). Celle-ci en a tous les signes et n'apparaît pas dans le relevé manuscrit.</li>
+      <li><strong>Sortie du coffre au 27.11.2025 : 263.9</strong><br>Déjà passé : séquence 302 — CHARGES 263.90 du 27.11.2025 (contrepartie du versement bancaire 301). Non redoublé.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section>
+  <div class="panel">
+    <div class="panel-head"><h2>Ce que l'import fera</h2></div>
+    <div class="panel-body">
+      <p><code>final-result.csv</code> contient les 50 écritures à créer, séquences
+      <code>615</code> à <code>664</code> (le maximum actuel de l'édition 2025-2026 est 614).
+      Rien n'est modifié ni supprimé : les 23 écritures existantes du coffre et les
+      391 écritures du compte courant restent telles quelles.</p>
+      <p>Le journal de l'application trie par numéro de séquence, pas par date — le bloc importé apparaîtra
+      donc à la fin de la liste, même si ses dates remontent à septembre 2025. Le tri chronologique de cette
+      page est celui du compte, pas celui de l'écran.</p>
+      <p>Le solde d'ouverture de 1'995.65 reste porté par <code>MoneyAccount.openingBalance</code> et n'est
+      pas une écriture.</p>
+    </div>
+  </div>
+</section>
+</div>
