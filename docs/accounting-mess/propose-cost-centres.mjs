@@ -64,8 +64,25 @@ const LABEL_EVENT = [
   { re: /vin chaud/i, cc: "SVC" },
 ];
 
-/** Weezevent revenue during April — the ticket sales. */
-const TICKETS = /WEEZEVENT/i;
+/**
+ * The festival. Its charges and invoices land across April and May 2026 — venue,
+ * ambulance, toilets, insurance, artist fees, the concession takings paid back
+ * out — and its own revenue arrives through Weezevent, tickets and cashless
+ * alike, on whatever date Weezevent settles.
+ */
+const FESTIVAL_FROM = "2026-04-01";
+const FESTIVAL_TO = "2026-05-31";
+const WEEZEVENT = /WEEZEVENT/i;
+
+/**
+ * The association itself on both legs — a move between our own bank account and
+ * our own cash box. Never an event's cost or revenue, whatever month it lands
+ * in, and already booked on the cash side.
+ */
+const INTERNAL_TRANSFER = /^BLV$/;
+
+/** "SG" is séance générale, not semaine grillades: pizzas for a meeting. */
+const ADMIN_LABEL = /pizzas\s+(SG|AG)\b|s[ée]ance g[ée]n[ée]rale|assembl[ée]e g[ée]n[ée]rale/i;
 
 const isThursday = (iso) => new Date(`${iso}T00:00:00Z`).getUTCDay() === 4;
 const windowFor = (date) => WINDOWS.find((w) => date >= w.from && date <= w.to) ?? null;
@@ -97,6 +114,7 @@ const rows = readFileSync(join(HERE, "journal-2025-2026-current.psv"), "utf8")
 const A = []; // inside an event window, and plainly of that event
 const B = []; // April ticket sales -> FESTIVAL
 const C = []; // Thursday card takings outside every window -> AFTER
+const D = []; // general-meeting pizzas -> INTERNE
 const SKIPPED = []; // inside a window but association-level, or undecidable
 
 for (const row of rows) {
@@ -106,14 +124,22 @@ for (const row of rows) {
   const association = ASSOCIATION_LEVEL.test(row.counterparty) || ASSOCIATION_LABEL.test(row.label);
   const win = windowFor(row.date);
 
-  if (TICKETS.test(row.counterparty) && row.date >= "2026-04-01" && row.date <= "2026-04-30") {
+  if (ADMIN_LABEL.test(row.label)) {
+    D.push({ ...row, cc: "INTERNE", why: `Séance / assemblée générale : « ${row.label} »` });
+    continue;
+  }
+
+  if (WEEZEVENT.test(row.counterparty)) {
     const cashless = /CASHLESS/i.test(row.label);
     B.push({
       ...row,
       cc: "FESTIVAL",
-      why: cashless
-        ? "Recette Weezevent en avril — cashless (recharges bar), pas de la billetterie"
-        : "Recette Weezevent en avril — billetterie",
+      why:
+        row.accountType === "CHARGES"
+          ? "Facture Weezevent — billetterie du festival"
+          : cashless
+            ? "Recette Weezevent — cashless (recharges bar)"
+            : "Recette Weezevent — billetterie",
     });
     continue;
   }
@@ -124,6 +150,9 @@ for (const row of rows) {
     continue;
   }
 
+  // The stand's own trade during its week. This runs before the festival sweep
+  // so the 13-17 April grill week keeps its takings and its shopping even
+  // though those five days are also festival days.
   if (win && !association) {
     if (TAKINGS.test(row.counterparty)) {
       A.push({ ...row, cc: win.cc, why: `Encaissement carte pendant ${win.name}` });
@@ -133,12 +162,28 @@ for (const row of rows) {
       A.push({ ...row, cc: win.cc, why: `Achat commerce pendant ${win.name}` });
       continue;
     }
-    SKIPPED.push({ ...row, why: `Dans la fenêtre ${win.name}, mais ni encaissement ni achat commerce` });
+  }
+
+  // Everything else in April and May, whether or not it also falls in the grill
+  // week — SUISA and the town's subsidy are dated inside those five days and
+  // belong to the festival, not to a grill evening.
+  if (
+    row.date >= FESTIVAL_FROM &&
+    row.date <= FESTIVAL_TO &&
+    !TAKINGS.test(row.counterparty) &&
+    !INTERNAL_TRANSFER.test(row.counterparty)
+  ) {
+    B.push({ ...row, cc: "FESTIVAL", why: "Charge ou recette du festival — avril / mai 2026" });
     continue;
   }
 
-  if (win && association) {
-    SKIPPED.push({ ...row, why: `Dans la fenêtre ${win.name}, mais niveau association` });
+  if (win) {
+    SKIPPED.push({
+      ...row,
+      why: association
+        ? `Dans la fenêtre ${win.name}, mais niveau association`
+        : `Dans la fenêtre ${win.name}, mais ni encaissement ni achat commerce`,
+    });
     continue;
   }
 
@@ -149,7 +194,7 @@ for (const row of rows) {
 }
 
 const untouched = rows.filter(
-  (r) => !r.costCentre && ![...A, ...B, ...C].some((t) => t.seq === r.seq),
+  (r) => !r.costCentre && ![...A, ...B, ...C, ...D].some((t) => t.seq === r.seq),
 ).length;
 
 /* --------------------------------------------------------------------- SQL */
@@ -178,8 +223,23 @@ WHERE cc."editionId" = (SELECT id FROM "Edition" WHERE name = ${quote(EDITION)})
 GROUP BY cc.code ORDER BY cc.code;
 `;
 
-writeFileSync(join(HERE, "cost-centres.sql"), sqlFor([...A, ...B], `${A.length + B.length} entries — event windows and April ticket sales`), "utf8");
+writeFileSync(join(HERE, "cost-centres.sql"), sqlFor([...A, ...B, ...D], `${A.length + B.length + D.length} entries — event windows, the festival, and general-meeting admin`), "utf8");
 writeFileSync(join(HERE, "cost-centres-extra.sql"), sqlFor(C, `${C.length} entries — Thursday card takings booked to AFTER`), "utf8");
+
+/**
+ * Clears the cost centre off exactly the sequences the two files above set, and
+ * nothing else — the 16 entries that already carried one before any of this are
+ * not in the list, so a rollback cannot erase a decision made by hand.
+ */
+const rollbackSql = `-- Clears the cost centre from the ${A.length + B.length + C.length + D.length} entries the proposal set.
+-- Generated by docs/accounting-mess/propose-cost-centres.mjs — do not hand-edit.
+\\set ON_ERROR_STOP on
+
+UPDATE "JournalEntry" SET "costCenterId" = NULL, "updatedAt" = now()
+WHERE "editionId" = (SELECT id FROM "Edition" WHERE name = ${quote(EDITION)})
+  AND "sequenceNumber" IN (${[...A, ...B, ...C, ...D].map((r) => r.seq).sort((a, b) => a - b).join(", ")});
+`;
+writeFileSync(join(HERE, "cost-centres-rollback.sql"), rollbackSql, "utf8");
 
 /* -------------------------------------------------------------------- HTML */
 
@@ -280,7 +340,8 @@ const html = `<title>Centres de charge — proposition</title>
 <section>
   <div class="cards">
     <div class="card"><div class="k">Bloc A — fenêtres</div><div class="v">${A.length}</div><div class="n">écritures dans une semaine d'événement</div></div>
-    <div class="card"><div class="k">Bloc B — billetterie</div><div class="v">${B.length}</div><div class="n">recettes Weezevent d'avril → FESTIVAL</div></div>
+    <div class="card"><div class="k">Bloc B — festival</div><div class="v">${B.length}</div><div class="n">avril / mai + Weezevent → FESTIVAL</div></div>
+    <div class="card"><div class="k">Bloc D — admin</div><div class="v">${D.length}</div><div class="n">pizzas de séance générale → INTERNE</div></div>
     <div class="card"><div class="k">Bloc C — jeudis</div><div class="v">${C.length}</div><div class="n">encaissements du jeudi → AFTER</div></div>
     <div class="card"><div class="k">Laissées vides</div><div class="v">${untouched}</div><div class="n">dont ${SKIPPED.length} écartées dans une fenêtre</div></div>
   </div>
@@ -288,23 +349,15 @@ const html = `<title>Centres de charge — proposition</title>
 
 <section>
   <div class="warn">
-    <h3>Avril 2026 : le festival tombe dans la semaine grillades</h3>
-    <p>Le festival 2026 a eu lieu autour du 17 avril — cachets d'artistes, SUISA, Weezevent,
-    Soldout Productions — et la semaine grillades 2 que vous datez du 13 au 17 avril couvre
-    exactement les mêmes jours. La proposition tranche ainsi : <strong>les encaissements carte et
-    les courses de ces cinq jours vont à SEGRILL2</strong>, tout le reste (SUISA 1'539, subvention
-    Commune 8'000, HEIG-VD, cachets) reste sans centre de charge en attendant votre arbitrage.</p>
-    <p>Si c'était en réalité le festival qui encaissait ces jours-là, dites-le et je bascule le
-    bloc SEGRILL2 d'avril sur <code>FESTIVAL</code> — c'est une ligne à changer.</p>
-  </div>
-
-  <div class="warn">
-    <h3>Une écriture porte « SG 3 » en décembre</h3>
-    <p>La séquence 319 du 02.12.2025, 72.00 à Maxime Magnenat, est libellée <strong>« pizzas SG 3 »</strong>.
-    Le libellé nomme donc SEGRILL3, que vous datez de fin juin. Soit la numérotation des soirées
-    grillades ne suit pas l'ordre que je lui prête, soit ce libellé désigne autre chose. Elle est
-    laissée sans centre de charge en attendant — un libellé qui contredit sa date ne se tranche pas
-    tout seul.</p>
+    <h3>Avril et mai vont au festival, sauf la semaine grillades</h3>
+    <p>Le festival dépense en avril et en mai — cachets, SUISA, ambulance, WC, assurance, location,
+    reversement des recettes aux stands — et encaisse par Weezevent, billetterie et cashless
+    confondus. Toutes les écritures de ces deux mois partent donc sur <code>FESTIVAL</code>, avec
+    trois exceptions : les <strong>encaissements TWINT et SumUp</strong> (le festival encaissait par
+    Weezevent, pas par TWINT), les <strong>virements entre le compte et le coffre</strong> — un
+    mouvement interne n'est ni une charge ni une recette — et la <strong>semaine grillades du 13 au
+    17 avril</strong>, dont les recettes carte et les courses restent sur <code>SEGRILL2</code>.</p>
+    <p>Ce bloc pèse ${B.length} écritures pour un résultat net de <strong>${chf(net(B))}</strong>.</p>
   </div>
 </section>
 
@@ -326,11 +379,25 @@ ${byWindow
 <section>
   <div class="panel">
     <div class="panel-head">
-      <h2>Bloc B — billetterie d'avril</h2>
-      <span class="hint"><code>FESTIVAL</code> · ${B.length} écritures</span>
-      <span class="net in">+${chf(net(B))}</span>
+      <h2>Bloc B — le festival</h2>
+      <span class="hint"><code>FESTIVAL</code> · ${B.length} écritures · avril-mai 2026 et Weezevent</span>
+      <span class="net ${net(B) < 0 ? "out" : "in"}">${net(B) > 0 ? "+" : ""}${chf(net(B))}</span>
     </div>
     ${table(B)}
+  </div>
+</section>
+
+<section>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Bloc D — administratif</h2>
+      <span class="hint"><code>INTERNE</code> · ${D.length} écritures</span>
+      <span class="net out">${chf(net(D))}</span>
+    </div>
+    <div class="panel-body"><p>« SG » est une <strong>séance générale</strong>, pas une semaine
+    grillades : les pizzas d'une séance ou d'une assemblée sont de l'administratif, pas un
+    événement.</p></div>
+    ${table(D)}
   </div>
 </section>
 
@@ -366,7 +433,7 @@ ${byWindow
     <div class="panel-head"><h2>Pour appliquer</h2></div>
     <div class="panel-body">
       <ul>
-        <li><code>cost-centres.sql</code> — blocs A et B, ${A.length + B.length} écritures.</li>
+        <li><code>cost-centres.sql</code> — blocs A, B et D, ${A.length + B.length + D.length} écritures.</li>
         <li><code>cost-centres-extra.sql</code> — bloc C, ${C.length} écritures, à part.</li>
         <li>Chaque <code>UPDATE</code> est conditionné à <code>costCenterId IS NULL</code> : rejouer
         le fichier ne peut pas écraser une décision prise entre-temps dans l'application.</li>
@@ -381,7 +448,8 @@ writeFileSync(join(HERE, "cost-centres-proposal.html"), html, "utf8");
 
 console.log(`A (fenêtres)   : ${A.length}`);
 for (const w of byWindow) console.log(`   ${w.cc.padEnd(9)} ${String(w.rows.length).padStart(3)}  net ${chf(net(w.rows))}`);
-console.log(`B (billetterie): ${B.length}  net ${chf(net(B))}`);
+console.log(`B (festival)   : ${B.length}  net ${chf(net(B))}`);
+console.log(`D (admin)      : ${D.length}  net ${chf(net(D))}`);
 console.log(`C (jeudis)     : ${C.length}  net ${chf(net(C))}`);
 console.log(`écartées       : ${SKIPPED.length}`);
 console.log(`restent vides  : ${untouched}`);

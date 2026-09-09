@@ -61,31 +61,24 @@
 <section>
   <div class="cards">
     <div class="card"><div class="k">Bloc A — fenêtres</div><div class="v">62</div><div class="n">écritures dans une semaine d'événement</div></div>
-    <div class="card"><div class="k">Bloc B — billetterie</div><div class="v">3</div><div class="n">recettes Weezevent d'avril → FESTIVAL</div></div>
+    <div class="card"><div class="k">Bloc B — festival</div><div class="v">79</div><div class="n">avril / mai + Weezevent → FESTIVAL</div></div>
+    <div class="card"><div class="k">Bloc D — admin</div><div class="v">2</div><div class="n">pizzas de séance générale → INTERNE</div></div>
     <div class="card"><div class="k">Bloc C — jeudis</div><div class="v">24</div><div class="n">encaissements du jeudi → AFTER</div></div>
-    <div class="card"><div class="k">Laissées vides</div><div class="v">309</div><div class="n">dont 13 écartées dans une fenêtre</div></div>
+    <div class="card"><div class="k">Laissées vides</div><div class="v">231</div><div class="n">dont 9 écartées dans une fenêtre</div></div>
   </div>
 </section>
 
 <section>
   <div class="warn">
-    <h3>Avril 2026 : le festival tombe dans la semaine grillades</h3>
-    <p>Le festival 2026 a eu lieu autour du 17 avril — cachets d'artistes, SUISA, Weezevent,
-    Soldout Productions — et la semaine grillades 2 que vous datez du 13 au 17 avril couvre
-    exactement les mêmes jours. La proposition tranche ainsi : <strong>les encaissements carte et
-    les courses de ces cinq jours vont à SEGRILL2</strong>, tout le reste (SUISA 1'539, subvention
-    Commune 8'000, HEIG-VD, cachets) reste sans centre de charge en attendant votre arbitrage.</p>
-    <p>Si c'était en réalité le festival qui encaissait ces jours-là, dites-le et je bascule le
-    bloc SEGRILL2 d'avril sur <code>FESTIVAL</code> — c'est une ligne à changer.</p>
-  </div>
-
-  <div class="warn">
-    <h3>Une écriture porte « SG 3 » en décembre</h3>
-    <p>La séquence 319 du 02.12.2025, 72.00 à Maxime Magnenat, est libellée <strong>« pizzas SG 3 »</strong>.
-    Le libellé nomme donc SEGRILL3, que vous datez de fin juin. Soit la numérotation des soirées
-    grillades ne suit pas l'ordre que je lui prête, soit ce libellé désigne autre chose. Elle est
-    laissée sans centre de charge en attendant — un libellé qui contredit sa date ne se tranche pas
-    tout seul.</p>
+    <h3>Avril et mai vont au festival, sauf la semaine grillades</h3>
+    <p>Le festival dépense en avril et en mai — cachets, SUISA, ambulance, WC, assurance, location,
+    reversement des recettes aux stands — et encaisse par Weezevent, billetterie et cashless
+    confondus. Toutes les écritures de ces deux mois partent donc sur <code>FESTIVAL</code>, avec
+    trois exceptions : les <strong>encaissements TWINT et SumUp</strong> (le festival encaissait par
+    Weezevent, pas par TWINT), les <strong>virements entre le compte et le coffre</strong> — un
+    mouvement interne n'est ni une charge ni une recette — et la <strong>semaine grillades du 13 au
+    17 avril</strong>, dont les recettes carte et les courses restent sur <code>SEGRILL2</code>.</p>
+    <p>Ce bloc pèse 79 écritures pour un résultat net de <strong>6 503,98</strong>.</p>
   </div>
 </section>
 
@@ -778,14 +771,104 @@
 <section>
   <div class="panel">
     <div class="panel-head">
-      <h2>Bloc B — billetterie d'avril</h2>
-      <span class="hint"><code>FESTIVAL</code> · 3 écritures</span>
-      <span class="net in">+20 312,64</span>
+      <h2>Bloc B — le festival</h2>
+      <span class="hint"><code>FESTIVAL</code> · 79 écritures · avril-mai 2026 et Weezevent</span>
+      <span class="net in">+6 503,98</span>
     </div>
     <div class="scroll"><table>
   <thead><tr><th class="num">Séq.</th><th>Date</th><th>Contrepartie</th><th>Libellé</th>
   <th class="num">Entrée</th><th class="num">Sortie</th><th>CC</th><th>Règle</th></tr></thead>
   <tbody><tr>
+      <td class="num">400</td>
+      <td class="date">27.02.2026<span class="dow">ven</span></td>
+      <td>WEEZEVENT SWITZERLAND SARL 1004 LAUSANNE</td>
+      <td class="lbl">Facture d'acompte 20260225-F-01416</td>
+      <td class="num in"></td>
+      <td class="num out">1 102,62</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Facture Weezevent — billetterie du festival</td>
+    </tr>
+<tr>
+      <td class="num">435</td>
+      <td class="date">17.03.2026<span class="dow">mar</span></td>
+      <td>WEEZEVENT SWITZERLAND SARL RUE PRE-DU-MARCHE LAUSANNE CH</td>
+      <td class="lbl">Weezevent E1727589 baleinev festival 2026</td>
+      <td class="num in">499,77</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Recette Weezevent — billetterie</td>
+    </tr>
+<tr>
+      <td class="num">454</td>
+      <td class="date">01.04.2026<span class="dow">mer</span></td>
+      <td>LIDL CRISSIER 0102 CRISSIER</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">24,70</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">458</td>
+      <td class="date">02.04.2026<span class="dow">jeu</span></td>
+      <td>LE CSARDA 0000 YVERDON-LES-B</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">144,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">459</td>
+      <td class="date">02.04.2026<span class="dow">jeu</span></td>
+      <td>PIXARTPRINTING SPA 345 VIA SAN DONA 30173 VENEZIA</td>
+      <td class="lbl">PIX-HDB-009740</td>
+      <td class="num in"></td>
+      <td class="num out">70,65</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">460</td>
+      <td class="date">03.04.2026<span class="dow">ven</span></td>
+      <td>DENNER DISCOUNT 1741 YVE 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">10,20</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">461</td>
+      <td class="date">03.04.2026<span class="dow">ven</span></td>
+      <td>LANDI NORD VAUDOIS VENOG 1401 YVERDON</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">13,60</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">462</td>
+      <td class="date">04.04.2026<span class="dow">sam</span></td>
+      <td>LIDL YVERDON 0140 YVERDON-LES-B</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">118,40</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">465</td>
+      <td class="date">07.04.2026<span class="dow">mar</span></td>
+      <td>RIVELLA AG NEUE INDUSTRIESTRASSE 10 CH 4852 ROTHRIST</td>
+      <td class="lbl">2026-0324-04 26.3.2026</td>
+      <td class="num in">400,00</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
       <td class="num">466</td>
       <td class="date">07.04.2026<span class="dow">mar</span></td>
       <td>WEEZEVENT SWITZERLAND SARL RUE PRE-DU-MARCHE LAUSANNE CH</td>
@@ -793,7 +876,207 @@
       <td class="num in">1 710,17</td>
       <td class="num out"></td>
       <td><span class="tag">FESTIVAL</span></td>
-      <td class="src">Recette Weezevent en avril — billetterie</td>
+      <td class="src">Recette Weezevent — billetterie</td>
+    </tr>
+<tr>
+      <td class="num">467</td>
+      <td class="date">07.04.2026<span class="dow">mar</span></td>
+      <td>MAXIME ALAIN FOURQUAUX 1950 SION</td>
+      <td class="lbl">Remboursement Elec</td>
+      <td class="num in"></td>
+      <td class="num out">287,20</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">468</td>
+      <td class="date">07.04.2026<span class="dow">mar</span></td>
+      <td>DUOENG KHANH HIEP 1373 CHAVORNAY</td>
+      <td class="lbl">Location slot foodtruck . 2026-0402 -03 . Ref: Location slot foodtruck NemViet</td>
+      <td class="num in">800,00</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">469</td>
+      <td class="date">07.04.2026<span class="dow">mar</span></td>
+      <td>SARAH MALLET 1 IMPASSE DES CHARMES 2053 CERNIER</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">667,20</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">477</td>
+      <td class="date">08.04.2026<span class="dow">mer</span></td>
+      <td>HEIG-VD ROUTE DE CHESEAUX YVERDON-LES-BAINS CH</td>
+      <td class="lbl">2026-0324-02,</td>
+      <td class="num in">6 000,00</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">478</td>
+      <td class="date">08.04.2026<span class="dow">mer</span></td>
+      <td>SOLDOUT PRODUCTIONS SA 4 RUE MADELEINE 1003 LAUSANNE</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">2 000,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">479</td>
+      <td class="date">10.04.2026<span class="dow">ven</span></td>
+      <td>4B34 AIME LA PLAGNE 00000 AIME LA PLAGN FRA</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">8,65</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">480</td>
+      <td class="date">10.04.2026<span class="dow">ven</span></td>
+      <td>WELDOM AIME 73210 AIME-LA-PLAGN FRA</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">26,84</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">481</td>
+      <td class="date">10.04.2026<span class="dow">ven</span></td>
+      <td>ALDI SUISSE 53 1442 MONTAGNY-PRÈS-YVERD</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">36,25</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">482</td>
+      <td class="date">10.04.2026<span class="dow">ven</span></td>
+      <td>AIME DIS 73210 AIME-LA-PLAGN FRA</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">38,23</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">483</td>
+      <td class="date">10.04.2026<span class="dow">ven</span></td>
+      <td>DENNER DISCOUNT 1741 YVE 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">56,85</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">484</td>
+      <td class="date">10.04.2026<span class="dow">ven</span></td>
+      <td>JUMBO-6038 MONTAGNY 1442 MONTAGNY-PRÈS-YVERD</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">97,50</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">485</td>
+      <td class="date">11.04.2026<span class="dow">sam</span></td>
+      <td>ALIGRO CHAVANNES 0000 CHAVANNES-PRE</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">806,85</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">486</td>
+      <td class="date">12.04.2026<span class="dow">dim</span></td>
+      <td>BP YVERDON-LES-BAINS 0140 YVERDON-LES-B</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">121,95</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">489</td>
+      <td class="date">13.04.2026<span class="dow">lun</span></td>
+      <td>SUISA 82 BELLARIASTRASSE 8038 ZURICH</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">1 539,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">505</td>
+      <td class="date">16.04.2026<span class="dow">jeu</span></td>
+      <td>DOUBLE R KERNINON ET B. 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in">1 300,00</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">506</td>
+      <td class="date">16.04.2026<span class="dow">jeu</span></td>
+      <td>COMMUNE D'YVERDON 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">23.03.2026 2026-0324-01</td>
+      <td class="num in">8 000,00</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">514</td>
+      <td class="date">18.04.2026<span class="dow">sam</span></td>
+      <td>LANDI NORD VAUDOIS VENOG 0140 YVERDON</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">75,75</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">515</td>
+      <td class="date">18.04.2026<span class="dow">sam</span></td>
+      <td>MIGROS MMM YVERDON 0140 YVERDON-LES-B</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">153,05</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">516</td>
+      <td class="date">18.04.2026<span class="dow">sam</span></td>
+      <td>MIGROS MMM YVERDON 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">160,85</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">517</td>
+      <td class="date">18.04.2026<span class="dow">sam</span></td>
+      <td>ALIGRO CHAVANNES 0000 CHAVANNES-PRE</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">748,55</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
     </tr>
 <tr>
       <td class="num">521</td>
@@ -803,7 +1086,147 @@
       <td class="num in">2 602,47</td>
       <td class="num out"></td>
       <td><span class="tag">FESTIVAL</span></td>
-      <td class="src">Recette Weezevent en avril — billetterie</td>
+      <td class="src">Recette Weezevent — billetterie</td>
+    </tr>
+<tr>
+      <td class="num">522</td>
+      <td class="date">20.04.2026<span class="dow">lun</span></td>
+      <td>ELOI BRESSAUD 1005 LAUSANNE</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">400,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">523</td>
+      <td class="date">20.04.2026<span class="dow">lun</span></td>
+      <td>SERGEY KOMAROV 1004 LAUSANNE</td>
+      <td class="lbl">Cachet Baleinev 2026</td>
+      <td class="num in"></td>
+      <td class="num out">400,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">524</td>
+      <td class="date">20.04.2026<span class="dow">lun</span></td>
+      <td>SCOP SAS AFX 69004 LYON</td>
+      <td class="lbl">THAHOMEY - RARISSIME PART. 2 / 17 a vr. 2026 / Yverdon-les-Bains - Frai s de transport</td>
+      <td class="num in"></td>
+      <td class="num out">761,40</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">525</td>
+      <td class="date">20.04.2026<span class="dow">lun</span></td>
+      <td>SCOP SAS AFX 69004 LYON</td>
+      <td class="lbl">THAHOMEY - RARISSIME PART. 2 / 17 a vr. 2026 / Yverdon-les-Bains - Cach et</td>
+      <td class="num in"></td>
+      <td class="num out">1 175,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">526</td>
+      <td class="date">20.04.2026<span class="dow">lun</span></td>
+      <td>SOLDOUT PRODUCTIONS SA 4 RUE MADELEINE 1003 LAUSANNE</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">2 000,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">527</td>
+      <td class="date">20.04.2026<span class="dow">lun</span></td>
+      <td>SEBASTIEN CRETTENAND 1957 ARDON</td>
+      <td class="lbl">Cachet Baleinev 2026</td>
+      <td class="num in"></td>
+      <td class="num out">700,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">528</td>
+      <td class="date">20.04.2026<span class="dow">lun</span></td>
+      <td>VALENTIN DESCLOUX 1681 BILLENS</td>
+      <td class="lbl">Cachet Baleinev 2026</td>
+      <td class="num in"></td>
+      <td class="num out">800,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">529</td>
+      <td class="date">20.04.2026<span class="dow">lun</span></td>
+      <td>LORIS LUISIER 1913 SAILLON</td>
+      <td class="lbl">Cachet Baleinev 2026</td>
+      <td class="num in"></td>
+      <td class="num out">1 000,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">530</td>
+      <td class="date">20.04.2026<span class="dow">lun</span></td>
+      <td>DENIS JOLLIEN 1965 SAVIESE</td>
+      <td class="lbl">Cachets Baleinev 2026</td>
+      <td class="num in"></td>
+      <td class="num out">2 600,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">531</td>
+      <td class="date">21.04.2026<span class="dow">mar</span></td>
+      <td></td>
+      <td class="lbl">—</td>
+      <td class="num in">2 000,00</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">540</td>
+      <td class="date">21.04.2026<span class="dow">mar</span></td>
+      <td>DENIS JOLLIEN ROUTE DES CRETES SAVIESE CH</td>
+      <td class="lbl">—</td>
+      <td class="num in">2 000,00</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">541</td>
+      <td class="date">21.04.2026<span class="dow">mar</span></td>
+      <td>M4S 1400 YVERDON- LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">2 000,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">542</td>
+      <td class="date">21.04.2026<span class="dow">mar</span></td>
+      <td>MATEO TOUSSAINT 26 RUE DU MILIEU 1400 YVERDON- LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">2 000,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">543</td>
+      <td class="date">23.04.2026<span class="dow">jeu</span></td>
+      <td>SHELL YVERDON 0140 YVERDON-LES-B</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">73,27</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
     </tr>
 <tr>
       <td class="num">544</td>
@@ -813,7 +1236,374 @@
       <td class="num in">16 000,00</td>
       <td class="num out"></td>
       <td><span class="tag">FESTIVAL</span></td>
-      <td class="src">Recette Weezevent en avril — cashless (recharges bar), pas de la billetterie</td>
+      <td class="src">Recette Weezevent — cashless (recharges bar)</td>
+    </tr>
+<tr>
+      <td class="num">545</td>
+      <td class="date">27.04.2026<span class="dow">lun</span></td>
+      <td>COMMUNE D'YVERDON 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">21.03.2026 2026-0321</td>
+      <td class="num in">2 000,00</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">546</td>
+      <td class="date">28.04.2026<span class="dow">mar</span></td>
+      <td>LANDI NORD VAUDOIS VENOG 1401 YVERDON</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">13,70</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">547</td>
+      <td class="date">29.04.2026<span class="dow">mer</span></td>
+      <td>MATEO TOUSSAINT 26 RUE DU MILIEU 1400 YVERDON- LES-BAINS</td>
+      <td class="lbl">NDF Artistes</td>
+      <td class="num in"></td>
+      <td class="num out">151,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">549</td>
+      <td class="date">04.05.2026<span class="dow">lun</span></td>
+      <td>WILLIAM ZUIN 2000 NEUCHATEL</td>
+      <td class="lbl">Remboursement KM Baleinev</td>
+      <td class="num in"></td>
+      <td class="num out">127,50</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">550</td>
+      <td class="date">04.05.2026<span class="dow">lun</span></td>
+      <td>WILLIAM ZUIN 2000 NEUCHATEL</td>
+      <td class="lbl">Remboursement Notes de frais Balein ev</td>
+      <td class="num in"></td>
+      <td class="num out">142,40</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">551</td>
+      <td class="date">05.05.2026<span class="dow">mar</span></td>
+      <td>NOREX SWITZERLAND SARL 21 ROUTE DE PRILLY 1023 CRISSIER</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">300,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">552</td>
+      <td class="date">05.05.2026<span class="dow">mar</span></td>
+      <td>CA-BALAIE.COM (WC) CHEMIN DE LA GRANGE AUX AGUETS 48 1034 BOUSSENS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">875,60</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">553</td>
+      <td class="date">05.05.2026<span class="dow">mar</span></td>
+      <td>MOBILIERE SUISSE SOCIETE D'ASSURANCES SA 3001 BERNE</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">992,05</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">554</td>
+      <td class="date">05.05.2026<span class="dow">mar</span></td>
+      <td>ECOMANIF SA 1 ROUTE DES CHAMPS-TORRENS 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">1 481,10</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">555</td>
+      <td class="date">05.05.2026<span class="dow">mar</span></td>
+      <td>FINO RESTO SA 1024 ECUBLENS VD</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">2 400,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">556</td>
+      <td class="date">05.05.2026<span class="dow">mar</span></td>
+      <td>LA SEMEUSE SA ALLEE PAYSANS-HORLOGERS 1 2300 LA CHAUX-DE-FONDS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">308,70</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">557</td>
+      <td class="date">05.05.2026<span class="dow">mar</span></td>
+      <td>SWISSLOC SARL 22 ROUTE DE LAUSANNE 1401 YVERDON-LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">432,40</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">558</td>
+      <td class="date">05.05.2026<span class="dow">mar</span></td>
+      <td>ENZOLOCATION LAUSANNE SARL 3 AVENUE DE TIVOLI 1007 LAUSANNE</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">1 950,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">559</td>
+      <td class="date">05.05.2026<span class="dow">mar</span></td>
+      <td>SAT AMBULANCE SA 12 CHAUSSEE DE TREYCOVAGNES 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">2 215,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">560</td>
+      <td class="date">05.05.2026<span class="dow">mar</span></td>
+      <td>MAEVA MAUVIEL 1012 LAUSANNE</td>
+      <td class="lbl">Remboursement KM IV</td>
+      <td class="num in"></td>
+      <td class="num out">39,90</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">561</td>
+      <td class="date">06.05.2026<span class="dow">mer</span></td>
+      <td>WEEZEVENT SWITZERLAND SARL RUE PRE-DU-MARCHE LAUSANNE CH</td>
+      <td class="lbl">Weezevent E1727589 baleinev festival 2026</td>
+      <td class="num in">4 370,59</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Recette Weezevent — billetterie</td>
+    </tr>
+<tr>
+      <td class="num">562</td>
+      <td class="date">07.05.2026<span class="dow">jeu</span></td>
+      <td>L'OEUFORIE SARL 7 CHEMIN DE BELLEVUE 1030 BUSSIGNY</td>
+      <td class="lbl">Versement recettes - location espac e BLV 2026</td>
+      <td class="num in"></td>
+      <td class="num out">2 561,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">563</td>
+      <td class="date">07.05.2026<span class="dow">jeu</span></td>
+      <td>IBECA SARL 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">Versement recettes, caution et remi se BLV 2026</td>
+      <td class="num in"></td>
+      <td class="num out">2 523,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">565</td>
+      <td class="date">08.05.2026<span class="dow">ven</span></td>
+      <td>LIDL YVERDON 0140 YVERDON-LES-B</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">27,44</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">566</td>
+      <td class="date">08.05.2026<span class="dow">ven</span></td>
+      <td>LE CSARDA 0000 YVERDON-LES-B</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">228,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">567</td>
+      <td class="date">12.05.2026<span class="dow">mar</span></td>
+      <td>ARTISANPIZZA SARL 1400 YVERDON-LES-BAINS</td>
+      <td class="lbl">Paiement facture 01-04/2026</td>
+      <td class="num in"></td>
+      <td class="num out">1 153,22</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">568</td>
+      <td class="date">18.05.2026<span class="dow">lun</span></td>
+      <td>MANUEL CABRAS 4 RTE DE LA CLOCHATTE 1018 LAUSANNE</td>
+      <td class="lbl">Remboursement Guichet Weezevent</td>
+      <td class="num in"></td>
+      <td class="num out">21,62</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">569</td>
+      <td class="date">18.05.2026<span class="dow">lun</span></td>
+      <td>MAXIME ALAIN FOURQUAUX 1950 SION</td>
+      <td class="lbl">Remboursement Elec 2</td>
+      <td class="num in"></td>
+      <td class="num out">52,90</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">570</td>
+      <td class="date">18.05.2026<span class="dow">lun</span></td>
+      <td>DOUSSE RAFAEL 1005 LAUSANNE</td>
+      <td class="lbl">Remboursement bracelets BLV</td>
+      <td class="num in"></td>
+      <td class="num out">63,72</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">571</td>
+      <td class="date">19.05.2026<span class="dow">mar</span></td>
+      <td>ELIA NICOLO 13 RUE DE LA PONTAISE 1018 LAUSANNE</td>
+      <td class="lbl">Remboursement Mate</td>
+      <td class="num in"></td>
+      <td class="num out">17,65</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">572</td>
+      <td class="date">19.05.2026<span class="dow">mar</span></td>
+      <td>MANUEL CABRAS 4 RTE DE LA CLOCHATTE 1018 LAUSANNE</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">50,15</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">577</td>
+      <td class="date">21.05.2026<span class="dow">jeu</span></td>
+      <td>TIP TOP TEIXEIRA PEREIRA 1217 MEYRIN</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">2 290,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">578</td>
+      <td class="date">22.05.2026<span class="dow">ven</span></td>
+      <td>LANDI NORD VAUDOIS VENOG 1401 YVERDON</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">40,50</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">579</td>
+      <td class="date">23.05.2026<span class="dow">sam</span></td>
+      <td>LIDL YVERDON 0140 YVERDON-LES-B</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">94,23</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">582</td>
+      <td class="date">26.05.2026<span class="dow">mar</span></td>
+      <td>WEEZEVENT SWITZERLAND SARL RUE PRE-DU-MARCHE LAUSANNE CH</td>
+      <td class="lbl">CASHLESS V147104605E1727589O401421</td>
+      <td class="num in">2 725,47</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Recette Weezevent — cashless (recharges bar)</td>
+    </tr>
+<tr>
+      <td class="num">583</td>
+      <td class="date">29.05.2026<span class="dow">ven</span></td>
+      <td>ASS GENERALE ETUDIANTS HEIG-VD ROUTE DE CHESEAUX YVERDON-LES-BAINS CH</td>
+      <td class="lbl">Sponsoring AGE</td>
+      <td class="num in">1 500,00</td>
+      <td class="num out"></td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">584</td>
+      <td class="date">29.05.2026<span class="dow">ven</span></td>
+      <td>VO MAI BICH NGOC 1373 CHAVORNAY</td>
+      <td class="lbl">virement recettes BLV</td>
+      <td class="num in"></td>
+      <td class="num out">2 493,00</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr>
+<tr>
+      <td class="num">585</td>
+      <td class="date">31.05.2026<span class="dow">dim</span></td>
+      <td>LANDI NORD VAUDOIS VENOG 0140 YVERDON</td>
+      <td class="lbl">—</td>
+      <td class="num in"></td>
+      <td class="num out">140,15</td>
+      <td><span class="tag">FESTIVAL</span></td>
+      <td class="src">Charge ou recette du festival — avril / mai 2026</td>
+    </tr></tbody>
+</table></div>
+  </div>
+</section>
+
+<section>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Bloc D — administratif</h2>
+      <span class="hint"><code>INTERNE</code> · 2 écritures</span>
+      <span class="net out">-240,00</span>
+    </div>
+    <div class="panel-body"><p>« SG » est une <strong>séance générale</strong>, pas une semaine
+    grillades : les pizzas d'une séance ou d'une assemblée sont de l'administratif, pas un
+    événement.</p></div>
+    <div class="scroll"><table>
+  <thead><tr><th class="num">Séq.</th><th>Date</th><th>Contrepartie</th><th>Libellé</th>
+  <th class="num">Entrée</th><th class="num">Sortie</th><th>CC</th><th>Règle</th></tr></thead>
+  <tbody><tr>
+      <td class="num">298</td>
+      <td class="date">26.11.2025<span class="dow">mer</span></td>
+      <td>CHARBONNIER LUCAS 1033 CHESEAUX-SUR-LAUSANNE</td>
+      <td class="lbl">Remboursement Pizzas AG</td>
+      <td class="num in"></td>
+      <td class="num out">168,00</td>
+      <td><span class="tag">INTERNE</span></td>
+      <td class="src">Séance / assemblée générale : « Remboursement Pizzas AG »</td>
+    </tr>
+<tr>
+      <td class="num">319</td>
+      <td class="date">02.12.2025<span class="dow">mar</span></td>
+      <td>MAXIME MAGNENAT 11B ROUTE DE SULLENS 1303 PENTHAZ</td>
+      <td class="lbl">pizzas SG 3</td>
+      <td class="num in"></td>
+      <td class="num out">72,00</td>
+      <td><span class="tag">INTERNE</span></td>
+      <td class="src">Séance / assemblée générale : « pizzas SG 3 »</td>
     </tr></tbody>
 </table></div>
   </div>
@@ -1083,7 +1873,7 @@
   <div class="panel">
     <div class="panel-head">
       <h2>Écartées alors qu'elles tombent dans une fenêtre</h2>
-      <span class="hint">13 écritures · laissées sans centre de charge</span>
+      <span class="hint">9 écritures · laissées sans centre de charge</span>
     </div>
     <div class="scroll"><table>
   <thead><tr><th class="num">Séq.</th><th>Date</th><th>Contrepartie</th><th>Libellé</th>
@@ -1129,16 +1919,6 @@
       <td class="src">Dans la fenêtre Marché de Noël, mais ni encaissement ni achat commerce</td>
     </tr>
 <tr>
-      <td class="num">319</td>
-      <td class="date">02.12.2025<span class="dow">mar</span></td>
-      <td>MAXIME MAGNENAT 11B ROUTE DE SULLENS 1303 PENTHAZ</td>
-      <td class="lbl">pizzas SG 3</td>
-      <td class="num in"></td>
-      <td class="num out">72,00</td>
-      
-      <td class="src">Dans la fenêtre Marché de Noël, mais ni encaissement ni achat commerce</td>
-    </tr>
-<tr>
       <td class="num">354</td>
       <td class="date">19.12.2025<span class="dow">ven</span></td>
       <td>SARAH MALLET 2053 CERNIER</td>
@@ -1169,36 +1949,6 @@
       <td class="src">Dans la fenêtre Semaine du Vin Chaud, mais ni encaissement ni achat commerce</td>
     </tr>
 <tr>
-      <td class="num">489</td>
-      <td class="date">13.04.2026<span class="dow">lun</span></td>
-      <td>SUISA 82 BELLARIASTRASSE 8038 ZURICH</td>
-      <td class="lbl">—</td>
-      <td class="num in"></td>
-      <td class="num out">1 539,00</td>
-      
-      <td class="src">Dans la fenêtre Semaine grillades 2, mais niveau association</td>
-    </tr>
-<tr>
-      <td class="num">505</td>
-      <td class="date">16.04.2026<span class="dow">jeu</span></td>
-      <td>DOUBLE R KERNINON ET B. 1400 YVERDON-LES-BAINS</td>
-      <td class="lbl">—</td>
-      <td class="num in">1 300,00</td>
-      <td class="num out"></td>
-      
-      <td class="src">Dans la fenêtre Semaine grillades 2, mais niveau association</td>
-    </tr>
-<tr>
-      <td class="num">506</td>
-      <td class="date">16.04.2026<span class="dow">jeu</span></td>
-      <td>COMMUNE D'YVERDON 1400 YVERDON-LES-BAINS</td>
-      <td class="lbl">23.03.2026 2026-0324-01</td>
-      <td class="num in">8 000,00</td>
-      <td class="num out"></td>
-      
-      <td class="src">Dans la fenêtre Semaine grillades 2, mais niveau association</td>
-    </tr>
-<tr>
       <td class="num">510</td>
       <td class="date">17.04.2026<span class="dow">ven</span></td>
       <td>BLV</td>
@@ -1227,7 +1977,7 @@
     <div class="panel-head"><h2>Pour appliquer</h2></div>
     <div class="panel-body">
       <ul>
-        <li><code>cost-centres.sql</code> — blocs A et B, 65 écritures.</li>
+        <li><code>cost-centres.sql</code> — blocs A, B et D, 143 écritures.</li>
         <li><code>cost-centres-extra.sql</code> — bloc C, 24 écritures, à part.</li>
         <li>Chaque <code>UPDATE</code> est conditionné à <code>costCenterId IS NULL</code> : rejouer
         le fichier ne peut pas écraser une décision prise entre-temps dans l'application.</li>
