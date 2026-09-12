@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
 import { Alert, Button, Field, Input, Modal, Select } from "@/components/ui";
-import { allowedProofMimeTypes } from "@/lib/proof-upload";
+import { allowedProofMimeTypes, MAX_PROOF_BYTES } from "@/lib/proof-upload";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import { createExpenseReportAction } from "./actions";
@@ -38,6 +38,7 @@ type Copy = {
   date: string;
   uploadProof: string;
   noProofRequired: string;
+  proofTooLarge: string;
   department: string;
   selectDepartment: string;
 };
@@ -64,6 +65,7 @@ export default function CreateExpenseReportModal({ departments, drivingRatePerKm
   const [open, setOpen] = useState(false);
   const [reportType, setReportType] = useState<ExpenseReportTypeValue>(EXPENSE_REPORT_TYPE.STANDARD);
   const [kilometers, setKilometers] = useState("");
+  const [proofError, setProofError] = useState<string | null>(null);
   const [createState, createFormAction, isCreating] = useActionState(createExpenseReportAction, initialActionState);
   const markSubmitted = useCloseOnSuccess(createState, isCreating, () => setOpen(false));
 
@@ -192,8 +194,20 @@ export default function CreateExpenseReportModal({ departments, drivingRatePerKm
                 name="proof"
                 required
                 accept={allowedProofMimeTypes.join(",")}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+
+                  if (file && file.size > MAX_PROOF_BYTES) {
+                    setProofError(copy.proofTooLarge.replace("{max}", String(MAX_PROOF_BYTES / (1024 * 1024))));
+                    event.target.value = "";
+                    return;
+                  }
+
+                  setProofError(null);
+                }}
                 className="file:mr-4 file:rounded-md file:border-0 file:bg-[var(--panel-strong)] file:px-3 file:py-1.5 file:text-xs file:font-semibold"
               />
+              <FormError message={proofError} className="mt-2" />
             </Field>
           )}
 

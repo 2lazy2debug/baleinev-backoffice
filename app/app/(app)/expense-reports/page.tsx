@@ -91,6 +91,7 @@ export default async function ExpenseReportsPage() {
                 date: copy.expenseReports.date,
                 uploadProof: copy.expenseReports.uploadProof,
                 noProofRequired: copy.expenseReports.noProofRequired,
+                proofTooLarge: copy.expenseReports.proofTooLarge,
                 department: copy.expenseReports.department,
                 selectDepartment: copy.expenseReports.selectDepartment,
               }}

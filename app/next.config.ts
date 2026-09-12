@@ -4,6 +4,8 @@ import path from "node:path";
 
 import type { NextConfig } from "next";
 
+import { MAX_PROOF_BYTES } from "./lib/proof-upload";
+
 // The version shown in the sidebar. Releases are cut from annotated git tags and
 // the box deploys by checking one out detached (see docs/production.md), so the
 // closest tag *is* what is running. package.json is the fallback for a build
@@ -27,6 +29,14 @@ const nextConfig: NextConfig = {
   env: { NEXT_PUBLIC_APP_VERSION: resolveVersion() },
   turbopack: {
     root: path.resolve(__dirname),
+  },
+  experimental: {
+    serverActions: {
+      // Server actions default to a 1 MB body limit, well under the proof
+      // upload limit — leave headroom over MAX_PROOF_BYTES for the rest of
+      // the form fields and multipart overhead.
+      bodySizeLimit: MAX_PROOF_BYTES + 1024 * 1024,
+    },
   },
 };
 
