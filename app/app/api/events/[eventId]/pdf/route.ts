@@ -36,6 +36,7 @@ export async function GET(_: Request, context: RouteContext) {
                 endTime: true,
                 noTime: true,
                 role: true,
+                capacity: true,
                 assignments: { select: { user: { select: { id: true, name: true } } } },
               },
             },
@@ -54,6 +55,8 @@ export async function GET(_: Request, context: RouteContext) {
     const { html, footerHtml } = renderShiftSchedulePdf(event, {
       staffColumn: copy.pdfStaffColumn,
       noShifts: copy.pdfNoShifts,
+      legendHeading: copy.pdfLegendHeading,
+      timelessHeading: copy.pdfTimelessHeading,
     });
 
     const browser = await puppeteer.launch({
