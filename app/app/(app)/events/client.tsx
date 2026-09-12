@@ -75,6 +75,7 @@ type EventItem = {
   endDate: Date | string;
   notes: string | null;
   info: string | null;
+  isExpired: boolean;
   eventType: { name: string; color: string | null };
   days: EventDayItem[];
 };
@@ -87,6 +88,7 @@ type EventsCopy = {
   editShift: string;
   deleteShift: string;
   isOff: string;
+  expired: string;
   toggleOn: string;
   toggleOff: string;
   noShifts: string;
@@ -158,8 +160,11 @@ export default function EventsPageClient({
   );
 
   // Collapsing is a reading aid, not a permission: everyone gets it, and an
-  // event starts open so the page looks the way it always has.
-  const [collapsedEventIds, setCollapsedEventIds] = useState<ReadonlySet<string>>(new Set());
+  // event starts open so the page looks the way it always has — except an
+  // expired one, which starts collapsed and can still be opened by hand.
+  const [collapsedEventIds, setCollapsedEventIds] = useState<ReadonlySet<string>>(
+    () => new Set(events.filter((event) => event.isExpired).map((event) => event.id))
+  );
 
   function toggleEventCollapsed(eventId: string) {
     setCollapsedEventIds((current) => {
@@ -295,6 +300,7 @@ export default function EventsPageClient({
             id={eventAnchorId(event.id)}
             className={cn(
               "scroll-mt-24 lg:scroll-mt-4",
+              event.isExpired ? "opacity-60" : undefined,
               highlightedEventId === event.id ? "ring-1 ring-[var(--accent)]" : undefined,
             )}
           >
@@ -308,6 +314,7 @@ export default function EventsPageClient({
                       style={{ backgroundColor: event.eventType.color ?? "var(--accent)" }}
                     />
                     <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{event.eventType.name}</span>
+                    {event.isExpired ? <Badge tone="neutral">{copy.expired}</Badge> : null}
                   </div>
                   <SectionTitle as="h3" className="mt-0.5">{event.name}</SectionTitle>
                   <p className="text-xs text-[var(--muted)]">{formatDate(event.startDate)} → {formatDate(event.endDate)}</p>
@@ -487,7 +494,7 @@ export default function EventsPageClient({
                                     </div>
 
                                     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                                      {isReadOnly ? null : signed ? (
+                                      {isReadOnly || event.isExpired ? null : signed ? (
                                         <form action={withdrawFormAction}>
                                           <input type="hidden" name="shiftId" value={shift.id} />
                                           <Button type="submit" variant="destructive" size="sm" disabled={isWithdrawing} className="w-full sm:w-auto">

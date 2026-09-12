@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { createUserTask } from "@/lib/tasks";
 import { TaskStatus, TaskType } from "@prisma/client";
 import { requireWritableEdition, resolveWritableEditionId } from "@/lib/edition-context";
+import { isEventExpired } from "@/lib/events";
 import {
   type ActionState,
   getRequiredString,
@@ -106,6 +107,39 @@ async function requireWritableShift(shiftId: string) {
   }
 
   await requireWritableEdition(shift.eventDay.event.editionId);
+}
+
+/**
+ * A finished event stops taking signups and withdrawals — joining or leaving
+ * a shift that already happened. Refuses server-side what the UI already
+ * hides, so a stale tab can't sign up after the client stopped offering it.
+ */
+async function assertEventNotExpired(shiftId: string) {
+  const shift = await prisma.eventShift.findUniqueOrThrow({
+    where: { id: shiftId },
+    select: {
+      eventDay: {
+        select: {
+          event: {
+            select: {
+              endDate: true,
+              days: {
+                select: {
+                  date: true,
+                  isOff: true,
+                  shifts: { select: { startTime: true, endTime: true, noTime: true } },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (isEventExpired(shift.eventDay.event)) {
+    throw new Error("This event has already ended.");
+  }
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -501,6 +535,7 @@ export async function signUpForShiftAction(_prevState: ActionState, formData: Fo
     const shiftId = getRequiredString(formData, "shiftId");
 
     await requireWritableShift(shiftId);
+    await assertEventNotExpired(shiftId);
 
     const shift = await prisma.eventShift.findUniqueOrThrow({
       where: { id: shiftId },
@@ -554,6 +589,11 @@ export async function withdrawFromShiftAction(_prevState: ActionState, formData:
     }
 
     await requireWritableShift(shiftId);
+    // Leaving a shift is locked once the event is over; an admin removing
+    // someone else is corrective bookkeeping, not "leaving", so it stays open.
+    if (targetUserId === access.id) {
+      await assertEventNotExpired(shiftId);
+    }
 
     const assignment = await prisma.staffAssignment.findFirst({
       where: { shiftId, userId: targetUserId },

@@ -4,6 +4,7 @@ import { Settings } from "lucide-react";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
+import { isEventExpired } from "@/lib/events";
 import { getDictionary, getLocale } from "@/lib/i18n";
 
 import { WritableEditionOnly } from "@/components/edition-read-only";
@@ -58,6 +59,19 @@ export default async function EventsPage() {
     );
   }
 
+  // Expired events keep their place in the ordering but sit below every
+  // active one — two stable filters over the query's own `startDate` order,
+  // rather than a second sort key.
+  const now = new Date();
+  const eventsWithExpiry = activeEdition.events.map((event) => ({
+    ...event,
+    isExpired: isEventExpired(event, now),
+  }));
+  const events = [
+    ...eventsWithExpiry.filter((event) => !event.isExpired),
+    ...eventsWithExpiry.filter((event) => event.isExpired),
+  ];
+
   return (
     <div className="space-y-4 lg:space-y-8">
       <PageHeader
@@ -106,7 +120,7 @@ export default async function EventsPage() {
       <EventsPageClient
         isAdmin={isAdmin}
         accessId={access.id}
-        events={activeEdition.events}
+        events={events}
         allUsers={allUsers}
         copy={copy.events}
         shellCopy={{ save: copy.shell.save, cancel: copy.shell.cancel }}
