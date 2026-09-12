@@ -81,8 +81,8 @@ interface EventDaySummary {
 
 interface ShiftSummary {
   role: string | null;
-  startTime: string;
-  endTime: string;
+  startTime: string | null;
+  endTime: string | null;
   eventDay: EventDaySummary | null;
 }
 
@@ -313,8 +313,8 @@ export function TasksPageClient({
                         {event.name} —{" "}
                         {new Date(eventDay.date).toLocaleDateString(
                           locale === "fr" ? "fr-CH" : "en-CH"
-                        )}{" "}
-                        {shift.startTime}–{shift.endTime}
+                        )}
+                        {shift.startTime && shift.endTime ? ` ${shift.startTime}–${shift.endTime}` : ""}
                       </p>
                     ) : null}
                     {task.dueDate ? (

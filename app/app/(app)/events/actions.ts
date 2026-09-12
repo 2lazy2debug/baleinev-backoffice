@@ -78,10 +78,15 @@ function staffShiftTaskFields({
   eventName: string;
   dayDate: Date | string;
   role: string | null;
-  startTime: string;
-  endTime: string;
+  startTime: string | null;
+  endTime: string | null;
 }) {
   const date = new Date(dayDate).toISOString().slice(0, 10);
+
+  if (!startTime || !endTime) {
+    return { title: `Shift: ${eventName} — ${role ?? "General"} (${date})`, dueDate: undefined };
+  }
+
   const dueDate = new Date(`${date}T${startTime}:00`);
 
   return {
@@ -363,6 +368,7 @@ export async function duplicateEventDayShiftsAction(
           eventDayId: target.id,
           startTime: shift.startTime,
           endTime: shift.endTime,
+          noTime: shift.noTime,
           role: shift.role,
           capacity: shift.capacity,
         })),
@@ -380,18 +386,37 @@ export async function duplicateEventDayShiftsAction(
 // EventShift CRUD (admin only)
 // ────────────────────────────────────────────────────────────────────────────
 
+/** Reads the shared start/end/noTime fields, refusing a half-timed or backwards shift. */
+function readShiftTimeFields(formData: FormData): { startTime: string | null; endTime: string | null; noTime: boolean } {
+  const noTime = String(formData.get("noTime") ?? "") === "on";
+  const startTimeRaw = String(formData.get("startTime") ?? "").trim();
+  const endTimeRaw = String(formData.get("endTime") ?? "").trim();
+
+  if (noTime) {
+    return { startTime: null, endTime: null, noTime: true };
+  }
+
+  if (!startTimeRaw || !endTimeRaw) {
+    throw new Error("A shift needs both a start and an end time, unless it has no fixed time.");
+  }
+  if (endTimeRaw <= startTimeRaw) {
+    throw new Error("A shift must end after it starts.");
+  }
+
+  return { startTime: startTimeRaw, endTime: endTimeRaw, noTime: false };
+}
+
 export async function addShiftAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
     const eventDayId = getRequiredString(formData, "eventDayId");
-    const startTime = getRequiredString(formData, "startTime");
-    const endTime = getRequiredString(formData, "endTime");
+    const { startTime, endTime, noTime } = readShiftTimeFields(formData);
     const role = getRequiredString(formData, "role");
     const capacity = Math.max(1, parseInt(String(formData.get("capacity") ?? "1"), 10));
 
     await requireWritableEventDay(eventDayId);
 
-    await prisma.eventShift.create({ data: { eventDayId, startTime, endTime, role, capacity } });
+    await prisma.eventShift.create({ data: { eventDayId, startTime, endTime, noTime, role, capacity } });
     revalidatePath("/events");
     return { error: null };
   } catch (err) {
@@ -403,14 +428,9 @@ export async function updateShiftAction(_prevState: ActionState, formData: FormD
   try {
     await requireAdmin();
     const id = getRequiredString(formData, "id");
-    const startTime = getRequiredString(formData, "startTime");
-    const endTime = getRequiredString(formData, "endTime");
+    const { startTime, endTime, noTime } = readShiftTimeFields(formData);
     const role = getRequiredString(formData, "role");
     const capacity = Math.max(1, parseInt(String(formData.get("capacity") ?? "1"), 10));
-
-    if (endTime <= startTime) {
-      throw new Error("A shift must end after it starts.");
-    }
 
     await requireWritableShift(id);
 
@@ -430,7 +450,7 @@ export async function updateShiftAction(_prevState: ActionState, formData: FormD
       );
     }
 
-    await prisma.eventShift.update({ where: { id }, data: { startTime, endTime, role, capacity } });
+    await prisma.eventShift.update({ where: { id }, data: { startTime, endTime, noTime, role, capacity } });
 
     // The staffing tasks quote the shift's role and hours, so a move has to
     // carry over to them — a pending task pointing at the old slot is wrong.

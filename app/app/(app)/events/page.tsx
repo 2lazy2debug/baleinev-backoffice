@@ -33,7 +33,7 @@ export default async function EventsPage() {
               orderBy: { date: "asc" },
               include: {
                 shifts: {
-                  orderBy: { startTime: "asc" },
+                  orderBy: [{ noTime: "asc" }, { startTime: "asc" }],
                   include: {
                     assignments: {
                       include: { user: { select: { id: true, name: true } } },

@@ -29,11 +29,12 @@ export async function GET(_: Request, context: RouteContext) {
             id: true,
             date: true,
             shifts: {
-              orderBy: { startTime: "asc" },
+              orderBy: [{ noTime: "asc" }, { startTime: "asc" }],
               select: {
                 id: true,
                 startTime: true,
                 endTime: true,
+                noTime: true,
                 role: true,
                 assignments: { select: { user: { select: { id: true, name: true } } } },
               },

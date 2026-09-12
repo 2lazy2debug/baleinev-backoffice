@@ -53,8 +53,9 @@ type AssignmentItem = {
 
 type ShiftItem = {
   id: string;
-  startTime: string;
-  endTime: string;
+  startTime: string | null;
+  endTime: string | null;
+  noTime: boolean;
   role: string | null;
   capacity: number;
   assignments: AssignmentItem[];
@@ -94,6 +95,7 @@ type EventsCopy = {
   signUp: string;
   assignStaff: string;
   role: string;
+  noTime: string;
   addShift: string;
   shiftOverlapWarning: string;
   exportPdf: string;
@@ -440,16 +442,18 @@ export default function EventsPageClient({
                                         id: shift.id,
                                         startTime: shift.startTime,
                                         endTime: shift.endTime,
+                                        noTime: shift.noTime,
                                         role: shift.role,
                                         capacity: shift.capacity,
                                         assignedCount: spotsFilled,
                                       }}
                                       otherShifts={day.shifts
                                         .filter((other) => other.id !== shift.id)
-                                        .map((other) => ({ startTime: other.startTime, endTime: other.endTime }))}
+                                        .map((other) => ({ startTime: other.startTime, endTime: other.endTime, noTime: other.noTime }))}
                                       onDone={() => setEditingShiftId(null)}
                                       copy={{
                                         role: copy.role,
+                                        noTime: copy.noTime,
                                         shiftOverlapWarning: copy.shiftOverlapWarning,
                                         save: shellCopy.save,
                                         cancel: shellCopy.cancel,
@@ -463,8 +467,13 @@ export default function EventsPageClient({
                                   <div className="flex flex-col gap-3 px-2.5 py-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-4 sm:py-2.5">
                                     <div className="space-y-0.5">
                                       <p className="text-sm font-semibold text-[var(--ink)]">{shift.role || "General"}</p>
-                                      {/* The one number anyone scans this list for. */}
-                                      <p className="text-xs font-semibold text-[var(--muted)]">{formatTime(shift.startTime)}–{formatTime(shift.endTime)}</p>
+                                      {/* The one number anyone scans this list for — or, for a
+                                          timeless shift, the fact that there isn't one. */}
+                                      <p className="text-xs font-semibold text-[var(--muted)]">
+                                        {shift.noTime || !shift.startTime || !shift.endTime
+                                          ? copy.noTime
+                                          : `${formatTime(shift.startTime)}–${formatTime(shift.endTime)}`}
+                                      </p>
                                       <p className="text-xs text-[var(--muted)]">
                                         {spotsFilled}/{shift.capacity}{" "}
                                         {isFull ? <span className="font-semibold text-rose-400">{copy.full}</span> : null}
@@ -559,9 +568,14 @@ export default function EventsPageClient({
                         {canManageEvents ? (
                           <AddShiftForm
                             eventDayId={day.id}
-                            existingShifts={day.shifts.map((shift) => ({ startTime: shift.startTime, endTime: shift.endTime }))}
+                            existingShifts={day.shifts.map((shift) => ({
+                              startTime: shift.startTime,
+                              endTime: shift.endTime,
+                              noTime: shift.noTime,
+                            }))}
                             copy={{
                               role: copy.role,
+                              noTime: copy.noTime,
                               addShift: copy.addShift,
                               shiftOverlapWarning: copy.shiftOverlapWarning,
                             }}

@@ -13,8 +13,9 @@ import ShiftFields, { type ExistingShift, useShiftOverlap } from "./shift-fields
 type Props = {
   shift: {
     id: string;
-    startTime: string;
-    endTime: string;
+    startTime: string | null;
+    endTime: string | null;
+    noTime: boolean;
     role: string | null;
     capacity: number;
     assignedCount: number;
@@ -24,6 +25,7 @@ type Props = {
   onDone: () => void;
   copy: {
     role: string;
+    noTime: string;
     shiftOverlapWarning: string;
     save: string;
     cancel: string;
@@ -32,14 +34,15 @@ type Props = {
 
 /**
  * The shift row's labels turned into fields, the way the journal table edits an
- * entry: same four fields as the add row, prefilled, saved in place. Closing is
+ * entry: same five fields as the add row, prefilled, saved in place. Closing is
  * the caller's business — the row goes back to reading as a row.
  */
 export default function EditShiftForm({ shift, otherShifts, onDone, copy }: Props) {
-  const [startTime, setStartTime] = useState(shift.startTime.slice(0, 5));
-  const [endTime, setEndTime] = useState(shift.endTime.slice(0, 5));
+  const [noTime, setNoTime] = useState(shift.noTime);
+  const [startTime, setStartTime] = useState(shift.startTime?.slice(0, 5) ?? "");
+  const [endTime, setEndTime] = useState(shift.endTime?.slice(0, 5) ?? "");
 
-  const hasOverlap = useShiftOverlap(startTime, endTime, otherShifts);
+  const hasOverlap = useShiftOverlap(noTime, startTime, endTime, otherShifts);
 
   async function save(previous: ActionState, formData: FormData): Promise<ActionState> {
     const result = await updateShiftAction(previous, formData);
@@ -64,6 +67,8 @@ export default function EditShiftForm({ shift, otherShifts, onDone, copy }: Prop
       <FormError message={state.error} className="w-full" />
       <input type="hidden" name="id" value={shift.id} />
       <ShiftFields
+        noTime={noTime}
+        onNoTimeChange={setNoTime}
         startTime={startTime}
         endTime={endTime}
         onStartTimeChange={setStartTime}
@@ -71,7 +76,7 @@ export default function EditShiftForm({ shift, otherShifts, onDone, copy }: Prop
         defaultRole={shift.role ?? ""}
         defaultCapacity={shift.capacity}
         minCapacity={Math.max(1, shift.assignedCount)}
-        copy={{ role: copy.role }}
+        copy={{ role: copy.role, noTime: copy.noTime }}
       />
       <div className="flex items-center gap-2">
         <IconButton type="submit" tone="save" label={copy.save} disabled={isPending}>

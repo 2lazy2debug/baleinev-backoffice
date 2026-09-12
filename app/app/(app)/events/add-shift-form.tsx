@@ -14,17 +14,19 @@ type Props = {
   existingShifts: ExistingShift[];
   copy: {
     role: string;
+    noTime: string;
     addShift: string;
     shiftOverlapWarning: string;
   };
 };
 
 export default function AddShiftForm({ eventDayId, existingShifts, copy }: Props) {
+  const [noTime, setNoTime] = useState(false);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [state, formAction, isPending] = useActionState(addShiftAction, initialActionState);
 
-  const hasOverlap = useShiftOverlap(startTime, endTime, existingShifts);
+  const hasOverlap = useShiftOverlap(noTime, startTime, endTime, existingShifts);
 
   return (
     <form
@@ -39,11 +41,13 @@ export default function AddShiftForm({ eventDayId, existingShifts, copy }: Props
       <FormError message={state.error} className="w-full" />
       <input type="hidden" name="eventDayId" value={eventDayId} />
       <ShiftFields
+        noTime={noTime}
+        onNoTimeChange={setNoTime}
         startTime={startTime}
         endTime={endTime}
         onStartTimeChange={setStartTime}
         onEndTimeChange={setEndTime}
-        copy={{ role: copy.role }}
+        copy={{ role: copy.role, noTime: copy.noTime }}
       />
       <Button type="submit" variant="primary" size="sm" disabled={isPending}>
         {copy.addShift}

@@ -16,8 +16,9 @@ const FALLBACK_ROLE_COLOR = "#898781"; // muted — used once the 8 slots are ex
 
 export type ShiftScheduleShift = {
   id: string;
-  startTime: string;
-  endTime: string;
+  startTime: string | null;
+  endTime: string | null;
+  noTime: boolean;
   role: string | null;
   assignments: { user: { id: string; name: string } }[];
 };
@@ -86,15 +87,21 @@ export function renderShiftSchedulePdf(event: ShiftScheduleEvent, copy: ShiftSch
     roles.map((role, index) => [role, CATEGORICAL_PALETTE[index] ?? FALLBACK_ROLE_COLOR]),
   );
 
+  // A timeless shift has no place on this time-free grid yet — Task 5 gives it
+  // one. Until then it just doesn't get a column.
   const columns: Column[] = days.flatMap((day) =>
-    day.shifts.map((shift) => ({
-      key: shift.id,
-      dayId: day.id,
-      dayLabel: formatDay(day.date),
-      timeLabel: `${formatTime(shift.startTime)}–${formatTime(shift.endTime)}`,
-      role: roleLabel(shift.role),
-      color: roleColors.get(roleLabel(shift.role)) ?? FALLBACK_ROLE_COLOR,
-    })),
+    day.shifts
+      .filter((shift): shift is ShiftScheduleShift & { startTime: string; endTime: string } =>
+        !shift.noTime && shift.startTime != null && shift.endTime != null,
+      )
+      .map((shift) => ({
+        key: shift.id,
+        dayId: day.id,
+        dayLabel: formatDay(day.date),
+        timeLabel: `${formatTime(shift.startTime)}–${formatTime(shift.endTime)}`,
+        role: roleLabel(shift.role),
+        color: roleColors.get(roleLabel(shift.role)) ?? FALLBACK_ROLE_COLOR,
+      })),
   );
 
   const peopleMap = new Map<string, { name: string; cells: Set<string> }>();

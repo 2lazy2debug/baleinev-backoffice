@@ -372,6 +372,75 @@ and the first to resolve it clears it for all of them.
 [business-processes.md](./business-processes.md)). Resolving a task never performs the underlying
 action: it records that somebody dealt with it.
 
+---
+
+### `EventType`
+A category an event belongs to (e.g. "Concert", "Workshop"). Global, not edition-scoped — an
+event type outlives any single edition.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `name` | String | Unique |
+| `description` | String? | |
+| `color` | String? | |
+
+A type still in use by an event cannot be deleted (enforced in the server action, not the FK).
+
+### `Event`
+One internal event inside an edition — a concert, a staffed activity — made of days, each with
+shifts.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `editionId` | String | FK → Edition (onDelete: Cascade) |
+| `eventTypeId` | String | FK → [`EventType`](#eventtype) (onDelete: Restrict) |
+| `costCenterId` | String? | FK → CostCenter (onDelete: SetNull) |
+| `name` | String | |
+| `startDate` / `endDate` | DateTime | Must fall within the edition's own dates, when the edition has them set |
+| `notes` | String? | |
+| `info` | String? | Free-form Markdown shown behind the header's info button — briefings, contacts |
+
+### `EventDay`
+One calendar day of an event.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `eventId` | String | FK → [`Event`](#event) (onDelete: Cascade) |
+| `date` | DateTime `@db.Date` | Compared in UTC — the app reasons about it with `timeZone: "UTC"` throughout |
+| `isOff` | Boolean | Default `false`. A day off shows no shifts and takes no signups |
+
+`@@unique([eventId, date])` — one row per event per calendar day.
+
+### `EventShift`
+A staffing slot on a day: a role, a headcount, and — unless it is timeless — a time window.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `eventDayId` | String | FK → [`EventDay`](#eventday) (onDelete: Cascade) |
+| `startTime` / `endTime` | String? | `"HH:MM"`. Null exactly when `noTime` is true. `endTime <= startTime` means the shift crosses midnight, not that it is invalid |
+| `noTime` | Boolean | Default `false`. A shift with no fixed hours ("renfort", "surplus") — sorts to the end of its day's list and never overlaps another shift |
+| `role` | String? | |
+| `capacity` | Int | Default `1` |
+
+### `StaffAssignment`
+One user signed up for, or assigned to, a shift.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `shiftId` | String | FK → [`EventShift`](#eventshift) (onDelete: Cascade — deleting a shift deletes who was on it) |
+| `userId` | String | FK → User (onDelete: Cascade) |
+| `createdAt` | DateTime | |
+
+`@@unique([shiftId, userId])` — a user is on a given shift at most once. Also the anchor for
+`Task.staffAssignmentId` (`STAFF_SHIFT`, above).
+
+---
+
 ### `Address`
 One person or organisation the festival deals with. **Global, not edition-scoped:** a supplier does
 not stop existing when an edition closes, so the book carries across years and stays writable in a

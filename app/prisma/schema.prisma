@@ -569,8 +569,12 @@ model EventDay {
 model EventShift {
   id         String   @id @default(cuid())
   eventDayId String
-  startTime  String
-  endTime    String
+  startTime  String?
+  endTime    String?
+  /// A shift with no fixed hours ("renfort", "surplus"). startTime/endTime are
+  /// null exactly when this is true — never "00:00", which would be a lie the
+  /// rest of the app would have to keep checking.
+  noTime     Boolean  @default(false)
   role       String?
   capacity   Int      @default(1)
   createdAt  DateTime @default(now())
