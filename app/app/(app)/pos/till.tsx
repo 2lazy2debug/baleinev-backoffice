@@ -3,6 +3,7 @@
 import { useActionState, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Minus, Plus, ReceiptText, Trash2 } from "lucide-react";
+import type { PosCellColor } from "@prisma/client";
 
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
@@ -21,6 +22,7 @@ import {
 import { formatDenomination, fromRappen, makeChange } from "@/lib/cash";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { drawnSlots, pageCount, tilesOnPage } from "@/lib/pos-layout";
+import { tileColorStyle } from "@/lib/pos-tile-colors";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
 
@@ -36,6 +38,8 @@ export type Tile = {
   label: string;
   /** Rappen — converted once from the cell's `Decimal` when the page built its props. */
   unitPrice: number;
+  /** Purely visual — null draws as the plain card. */
+  color: PosCellColor | null;
 };
 
 type CartLine = { key: string; elementId: string | null; label: string; unitPrice: number; quantity: number };
@@ -47,11 +51,13 @@ function TileButton({
   onClick,
   disabled,
   label,
+  color,
   children,
 }: {
   onClick: () => void;
   disabled?: boolean;
   label: string;
+  color?: PosCellColor | null;
   children: React.ReactNode;
 }) {
   return (
@@ -73,6 +79,7 @@ function TileButton({
               }
             }
       }
+      style={tileColorStyle(color ?? null)}
       className={cn(
         "flex h-full min-h-24 flex-col items-center justify-center gap-1 p-2 text-center transition sm:p-3",
         disabled ? "opacity-40" : "cursor-pointer hover:border-[var(--accent)]",
@@ -285,6 +292,7 @@ export function Till({
               key={tile.id}
               label={tile.label}
               disabled={paused}
+              color={tile.color}
               onClick={() => addLine({ elementId: tile.elementId, label: tile.label, unitPrice: tile.unitPrice })}
             >
               <span className="line-clamp-2 text-sm font-medium text-[var(--ink)]">{tile.label}</span>

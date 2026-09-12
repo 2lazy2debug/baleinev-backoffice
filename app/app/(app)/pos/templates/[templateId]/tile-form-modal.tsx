@@ -2,6 +2,7 @@
 
 import { useActionState, useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { PosCellColor } from "@prisma/client";
 
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
@@ -12,10 +13,12 @@ import {
   Input,
   Modal,
   Suggest,
+  cn,
   type SuggestOption,
 } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
+import { TILE_COLORS, tileSwatchStyle } from "@/lib/pos-tile-colors";
 
 import {
   ArticleFormModal,
@@ -41,6 +44,8 @@ export type EditorCell = {
   label: string;
   /** A `Decimal(10,2)` as a string — "4.00", "-2.00". */
   price: string;
+  /** Purely visual — null draws as the plain card. */
+  color: PosCellColor | null;
 };
 
 /**
@@ -52,6 +57,24 @@ const SPACER_OPTION_ID = "__whitespace__";
 const CREATE_OPTION_ID = "__create_article__";
 
 const FORM_ID = "pos-tile-form";
+
+/** The POS block of *a* dictionary — the literal types differ between en and fr. */
+type PosCopy = (typeof dictionaries)[Locale]["pos"];
+
+const COLOR_LABEL_KEY: Record<PosCellColor, keyof PosCopy> = {
+  BLUE: "colorBlue",
+  ORANGE: "colorOrange",
+  TEAL: "colorTeal",
+  AMBER: "colorAmber",
+  PINK: "colorPink",
+  GREEN: "colorGreen",
+  VIOLET: "colorViolet",
+  RED: "colorRed",
+};
+
+function colorLabel(copy: PosCopy, color: PosCellColor): string {
+  return copy[COLOR_LABEL_KEY[color]];
+}
 
 type Props = {
   locale: Locale;
@@ -71,9 +94,10 @@ type Draft = {
   articleQuery: string;
   label: string;
   price: string;
+  color: PosCellColor | null;
 };
 
-const blank: Draft = { kind: "ARTICLE", elementId: "", articleQuery: "", label: "", price: "" };
+const blank: Draft = { kind: "ARTICLE", elementId: "", articleQuery: "", label: "", price: "", color: null };
 
 /**
  * What a tile is, in one dialog — the same one for adding and for editing, the
@@ -164,6 +188,7 @@ export function TileFormModal({
               cell.kind === "SPACER" ? copy.whitespace : (articleName.get(cell.elementId ?? "") ?? ""),
             label: cell.label,
             price: cell.price,
+            color: cell.color,
           }
         : blank,
     );
@@ -302,6 +327,39 @@ export function TileFormModal({
                 />
               </Field>
               <p className="text-xs text-[var(--muted)]">{copy.priceHint}</p>
+
+              <Field label={copy.color}>
+                <input type="hidden" name="color" value={form.color ?? ""} />
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    aria-label={copy.colorNone}
+                    aria-pressed={form.color === null}
+                    onClick={() => setForm((current) => ({ ...current, color: null }))}
+                    className={cn(
+                      "flex h-8 w-8 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--panel-strong)] text-[var(--muted)] transition",
+                      form.color === null ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--panel)]" : null,
+                    )}
+                  >
+                    <span className="h-0.5 w-4 rotate-45 rounded-full bg-current" />
+                  </button>
+                  {TILE_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      aria-label={colorLabel(copy, color)}
+                      aria-pressed={form.color === color}
+                      onClick={() => setForm((current) => ({ ...current, color }))}
+                      style={tileSwatchStyle(color)}
+                      className={cn(
+                        "h-8 w-8 rounded-full border border-[var(--line)] transition",
+                        form.color === color ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--panel)]" : null,
+                      )}
+                    />
+                  ))}
+                </div>
+              </Field>
+              <p className="text-xs text-[var(--muted)]">{copy.colorHint}</p>
             </>
           )}
         </form>

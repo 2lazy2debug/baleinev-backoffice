@@ -86,6 +86,21 @@ enum PosCellKind {
   SPACER
 }
 
+/// A tile's background wash, purely visual — picked from the app's eight
+/// categorical hues (the same ones charts use to tell series apart) so a bar
+/// can group article tiles by eye without inventing a color system. Null is
+/// the default panel background.
+enum PosCellColor {
+  BLUE
+  ORANGE
+  TEAL
+  AMBER
+  PINK
+  GREEN
+  VIOLET
+  RED
+}
+
 model User {
   id                   String   @id @default(cuid())
   email                String   @unique
@@ -958,14 +973,16 @@ model PosTemplate {
 /// A `SPACER` tile holds a place in the stack and nothing else: `elementId` is
 /// null, `label` is "" and `price` is 0.
 model PosTemplateCell {
-  id         String      @id @default(cuid())
+  id         String        @id @default(cuid())
   templateId String
   position   Int
-  kind       PosCellKind @default(ARTICLE)
+  kind       PosCellKind   @default(ARTICLE)
   elementId  String?
   label      String
   /// Negative is allowed and meaningful — a deposit handed back.
-  price      Decimal     @db.Decimal(10, 2)
+  price      Decimal       @db.Decimal(10, 2)
+  /// Purely visual, null by default. See `PosCellColor`.
+  color      PosCellColor?
 
   template PosTemplate   @relation(fields: [templateId], references: [id], onDelete: Cascade)
   element  StockElement? @relation(fields: [elementId], references: [id], onDelete: Restrict)

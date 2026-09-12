@@ -148,7 +148,7 @@ export default async function PosPage() {
   const cells = await prisma.posTemplateCell.findMany({
     where: { templateId: joined.templateId },
     orderBy: { position: "asc" },
-    select: { id: true, kind: true, elementId: true, label: true, price: true },
+    select: { id: true, kind: true, elementId: true, label: true, price: true, color: true },
   });
 
   const tiles: Tile[] = cells.map((cell) => ({
@@ -157,6 +157,7 @@ export default async function PosPage() {
     elementId: cell.elementId,
     label: cell.label,
     unitPrice: toRappen(cell.price),
+    color: cell.color,
   }));
 
   return (

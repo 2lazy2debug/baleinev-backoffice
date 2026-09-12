@@ -35,6 +35,7 @@ import {
 } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { COLUMN_CHOICES, drawnSlots, pageCount, tilesOnPage, tilesPerPage } from "@/lib/pos-layout";
+import { tileColorStyle, tileSwatchStyle } from "@/lib/pos-tile-colors";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
 
@@ -338,6 +339,10 @@ function StackRow({
       <GripVertical className={cn("h-4 w-4 shrink-0", isReadOnly ? "opacity-0" : "text-[var(--muted)]")} />
       <span className="w-6 shrink-0 text-2xs tabular-nums text-[var(--muted)]">{index + 1}</span>
 
+      {cell.color ? (
+        <span className="h-3 w-3 shrink-0 rounded-full" style={tileSwatchStyle(cell.color)} />
+      ) : null}
+
       {/* The article's own name only when the tile is *not* called that. A tile
           reading "Beer 3dl" over "Feldschlösschen Original 30 cl" says something;
           the same word twice says nothing. */}
@@ -533,6 +538,7 @@ function PreviewModal({
                         }
                       }
                 }
+                style={spacer ? undefined : tileColorStyle(tile.color)}
                 className={cn(
                   "flex min-h-24 flex-col items-center justify-center gap-1 p-2 text-center transition sm:p-3",
                   isReadOnly ? null : "cursor-grab active:cursor-grabbing",

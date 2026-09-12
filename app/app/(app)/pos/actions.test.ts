@@ -198,9 +198,21 @@ describe("addPosTemplateCellAction", () => {
         elementId: "el_1",
         label: "Beer 3dl",
         price: "4.50",
+        color: null,
       },
     });
     expect(revalidatePath).toHaveBeenCalledWith("/pos/templates/tpl_1");
+  });
+
+  it("stores the color a form picked", async () => {
+    await addPosTemplateCellAction({ error: null }, cellForm({ color: "TEAL" }));
+    expect(prisma.posTemplateCell.create.mock.calls[0][0].data.color).toBe("TEAL");
+  });
+
+  it("refuses a color that does not exist", async () => {
+    const result = await addPosTemplateCellAction({ error: null }, cellForm({ color: "MAUVE" }));
+    expect(result.error).toMatch(/that color does not exist/i);
+    expect(prisma.posTemplateCell.create).not.toHaveBeenCalled();
   });
 
   it("accepts a negative price — a deposit handed back", async () => {
@@ -216,11 +228,19 @@ describe("addPosTemplateCellAction", () => {
   it("stores a spacer with no article, no label and no price, whatever the form carried", async () => {
     const result = await addPosTemplateCellAction(
       { error: null },
-      cellForm({ kind: "SPACER", elementId: "el_1", label: "Beer 3dl", price: "4.50" }),
+      cellForm({ kind: "SPACER", elementId: "el_1", label: "Beer 3dl", price: "4.50", color: "RED" }),
     );
     expect(result).toEqual({ error: null });
     expect(prisma.posTemplateCell.create).toHaveBeenCalledWith({
-      data: { templateId: "tpl_1", position: 3, kind: "SPACER", elementId: null, label: "", price: "0.00" },
+      data: {
+        templateId: "tpl_1",
+        position: 3,
+        kind: "SPACER",
+        elementId: null,
+        label: "",
+        price: "0.00",
+        color: null,
+      },
     });
     // A spacer points at nothing, so the catalogue is never consulted.
     expect(prisma.stockElement.findUnique).not.toHaveBeenCalled();
@@ -249,7 +269,7 @@ describe("updatePosTemplateCellAction", () => {
     expect(result).toEqual({ error: null });
     expect(prisma.posTemplateCell.update).toHaveBeenCalledWith({
       where: { id: "cell_1" },
-      data: { kind: "ARTICLE", elementId: "el_1", label: "Beer 3dl", price: "5.00" },
+      data: { kind: "ARTICLE", elementId: "el_1", label: "Beer 3dl", price: "5.00", color: null },
     });
   });
 
@@ -257,7 +277,7 @@ describe("updatePosTemplateCellAction", () => {
     await updatePosTemplateCellAction({ error: null }, cellForm({ cellId: "cell_1", kind: "SPACER" }));
     expect(prisma.posTemplateCell.update).toHaveBeenCalledWith({
       where: { id: "cell_1" },
-      data: { kind: "SPACER", elementId: null, label: "", price: "0.00" },
+      data: { kind: "SPACER", elementId: null, label: "", price: "0.00", color: null },
     });
   });
 });

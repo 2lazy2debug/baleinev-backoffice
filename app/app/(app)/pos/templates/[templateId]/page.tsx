@@ -67,6 +67,7 @@ export default async function PosTemplateEditorPage({ params }: Params) {
     elementId: cell.elementId,
     label: cell.label,
     price: decimalToNumber(cell.price).toFixed(2),
+    color: cell.color,
   }));
 
   const articleOptions: ArticleOption[] = articles.map((article) => ({

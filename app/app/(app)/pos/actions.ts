@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { PosCellKind, type Prisma } from "@prisma/client";
+import { PosCellColor, PosCellKind, type Prisma } from "@prisma/client";
 
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
@@ -152,18 +152,33 @@ export async function deletePosTemplateAction(_prevState: ActionState, formData:
   }
 }
 
+/** A blank `color` field means "no color" — the form field is never required. */
+function parseColor(formData: FormData): PosCellColor | null {
+  const raw = String(formData.get("color") ?? "").trim();
+  if (!raw) {
+    return null;
+  }
+
+  if (!Object.values(PosCellColor).includes(raw as PosCellColor)) {
+    throw new Error("That color does not exist.");
+  }
+
+  return raw as PosCellColor;
+}
+
 /**
- * The tile a form describes: an article with a label and a price, or a spacer,
- * which is a place in the stack and nothing else.
+ * The tile a form describes: an article with a label, a price and a color, or
+ * a spacer, which is a place in the stack and nothing else.
  */
 async function cellFieldsFrom(formData: FormData) {
   if (String(formData.get("kind") ?? "") === PosCellKind.SPACER) {
-    return { kind: PosCellKind.SPACER, elementId: null, label: "", price: "0.00" };
+    return { kind: PosCellKind.SPACER, elementId: null, label: "", price: "0.00", color: null };
   }
 
   const elementId = getRequiredString(formData, "elementId");
   const label = getRequiredString(formData, "label");
   const price = parsePrice(formData);
+  const color = parseColor(formData);
 
   // The picker only offers real articles, but a stale tab is a real thing.
   const element = await prisma.stockElement.findUnique({ where: { id: elementId }, select: { id: true } });
@@ -172,7 +187,7 @@ async function cellFieldsFrom(formData: FormData) {
     throw new Error("That article no longer exists.");
   }
 
-  return { kind: PosCellKind.ARTICLE, elementId, label, price };
+  return { kind: PosCellKind.ARTICLE, elementId, label, price, color };
 }
 
 /** Every cell action addresses a tile by id and re-checks it is on that template. */
