@@ -97,14 +97,23 @@ describe("addShiftAction", () => {
     expect(prisma.eventShift.create).not.toHaveBeenCalled();
   });
 
-  it("accepts a normal timed shift", async () => {
+  it("refuses a time off the quarter-hour grid", async () => {
     const result = await addShiftAction(
       { error: null },
-      addForm({ startTime: "08:00", endTime: "16:00" }),
+      addForm({ startTime: "08:07", endTime: "16:00" }),
+    );
+    expect(result.error).toMatch(/quarter hour/i);
+    expect(prisma.eventShift.create).not.toHaveBeenCalled();
+  });
+
+  it("accepts a normal timed shift on the quarter-hour grid", async () => {
+    const result = await addShiftAction(
+      { error: null },
+      addForm({ startTime: "08:15", endTime: "16:00" }),
     );
     expect(result).toEqual({ error: null });
     expect(prisma.eventShift.create.mock.calls[0][0].data).toMatchObject({
-      startTime: "08:00",
+      startTime: "08:15",
       endTime: "16:00",
       noTime: false,
     });
@@ -128,5 +137,27 @@ describe("updateShiftAction", () => {
       error: "A shift needs both a start and an end time, unless it has no fixed time.",
     });
     expect(prisma.eventShift.update).not.toHaveBeenCalled();
+  });
+
+  it("refuses a time off the quarter-hour grid", async () => {
+    const result = await updateShiftAction(
+      { error: null },
+      updateForm({ startTime: "08:00", endTime: "10:52" }),
+    );
+    expect(result.error).toMatch(/quarter hour/i);
+    expect(prisma.eventShift.update).not.toHaveBeenCalled();
+  });
+
+  it("accepts a time on the quarter-hour grid", async () => {
+    const result = await updateShiftAction(
+      { error: null },
+      updateForm({ startTime: "08:00", endTime: "10:45" }),
+    );
+    expect(result).toEqual({ error: null });
+    expect(prisma.eventShift.update.mock.calls[0][0].data).toMatchObject({
+      startTime: "08:00",
+      endTime: "10:45",
+      noTime: false,
+    });
   });
 });

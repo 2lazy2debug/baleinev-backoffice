@@ -86,6 +86,7 @@ export default function ShiftFields({
         <Input
           type="time"
           name="startTime"
+          step={900}
           required={!noTime}
           disabled={noTime}
           value={startTime}
@@ -97,6 +98,7 @@ export default function ShiftFields({
         <Input
           type="time"
           name="endTime"
+          step={900}
           required={!noTime}
           disabled={noTime}
           value={endTime}

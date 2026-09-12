@@ -420,7 +420,13 @@ export async function duplicateEventDayShiftsAction(
 // EventShift CRUD (admin only)
 // ────────────────────────────────────────────────────────────────────────────
 
-/** Reads the shared start/end/noTime fields, refusing a half-timed or backwards shift. */
+/** True once a "HH:MM" string lands on `:00`, `:15`, `:30` or `:45`. */
+function isQuarterHour(time: string): boolean {
+  const minutes = Number(time.split(":")[1]);
+  return Number.isFinite(minutes) && minutes % 15 === 0;
+}
+
+/** Reads the shared start/end/noTime fields, refusing a half-timed, backwards or off-grid shift. */
 function readShiftTimeFields(formData: FormData): { startTime: string | null; endTime: string | null; noTime: boolean } {
   const noTime = String(formData.get("noTime") ?? "") === "on";
   const startTimeRaw = String(formData.get("startTime") ?? "").trim();
@@ -435,6 +441,9 @@ function readShiftTimeFields(formData: FormData): { startTime: string | null; en
   }
   if (endTimeRaw <= startTimeRaw) {
     throw new Error("A shift must end after it starts.");
+  }
+  if (!isQuarterHour(startTimeRaw) || !isQuarterHour(endTimeRaw)) {
+    throw new Error("Shift times must land on the quarter hour — :00, :15, :30 or :45.");
   }
 
   return { startTime: startTimeRaw, endTime: endTimeRaw, noTime: false };
