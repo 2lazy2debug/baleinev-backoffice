@@ -166,6 +166,8 @@ model User {
   cashRegistersJournaled  CashRegister[]          @relation("CashRegisterJournaledBy")
   posSessionsOpened       PosSession[]            @relation("PosSessionOpenedBy")
   posSales                PosSale[]               @relation("PosSaleSoldBy")
+  eventStaffLogsAsActor   EventStaffLog[]         @relation("EventStaffLogActor")
+  eventStaffLogsAsSubject EventStaffLog[]         @relation("EventStaffLogSubject")
 
   @@index([selectedEditionId])
   @@index([selectedStockPlaceId])
@@ -548,6 +550,7 @@ model Event {
   eventType  EventType   @relation(fields: [eventTypeId], references: [id], onDelete: Restrict)
   costCenter CostCenter? @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
   days       EventDay[]
+  staffLogs  EventStaffLog[]
 
   @@index([editionId, startDate])
 }
@@ -582,6 +585,7 @@ model EventShift {
 
   eventDay    EventDay          @relation(fields: [eventDayId], references: [id], onDelete: Cascade)
   assignments StaffAssignment[]
+  staffLogs   EventStaffLog[]
 }
 
 model StaffAssignment {
@@ -595,6 +599,41 @@ model StaffAssignment {
   task  Task?
 
   @@unique([shiftId, userId])
+}
+
+enum EventStaffAction {
+  SIGNUP
+  WITHDRAW
+  ASSIGN
+  UNASSIGN
+}
+
+/// Who put whom on a shift, and when — admin-only, read-only, `/events/logs`.
+/// Every relation is `onDelete: SetNull`: `StaffAssignment` itself cascades
+/// away when a shift or day is deleted, but the log of it happening must not
+/// — the denormalised name columns are what keep the line readable once the
+/// rows they point at are gone, the same trade `StockMovement` makes.
+model EventStaffLog {
+  id        String           @id @default(cuid())
+  eventId   String?
+  shiftId   String?
+  actorId   String?
+  subjectId String?
+  action    EventStaffAction
+  createdAt DateTime         @default(now())
+
+  eventName   String
+  shiftLabel  String
+  actorName   String
+  subjectName String
+
+  event   Event?      @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  shift   EventShift? @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+  actor   User?       @relation("EventStaffLogActor", fields: [actorId], references: [id], onDelete: SetNull)
+  subject User?       @relation("EventStaffLogSubject", fields: [subjectId], references: [id], onDelete: SetNull)
+
+  @@index([eventId, createdAt])
+  @@index([createdAt])
 }
 
 model Task {

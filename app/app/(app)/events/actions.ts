@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUserAccess, requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { createUserTask } from "@/lib/tasks";
-import { TaskStatus, TaskType } from "@prisma/client";
+import { EventStaffAction, TaskStatus, TaskType, type Prisma } from "@prisma/client";
 import { requireWritableEdition, resolveWritableEditionId } from "@/lib/edition-context";
 import { isEventExpired } from "@/lib/events";
 import {
@@ -525,6 +525,64 @@ export async function deleteShiftAction(_prevState: ActionState, formData: FormD
   }
 }
 
+const shiftLabelDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+
+/** The `EventStaffLog.shiftLabel` snapshot: "Sat 12 Apr · 18:00–22:00 · Bar". */
+function shiftLabelFor(shift: {
+  startTime: string | null;
+  endTime: string | null;
+  noTime: boolean;
+  role: string | null;
+  eventDay: { date: Date };
+}): string {
+  const date = shiftLabelDateFormatter.format(shift.eventDay.date);
+  const time = shift.noTime ? "No fixed time" : `${shift.startTime}–${shift.endTime}`;
+  return `${date} · ${time} · ${shift.role ?? "General"}`;
+}
+
+/**
+ * One row in the staffing log. Written in the same transaction as the
+ * assignment write it records, so the log never drifts from what actually
+ * happened.
+ */
+async function writeStaffLog(
+  tx: Prisma.TransactionClient,
+  params: {
+    action: EventStaffAction;
+    shift: {
+      id: string;
+      startTime: string | null;
+      endTime: string | null;
+      noTime: boolean;
+      role: string | null;
+      eventDay: { date: Date; event: { id: string; name: string } };
+    };
+    actorId: string;
+    actorName: string;
+    subjectId: string;
+    subjectName: string;
+  },
+) {
+  await tx.eventStaffLog.create({
+    data: {
+      eventId: params.shift.eventDay.event.id,
+      shiftId: params.shift.id,
+      actorId: params.actorId,
+      subjectId: params.subjectId,
+      action: params.action,
+      eventName: params.shift.eventDay.event.name,
+      shiftLabel: shiftLabelFor(params.shift),
+      actorName: params.actorName,
+      subjectName: params.subjectName,
+    },
+  });
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // Staff assignments (self-service + admin can assign)
 // ────────────────────────────────────────────────────────────────────────────
@@ -541,7 +599,7 @@ export async function signUpForShiftAction(_prevState: ActionState, formData: Fo
       where: { id: shiftId },
       include: {
         assignments: true,
-        eventDay: { include: { event: { select: { name: true } } } },
+        eventDay: { include: { event: { select: { id: true, name: true } } } },
       },
     });
 
@@ -552,8 +610,19 @@ export async function signUpForShiftAction(_prevState: ActionState, formData: Fo
     const existing = shift.assignments.find((a) => a.userId === access.id);
     if (existing) return { error: null }; // already signed up, idempotent
 
-    const assignment = await prisma.staffAssignment.create({
-      data: { shiftId, userId: access.id },
+    const assignment = await prisma.$transaction(async (tx) => {
+      const created = await tx.staffAssignment.create({
+        data: { shiftId, userId: access.id },
+      });
+      await writeStaffLog(tx, {
+        action: EventStaffAction.SIGNUP,
+        shift,
+        actorId: access.id,
+        actorName: access.userName,
+        subjectId: access.id,
+        subjectName: access.userName,
+      });
+      return created;
     });
 
     await createUserTask({
@@ -595,9 +664,15 @@ export async function withdrawFromShiftAction(_prevState: ActionState, formData:
       await assertEventNotExpired(shiftId);
     }
 
-    const assignment = await prisma.staffAssignment.findFirst({
-      where: { shiftId, userId: targetUserId },
+    const shift = await prisma.eventShift.findUniqueOrThrow({
+      where: { id: shiftId },
+      include: {
+        assignments: { include: { user: { select: { name: true } } } },
+        eventDay: { include: { event: { select: { id: true, name: true } } } },
+      },
     });
+
+    const assignment = shift.assignments.find((a) => a.userId === targetUserId);
     if (!assignment) return { error: null };
 
     // Resolve the associated STAFF_SHIFT task if it exists
@@ -609,7 +684,17 @@ export async function withdrawFromShiftAction(_prevState: ActionState, formData:
       });
     }
 
-    await prisma.staffAssignment.delete({ where: { id: assignment.id } });
+    await prisma.$transaction(async (tx) => {
+      await tx.staffAssignment.delete({ where: { id: assignment.id } });
+      await writeStaffLog(tx, {
+        action: targetUserId === access.id ? EventStaffAction.WITHDRAW : EventStaffAction.UNASSIGN,
+        shift,
+        actorId: access.id,
+        actorName: access.userName,
+        subjectId: targetUserId,
+        subjectName: assignment.user.name,
+      });
+    });
 
     revalidatePath("/events");
     revalidatePath("/tasks");
@@ -621,7 +706,7 @@ export async function withdrawFromShiftAction(_prevState: ActionState, formData:
 
 export async function adminAssignUserToShiftAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    await requireAdmin();
+    const access = await requireAdmin();
     const shiftId = getRequiredString(formData, "shiftId");
     const userId = getRequiredString(formData, "userId");
 
@@ -631,7 +716,7 @@ export async function adminAssignUserToShiftAction(_prevState: ActionState, form
       where: { id: shiftId },
       include: {
         assignments: true,
-        eventDay: { include: { event: { select: { name: true } } } },
+        eventDay: { include: { event: { select: { id: true, name: true } } } },
       },
     });
 
@@ -642,7 +727,20 @@ export async function adminAssignUserToShiftAction(_prevState: ActionState, form
     const existing = shift.assignments.find((a) => a.userId === userId);
     if (existing) return { error: null };
 
-    const assignment = await prisma.staffAssignment.create({ data: { shiftId, userId } });
+    const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { name: true } });
+
+    const assignment = await prisma.$transaction(async (tx) => {
+      const created = await tx.staffAssignment.create({ data: { shiftId, userId } });
+      await writeStaffLog(tx, {
+        action: EventStaffAction.ASSIGN,
+        shift,
+        actorId: access.id,
+        actorName: access.userName,
+        subjectId: userId,
+        subjectName: user.name,
+      });
+      return created;
+    });
 
     await createUserTask({
       type: TaskType.STAFF_SHIFT,

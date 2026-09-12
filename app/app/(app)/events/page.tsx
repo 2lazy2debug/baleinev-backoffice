@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Settings } from "lucide-react";
+import { History, Settings } from "lucide-react";
 
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
@@ -111,6 +111,14 @@ export default async function EventsPage() {
               className={iconButtonClasses("neutral", "md")}
             >
               <Settings />
+            </Link>
+            <Link
+              href="/events/logs"
+              title={copy.events.logsTitle}
+              aria-label={copy.events.logsTitle}
+              className={iconButtonClasses("neutral", "md")}
+            >
+              <History />
             </Link>
             </>
           ) : null

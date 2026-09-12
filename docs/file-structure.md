@@ -284,8 +284,11 @@ app/
 │   │   ├── edit-shift-form.tsx   ← The same fields prefilled, in place of the row's labels
 │   │   ├── settings/             ← Event types (admin only): create button + edit dialog; delete is
 │   │   │                            refused while a type is in use
+│   │   ├── logs/                 ← The staffing log, newest first: who was signed up, withdrawn or
+│   │   │                            (un)assigned, and by whom — admin-only, filtered by event
 │   │   └── actions.ts            ← Server actions: event type / event / day / shift CRUD, the info
-│   │                                page, sign-up, withdraw, admin assign
+│   │                                page, sign-up, withdraw, admin assign — each of the staffing
+│   │                                four also writes an `EventStaffLog` row in the same transaction
 │   │
 │   ├── users/
 │   │   ├── page.tsx              ← User management (admin only, data-fetching only)

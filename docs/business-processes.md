@@ -904,3 +904,17 @@ afterwards does not touch recorded history, and deleting an article leaves its s
 
 **Nothing here books anything.** A session's takings reach the journal only when the *cash
 register* behind it is closed — that is the register-close flow's job, not this one's.
+
+## 14. Events — the staffing log
+
+Signing up, withdrawing, and an admin assigning or removing someone are the four gestures that
+move a `StaffAssignment`, and each one writes an `EventStaffLog` row in the same transaction —
+`SIGNUP`, `WITHDRAW`, `ASSIGN`, `UNASSIGN`. A signup or a self-withdrawal logs the user as both
+actor and subject; an admin's assign or removal logs the admin as actor and the staffer as
+subject.
+
+`/events/logs` reads it back, admin-only, newest first, filtered by event — the same shape as
+[`/stock/history`](#everything-that-moves-a-quantity-is-logged): a capped read (the last 300
+entries), preformatted timestamps, denormalised names so a line still reads once the shift, the
+event, or the person it names is gone. A hidden button is not the rule here either — the log has
+no write path of its own, it only ever records what the staffing actions already did.

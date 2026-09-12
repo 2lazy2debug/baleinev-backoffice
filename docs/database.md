@@ -439,6 +439,26 @@ One user signed up for, or assigned to, a shift.
 `@@unique([shiftId, userId])` — a user is on a given shift at most once. Also the anchor for
 `Task.staffAssignmentId` (`STAFF_SHIFT`, above).
 
+### `EventStaffLog`
+Who put whom on a shift, and when — admin-only, read-only, `/events/logs`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `eventId` | String? | FK → [`Event`](#event), **`SetNull`** |
+| `shiftId` | String? | FK → [`EventShift`](#eventshift), **`SetNull`** |
+| `actorId` | String? | Who did it. FK → User, **`SetNull`** |
+| `subjectId` | String? | Who it was done to. FK → User, **`SetNull`** |
+| `action` | `EventStaffAction` | `SIGNUP` \| `WITHDRAW` \| `ASSIGN` \| `UNASSIGN` |
+| `eventName` / `shiftLabel` / `actorName` / `subjectName` | String | Denormalised snapshots |
+| `createdAt` | DateTime | |
+
+Every relation is `SetNull`, not `Cascade`: `StaffAssignment` itself cascades away when a shift or
+day is deleted, but the log of it having happened must outlive that — the same trade
+[`StockMovement`](#stockmovement) makes for a deleted stock item. The four name columns are what
+keep a line readable once the rows they point at are gone; a signup logs `actor == subject`, an
+admin assignment or removal logs the admin as actor and the staffer as subject.
+
 ---
 
 ### `Address`
