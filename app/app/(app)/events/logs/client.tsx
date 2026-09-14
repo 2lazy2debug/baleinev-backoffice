@@ -43,6 +43,8 @@ const ACTION_TONE: Record<EventStaffAction, "success" | "warning" | "info" | "er
   WITHDRAW: "warning",
   ASSIGN: "info",
   UNASSIGN: "error",
+  UNAVAILABLE: "error",
+  AVAILABLE: "info",
 };
 
 /**
@@ -63,6 +65,8 @@ export function EventStaffLogClient({ locale, logs }: Props) {
     WITHDRAW: copy.logsActionWithdraw,
     ASSIGN: copy.logsActionAssign,
     UNASSIGN: copy.logsActionUnassign,
+    UNAVAILABLE: copy.logsActionUnavailable,
+    AVAILABLE: copy.logsActionAvailable,
   };
 
   function actionBadge(log: StaffLogRow) {

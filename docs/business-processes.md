@@ -907,13 +907,29 @@ register* behind it is closed — that is the register-close flow's job, not thi
 
 ## 14. Events — the staffing log
 
-Signing up, withdrawing, and an admin assigning or removing someone are the four gestures that
-move a `StaffAssignment`, and each one writes an `EventStaffLog` row in the same transaction —
-`SIGNUP`, `WITHDRAW`, `ASSIGN`, `UNASSIGN`. A signup or a self-withdrawal logs the user as both
-actor and subject; an admin's assign or removal logs the admin as actor and the staffer as
-subject.
+Signing up, withdrawing, declining, un-declining, and an admin assigning or removing someone are
+the six gestures that write an `EventStaffLog` row in the same transaction as the change it
+records — `SIGNUP`, `WITHDRAW`, `ASSIGN`, `UNASSIGN`, `UNAVAILABLE`, `AVAILABLE`. Only `SIGNUP` and
+`ASSIGN`/`UNASSIGN` move a `StaffAssignment`; `UNAVAILABLE`/`AVAILABLE` move a
+`ShiftUnavailability` instead — a separate table, because a decline consumes no capacity, anchors
+no `STAFF_SHIFT` task and prints on no schedule PDF. A signup, a self-withdrawal or a self-declared
+(un)availability logs the user as both actor and subject; an admin's assign or removal logs the
+admin as actor and the staffer as subject — there is no admin-declared unavailability, since that
+is a statement only the person themself can make.
 
-`/events/logs` reads it back, admin-only, newest first, filtered by event — the same shape as
+Signing up or being assigned clears any earlier `ShiftUnavailability` for that user on that shift
+(a `deleteMany`, so the common case of no row to clear is a no-op) rather than leaving a stale
+decline behind, and that clearing does not get its own `AVAILABLE` log line — the `SIGNUP` or
+`ASSIGN` line already says so.
+
+**A reader sees only their own unavailability; an admin sees everyone's.** That is enforced in the
+`prisma` query in `app/(app)/events/page.tsx` — the `unavailabilities` relation is loaded with
+`where: { userId: access.id }` for anyone who isn't an admin — not in the JSX. A client-side
+`{isAdmin ? … : null}` would still ship every name to every reader's browser inside the RSC
+payload, one View-Source away; the non-admin query simply never loads a row that isn't the
+reader's own.
+
+`/events/logs` reads the log back, admin-only, newest first, filtered by event — the same shape as
 [`/stock/history`](#everything-that-moves-a-quantity-is-logged): a capped read (the last 300
 entries), preformatted timestamps, denormalised names so a line still reads once the shift, the
 event, or the person it names is gone. A hidden button is not the rule here either — the log has
