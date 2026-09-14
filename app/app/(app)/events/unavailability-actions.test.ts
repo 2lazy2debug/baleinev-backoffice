@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// The staffing four (signup / withdraw / admin assign / the admin removal
-// inside withdraw) each write an EventStaffLog row in the same transaction as
-// the StaffAssignment write. These tests cover that logging, not the
-// capacity/guard rules already covered elsewhere.
+// The two unavailability actions and the deleteMany they trigger inside
+// signUpForShiftAction / adminAssignUserToShiftAction. Same mock shape as
+// staffing-actions.test.ts — this file covers the decline side of it.
 const getCurrentUserAccess = vi.fn();
 const requireAdmin = vi.fn();
 const requireWritableEdition = vi.fn();
@@ -37,7 +36,12 @@ vi.mock("@/lib/edition-context", () => ({
   resolveWritableEditionId: (...a: unknown[]) => resolveWritableEditionId(...a),
 }));
 
-const { signUpForShiftAction, withdrawFromShiftAction, adminAssignUserToShiftAction } = await import("./actions");
+const {
+  markUnavailableForShiftAction,
+  clearUnavailableForShiftAction,
+  signUpForShiftAction,
+  adminAssignUserToShiftAction,
+} = await import("./actions");
 
 // Far in the future, so `isEventExpired` never trips inside these tests.
 const DAY = new Date("2099-04-12T00:00:00.000Z");
@@ -65,16 +69,9 @@ function shiftFixture(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function signUpForm(): FormData {
+function shiftForm(): FormData {
   const fd = new FormData();
   fd.set("shiftId", "shift_1");
-  return fd;
-}
-
-function withdrawForm(userId?: string): FormData {
-  const fd = new FormData();
-  fd.set("shiftId", "shift_1");
-  if (userId) fd.set("userId", userId);
   return fd;
 }
 
@@ -93,105 +90,106 @@ beforeEach(() => {
   prisma.eventShift.findUnique.mockResolvedValue({ eventDay: { event: { editionId: "ed_1" } } });
   prisma.eventShift.findUniqueOrThrow.mockResolvedValue(shiftFixture());
   prisma.task.findFirst.mockResolvedValue(null);
+  prisma.shiftUnavailability.findUnique.mockResolvedValue(null);
   tx.staffAssignment.create.mockResolvedValue({ id: "assignment_1" });
 });
 
-describe("signUpForShiftAction", () => {
-  it("logs a SIGNUP with the signer as both actor and subject", async () => {
-    const result = await signUpForShiftAction({ error: null }, signUpForm());
+describe("markUnavailableForShiftAction", () => {
+  it("creates the row and logs UNAVAILABLE in the same transaction", async () => {
+    const result = await markUnavailableForShiftAction({ error: null }, shiftForm());
 
     expect(result).toEqual({ error: null });
-    expect(tx.staffAssignment.create).toHaveBeenCalledWith({ data: { shiftId: "shift_1", userId: "user_1" } });
+    expect(tx.shiftUnavailability.create).toHaveBeenCalledWith({ data: { shiftId: "shift_1", userId: "user_1" } });
     expect(tx.eventStaffLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         eventId: "event_1",
         shiftId: "shift_1",
         actorId: "user_1",
         subjectId: "user_1",
-        action: "SIGNUP",
-        eventName: "Spring Fest",
+        action: "UNAVAILABLE",
         actorName: "Alex",
         subjectName: "Alex",
       }),
     });
   });
 
-  it("does not log an already-signed-up no-op", async () => {
+  it("refuses while assigned, and writes nothing", async () => {
     prisma.eventShift.findUniqueOrThrow.mockResolvedValue(
       shiftFixture({ assignments: [{ id: "a_1", userId: "user_1" }] }),
     );
 
-    await signUpForShiftAction({ error: null }, signUpForm());
+    const result = await markUnavailableForShiftAction({ error: null }, shiftForm());
 
+    expect(result).toEqual({ error: "Withdraw from this shift first." });
     expect(prisma.$transaction).not.toHaveBeenCalled();
-    expect(tx.eventStaffLog.create).not.toHaveBeenCalled();
+  });
+
+  it("is idempotent — a second call creates nothing", async () => {
+    prisma.shiftUnavailability.findUnique.mockResolvedValue({ id: "unavail_1" });
+
+    const result = await markUnavailableForShiftAction({ error: null }, shiftForm());
+
+    expect(result).toEqual({ error: null });
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(tx.shiftUnavailability.create).not.toHaveBeenCalled();
   });
 });
 
-describe("withdrawFromShiftAction", () => {
-  it("logs a WITHDRAW when a user removes themself", async () => {
-    prisma.eventShift.findUniqueOrThrow.mockResolvedValue(
-      shiftFixture({ assignments: [{ id: "a_1", userId: "user_1", user: { name: "Alex" } }] }),
-    );
+describe("clearUnavailableForShiftAction", () => {
+  it("deletes the row and logs AVAILABLE", async () => {
+    prisma.shiftUnavailability.findUnique.mockResolvedValue({ id: "unavail_1" });
 
-    const result = await withdrawFromShiftAction({ error: null }, withdrawForm());
+    const result = await clearUnavailableForShiftAction({ error: null }, shiftForm());
 
     expect(result).toEqual({ error: null });
-    expect(tx.staffAssignment.delete).toHaveBeenCalledWith({ where: { id: "a_1" } });
+    expect(tx.shiftUnavailability.delete).toHaveBeenCalledWith({ where: { id: "unavail_1" } });
     expect(tx.eventStaffLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         actorId: "user_1",
         subjectId: "user_1",
-        action: "WITHDRAW",
+        action: "AVAILABLE",
         actorName: "Alex",
         subjectName: "Alex",
       }),
     });
   });
 
-  it("logs an UNASSIGN when an admin removes someone else", async () => {
-    getCurrentUserAccess.mockResolvedValue({ id: "admin_1", userName: "Admin", role: "ADMIN" });
-    prisma.eventShift.findUniqueOrThrow.mockResolvedValue(
-      shiftFixture({ assignments: [{ id: "a_1", userId: "user_2", user: { name: "Jamie" } }] }),
-    );
+  it("is idempotent when there is no row to clear", async () => {
+    const result = await clearUnavailableForShiftAction({ error: null }, shiftForm());
 
-    await withdrawFromShiftAction({ error: null }, withdrawForm("user_2"));
-
-    expect(tx.eventStaffLog.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        actorId: "admin_1",
-        subjectId: "user_2",
-        action: "UNASSIGN",
-        actorName: "Admin",
-        subjectName: "Jamie",
-      }),
-    });
-  });
-
-  it("refuses a non-admin removing someone else, and logs nothing", async () => {
-    const result = await withdrawFromShiftAction({ error: null }, withdrawForm("user_2"));
-
-    expect(result.error).toMatch(/only admins/i);
+    expect(result).toEqual({ error: null });
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 });
 
-describe("adminAssignUserToShiftAction", () => {
-  it("logs an ASSIGN with the admin as actor and the staffer as subject", async () => {
+describe("signing up clears an earlier decline", () => {
+  it("calls shiftUnavailability.deleteMany and still logs exactly one row, SIGNUP", async () => {
+    const result = await signUpForShiftAction({ error: null }, shiftForm());
+
+    expect(result).toEqual({ error: null });
+    expect(tx.shiftUnavailability.deleteMany).toHaveBeenCalledWith({
+      where: { shiftId: "shift_1", userId: "user_1" },
+    });
+    expect(tx.eventStaffLog.create).toHaveBeenCalledTimes(1);
+    expect(tx.eventStaffLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ action: "SIGNUP" }),
+    });
+  });
+});
+
+describe("admin assigning clears an earlier decline", () => {
+  it("calls shiftUnavailability.deleteMany and still logs exactly one row, ASSIGN", async () => {
     prisma.user.findUniqueOrThrow.mockResolvedValue({ name: "Jamie" });
 
     const result = await adminAssignUserToShiftAction({ error: null }, assignForm("user_2"));
 
     expect(result).toEqual({ error: null });
-    expect(tx.staffAssignment.create).toHaveBeenCalledWith({ data: { shiftId: "shift_1", userId: "user_2" } });
+    expect(tx.shiftUnavailability.deleteMany).toHaveBeenCalledWith({
+      where: { shiftId: "shift_1", userId: "user_2" },
+    });
+    expect(tx.eventStaffLog.create).toHaveBeenCalledTimes(1);
     expect(tx.eventStaffLog.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        actorId: "admin_1",
-        subjectId: "user_2",
-        action: "ASSIGN",
-        actorName: "Admin",
-        subjectName: "Jamie",
-      }),
+      data: expect.objectContaining({ action: "ASSIGN" }),
     });
   });
 });

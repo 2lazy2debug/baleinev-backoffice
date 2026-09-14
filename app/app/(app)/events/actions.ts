@@ -623,6 +623,9 @@ export async function signUpForShiftAction(_prevState: ActionState, formData: Fo
       const created = await tx.staffAssignment.create({
         data: { shiftId, userId: access.id },
       });
+      // Signing up answers "yes" — it overrides an earlier "no" without a
+      // separate AVAILABLE log line, since the SIGNUP line already says so.
+      await tx.shiftUnavailability.deleteMany({ where: { shiftId, userId: access.id } });
       await writeStaffLog(tx, {
         action: EventStaffAction.SIGNUP,
         shift,
@@ -740,6 +743,9 @@ export async function adminAssignUserToShiftAction(_prevState: ActionState, form
 
     const assignment = await prisma.$transaction(async (tx) => {
       const created = await tx.staffAssignment.create({ data: { shiftId, userId } });
+      // An admin assigning someone over a declared decline is allowed — the
+      // decline just stops being current, the same way a self-signup clears it.
+      await tx.shiftUnavailability.deleteMany({ where: { shiftId, userId } });
       await writeStaffLog(tx, {
         action: EventStaffAction.ASSIGN,
         shift,
@@ -766,6 +772,97 @@ export async function adminAssignUserToShiftAction(_prevState: ActionState, form
 
     revalidatePath("/events");
     revalidatePath("/tasks");
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+/**
+ * The other answer to a shift, self-service only — there is no admin override
+ * and no `userId` to read, because a decline is a statement only the person
+ * themself can make. An admin can still assign someone over it (see
+ * `adminAssignUserToShiftAction`); they just can't declare it on their behalf.
+ */
+export async function markUnavailableForShiftAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    const access = await getCurrentUserAccess();
+    const shiftId = getRequiredString(formData, "shiftId");
+
+    await requireWritableShift(shiftId);
+    await assertEventNotExpired(shiftId);
+
+    const shift = await prisma.eventShift.findUniqueOrThrow({
+      where: { id: shiftId },
+      include: {
+        assignments: true,
+        eventDay: { include: { event: { select: { id: true, name: true } } } },
+      },
+    });
+
+    // Two contradictory answers must not be storable. The UI never offers this
+    // button while signed up; this is the stale-tab backstop.
+    if (shift.assignments.some((a) => a.userId === access.id)) {
+      throw new Error("Withdraw from this shift first.");
+    }
+
+    const existing = await prisma.shiftUnavailability.findUnique({
+      where: { shiftId_userId: { shiftId, userId: access.id } },
+    });
+    if (existing) return { error: null }; // already declined, idempotent
+
+    await prisma.$transaction(async (tx) => {
+      await tx.shiftUnavailability.create({ data: { shiftId, userId: access.id } });
+      await writeStaffLog(tx, {
+        action: EventStaffAction.UNAVAILABLE,
+        shift,
+        actorId: access.id,
+        actorName: access.userName,
+        subjectId: access.id,
+        subjectName: access.userName,
+      });
+    });
+
+    revalidatePath("/events");
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+export async function clearUnavailableForShiftAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    const access = await getCurrentUserAccess();
+    const shiftId = getRequiredString(formData, "shiftId");
+
+    await requireWritableShift(shiftId);
+    await assertEventNotExpired(shiftId);
+
+    const shift = await prisma.eventShift.findUniqueOrThrow({
+      where: { id: shiftId },
+      include: {
+        eventDay: { include: { event: { select: { id: true, name: true } } } },
+      },
+    });
+
+    const existing = await prisma.shiftUnavailability.findUnique({
+      where: { shiftId_userId: { shiftId, userId: access.id } },
+    });
+    if (!existing) return { error: null };
+
+    await prisma.$transaction(async (tx) => {
+      await tx.shiftUnavailability.delete({ where: { id: existing.id } });
+      await writeStaffLog(tx, {
+        action: EventStaffAction.AVAILABLE,
+        shift,
+        actorId: access.id,
+        actorName: access.userName,
+        subjectId: access.id,
+        subjectName: access.userName,
+      });
+    });
+
+    revalidatePath("/events");
     return { error: null };
   } catch (err) {
     return { error: toActionErrorMessage(err) };

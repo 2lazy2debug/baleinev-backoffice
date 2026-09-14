@@ -152,6 +152,7 @@ model User {
   submittedExpenseReports ExpenseReport[]         @relation("ExpenseReportSubmittedBy")
   reviewedExpenseReports  ExpenseReport[]         @relation("ExpenseReportReviewedBy")
   staffAssignments        StaffAssignment[]
+  shiftUnavailabilities   ShiftUnavailability[]
   createdTasks            Task[]                  @relation("TaskCreator")
   assignedTasks           Task[]                  @relation("TaskAssignee")
   resolvedTasks           Task[]                  @relation("TaskResolver")
@@ -546,9 +547,9 @@ model Event {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  edition    Edition     @relation(fields: [editionId], references: [id], onDelete: Cascade)
-  eventType  EventType   @relation(fields: [eventTypeId], references: [id], onDelete: Restrict)
-  costCenter CostCenter? @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+  edition    Edition         @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  eventType  EventType       @relation(fields: [eventTypeId], references: [id], onDelete: Restrict)
+  costCenter CostCenter?     @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
   days       EventDay[]
   staffLogs  EventStaffLog[]
 
@@ -583,9 +584,10 @@ model EventShift {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  eventDay    EventDay          @relation(fields: [eventDayId], references: [id], onDelete: Cascade)
-  assignments StaffAssignment[]
-  staffLogs   EventStaffLog[]
+  eventDay         EventDay              @relation(fields: [eventDayId], references: [id], onDelete: Cascade)
+  assignments      StaffAssignment[]
+  unavailabilities ShiftUnavailability[]
+  staffLogs        EventStaffLog[]
 }
 
 model StaffAssignment {
@@ -601,11 +603,32 @@ model StaffAssignment {
   @@unique([shiftId, userId])
 }
 
+/// "Not me, not this shift." The other answer to a shift — the one that used to
+/// be indistinguishable from silence. Private: a reader only ever sees their
+/// own rows, admins see everyone's (see the query in `events/page.tsx`).
+/// Deliberately not a status on `StaffAssignment` — an assignment consumes
+/// capacity, anchors a STAFF_SHIFT task and prints on the schedule PDF, and
+/// none of that is true of a decline.
+model ShiftUnavailability {
+  id        String   @id @default(cuid())
+  shiftId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  shift EventShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([shiftId, userId])
+  @@index([userId])
+}
+
 enum EventStaffAction {
   SIGNUP
   WITHDRAW
   ASSIGN
   UNASSIGN
+  UNAVAILABLE
+  AVAILABLE
 }
 
 /// Who put whom on a shift, and when — admin-only, read-only, `/events/logs`.

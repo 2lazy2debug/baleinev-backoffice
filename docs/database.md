@@ -439,6 +439,25 @@ One user signed up for, or assigned to, a shift.
 `@@unique([shiftId, userId])` — a user is on a given shift at most once. Also the anchor for
 `Task.staffAssignmentId` (`STAFF_SHIFT`, above).
 
+### `ShiftUnavailability`
+The other answer to a shift — "not me, not this shift" — picked per shift, private to the person
+who picked it. Not a status on `StaffAssignment`: an assignment consumes capacity, anchors a
+STAFF_SHIFT task and prints on the schedule PDF, and none of that is true of a decline, so it gets
+its own table.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `shiftId` | String | FK → [`EventShift`](#eventshift) (onDelete: Cascade) |
+| `userId` | String | FK → User (onDelete: Cascade) |
+| `createdAt` | DateTime | |
+
+`@@unique([shiftId, userId])` — a user has at most one answer per shift. Signing up
+(`signUpForShiftAction`) or being assigned (`adminAssignUserToShiftAction`) clears this row for
+that user rather than leaving a stale decline behind. A reader only ever sees their own row; an
+admin sees everyone's — enforced in the `page.tsx` query, not in the markup (see
+[Events — the staffing log](business-processes.md#14-events--the-staffing-log)).
+
 ### `EventStaffLog`
 Who put whom on a shift, and when — admin-only, read-only, `/events/logs`.
 
@@ -449,7 +468,7 @@ Who put whom on a shift, and when — admin-only, read-only, `/events/logs`.
 | `shiftId` | String? | FK → [`EventShift`](#eventshift), **`SetNull`** |
 | `actorId` | String? | Who did it. FK → User, **`SetNull`** |
 | `subjectId` | String? | Who it was done to. FK → User, **`SetNull`** |
-| `action` | `EventStaffAction` | `SIGNUP` \| `WITHDRAW` \| `ASSIGN` \| `UNASSIGN` |
+| `action` | `EventStaffAction` | `SIGNUP` \| `WITHDRAW` \| `ASSIGN` \| `UNASSIGN` \| `UNAVAILABLE` \| `AVAILABLE` |
 | `eventName` / `shiftLabel` / `actorName` / `subjectName` | String | Denormalised snapshots |
 | `createdAt` | DateTime | |
 
