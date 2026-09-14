@@ -21,6 +21,7 @@ import {
 import AddShiftForm from "./add-shift-form";
 import DuplicateDayModal from "./duplicate-day-modal";
 import EventInfoModal from "./event-info-modal";
+import EventResponsesModal, { type EventResponses } from "./event-responses-modal";
 import EditShiftForm from "./edit-shift-form";
 
 /**
@@ -40,6 +41,44 @@ function formatTime(t: string) {
 
 function formatDate(d: Date | string) {
   return new Date(d).toISOString().slice(0, 10);
+}
+
+/**
+ * Who has answered this event: at least one StaffAssignment or
+ * ShiftUnavailability on any shift of any non-off day. The denominator is
+ * every user, admin-only, so this is only ever called for an admin.
+ */
+function eventResponses(event: EventItem, allUsers: UserItem[]): EventResponses {
+  const shiftCounts = new Map<string, number>();
+  const unavailableUserIds = new Set<string>();
+
+  for (const day of event.days) {
+    if (day.isOff) continue;
+    for (const shift of day.shifts) {
+      for (const assignment of shift.assignments) {
+        shiftCounts.set(assignment.userId, (shiftCounts.get(assignment.userId) ?? 0) + 1);
+      }
+      for (const unavailability of shift.unavailabilities) {
+        unavailableUserIds.add(unavailability.userId);
+      }
+    }
+  }
+
+  const answered: EventResponses["answered"] = [];
+  const noAnswer: EventResponses["noAnswer"] = [];
+
+  for (const user of allUsers) {
+    const shiftCount = shiftCounts.get(user.id) ?? 0;
+    const isUnavailable = unavailableUserIds.has(user.id);
+
+    if (shiftCount > 0 || isUnavailable) {
+      answered.push({ id: user.id, name: user.name, shiftCount, unavailableOnly: shiftCount === 0 });
+    } else {
+      noAnswer.push({ id: user.id, name: user.name });
+    }
+  }
+
+  return { answered, noAnswer };
 }
 
 type UserItem = {
@@ -128,6 +167,12 @@ type EventsCopy = {
   write: string;
   preview: string;
   nothingToPreview: string;
+  responses: string;
+  responsesAnswered: string;
+  responsesNoAnswer: string;
+  responsesShiftCount: string;
+  responsesUnavailableOnly: string;
+  responsesEveryoneAnswered: string;
 };
 
 type Props = {
@@ -363,6 +408,21 @@ export default function EventsPageClient({
                     cancel: shellCopy.cancel,
                   }}
                 />
+                {/* Who hasn't replied yet — the admin's view of the feature. */}
+                {isAdmin ? (
+                  <EventResponsesModal
+                    eventName={event.name}
+                    responses={eventResponses(event, allUsers)}
+                    copy={{
+                      responses: copy.responses,
+                      responsesAnswered: copy.responsesAnswered,
+                      responsesNoAnswer: copy.responsesNoAnswer,
+                      responsesShiftCount: copy.responsesShiftCount,
+                      responsesUnavailableOnly: copy.responsesUnavailableOnly,
+                      responsesEveryoneAnswered: copy.responsesEveryoneAnswered,
+                    }}
+                  />
+                ) : null}
                 <Button
                   type="button"
                   variant="secondary"
