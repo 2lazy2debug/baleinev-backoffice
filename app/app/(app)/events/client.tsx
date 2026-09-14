@@ -10,8 +10,10 @@ import { initialActionState } from "@/lib/server-action-helpers";
 
 import {
   adminAssignUserToShiftAction,
+  clearUnavailableForShiftAction,
   deleteEventAction,
   deleteShiftAction,
+  markUnavailableForShiftAction,
   signUpForShiftAction,
   toggleEventDayOffAction,
   withdrawFromShiftAction,
@@ -51,6 +53,12 @@ type AssignmentItem = {
   user: { id: string; name: string };
 };
 
+type UnavailabilityItem = {
+  id: string;
+  userId: string;
+  user: { id: string; name: string };
+};
+
 type ShiftItem = {
   id: string;
   startTime: string | null;
@@ -59,6 +67,7 @@ type ShiftItem = {
   role: string | null;
   capacity: number;
   assignments: AssignmentItem[];
+  unavailabilities: UnavailabilityItem[];
 };
 
 type EventDayItem = {
@@ -95,6 +104,9 @@ type EventsCopy = {
   full: string;
   withdraw: string;
   signUp: string;
+  unavailable: string;
+  availableAgain: string;
+  unavailableStaff: string;
   assignStaff: string;
   role: string;
   noTime: string;
@@ -146,6 +158,14 @@ export default function EventsPageClient({
   const [signUpState, signUpFormAction, isSigningUp] = useActionState(signUpForShiftAction, initialActionState);
   const [withdrawState, withdrawFormAction, isWithdrawing] = useActionState(
     withdrawFromShiftAction,
+    initialActionState
+  );
+  const [markUnavailableState, markUnavailableFormAction, isMarkingUnavailable] = useActionState(
+    markUnavailableForShiftAction,
+    initialActionState
+  );
+  const [clearUnavailableState, clearUnavailableFormAction, isClearingUnavailable] = useActionState(
+    clearUnavailableForShiftAction,
     initialActionState
   );
   const isReadOnly = useEditionReadOnly();
@@ -270,6 +290,8 @@ export default function EventsPageClient({
       <FormError message={toggleDayOffState.error} />
       <FormError message={signUpState.error} />
       <FormError message={withdrawState.error} />
+      <FormError message={markUnavailableState.error} />
+      <FormError message={clearUnavailableState.error} />
       <FormError message={adminAssignState.error} />
       <FormError message={deleteShiftState.error} />
       <FormError message={actionError} />
@@ -428,6 +450,7 @@ export default function EventsPageClient({
                         ) : (
                           day.shifts.map((shift) => {
                             const signed = shift.assignments.find((a) => a.userId === accessId);
+                            const unavailable = shift.unavailabilities.some((u) => u.userId === accessId);
                             const spotsFilled = shift.assignments.length;
                             const isFull = spotsFilled >= shift.capacity;
 
@@ -501,14 +524,31 @@ export default function EventsPageClient({
                                             {copy.withdraw}
                                           </Button>
                                         </form>
-                                      ) : !isFull ? (
-                                        <form action={signUpFormAction}>
+                                      ) : unavailable ? (
+                                        <form action={clearUnavailableFormAction}>
                                           <input type="hidden" name="shiftId" value={shift.id} />
-                                          <Button type="submit" variant="primary" size="sm" disabled={isSigningUp} className="w-full sm:w-auto">
-                                            {copy.signUp}
+                                          <Button type="submit" variant="secondary" size="sm" disabled={isClearingUnavailable} className="w-full sm:w-auto">
+                                            {copy.availableAgain}
                                           </Button>
                                         </form>
-                                      ) : null}
+                                      ) : (
+                                        <>
+                                          {!isFull ? (
+                                            <form action={signUpFormAction}>
+                                              <input type="hidden" name="shiftId" value={shift.id} />
+                                              <Button type="submit" variant="primary" size="sm" disabled={isSigningUp} className="w-full sm:w-auto">
+                                                {copy.signUp}
+                                              </Button>
+                                            </form>
+                                          ) : null}
+                                          <form action={markUnavailableFormAction}>
+                                            <input type="hidden" name="shiftId" value={shift.id} />
+                                            <Button type="submit" variant="ghost" size="sm" disabled={isMarkingUnavailable} className="w-full sm:w-auto">
+                                              {copy.unavailable}
+                                            </Button>
+                                          </form>
+                                        </>
+                                      )}
 
                                       {/* Admin: assign someone else */}
                                       {canManageEvents && !isFull ? (
@@ -520,7 +560,11 @@ export default function EventsPageClient({
                                               {allUsers
                                                 .filter((u) => !shift.assignments.some((a) => a.userId === u.id))
                                                 .map((u) => (
-                                                  <option key={u.id} value={u.id}>{u.name}</option>
+                                                  <option key={u.id} value={u.id}>
+                                                    {shift.unavailabilities.some((un) => un.userId === u.id)
+                                                      ? `${u.name} — ${copy.unavailable}`
+                                                      : u.name}
+                                                  </option>
                                                 ))}
                                             </Select>
                                           </div>
@@ -563,6 +607,18 @@ export default function EventsPageClient({
                                           {a.user.name}
                                         </Chip>
                                       </form>
+                                    ))}
+                                  </div>
+                                ) : null}
+
+                                {/* Admin: who declined — read-only, no retracting someone's answer */}
+                                {isAdmin && shift.unavailabilities.length > 0 ? (
+                                  <div className="flex flex-wrap items-center gap-1.5 border-t border-[var(--line)] px-2.5 py-2 sm:px-4">
+                                    <span className="text-2xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                                      {copy.unavailableStaff}
+                                    </span>
+                                    {shift.unavailabilities.map((u) => (
+                                      <Chip key={u.id}>{u.user.name}</Chip>
                                     ))}
                                   </div>
                                 ) : null}

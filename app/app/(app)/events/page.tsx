@@ -39,6 +39,13 @@ export default async function EventsPage() {
                     assignments: {
                       include: { user: { select: { id: true, name: true } } },
                     },
+                    unavailabilities: {
+                      // The privacy line. A reader loads only their own row; an
+                      // admin loads everyone's, because telling "no" apart from
+                      // "no answer" is their job.
+                      where: isAdmin ? undefined : { userId: access.id },
+                      select: { id: true, userId: true, user: { select: { id: true, name: true } } },
+                    },
                   },
                 },
               },
