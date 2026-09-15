@@ -226,44 +226,16 @@ export function Till({
         <p className="text-3xl font-semibold tabular-nums">{formatCurrency(fromRappen(total))}</p>
       </Card>
 
-      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-        {totalPages > 1 ? (
-          <div className="flex items-center gap-3">
-            <IconButton
-              size="sm"
-              tone="neutral"
-              label={copy.previousPage}
-              disabled={currentPage === 0}
-              onClick={() => setPage(Math.max(0, currentPage - 1))}
-            >
-              <ChevronLeft />
-            </IconButton>
-            <span className="text-sm tabular-nums text-[var(--muted)]">
-              {copy.pageOf.replace("{page}", String(currentPage + 1)).replace("{total}", String(totalPages))}
-            </span>
-            <IconButton
-              size="sm"
-              tone="neutral"
-              label={copy.nextPage}
-              disabled={currentPage >= totalPages - 1}
-              onClick={() => setPage(currentPage + 1)}
-            >
-              <ChevronRight />
-            </IconButton>
-          </div>
-        ) : null}
-
-        <div className="flex items-center gap-2">
-          <span className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
-            {copy.columns}
-          </span>
-          <SegmentedControl
-            size="sm"
-            options={COLUMN_CHOICES.map((count) => ({ value: String(count), label: String(count) }))}
-            value={String(columns)}
-            onChange={(value) => chooseColumns(normalizeColumns(value))}
-          />
-        </div>
+      <div className="flex items-center justify-center gap-2">
+        <span className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+          {copy.columns}
+        </span>
+        <SegmentedControl
+          size="sm"
+          options={COLUMN_CHOICES.map((count) => ({ value: String(count), label: String(count) }))}
+          value={String(columns)}
+          onChange={(value) => chooseColumns(normalizeColumns(value))}
+        />
       </div>
 
       {/* Custom sale is the last slot of every page, so it is in the same corner
@@ -321,6 +293,32 @@ export function Till({
           {copy.checkout}
         </Button>
       </div>
+
+      {totalPages > 1 ? (
+        <div className="flex w-full items-center justify-between gap-3">
+          <IconButton
+            size="sm"
+            tone="neutral"
+            label={copy.previousPage}
+            disabled={currentPage === 0}
+            onClick={() => setPage(Math.max(0, currentPage - 1))}
+          >
+            <ChevronLeft />
+          </IconButton>
+          <span className="text-sm tabular-nums text-[var(--muted)]">
+            {copy.pageOf.replace("{page}", String(currentPage + 1)).replace("{total}", String(totalPages))}
+          </span>
+          <IconButton
+            size="sm"
+            tone="neutral"
+            label={copy.nextPage}
+            disabled={currentPage >= totalPages - 1}
+            onClick={() => setPage(currentPage + 1)}
+          >
+            <ChevronRight />
+          </IconButton>
+        </div>
+      ) : null}
 
       {/* --- the cart list ------------------------------------------------- */}
       <Modal open={listOpen} onClose={() => setListOpen(false)} title={copy.list} size="sm" mobileFullScreen>
