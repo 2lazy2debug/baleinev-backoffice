@@ -1,14 +1,19 @@
 "use client";
 
+import { useActionState } from "react";
 import Link from "next/link";
+import { Trash2 } from "lucide-react";
 
+import { FormError } from "@/components/form-error";
 import {
   Badge,
   Cardlet,
+  CardletActions,
   CardletField,
   CardletFields,
   CardletHeader,
   CardletList,
+  IconButton,
   Panel,
   PanelHeader,
   SectionTitle,
@@ -21,9 +26,11 @@ import {
 } from "@/components/ui";
 import { fromRappen } from "@/lib/cash";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
+import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
 
 import { POS_METHODS, methodLabel, type PosMethod } from "../pos-methods";
+import { deletePosSessionAction } from "../session-actions";
 
 export type SessionRow = {
   id: string;
@@ -57,6 +64,29 @@ function methodCell(row: SessionRow, method: PosMethod) {
 export function PosSessionsClient({ locale, sessions }: { locale: Locale; sessions: SessionRow[] }) {
   const copy = dictionaries[locale].pos;
 
+  const [deleteState, deleteFormAction, deleting] = useActionState(deletePosSessionAction, initialActionState);
+
+  function confirmDelete(event: React.FormEvent<HTMLFormElement>) {
+    if (!window.confirm(copy.deleteSessionConfirm)) {
+      event.preventDefault();
+    }
+  }
+
+  function deleteButton(session: SessionRow, size: "sm") {
+    if (session.saleCount > 0) {
+      return null;
+    }
+
+    return (
+      <form action={deleteFormAction} onSubmit={confirmDelete}>
+        <input type="hidden" name="sessionId" value={session.id} />
+        <IconButton type="submit" tone="delete" size={size} label={copy.deleteSession} disabled={deleting}>
+          <Trash2 />
+        </IconButton>
+      </form>
+    );
+  }
+
   const methodTotals = POS_METHODS.map((method) =>
     sessions.reduce((sum, row) => sum + (row.byMethod[method] ?? 0), 0),
   );
@@ -68,6 +98,12 @@ export function PosSessionsClient({ locale, sessions }: { locale: Locale; sessio
       <PanelHeader flushOnMobile>
         <SectionTitle desktopOnly>{copy.sessionsTitle}</SectionTitle>
       </PanelHeader>
+
+      {deleteState.error ? (
+        <div className="border-b border-[var(--line)] px-3 py-2 sm:px-5">
+          <FormError message={deleteState.error} />
+        </div>
+      ) : null}
 
       <Table desktopOnly dense frame={false}>
         <THead>
@@ -84,6 +120,7 @@ export function PosSessionsClient({ locale, sessions }: { locale: Locale; sessio
               </TH>
             ))}
             <TH className="text-right">{copy.total}</TH>
+            <TH aria-label={copy.deleteSession} />
           </TR>
         </THead>
         <tbody>
@@ -110,6 +147,7 @@ export function PosSessionsClient({ locale, sessions }: { locale: Locale; sessio
               <TD className="text-right font-semibold tabular-nums">
                 {formatCurrency(fromRappen(session.total))}
               </TD>
+              <TD className="text-right">{deleteButton(session, "sm")}</TD>
             </TR>
           ))}
         </tbody>
@@ -123,6 +161,7 @@ export function PosSessionsClient({ locale, sessions }: { locale: Locale; sessio
               </TD>
             ))}
             <TD className="text-right tabular-nums">{formatCurrency(fromRappen(grandTotal))}</TD>
+            <TD />
           </TR>
         </TFoot>
       </Table>
@@ -155,6 +194,7 @@ export function PosSessionsClient({ locale, sessions }: { locale: Locale; sessio
               ))}
               <CardletField label={copy.total}>{formatCurrency(fromRappen(session.total))}</CardletField>
             </CardletFields>
+            {session.saleCount === 0 ? <CardletActions inline>{deleteButton(session, "sm")}</CardletActions> : null}
           </Cardlet>
         ))}
       </CardletList>

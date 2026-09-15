@@ -3,7 +3,7 @@
 import { PosCellKind, PosPaymentMethod, PosSessionStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
-import { getCurrentUserAccess } from "@/lib/access";
+import { getCurrentUserAccess, requireAdmin } from "@/lib/access";
 import { type DenominationCount, makeChange } from "@/lib/cash";
 import { prisma } from "@/lib/db";
 import { resolveWritableEditionId } from "@/lib/edition-context";
@@ -215,6 +215,41 @@ export async function setPosSessionStatusAction(_prevState: ActionState, formDat
       });
     }
 
+    revalidatePath("/pos");
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+/**
+ * Removes a session that never took a sale — an empty till opened by mistake,
+ * or a test run. Admin-only, and refuses the moment a single sale exists: a
+ * session with takings is history, not clutter, whatever its status.
+ */
+export async function deletePosSessionAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    const editionId = await resolveWritableEditionId();
+
+    const sessionId = getRequiredString(formData, "sessionId");
+
+    const session = await prisma.posSession.findUnique({
+      where: { id: sessionId },
+      select: { editionId: true, _count: { select: { sales: true } } },
+    });
+
+    if (!session || session.editionId !== editionId) {
+      throw new Error("That session no longer exists. Refresh and try again.");
+    }
+
+    if (session._count.sales > 0) {
+      throw new Error("That session has sales recorded. It cannot be deleted.");
+    }
+
+    await prisma.posSession.delete({ where: { id: sessionId } });
+
+    revalidatePath("/pos/sessions");
     revalidatePath("/pos");
     return { error: null };
   } catch (err) {

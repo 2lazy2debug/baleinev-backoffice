@@ -720,6 +720,8 @@ export const dictionaries = {
       lineTotal: "Line total",
       backToSessions: "Back to sessions",
       viewSessions: "Session history",
+      deleteSession: "Delete session",
+      deleteSessionConfirm: "Delete this session? This cannot be undone.",
     },
     departments: {
       title: "Departments",
@@ -1781,6 +1783,8 @@ export const dictionaries = {
       lineTotal: "Total ligne",
       backToSessions: "Retour aux sessions",
       viewSessions: "Historique des sessions",
+      deleteSession: "Supprimer la session",
+      deleteSessionConfirm: "Supprimer cette session ? Cette action est irréversible.",
     },
     departments: {
       title: "Départements",

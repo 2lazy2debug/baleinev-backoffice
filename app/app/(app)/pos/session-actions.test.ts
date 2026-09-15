@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Everything these actions reach for that a test process has no real version of.
 const getCurrentUserAccess = vi.fn();
+const requireAdmin = vi.fn();
 const resolveWritableEditionId = vi.fn();
 const revalidatePath = vi.fn();
 
@@ -18,7 +19,7 @@ const tx = {
 };
 const prisma = {
   posTemplate: { findUnique: vi.fn() },
-  posSession: { findUnique: vi.fn(), update: vi.fn() },
+  posSession: { findUnique: vi.fn(), update: vi.fn(), delete: vi.fn() },
   cashRegister: { findUnique: vi.fn() },
   stockElement: { findMany: vi.fn() },
   stockPlace: { findUnique: vi.fn() },
@@ -28,7 +29,10 @@ const prisma = {
 
 vi.mock("next/cache", () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
 vi.mock("@/lib/stock-movements", () => ({ removeFromPlace: (...a: unknown[]) => removeFromPlace(...a) }));
-vi.mock("@/lib/access", () => ({ getCurrentUserAccess: () => getCurrentUserAccess() }));
+vi.mock("@/lib/access", () => ({
+  getCurrentUserAccess: () => getCurrentUserAccess(),
+  requireAdmin: () => requireAdmin(),
+}));
 vi.mock("@/lib/edition-context", () => ({ resolveWritableEditionId: () => resolveWritableEditionId() }));
 vi.mock("@/lib/db", () => ({ prisma }));
 
@@ -38,6 +42,7 @@ const {
   leavePosSessionAction,
   setPosSessionStatusAction,
   recordPosSaleAction,
+  deletePosSessionAction,
 } = await import("./session-actions");
 
 function form(entries: Array<[string, string]>): FormData {
@@ -57,6 +62,7 @@ const OPEN_SESSION = {
 beforeEach(() => {
   vi.clearAllMocks();
   getCurrentUserAccess.mockResolvedValue({ id: "u_1", role: "DEPARTMENT", departmentNames: [] });
+  requireAdmin.mockResolvedValue({ id: "u_1", role: "ADMIN", departmentNames: [] });
   resolveWritableEditionId.mockResolvedValue("ed_1");
   prisma.posTemplate.findUnique.mockResolvedValue({ editionId: "ed_1", _count: { cells: 8 } });
   prisma.cashRegister.findUnique.mockResolvedValue({ editionId: "ed_1", closedAt: null });
@@ -75,6 +81,7 @@ describe("a closed edition refuses every session and sale action", () => {
     ["join", () => joinPosSessionAction("sess_1")],
     ["status", () => setPosSessionStatusAction({ error: null }, form([["sessionId", "sess_1"], ["status", "PAUSED"]]))],
     ["sale", () => recordPosSaleAction({ error: null }, form([["sessionId", "sess_1"], ["method", "TWINT"], ["lines", "[]"]]))],
+    ["delete", () => deletePosSessionAction({ error: null }, form([["sessionId", "sess_1"]]))],
   ])("%s", async (_name, run) => {
     resolveWritableEditionId.mockRejectedValue(new Error("This edition is closed. Reopen it to make changes."));
     expect((await run()).error).toMatch(/closed/i);
@@ -397,5 +404,37 @@ describe("recordPosSaleAction", () => {
       );
       expect(revalidatePath).toHaveBeenCalledWith("/stock");
     });
+  });
+});
+
+describe("deletePosSessionAction", () => {
+  it("refuses a non-admin", async () => {
+    requireAdmin.mockRejectedValue(new Error("Unauthorized."));
+    const result = await deletePosSessionAction({ error: null }, form([["sessionId", "sess_1"]]));
+    expect(result.error).toMatch(/unauthorized/i);
+    expect(prisma.posSession.delete).not.toHaveBeenCalled();
+  });
+
+  it("refuses a session from another edition", async () => {
+    prisma.posSession.findUnique.mockResolvedValue({ editionId: "ed_other", _count: { sales: 0 } });
+    const result = await deletePosSessionAction({ error: null }, form([["sessionId", "sess_1"]]));
+    expect(result.error).toMatch(/no longer exists/i);
+    expect(prisma.posSession.delete).not.toHaveBeenCalled();
+  });
+
+  it("refuses a session that has sales", async () => {
+    prisma.posSession.findUnique.mockResolvedValue({ editionId: "ed_1", _count: { sales: 3 } });
+    const result = await deletePosSessionAction({ error: null }, form([["sessionId", "sess_1"]]));
+    expect(result.error).toMatch(/cannot be deleted/i);
+    expect(prisma.posSession.delete).not.toHaveBeenCalled();
+  });
+
+  it("deletes an empty session and revalidates", async () => {
+    prisma.posSession.findUnique.mockResolvedValue({ editionId: "ed_1", _count: { sales: 0 } });
+    const result = await deletePosSessionAction({ error: null }, form([["sessionId", "sess_1"]]));
+    expect(result).toEqual({ error: null });
+    expect(prisma.posSession.delete).toHaveBeenCalledWith({ where: { id: "sess_1" } });
+    expect(revalidatePath).toHaveBeenCalledWith("/pos/sessions");
+    expect(revalidatePath).toHaveBeenCalledWith("/pos");
   });
 });
