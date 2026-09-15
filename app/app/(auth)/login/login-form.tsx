@@ -84,7 +84,7 @@ export default function LoginForm({ copy }: { copy: LoginCopy }) {
                     alt="Baleinev"
                     width={280}
                     height={112}
-                    className="w-full max-w-[13rem] object-contain"
+                    className="brand-logo w-full max-w-[13rem] object-contain"
                     priority
                   />
                 </div>

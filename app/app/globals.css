@@ -16,6 +16,10 @@
   --muted: #9cb0c4;
   --accent: #00a68c;
   --accent-strong: #008a74;
+  /* The sidebar's translucent backdrop-blur fill — kept as a token rather than
+     an inline rgba() because it has to shift with the theme (it approximates
+     --page at reduced opacity, and the two colors are unrelated across themes). */
+  --panel-translucent: rgba(16, 30, 43, 0.9);
 
   /* Categorical chart palette — for telling series apart, never for status.
      Eight fixed slots, assigned in this order and never cycled: a ninth
@@ -40,6 +44,27 @@
      grey rather than as a ninth category. Kept neutral, not blue-grey: a
      blue-grey sits too close to slots 1 and 7 to tell apart in a ring. */
   --chart-other: #7f8079;
+}
+
+/* Light theme — a light-coffee neutral scale in place of the dark navy one.
+   --accent/--accent-strong are deliberately absent here: the green is the one
+   constant across themes, so it just falls through from :root. Toggled via
+   `data-theme="light"` on <html> (see lib/theme.ts, components/app-shell.tsx). */
+:root[data-theme="light"] {
+  --page: #efe6d8;
+  --panel: #f8f2e6;
+  --panel-strong: #fffbf3;
+  --line: #c9b393;
+  --ink: #3a2c1e;
+  --muted: #6e5a40;
+  --panel-translucent: rgba(239, 230, 216, 0.9);
+}
+
+/* logo_blv.png is a white silhouette on transparent, drawn for the dark theme —
+   it disappears against a light-coffee page, so light theme inverts it to a
+   dark mark instead of shipping a second asset. */
+:root[data-theme="light"] .brand-logo {
+  filter: invert(1);
 }
 
 @theme inline {

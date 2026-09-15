@@ -4,6 +4,7 @@ import { createContext, useContext } from "react";
 
 import type { EditionOption } from "@/components/navigation";
 import type { Locale } from "@/lib/i18n-dictionaries";
+import type { Theme } from "@/lib/theme";
 
 /**
  * What the mobile account menu needs from <AppShell>.
@@ -21,6 +22,8 @@ export type MobileShellValue = {
   onSelectEdition: (editionId: string) => void;
   onOpenLanguage: () => void;
   locale: Locale;
+  theme: Theme;
+  onToggleTheme: () => void;
 };
 
 const MobileShellContext = createContext<MobileShellValue | null>(null);

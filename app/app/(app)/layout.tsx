@@ -5,9 +5,11 @@ import { canManageMoneyAccounts, getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEdition } from "@/lib/edition-context";
 import { getLocale } from "@/lib/i18n";
+import { getTheme } from "@/lib/theme";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
+  const theme = await getTheme();
   const access = await getCurrentUserAccess();
 
   const [selectedEdition, editions, pendingTaskCount] = await Promise.all([
@@ -37,6 +39,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
       }))}
       selectedEditionId={selectedEdition?.id ?? null}
       locale={locale}
+      theme={theme}
       role={access.role}
       canManageMoneyAccounts={canManageMoneyAccounts(access)}
       pendingTaskCount={pendingTaskCount}

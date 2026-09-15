@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { CircleUserRound, Globe, Layers } from "lucide-react";
+import { CircleUserRound, Globe, Layers, Moon, Sun } from "lucide-react";
 
 import { MobileSheet, MobileSheetRow } from "@/components/mobile/mobile-sheet";
 import { useMobileShell } from "@/components/mobile/mobile-shell-context";
@@ -55,6 +55,8 @@ export function MobileAccountMenu() {
     onSelectEdition,
     onOpenLanguage,
     locale,
+    theme,
+    onToggleTheme,
   } = shell;
   const copy = dictionaries[locale].shell;
 
@@ -90,6 +92,12 @@ export function MobileAccountMenu() {
             setOverlay("closed");
             onOpenLanguage();
           }}
+        />
+        <MobileSheetRow
+          icon={theme === "dark" ? Sun : Moon}
+          label={copy.theme}
+          value={theme === "dark" ? copy.lightTheme : copy.darkTheme}
+          onClick={onToggleTheme}
         />
         <MobileSheetRow
           icon={Layers}

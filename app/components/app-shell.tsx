@@ -26,6 +26,8 @@ import {
   ChevronRight,
   CircleUserRound,
   Globe,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { useState, useRef } from "react";
 
@@ -37,6 +39,7 @@ import type { EditionOption, NavigationItem } from "@/components/navigation";
 import { SignOutButton } from "@/components/sign-out-button";
 import { IconButton, Select, buttonClasses, iconButtonClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
+import type { Theme } from "@/lib/theme";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -44,6 +47,7 @@ type AppShellProps = {
   editions: EditionOption[];
   selectedEditionId: string | null;
   locale: Locale;
+  theme: Theme;
   role: "ADMIN" | "DEPARTMENT";
   canManageMoneyAccounts: boolean;
   pendingTaskCount: number;
@@ -51,12 +55,13 @@ type AppShellProps = {
 
 const GLOBAL_ROUTES = ["/addresses", "/articles", "/passwords", "/stock", "/users", "/departments", "/templates", "/editions", "/account"];
 
-export function AppShell({ children, userName, editions, selectedEditionId, locale, role, canManageMoneyAccounts, pendingTaskCount }: AppShellProps) {
+export function AppShell({ children, userName, editions, selectedEditionId, locale, theme: initialTheme, role, canManageMoneyAccounts, pendingTaskCount }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [switchingEdition, setSwitchingEdition] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [theme, setTheme] = useState<Theme>(initialTheme);
   const asideRef = useRef<HTMLElement | null>(null);
   const copy = dictionaries[locale].shell;
 
@@ -135,6 +140,19 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
     }
   }
 
+  function toggleTheme() {
+    const next: Theme = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.dataset.theme = next;
+    fetch("/api/preferences/theme", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ theme: next }),
+    })
+      .catch(() => {})
+      .finally(() => router.refresh());
+  }
+
   const COLLAPSED_WIDTH = 64;
 
   function toggleCollapse() {
@@ -172,17 +190,19 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
         onSelectEdition: selectEdition,
         onOpenLanguage: () => setIsLanguageOpen(true),
         locale,
+        theme,
+        onToggleTheme: toggleTheme,
       }}
     >
       <div className="min-h-screen bg-[var(--page)] text-[var(--ink)]">
         <div className="flex min-h-screen">
           <aside
             ref={asideRef}
-            className={`sticky top-0 hidden h-screen shrink-0 flex-col border-r border-[var(--line)] bg-[color:rgba(16,30,43,0.9)] backdrop-blur lg:flex ${isCollapsed ? "collapsed" : ""}`}
+            className={`sticky top-0 hidden h-screen shrink-0 flex-col border-r border-[var(--line)] bg-[color:var(--panel-translucent)] backdrop-blur lg:flex ${isCollapsed ? "collapsed" : ""}`}
             style={{ width: isCollapsed ? `${COLLAPSED_WIDTH}px` : "clamp(220px, 14.285vw, 320px)" }}
           >
             <div className={`shrink-0 border-b border-[var(--line)] ${isCollapsed ? "px-3 py-4" : "px-5 py-5"}`}>
-              <Image src="/logo_blv.png" alt="Baleinev" width={320} height={128} className="w-full object-contain" priority />
+              <Image src="/logo_blv.png" alt="Baleinev" width={320} height={128} className="brand-logo w-full object-contain" priority />
               {!isCollapsed ? (
                 <div className="mt-3 space-y-1">
                   <label htmlFor="edition-picker" className="block text-3xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
@@ -266,6 +286,14 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
                   <IconButton size="md" tone="neutral" label={copy.language} onClick={() => setIsLanguageOpen(true)}>
                     <Globe />
                   </IconButton>
+                  <IconButton
+                    size="md"
+                    tone="neutral"
+                    label={theme === "dark" ? copy.switchToLightTheme : copy.switchToDarkTheme}
+                    onClick={toggleTheme}
+                  >
+                    {theme === "dark" ? <Sun /> : <Moon />}
+                  </IconButton>
                   <IconButton size="md" tone="neutral" label={copy.expandSidebar} onClick={toggleCollapse}>
                     <ChevronRight />
                   </IconButton>
@@ -281,6 +309,14 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
                     </Link>
                     <IconButton size="md" tone="neutral" label={copy.language} onClick={() => setIsLanguageOpen(true)}>
                       <Globe />
+                    </IconButton>
+                    <IconButton
+                      size="md"
+                      tone="neutral"
+                      label={theme === "dark" ? copy.switchToLightTheme : copy.switchToDarkTheme}
+                      onClick={toggleTheme}
+                    >
+                      {theme === "dark" ? <Sun /> : <Moon />}
                     </IconButton>
                     <IconButton size="md" tone="neutral" label={copy.collapseSidebar} onClick={toggleCollapse}>
                       <ChevronLeft />
