@@ -6,6 +6,7 @@ import { Check, ChevronDown, ChevronUp, FileText, Link2, Pencil, Plus, Trash2 } 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import { Badge, Button, Chip, ChipRemoveButton, IconButton, Panel, PanelHeader, SectionTitle, Select, cn, nestedSurfaceClasses, scrollToBelowTopBar } from "@/components/ui";
+import type { Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import {
@@ -39,8 +40,20 @@ function formatTime(t: string) {
   return t.slice(0, 5);
 }
 
-function formatDate(d: Date | string) {
-  return new Date(d).toISOString().slice(0, 10);
+/**
+ * "Monday - 15.09.2026" / "lundi - 15.09.2026" (capitalized to "Lundi"). Event
+ * days are pure calendar dates with no time-of-day, so everything reads off
+ * UTC fields — the same reason the old `toISOString().slice(0, 10)` worked
+ * regardless of the browser's timezone.
+ */
+function formatDate(d: Date | string, locale: Locale) {
+  const date = new Date(d);
+  const intlLocale = locale === "fr" ? "fr-CH" : "en-CH";
+  const weekday = new Intl.DateTimeFormat(intlLocale, { weekday: "long", timeZone: "UTC" }).format(date);
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const year = date.getUTCFullYear();
+  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} - ${day}.${month}.${year}`;
 }
 
 /**
@@ -182,6 +195,7 @@ type Props = {
   allUsers: UserItem[];
   copy: EventsCopy;
   shellCopy: { save: string; cancel: string };
+  locale: Locale;
 };
 
 export default function EventsPageClient({
@@ -191,6 +205,7 @@ export default function EventsPageClient({
   allUsers,
   copy,
   shellCopy,
+  locale,
 }: Props) {
   const [deleteEventState, deleteEventFormAction, isDeletingEvent] = useActionState(
     deleteEventAction,
@@ -384,7 +399,7 @@ export default function EventsPageClient({
                     {event.isExpired ? <Badge tone="neutral">{copy.expired}</Badge> : null}
                   </div>
                   <SectionTitle as="h3" className="mt-0.5">{event.name}</SectionTitle>
-                  <p className="text-xs text-[var(--muted)]">{formatDate(event.startDate)} → {formatDate(event.endDate)}</p>
+                  <p className="text-xs text-[var(--muted)]">{formatDate(event.startDate, locale)} → {formatDate(event.endDate, locale)}</p>
                   {event.notes ? <p className="mt-1 text-xs text-[var(--muted)]">{event.notes}</p> : null}
                 </div>
                 <div className="shrink-0 sm:hidden">{collapseButton}</div>
@@ -464,7 +479,7 @@ export default function EventsPageClient({
                   <div key={day.id} className={`px-3 py-3 sm:px-5 sm:py-4 ${day.isOff ? "opacity-50" : ""}`}>
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold">{formatDate(day.date)}</span>
+                        <span className="text-sm font-semibold">{formatDate(day.date, locale)}</span>
                         {day.isOff ? <Badge tone="neutral">{copy.isOff}</Badge> : null}
                       </div>
                       {canManageEvents ? (
@@ -482,6 +497,7 @@ export default function EventsPageClient({
                                 isOff: d.isOff,
                                 shiftCount: d.shifts.length,
                               }))}
+                              locale={locale}
                               copy={{
                                 duplicateDay: copy.duplicateDay,
                                 duplicateDayTitle: copy.duplicateDayTitle,

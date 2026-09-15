@@ -6,6 +6,7 @@ import { Copy } from "lucide-react";
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
 import { Button, Checkbox, IconButton, Modal } from "@/components/ui";
+import type { Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import { duplicateEventDayShiftsAction } from "./actions";
@@ -22,6 +23,7 @@ type Props = {
   sourceDate: Date | string;
   sourceShiftCount: number;
   days: CandidateDay[];
+  locale: Locale;
   copy: {
     duplicateDay: string;
     duplicateDayTitle: string;
@@ -32,8 +34,15 @@ type Props = {
   };
 };
 
-function formatDate(d: Date | string) {
-  return new Date(d).toISOString().slice(0, 10);
+/** Same format as the event list's date display: "Monday - 15.09.2026". */
+function formatDate(d: Date | string, locale: Locale) {
+  const date = new Date(d);
+  const intlLocale = locale === "fr" ? "fr-CH" : "en-CH";
+  const weekday = new Intl.DateTimeFormat(intlLocale, { weekday: "long", timeZone: "UTC" }).format(date);
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const year = date.getUTCFullYear();
+  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} - ${day}.${month}.${year}`;
 }
 
 export default function DuplicateDayModal({
@@ -41,6 +50,7 @@ export default function DuplicateDayModal({
   sourceDate,
   sourceShiftCount,
   days,
+  locale,
   copy,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -100,7 +110,7 @@ export default function DuplicateDayModal({
           <FormError message={state.error} />
           <input type="hidden" name="sourceDayId" value={sourceDayId} />
           <p className="text-sm text-[var(--muted)]">
-            {copy.duplicateDayDescription.replace("{count}", String(sourceShiftCount)).replace("{date}", formatDate(sourceDate))}
+            {copy.duplicateDayDescription.replace("{count}", String(sourceShiftCount)).replace("{date}", formatDate(sourceDate, locale))}
           </p>
 
           {candidates.length === 0 ? (
@@ -118,7 +128,7 @@ export default function DuplicateDayModal({
                     checked={selected.has(day.id)}
                     onChange={() => toggle(day.id)}
                   />
-                  <span className="font-medium text-[var(--ink)]">{formatDate(day.date)}</span>
+                  <span className="font-medium text-[var(--ink)]">{formatDate(day.date, locale)}</span>
                   {day.shiftCount > 0 ? (
                     <span className="text-xs text-[var(--muted)]">{copy.duplicateDayHasShifts}</span>
                   ) : null}
