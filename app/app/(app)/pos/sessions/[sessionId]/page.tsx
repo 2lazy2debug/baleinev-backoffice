@@ -8,7 +8,7 @@ import { fromRappen, toRappen } from "@/lib/cash";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
-import { totalsFor } from "@/lib/pos";
+import { itemTotalsFor, totalsFor } from "@/lib/pos";
 import { formatCurrency } from "@/lib/utils";
 
 import { methodLabel, orderMethods, type PosMethod } from "../../pos-methods";
@@ -65,6 +65,7 @@ export default async function PosSessionDetailPage({ params }: Params) {
 
   const methods = orderMethods(session.methods.map((row) => row.method as PosMethod));
   const totals = totalsFor(session.sales, methods);
+  const items = itemTotalsFor(session.sales);
 
   const clock = new Intl.DateTimeFormat(locale === "fr" ? "fr-CH" : "en-CH", { timeStyle: "short" });
   const stamp = new Intl.DateTimeFormat(locale === "fr" ? "fr-CH" : "en-CH", { dateStyle: "medium", timeStyle: "short" });
@@ -148,7 +149,7 @@ export default async function PosSessionDetailPage({ params }: Params) {
         ) : null}
       </div>
 
-      <SessionDetailClient locale={locale} sales={sales} />
+      <SessionDetailClient locale={locale} sales={sales} items={items} />
     </div>
   );
 }

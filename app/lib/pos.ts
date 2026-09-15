@@ -61,3 +61,46 @@ export function totalsFor(sales: SaleForTotals[], methods: PosPaymentMethod[]): 
 
   return { byMethod, total, saleCount: sales.length, changeGiven };
 }
+
+/** The slice of a `PosSaleLine` this roll-up reads. */
+export type SaleLineForItemTotals = {
+  elementId: string | null;
+  label: string;
+  unitPrice: { toString(): string } | number;
+  quantity: number;
+};
+
+export type ItemTotal = {
+  /** The article id, or `custom:<label>` for a typed-in line — stable enough to key a row on. */
+  key: string;
+  label: string;
+  quantity: number;
+  /** Rappen. */
+  total: number;
+};
+
+/**
+ * Rolls a session's sale lines up by article: the same tile bought across ten
+ * sales is one row, one running quantity, one running total. A custom line
+ * (no article behind it) groups by its typed label instead.
+ */
+export function itemTotalsFor(sales: { lines: SaleLineForItemTotals[] }[]): ItemTotal[] {
+  const byKey = new Map<string, ItemTotal>();
+
+  for (const sale of sales) {
+    for (const line of sale.lines) {
+      const key = line.elementId ?? `custom:${line.label}`;
+      const amount = toRappen(line.unitPrice) * line.quantity;
+      const existing = byKey.get(key);
+
+      if (existing) {
+        existing.quantity += line.quantity;
+        existing.total += amount;
+      } else {
+        byKey.set(key, { key, label: line.label, quantity: line.quantity, total: amount });
+      }
+    }
+  }
+
+  return [...byKey.values()].sort((a, b) => b.quantity - a.quantity);
+}

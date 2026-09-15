@@ -27,6 +27,7 @@ import {
 } from "@/components/ui";
 import { formatDenomination, fromRappen } from "@/lib/cash";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
+import type { ItemTotal } from "@/lib/pos";
 import { formatCurrency } from "@/lib/utils";
 
 import { methodLabel, type PosMethod } from "../../pos-methods";
@@ -55,12 +56,59 @@ export type SaleRow = {
 
 const francs = (rappen: number) => formatCurrency(fromRappen(rappen));
 
-export function SessionDetailClient({ locale, sales }: { locale: Locale; sales: SaleRow[] }) {
+export function SessionDetailClient({
+  locale,
+  sales,
+  items,
+}: {
+  locale: Locale;
+  sales: SaleRow[];
+  items: ItemTotal[];
+}) {
   const copy = dictionaries[locale].pos;
   const [viewing, setViewing] = useState<SaleRow | null>(null);
 
   return (
     <>
+      {items.length > 0 ? (
+        <Panel flushOnMobile>
+          <PanelHeader flushOnMobile>
+            <SectionTitle desktopOnly>{copy.byItem}</SectionTitle>
+          </PanelHeader>
+
+          <Table desktopOnly dense frame={false}>
+            <THead>
+              <TR>
+                <TH>{copy.item}</TH>
+                <TH className="text-right">{copy.quantity}</TH>
+                <TH className="text-right">{copy.total}</TH>
+              </TR>
+            </THead>
+            <tbody>
+              {items.map((item) => (
+                <TR key={item.key}>
+                  <TD>{item.label}</TD>
+                  <TD className="text-right tabular-nums">{item.quantity}</TD>
+                  <TD className="text-right font-semibold tabular-nums">{francs(item.total)}</TD>
+                </TR>
+              ))}
+            </tbody>
+          </Table>
+
+          <CardletList>
+            {items.map((item) => (
+              <Cardlet key={item.key}>
+                <CardletHeader title={item.label} />
+                <CardletFields>
+                  <CardletField label={copy.quantity}>{item.quantity}</CardletField>
+                  <CardletField label={copy.total}>{francs(item.total)}</CardletField>
+                </CardletFields>
+              </Cardlet>
+            ))}
+          </CardletList>
+        </Panel>
+      ) : null}
+
       <Panel flushOnMobile>
         <PanelHeader flushOnMobile>
           <SectionTitle desktopOnly>{copy.sales}</SectionTitle>

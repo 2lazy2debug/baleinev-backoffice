@@ -722,6 +722,9 @@ export const dictionaries = {
       viewSessions: "Session history",
       deleteSession: "Delete session",
       deleteSessionConfirm: "Delete this session? This cannot be undone.",
+      byItem: "By item",
+      item: "Item",
+      quantity: "Qty",
     },
     departments: {
       title: "Departments",
@@ -1785,6 +1788,9 @@ export const dictionaries = {
       viewSessions: "Historique des sessions",
       deleteSession: "Supprimer la session",
       deleteSessionConfirm: "Supprimer cette session ? Cette action est irréversible.",
+      byItem: "Par article",
+      item: "Article",
+      quantity: "Qté",
     },
     departments: {
       title: "Départements",

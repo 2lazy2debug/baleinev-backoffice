@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { totalsFor, type SaleForTotals } from "./pos";
+import { itemTotalsFor, totalsFor, type SaleForTotals, type SaleLineForItemTotals } from "./pos";
 
 const sale = (over: Partial<SaleForTotals>): SaleForTotals => ({
   method: "CASH",
   total: "0.00",
   changeDue: null,
+  ...over,
+});
+
+const line = (over: Partial<SaleLineForItemTotals>): SaleLineForItemTotals => ({
+  elementId: "el_1",
+  label: "Beer 3dl",
+  unitPrice: "4.50",
+  quantity: 1,
   ...over,
 });
 
@@ -71,3 +79,51 @@ describe("totalsFor", () => {
     });
   });
 })
+
+describe("itemTotalsFor", () => {
+  it("merges the same article across sales", () => {
+    const items = itemTotalsFor([
+      { lines: [line({ quantity: 2 })] },
+      { lines: [line({ quantity: 3 })] },
+    ]);
+
+    expect(items).toEqual([{ key: "el_1", label: "Beer 3dl", quantity: 5, total: 2250 }]);
+  });
+
+  it("keeps different articles apart", () => {
+    const items = itemTotalsFor([
+      { lines: [line({ elementId: "el_1", label: "Beer 3dl", quantity: 1 }), line({ elementId: "el_2", label: "Wine", unitPrice: "6.00", quantity: 1 })] },
+    ]);
+
+    expect(items).toEqual([
+      { key: "el_1", label: "Beer 3dl", quantity: 1, total: 450 },
+      { key: "el_2", label: "Wine", quantity: 1, total: 600 },
+    ]);
+  });
+
+  it("groups custom lines by their typed label, not an id", () => {
+    const items = itemTotalsFor([
+      { lines: [line({ elementId: null, label: "Tip", unitPrice: "1.00", quantity: 1 })] },
+      { lines: [line({ elementId: null, label: "Tip", unitPrice: "1.00", quantity: 2 })] },
+    ]);
+
+    expect(items).toEqual([{ key: "custom:Tip", label: "Tip", quantity: 3, total: 300 }]);
+  });
+
+  it("sorts by quantity, most sold first", () => {
+    const items = itemTotalsFor([
+      {
+        lines: [
+          line({ elementId: "el_1", label: "Beer 3dl", quantity: 1 }),
+          line({ elementId: "el_2", label: "Wine", unitPrice: "6.00", quantity: 5 }),
+        ],
+      },
+    ]);
+
+    expect(items.map((item) => item.key)).toEqual(["el_2", "el_1"]);
+  });
+
+  it("returns an empty list for a session with no sales", () => {
+    expect(itemTotalsFor([])).toEqual([]);
+  });
+});
