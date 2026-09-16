@@ -90,7 +90,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
   }
 
   return (
-    <div className="space-y-6 flex flex-col h-full">
+    <div className="space-y-4 lg:space-y-8 flex flex-col h-full">
       <PageHeader
         eyebrow={copy.journal.title}
         title={<>{copy.journal.entriesFor} - {activeEdition.name}</>}

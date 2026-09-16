@@ -118,7 +118,7 @@ export function TemplatesPageClient({
         )}
       </div>
 
-      <section className="space-y-6">
+      <section className="space-y-4 lg:space-y-8">
         <Card as="section">
           <SectionTitle>{copy.templates.create}</SectionTitle>
           <form action={createFormAction} className="mt-6 space-y-4">

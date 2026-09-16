@@ -45,7 +45,7 @@ export default async function JournalEntryEditPage({ params }: JournalEntryEditP
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.journal.title}
         title={<>{copy.journal.edit} #{entry.sequenceNumber}</>}
