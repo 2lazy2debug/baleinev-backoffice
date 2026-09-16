@@ -293,8 +293,8 @@ function EntryRow({
               )
             ) : null}
           </div>
-          {revealError ? <p className="text-xs text-rose-300">{revealError}</p> : null}
-          {totpError ? <p className="text-xs text-rose-300">{totpError}</p> : null}
+          {revealError ? <FormError message={revealError} /> : null}
+          {totpError ? <FormError message={totpError} /> : null}
         </div>
 
         {/* Info: website + departments */}

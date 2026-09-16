@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
+import { FormError } from "@/components/form-error";
 import { Badge, Button, Card, Field, Input, Modal, PageHeader, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
 import { type ActionState } from "@/lib/server-action-helpers";
 
@@ -734,7 +735,7 @@ export default function CalendarPageClient({
               </div>
             )}
 
-            {appointmentActionError ? <p className="mt-3 text-sm text-rose-300">{appointmentActionError}</p> : null}
+            {appointmentActionError ? <FormError message={appointmentActionError} /> : null}
         </Modal>
       ) : null}
 

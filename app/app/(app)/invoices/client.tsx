@@ -6,6 +6,7 @@ import { Check, Copy, Plus, RotateCcw, Trash2 } from "lucide-react";
 import type { AddressTypeOption } from "@/components/address-fields";
 import { AddressPicker, type PickableAddress } from "@/components/address-picker";
 import { useEditionReadOnly } from "@/components/edition-read-only";
+import { FormError } from "@/components/form-error";
 import { Button, Card, Field, IconButton, Input, Modal, PageHeader, SectionTitle, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
 import { addressNameBlock } from "@/lib/addresses";
 import type { CountryOption } from "@/lib/countries";
@@ -657,7 +658,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
         }
       />
 
-      {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+      {error ? <FormError message={error} /> : null}
 
       <Card as="section">
         <SectionTitle>{copy.invoices.historyTitle}</SectionTitle>
@@ -1011,7 +1012,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
               />
             </Field>
 
-            {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+            {error ? <FormError message={error} /> : null}
           </form>
         )}
       </Modal>
