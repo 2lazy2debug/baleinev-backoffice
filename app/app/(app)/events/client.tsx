@@ -161,10 +161,12 @@ type EventsCopy = {
   unavailableStaff: string;
   assignStaff: string;
   role: string;
+  genericShiftLabel: string;
   noTime: string;
   addShift: string;
   shiftOverlapWarning: string;
   exportPdf: string;
+  pdfGenerationError: string;
   downloadingPdf: string;
   copyEventLink: string;
   eventLinkCopied: string;
