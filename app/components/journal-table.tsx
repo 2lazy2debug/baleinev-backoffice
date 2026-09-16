@@ -631,7 +631,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                         className="truncate text-[var(--accent)] hover:underline"
                         title={row.invoiceNumber ?? undefined}
                       >
-                        {row.invoiceHref}
+                        {row.invoiceNumber ?? entry.label}
                       </a>
                     ) : (
                       <span className="truncate">{entry.label}</span>
