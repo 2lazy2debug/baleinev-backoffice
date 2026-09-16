@@ -83,7 +83,7 @@ export function UsersPageClient({
                   id={`update-user-${user.id}`}
                   action={updateFormAction}
                   onSubmit={markUpdateSubmitted}
-                  className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_170px_200px]"
+                  className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_170px_200px]"
                 >
                   <input type="hidden" name="userId" value={user.id} />
                   <Field label={copy.users.name}>
@@ -111,7 +111,7 @@ export function UsersPageClient({
                       ))}
                     </MultiSelect>
                   </Field>
-                  <Field label={copy.users.newPasswordOptional} className="md:col-span-2 xl:col-span-4">
+                  <Field label={copy.users.newPasswordOptional} className="sm:col-span-2 xl:col-span-4">
                     <Input type="password" name="newPassword" size="sm" />
                   </Field>
                 </form>

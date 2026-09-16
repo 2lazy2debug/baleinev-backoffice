@@ -130,7 +130,7 @@ export default function CreateExpenseReportModal({ departments, drivingRatePerKm
                 <Input type="text" name="drivingReason" required />
               </Field>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <Field label={copy.departure}>
                   <Input type="text" name="departure" required />
                 </Field>

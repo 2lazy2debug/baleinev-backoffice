@@ -199,7 +199,7 @@ export function TasksPageClient({
                 {isGeneral ? (
                   <>
                     {canManageTask ? (
-                      <form action={updateTaskFormAction} className="mt-2 grid gap-2 md:grid-cols-2">
+                      <form action={updateTaskFormAction} className="mt-2 grid gap-2 sm:grid-cols-2">
                         <input type="hidden" name="todoTaskId" value={task.id} />
                         <Input type="text" name="title" required defaultValue={task.title} />
                         <Input
@@ -211,10 +211,10 @@ export function TasksPageClient({
                           name="description"
                           rows={2}
                           defaultValue={task.description ?? ""}
-                          className="md:col-span-2"
+                          className="sm:col-span-2"
                         />
                         {access.role === "ADMIN" ? (
-                          <div className="md:col-span-2">
+                          <div className="sm:col-span-2">
                             <Select name="assignedToUserId" defaultValue={task.assignedToUserId ?? ""}>
                               <option value="">{copy.tasks.unassigned}</option>
                               {users.map((user) => (
@@ -225,7 +225,7 @@ export function TasksPageClient({
                             </Select>
                           </div>
                         ) : null}
-                        <div className="md:col-span-2">
+                        <div className="sm:col-span-2">
                           <Button type="submit" variant="primary" disabled={isUpdatingTask}>
                             {copy.tasks.saveTask}
                           </Button>
@@ -382,17 +382,17 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
   return (
     <Card as="article" className="space-y-2 sm:space-y-3">
       {isEditing ? (
-        <form action={updateTodoFormAction} className="grid gap-3 md:grid-cols-2">
-          <FormError message={updateTodoState.error} className="md:col-span-2" />
+        <form action={updateTodoFormAction} className="grid gap-3 sm:grid-cols-2">
+          <FormError message={updateTodoState.error} className="sm:col-span-2" />
           <input type="hidden" name="todoId" value={todo.id} />
-          <Field label={copy.tasks.todoTitle} className="md:col-span-2">
+          <Field label={copy.tasks.todoTitle} className="sm:col-span-2">
             <Input type="text" name="title" required defaultValue={todo.title} />
           </Field>
-          <Field label={copy.tasks.todoDescription} className="md:col-span-2">
+          <Field label={copy.tasks.todoDescription} className="sm:col-span-2">
             <Textarea name="description" rows={2} defaultValue={todo.description ?? ""} />
           </Field>
           {isAdmin ? (
-            <Field label={copy.tasks.assignTodoTo} className="md:col-span-2">
+            <Field label={copy.tasks.assignTodoTo} className="sm:col-span-2">
               <Select name="assignedToUserId" defaultValue={todo.assignedToUserId ?? ""}>
                 <option value="">{copy.tasks.unassigned}</option>
                 {users.map((user) => (
@@ -403,7 +403,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
               </Select>
             </Field>
           ) : null}
-          <div className="md:col-span-2 flex gap-2">
+          <div className="sm:col-span-2 flex gap-2">
             <Button type="submit" variant="primary" disabled={isSavingTodo}>
               {copy.tasks.saveTodo}
             </Button>
@@ -445,7 +445,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
           action={deleteTodoFormAction}
           className="grid gap-2 rounded-xl border border-dashed border-rose-400/50 bg-rose-950/20 p-3 md:grid-cols-[1fr_auto]"
         >
-          <FormError message={deleteTodoState.error} className="md:col-span-2" />
+          <FormError message={deleteTodoState.error} className="sm:col-span-2" />
           <input type="hidden" name="todoId" value={todo.id} />
           <Field label={copy.tasks.typeDeleteToConfirm} className="text-rose-300">
             <Input type="text" name="confirmDelete" tone="danger" required placeholder="delete" autoFocus />
@@ -465,8 +465,8 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
         <p className="text-sm font-semibold">{copy.tasks.todoTasks}</p>
 
         {canManageTodoTasks ? (
-          <form action={createTaskFormAction} className="grid gap-2 md:grid-cols-2">
-            <FormError message={createTaskState.error} className="md:col-span-2" />
+          <form action={createTaskFormAction} className="grid gap-2 sm:grid-cols-2">
+            <FormError message={createTaskState.error} className="sm:col-span-2" />
             <input type="hidden" name="todoId" value={todo.id} />
             <Input type="text" name="title" required placeholder={copy.tasks.taskTitle} />
             <Input type="datetime-local" name="dueDate" />
@@ -474,10 +474,10 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
               name="description"
               rows={2}
               placeholder={copy.tasks.taskDescription}
-              className="md:col-span-2"
+              className="sm:col-span-2"
             />
             {isAdmin ? (
-              <div className="md:col-span-2">
+              <div className="sm:col-span-2">
                 <Select name="assignedToUserId" defaultValue="">
                   <option value="">{copy.tasks.unassigned}</option>
                   {users.map((user) => (
@@ -488,7 +488,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
                 </Select>
               </div>
             ) : null}
-            <div className="md:col-span-2">
+            <div className="sm:col-span-2">
               <Button type="submit" variant="primary" disabled={isCreatingTask}>
                 {copy.tasks.createTask}
               </Button>

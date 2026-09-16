@@ -139,7 +139,7 @@ export function EditionsPageClient({ editions, copy }: { editions: EditionItem[]
             <span className="mt-2 block text-xs text-[var(--muted)]">{copy.editions.editionNameHint}</span>
           </Field>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Field label={copy.editions.startDate}>
               <Input type="date" name="startDate" />
             </Field>

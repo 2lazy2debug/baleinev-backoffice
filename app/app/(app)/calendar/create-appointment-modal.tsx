@@ -65,16 +65,16 @@ export function CreateAppointmentModal({
           id="create-appointment-form"
           action={formAction}
           onSubmit={markSubmitted}
-          className="grid gap-4 md:grid-cols-2"
+          className="grid gap-4 sm:grid-cols-2"
         >
-          <FormError message={state.error} className="md:col-span-2" />
-          <div className="md:col-span-2">
+          <FormError message={state.error} className="sm:col-span-2" />
+          <div className="sm:col-span-2">
             <Field label={copy.appointmentTitle}>
               <Input type="text" name="title" required />
             </Field>
           </div>
 
-          <div className="md:col-span-2">
+          <div className="sm:col-span-2">
             <Field label={copy.appointmentDescription}>
               <Textarea name="description" rows={3} required />
             </Field>
@@ -88,7 +88,7 @@ export function CreateAppointmentModal({
             <Input type="datetime-local" name="endAt" />
           </Field>
 
-          <div className="md:col-span-2 space-y-1">
+          <div className="sm:col-span-2 space-y-1">
             <span className="text-sm font-medium">{copy.audience}</span>
             <details className={nestedSurfaceClasses}>
               <summary className="cursor-pointer px-3 py-2 text-sm text-[var(--muted)]">{copy.audienceHelp}</summary>
