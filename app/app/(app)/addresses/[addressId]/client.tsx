@@ -16,6 +16,7 @@ import {
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
 import {
+  Alert,
   Badge,
   Button,
   Card,
@@ -229,7 +230,7 @@ export function AddressDetailClient({ locale, countries, addressTypes, canDelete
                 <Button type="submit" form={ADDRESS_FORM_ID} variant="primary" disabled={isSaving}>
                   {copy.save}
                 </Button>
-                {saveState.saved ? <span className="text-xs font-medium text-emerald-300">{copy.saved}</span> : null}
+                {saveState.saved ? <Alert tone="success">{copy.saved}</Alert> : null}
                 {canDelete ? (
                   <Button
                     type="submit"

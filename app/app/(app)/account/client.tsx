@@ -291,5 +291,5 @@ function SavedNotice({ state, copy }: { state: ActionState; copy: Copy }) {
     return null;
   }
 
-  return <span className="text-xs font-medium text-emerald-300">{copy.saved}</span>;
+  return <Alert tone="success">{copy.saved}</Alert>;
 }
