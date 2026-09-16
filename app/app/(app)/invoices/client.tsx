@@ -673,7 +673,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                   <TH>{copy.invoices.invoiceDate}</TH>
                   <TH>{copy.invoices.supplierName}</TH>
                   <TH className="text-right">{copy.invoices.total}</TH>
-                  <TH className="text-right">Actions</TH>
+                  <TH className="text-right">{copy.journal.actions}</TH>
                 </TR>
               </THead>
               <tbody>
@@ -735,7 +735,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                             <>
                               <IconButton
                                 tone="neutral"
-                                label="Duplicate invoice"
+                                label={copy.invoices.duplicateInvoice}
                                 onClick={() => duplicateFromHistory(item)}
                               >
                                 <Copy />
@@ -801,7 +801,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
               >
                 {accounts.map((account) => (
                   <option key={account.id} value={account.id}>
-                    {account.name} ({account.iban ?? "no IBAN"})
+                    {account.name} ({account.iban ?? copy.invoices.noIbanTag})
                   </option>
                 ))}
               </Select>
@@ -970,7 +970,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                           <TD className="text-right">
                             <IconButton
                               tone="delete"
-                              label="Remove line item"
+                              label={copy.invoices.removeLineItem}
                               onClick={() => removeLineItem(item.id)}
                               disabled={isEditingPaidInvoice}
                             >

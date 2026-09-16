@@ -456,7 +456,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
               <TH>{copy.label}</TH>
               <TH>{copy.counterpart}</TH>
               <TH>{copy.account}</TH>
-              <TH>CC</TH>
+              <TH>{copy.costCenterShort}</TH>
               <TH>{copy.balance}</TH>
               <TH>{copy.actions}</TH>
             </TR>

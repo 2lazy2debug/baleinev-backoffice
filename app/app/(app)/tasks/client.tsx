@@ -282,7 +282,7 @@ export function TasksPageClient({
                 ) : (
                   <>
                     <p className="mt-2 font-medium">
-                      {task.type === "STAFF_SHIFT" && shift ? `Shift: ${shift.role || copy.tasks.staffShift}` : task.title}
+                      {task.type === "STAFF_SHIFT" && shift ? `${copy.tasks.shiftPrefix}: ${shift.role || copy.tasks.staffShift}` : task.title}
                     </p>
                     {expenseReport ? (
                       <p className="text-xs text-[var(--muted)]">
@@ -408,7 +408,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
               {copy.tasks.saveTodo}
             </Button>
             <Button type="button" variant="secondary" onClick={() => setEditingTodoId(null)}>
-              {copy.common.cancel ?? "Cancel"}
+              {copy.shell.cancel}
             </Button>
           </div>
         </form>
@@ -455,7 +455,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
               {copy.tasks.delete}
             </Button>
             <Button type="button" variant="secondary" onClick={() => setDeletingTodoId(null)}>
-              {copy.common.cancel ?? "Cancel"}
+              {copy.shell.cancel}
             </Button>
           </div>
         </form>
@@ -546,7 +546,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
                     <IconButton
                       type="submit"
                       tone="neutral"
-                      label={task.status === "DONE" ? "Mark pending" : "Mark done"}
+                      label={task.status === "DONE" ? copy.tasks.markPending : copy.tasks.markDone}
                       disabled={isTogglingStatus}
                     >
                       {task.status === "DONE" ? <Check /> : <Circle />}

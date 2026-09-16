@@ -148,7 +148,7 @@ export function AddJournalEntryModal({
         </Field>
 
         <Field label={`${copy.label} *`}>
-          <Input type="text" name="label" required defaultValue={initialValues?.label} placeholder="Description" />
+          <Input type="text" name="label" required defaultValue={initialValues?.label} placeholder={copy.descriptionPlaceholder} />
         </Field>
 
         <div className="grid gap-3 sm:grid-cols-2">

@@ -321,7 +321,7 @@ export default function EventsPageClient({
 
       if (!response.ok) {
         const data = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error || "Could not generate PDF.");
+        throw new Error(data?.error || copy.pdfGenerationError);
       }
 
       const blob = await response.blob();
@@ -334,7 +334,7 @@ export default function EventsPageClient({
       anchor.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Could not generate PDF.");
+      setActionError(err instanceof Error ? err.message : copy.pdfGenerationError);
     } finally {
       setDownloadingEventId(null);
     }
@@ -572,7 +572,7 @@ export default function EventsPageClient({
                                      row has room again — it is back to one dense line. */
                                   <div className="flex flex-col gap-3 px-2.5 py-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-4 sm:py-2.5">
                                     <div className="space-y-0.5">
-                                      <p className="text-sm font-semibold text-[var(--ink)]">{shift.role || "General"}</p>
+                                      <p className="text-sm font-semibold text-[var(--ink)]">{shift.role || copy.genericShiftLabel}</p>
                                       {/* The one number anyone scans this list for — or, for a
                                           timeless shift, the fact that there isn't one. */}
                                       <p className="text-xs font-semibold text-[var(--muted)]">
