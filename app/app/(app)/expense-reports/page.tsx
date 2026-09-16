@@ -62,7 +62,7 @@ export default async function ExpenseReportsPage() {
     <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.expenseReports.title}
-        title={<>{copy.expenseReports.title} {activeEdition.name}</>}
+        title={activeEdition.name}
         description={copy.expenseReports.subtitle}
         actions={
           <WritableEditionOnly>

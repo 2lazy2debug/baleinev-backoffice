@@ -33,7 +33,6 @@ export default async function DepartmentsPage() {
   return (
     <div className="space-y-4 lg:space-y-8">
       <PageHeader
-        eyebrow={copy.departments.title}
         title={copy.departments.title}
         description={copy.departments.subtitle}
         actions={<CreateDepartmentModal locale={locale} />}

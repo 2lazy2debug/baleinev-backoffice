@@ -41,7 +41,6 @@ export default async function ArticlesPage() {
   return (
     <div className="space-y-4 lg:space-y-8">
       <PageHeader
-        eyebrow={copy.articles.title}
         title={copy.articles.title}
         description={copy.articles.subtitle}
         actions={<CreateArticleButton locale={locale} units={unitOptions} conversions={conversionOptions} />}

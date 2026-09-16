@@ -211,7 +211,6 @@ export function AddressesClient({ locale, addresses, canDelete, addressTypes, ac
   return (
     <div className="space-y-4 lg:space-y-8">
       <PageHeader
-        eyebrow={copy.title}
         title={copy.title}
         description={copy.subtitle}
         actions={actions}
