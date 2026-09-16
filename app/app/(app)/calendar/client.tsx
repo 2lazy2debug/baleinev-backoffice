@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, Field, Input, Modal, PageHeader, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
+import { Badge, Button, Card, Field, Input, Modal, PageHeader, SectionTitle, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
 import { type ActionState } from "@/lib/server-action-helpers";
 
 type CalendarTask = {
@@ -399,7 +399,7 @@ export default function CalendarPageClient({
         <div>
         <Card as="section" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-semibold">{copy.monthView}: {monthStart.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</p>
+            <SectionTitle desktopOnly>{copy.monthView}: {monthStart.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</SectionTitle>
             <div className="flex gap-2">
               <Button
                 variant="secondary"
@@ -498,9 +498,9 @@ export default function CalendarPageClient({
 
         <div>
         <Card as="section" className="space-y-4">
-          <p className="text-sm font-semibold">
+          <SectionTitle desktopOnly>
             {copy.dayView}: {selectedDate.toLocaleDateString(undefined, { weekday: "long", day: "2-digit", month: "long" })}
-          </p>
+          </SectionTitle>
 
           {/* An hour-by-hour timeline is too fine-grained for a thumb: below `sm` the
               same items render as an agenda list, in start order, each with its time. */}

@@ -6,7 +6,7 @@ import { Check, Circle, Pencil, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, Field, IconButton, Input, Select, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
+import { Button, Card, Field, IconButton, Input, SectionTitle, Select, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { decimalToNumber, formatCurrency } from "@/lib/utils";
 
@@ -462,7 +462,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
       ) : null}
 
       <div className={cn(nestedSurfaceClasses, "space-y-2 p-2 sm:p-3")}>
-        <p className="text-sm font-semibold">{copy.tasks.todoTasks}</p>
+        <SectionTitle>{copy.tasks.todoTasks}</SectionTitle>
 
         {canManageTodoTasks ? (
           <form action={createTaskFormAction} className="grid gap-2 sm:grid-cols-2">
