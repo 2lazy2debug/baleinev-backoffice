@@ -358,6 +358,7 @@ function EntryDialog({
       onClose={onClose}
       title={title}
       size="md"
+      mobileFullScreen
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>

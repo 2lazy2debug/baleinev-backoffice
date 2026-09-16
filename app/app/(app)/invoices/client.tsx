@@ -765,6 +765,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
         onClose={closeFormModal}
         title={editingInvoiceId ? copy.invoices.saveModifications : copy.invoices.create}
         size="xl"
+        mobileFullScreen
         footer={
           accounts.length === 0 ? undefined : (
             <>
@@ -1023,6 +1024,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
         }}
         title={copy.invoices.setPaid}
         size="md"
+        mobileFullScreen
         footer={
           <>
             <Button

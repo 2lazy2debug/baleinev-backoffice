@@ -103,6 +103,7 @@ export function EventSettingsClient({ locale, eventTypes }: Props) {
         onClose={() => setEditing(null)}
         title={copy.eventType}
         size="sm"
+        mobileFullScreen
         footer={
           <>
             <Button type="button" variant="secondary" onClick={() => setEditing(null)}>

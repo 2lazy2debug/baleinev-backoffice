@@ -656,6 +656,7 @@ export default function CalendarPageClient({
           onClose={closeAppointmentDetails}
           title={copy.detailsTitle}
           size="md"
+          mobileFullScreen
           footer={
             canManageSelectedAppointment ? (
               <>

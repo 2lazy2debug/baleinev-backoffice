@@ -55,6 +55,7 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
         onClose={() => setOpen(false)}
         title={copy.openCreateModal}
         size="xl"
+        mobileFullScreen
         footer={
           <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
             {copy.closeCreateModal}

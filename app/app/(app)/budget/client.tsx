@@ -612,6 +612,7 @@ export default function BudgetPageClient({
           onClose={() => setEntryModalBudget(null)}
           title={entryModalBudget ? `${copy.budget.addBudgetEntry} - ${entryModalBudget.name}` : copy.budget.addBudgetEntry}
           size="md"
+          mobileFullScreen
           footer={
             <>
               <Button variant="secondary" onClick={() => setEntryModalBudget(null)}>
