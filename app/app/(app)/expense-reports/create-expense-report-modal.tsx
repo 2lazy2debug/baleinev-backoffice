@@ -80,8 +80,7 @@ export default function CreateExpenseReportModal({ departments, drivingRatePerKm
 
   return (
     <>
-      <Button type="button" variant="primary" onClick={() => setOpen(true)}>
-        <Plus />
+      <Button type="button" variant="primary" icon={<Plus />} compactOnMobile onClick={() => setOpen(true)}>
         {copy.create}
       </Button>
 

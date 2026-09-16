@@ -42,8 +42,7 @@ export function CreateUserModal({ departments, copy }: Props) {
 
   return (
     <>
-      <Button type="button" variant="primary" onClick={() => setOpen(true)}>
-        <Plus />
+      <Button type="button" variant="primary" icon={<Plus />} compactOnMobile onClick={() => setOpen(true)}>
         {copy.create}
       </Button>
 

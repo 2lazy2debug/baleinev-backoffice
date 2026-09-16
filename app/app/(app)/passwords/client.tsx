@@ -86,8 +86,7 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
         title={copy.heading}
         description={copy.subtitle}
         actions={
-          <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
-            <Plus />
+          <Button variant="primary" icon={<Plus />} compactOnMobile onClick={() => setIsCreateOpen(true)}>
             {copy.add}
           </Button>
         }

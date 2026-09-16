@@ -22,7 +22,7 @@ export default function AddressesCreateButton({ locale, countries, addressTypes 
 
   return (
     <>
-      <Button type="button" variant="primary" icon={<Plus />} onClick={() => setOpen(true)}>
+      <Button type="button" variant="primary" icon={<Plus />} compactOnMobile onClick={() => setOpen(true)}>
         {copy.add}
       </Button>
       <CreateAddressModal

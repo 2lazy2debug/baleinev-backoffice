@@ -154,7 +154,7 @@ export function AddStockModal({ locale, stockPlaceId, elements, units, conversio
 
   return (
     <>
-      <Button type="button" variant="primary" icon={<Plus />} onClick={() => setOpen(true)}>
+      <Button type="button" variant="primary" icon={<Plus />} compactOnMobile onClick={() => setOpen(true)}>
         {copy.newEntry}
       </Button>
 

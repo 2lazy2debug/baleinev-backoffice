@@ -68,8 +68,7 @@ export default function JournalPageClient({ activeEdition, accountBalances, loca
     <div className="relative flex-1 flex flex-col gap-4">
       {/* Plus button above table */}
       {isReadOnly ? null : (
-        <Button variant="primary" onClick={() => setIsModalOpen(true)} className="self-start">
-          <Plus />
+        <Button variant="primary" icon={<Plus />} compactOnMobile onClick={() => setIsModalOpen(true)} className="self-start">
           {copy.addEntry}
         </Button>
       )}

@@ -23,8 +23,7 @@ export default function CreateCostCenterModal({ locale }: Props) {
 
   return (
     <>
-      <Button type="button" variant="primary" onClick={() => setOpen(true)}>
-        <Plus />
+      <Button type="button" variant="primary" icon={<Plus />} compactOnMobile onClick={() => setOpen(true)}>
         {copy.costCenters.add}
       </Button>
 

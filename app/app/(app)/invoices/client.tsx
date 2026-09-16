@@ -650,8 +650,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
         }
         actions={
           isReadOnly ? null : (
-            <Button variant="primary" onClick={openCreateModal}>
-              <Plus />
+            <Button variant="primary" icon={<Plus />} compactOnMobile onClick={openCreateModal}>
               {copy.invoices.create}
             </Button>
           )

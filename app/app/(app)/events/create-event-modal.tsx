@@ -70,8 +70,7 @@ export default function CreateEventModal({ eventTypes, costCenters, editionStart
 
   return (
     <>
-      <Button type="button" variant="primary" onClick={() => setOpen(true)}>
-        <Plus />
+      <Button type="button" variant="primary" icon={<Plus />} compactOnMobile onClick={() => setOpen(true)}>
         {copy.createEvent}
       </Button>
 
