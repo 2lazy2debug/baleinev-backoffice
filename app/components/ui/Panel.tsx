@@ -36,7 +36,7 @@ export function Panel({
   return (
     <As
       className={cn(
-        "overflow-hidden",
+        "overflow-hidden bg-[var(--panel)]",
         nested ? nestedSurfaceClasses : "rounded-2xl border border-[var(--line)]",
         flushOnMobile ? "max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent" : null,
         className,

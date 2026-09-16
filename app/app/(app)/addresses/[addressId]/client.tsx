@@ -287,7 +287,7 @@ export function AddressDetailClient({ locale, countries, addressTypes, canDelete
         </Card>
       </CardGrid>
 
-      <Panel flushOnMobile as="section" className="bg-[var(--panel)]">
+      <Panel flushOnMobile as="section">
         <PanelHeader flushOnMobile>
           <SectionTitle>{copy.bankAccounts}</SectionTitle>
         </PanelHeader>

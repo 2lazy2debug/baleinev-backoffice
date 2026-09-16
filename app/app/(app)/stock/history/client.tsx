@@ -92,7 +92,7 @@ export function StockHistoryClient({ locale, places, movements }: Props) {
   }
 
   return (
-    <Panel flushOnMobile as="div" className="bg-[var(--panel)]">
+    <Panel flushOnMobile as="div">
       <PanelHeader flushOnMobile>
         <p className="text-xs text-[var(--muted)]">
           {copy.showing} {visible.length} {copy.of} {movements.length}

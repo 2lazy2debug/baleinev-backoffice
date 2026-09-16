@@ -389,7 +389,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   }));
 
   return (
-    <Panel flushOnMobile as="div" className="flex h-full flex-col bg-[var(--panel)]">
+    <Panel flushOnMobile as="div" className="flex h-full flex-col">
       <PanelHeader flushOnMobile className="shrink-0 flex-wrap">
         <div className="min-w-0">
           <SectionTitle>{copy.entries}</SectionTitle>

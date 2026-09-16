@@ -315,7 +315,7 @@ export function StockClient({ locale, rows, places, currentPlaceId, eyebrow, tit
         }
       />
 
-      <Panel flushOnMobile as="div" className="bg-[var(--panel)]">
+      <Panel flushOnMobile as="div">
         {error ? (
           <div className="border-b border-[var(--line)] px-4 py-2">
             <FormError message={error} />

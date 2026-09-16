@@ -235,7 +235,7 @@ export function AddressesClient({ locale, addresses, canDelete, addressTypes, ac
         }
       />
 
-      <Panel flushOnMobile as="div" className="bg-[var(--panel)]">
+      <Panel flushOnMobile as="div">
         {saveState.error || deleteState.error ? (
           <div className="border-b border-[var(--line)] px-4 py-2">
             <FormError message={saveState.error ?? deleteState.error} />

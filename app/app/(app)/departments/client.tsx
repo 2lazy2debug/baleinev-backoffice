@@ -74,7 +74,7 @@ export function DepartmentsClient({ locale, departments }: { locale: Locale; dep
 
   return (
     <>
-      <Panel flushOnMobile as="div" className="bg-[var(--panel)]">
+      <Panel flushOnMobile as="div">
         <Table desktopOnly frame={false}>
           <THead>
             <TR>
