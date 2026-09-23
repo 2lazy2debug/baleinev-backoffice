@@ -67,13 +67,14 @@ type JournalTableProps = {
   canBulkEdit: boolean;
 };
 
-/** The seven fields the journal is edited by, inline or in bulk. */
+/** The eight fields the journal is edited by, inline or in bulk. */
 type EntryDraft = {
   date: string;
   budgetId: string;
   accountType: string;
   amount: string;
   label: string;
+  counterparty: string;
   moneyAccountId: string;
   costCenterId: string;
 };
@@ -91,6 +92,7 @@ function draftFromEntry(entry: JournalEntry): EntryDraft {
     accountType: entry.accountType,
     amount: Number(entry.amount).toFixed(2),
     label: entry.label,
+    counterparty: entry.counterparty ?? "",
     moneyAccountId: entry.moneyAccountId,
     costCenterId: entry.costCenterId ?? "",
   };
@@ -292,6 +294,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
     formData.set("date", editDraft.date);
     formData.set("amount", editDraft.amount);
     formData.set("label", editDraft.label);
+    formData.set("counterparty", editDraft.counterparty);
     formData.set("costCenterId", editDraft.costCenterId);
     const result = await updateJournalEntryAction(_prevState, formData);
 
@@ -637,7 +640,18 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                       <span className="truncate">{entry.label}</span>
                     )}
                   </TD>
-                  <TD>{row.counterpart}</TD>
+                  <TD>
+                    {draft ? (
+                      <Input
+                        type="text"
+                        value={draft.counterparty}
+                        onChange={(e) => updateDraft(entry.id, { counterparty: e.target.value })}
+                        size="sm"
+                      />
+                    ) : (
+                      row.counterpart
+                    )}
+                  </TD>
                   <TD>
                     {draft ? (
                       <Select
@@ -764,7 +778,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                 }
               />
 
-              {/* The same seven fields as a table row, stacked — a phone in bulk mode
+              {/* The same eight fields as a table row, stacked — a phone in bulk mode
                   edits the entry it is looking at, it does not leave for a form page. */}
               {draft ? (
                 <CardletFields>
@@ -825,6 +839,14 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                       <option value="">-</option>
                       {costCenters.map((cc) => <option key={cc.id} value={cc.id}>{cc.code}</option>)}
                     </Select>
+                  </CardletField>
+                  <CardletField label={copy.counterpart} className="col-span-2">
+                    <Input
+                      type="text"
+                      value={draft.counterparty}
+                      onChange={(e) => updateDraft(row.entry.id, { counterparty: e.target.value })}
+                      size="sm"
+                    />
                   </CardletField>
                 </CardletFields>
               ) : (
