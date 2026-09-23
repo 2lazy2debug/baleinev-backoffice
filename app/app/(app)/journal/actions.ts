@@ -221,9 +221,10 @@ export async function updateJournalEntryAction(_prevState: ActionState, formData
 
     await assertBudgetInEdition(budgetId, entry.editionId);
 
-    // Absent is not the same as blank. The edit form posts these two as named
-    // inputs, so clearing one there still clears it; the journal's inline row
-    // editor has no such column and must not null what it cannot show.
+    // Absent is not the same as blank. Both the edit form and the journal's
+    // inline row editor post `counterparty` as a named input, so clearing it
+    // either way still clears it; `referenceNumber` has no grid column and
+    // must not be nulled by an editor that cannot show it.
     const optional = (key: "counterparty" | "referenceNumber") =>
       formData.has(key) ? { [key]: String(formData.get(key) ?? "").trim() || null } : {};
 
@@ -255,11 +256,11 @@ export async function updateJournalEntryAction(_prevState: ActionState, formData
 /**
  * Save every row the journal's bulk-edit mode changed, in one transaction.
  *
- * Bulk edit is the same seven fields as the inline row editor, applied to the
+ * Bulk edit is the same eight fields as the inline row editor, applied to the
  * whole ledger at once, so it reuses that shape rather than inventing a second
  * one: the client sends only the rows it actually touched, as JSON, and either
- * all of them land or none do. `counterparty` and `referenceNumber` are not
- * part of the grid and are deliberately left alone.
+ * all of them land or none do. `referenceNumber` has no grid column and is
+ * deliberately left alone.
  */
 export async function bulkUpdateJournalEntriesAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
@@ -303,6 +304,7 @@ export async function bulkUpdateJournalEntriesAction(_prevState: ActionState, fo
         date,
         amount: toPositiveAmount(readRequired("amount")),
         label: readRequired("label"),
+        counterparty: String(item.counterparty ?? "").trim() || null,
         costCenterId: String(item.costCenterId ?? "").trim() || null,
       };
     });
@@ -328,7 +330,7 @@ export async function bulkUpdateJournalEntriesAction(_prevState: ActionState, fo
       throw new Error("Opening entries are locked and cannot be edited.");
     }
 
-    // The grid edits the same seven fields as the inline editor, so it can reach
+    // The grid edits the same eight fields as the inline editor, so it can reach
     // a booked entry's money the same way — same rule, applied row by row.
     const storedById = new Map(stored.map((entry) => [entry.id, entry]));
     for (const update of updates) {

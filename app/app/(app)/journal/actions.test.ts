@@ -181,4 +181,19 @@ describe("bulkUpdateJournalEntriesAction", () => {
     expect(result.error).toBeNull();
     expect(prisma.$transaction).toHaveBeenCalled();
   });
+
+  it("saves the grid's counterparty edit", async () => {
+    prisma.journalEntry.findMany.mockResolvedValue([{ id: "je_1", ...plain }]);
+    prisma.journalEntry.update.mockReturnValue("updated");
+
+    const result = await bulkUpdateJournalEntriesAction(
+      { error: null },
+      bulkForm({ counterparty: "Client via Twint" }),
+    );
+
+    expect(result.error).toBeNull();
+    expect(prisma.journalEntry.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ counterparty: "Client via Twint" }) }),
+    );
+  });
 });
