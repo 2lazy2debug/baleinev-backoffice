@@ -84,6 +84,19 @@ function typeLabel(type: string, locale: Locale) {
   return type === "PRODUITS" ? copy.produits : copy.charges;
 }
 
+const RESIZE_MIN_WIDTH = 48;
+
+/** A drag grip on a header cell's right edge — the cell must be `relative`. */
+function ColumnResizeHandle({ onResizeStart }: { onResizeStart: (e: React.MouseEvent<HTMLDivElement>) => void }) {
+  return (
+    <div
+      onMouseDown={onResizeStart}
+      onClick={(e) => e.stopPropagation()}
+      className="absolute inset-y-0 right-0 w-1.5 cursor-col-resize select-none hover:bg-[var(--accent)]"
+    />
+  );
+}
+
 /** An entry as the editor sees it — the baseline both edit modes start from. */
 function draftFromEntry(entry: JournalEntry): EntryDraft {
   return {
@@ -141,11 +154,13 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
       const colgroup = table.querySelectorAll("colgroup > col");
       if (!colgroup || colgroup.length === 0) return;
 
-      // flexible columns are those without Tailwind w- classes (fixed widths)
+      // flexible columns are those without Tailwind w- classes (fixed widths),
+      // minus any column the person has since dragged to a width of their own —
+      // a manual resize is a deliberate choice and outranks this redistribution.
       const flexibleIndexes: number[] = [];
       colgroup.forEach((c, idx) => {
         const cls = c.getAttribute("class") || "";
-        if (!/\bw-\d+/.test(cls)) flexibleIndexes.push(idx);
+        if (!/\bw-\d+/.test(cls) && c.getAttribute("data-resized") !== "true") flexibleIndexes.push(idx);
       });
 
       if (flexibleIndexes.length === 0) return;
@@ -275,6 +290,35 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   const handleFilterChange = (column: string, value: string) => {
     setFilters({ ...filters, [column]: value });
   };
+
+  function handleResizeStart(colIndex: number) {
+    return (e: React.MouseEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const table = tableRef.current;
+      if (!table) return;
+      const col = table.querySelectorAll("colgroup > col")[colIndex] as HTMLElement | undefined;
+      const th = table.querySelectorAll("thead tr")[0]?.querySelectorAll("th")[colIndex] as HTMLElement | undefined;
+      if (!col || !th) return;
+
+      const startX = e.clientX;
+      const startWidth = th.getBoundingClientRect().width;
+      document.body.classList.add("cursor-col-resize", "select-none");
+
+      function onMouseMove(ev: MouseEvent) {
+        const width = Math.max(RESIZE_MIN_WIDTH, Math.round(startWidth + (ev.clientX - startX)));
+        col!.style.width = `${width}px`;
+        col!.setAttribute("data-resized", "true");
+      }
+      function onMouseUp() {
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+        document.body.classList.remove("cursor-col-resize", "select-none");
+      }
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    };
+  }
 
   function handleEditStart(entry: JournalEntry) {
     setEditingId(entry.id);
@@ -442,26 +486,52 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
             <col className="w-40" />
             <col className="w-20" />
             <col className="w-44" />
-            <col className="w-24" />
+            {/* Empty for every row while bulk edit is on — save/cancel moved to the
+                header, so the column has nothing left to hold but a rare "locked". */}
+            <col className={isBulkEditing ? "w-16" : "w-24"} />
           </colgroup>
           <THead className="sticky top-0">
             <TR>
-              <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("date")}>
+              <TH className="relative cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("date")}>
                 {copy.date}
+                <ColumnResizeHandle onResizeStart={handleResizeStart(0)} />
               </TH>
-              <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("budget")}>
+              <TH className="relative cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("budget")}>
                 {copy.budget}
+                <ColumnResizeHandle onResizeStart={handleResizeStart(1)} />
               </TH>
-              <TH>{copy.type}</TH>
-              <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("amount")}>
+              <TH className="relative">
+                {copy.type}
+                <ColumnResizeHandle onResizeStart={handleResizeStart(2)} />
+              </TH>
+              <TH className="relative cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("amount")}>
                 {copy.amount}
+                <ColumnResizeHandle onResizeStart={handleResizeStart(3)} />
               </TH>
-              <TH>{copy.label}</TH>
-              <TH>{copy.counterpart}</TH>
-              <TH>{copy.account}</TH>
-              <TH>{copy.costCenterShort}</TH>
-              <TH>{copy.balance}</TH>
-              <TH>{copy.actions}</TH>
+              <TH className="relative">
+                {copy.label}
+                <ColumnResizeHandle onResizeStart={handleResizeStart(4)} />
+              </TH>
+              <TH className="relative">
+                {copy.counterpart}
+                <ColumnResizeHandle onResizeStart={handleResizeStart(5)} />
+              </TH>
+              <TH className="relative">
+                {copy.account}
+                <ColumnResizeHandle onResizeStart={handleResizeStart(6)} />
+              </TH>
+              <TH className="relative">
+                {copy.costCenterShort}
+                <ColumnResizeHandle onResizeStart={handleResizeStart(7)} />
+              </TH>
+              <TH className="relative">
+                {copy.balance}
+                <ColumnResizeHandle onResizeStart={handleResizeStart(8)} />
+              </TH>
+              <TH className="relative">
+                {copy.actions}
+                <ColumnResizeHandle onResizeStart={handleResizeStart(9)} />
+              </TH>
             </TR>
             <TR className="bg-[var(--panel)] normal-case">
               <TH>
