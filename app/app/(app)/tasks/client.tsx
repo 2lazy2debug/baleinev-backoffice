@@ -7,8 +7,11 @@ import { Check, Circle, Pencil, Trash2 } from "lucide-react";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import { Button, Card, Field, IconButton, Input, SectionTitle, Select, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
+import { getDictionary } from "@/lib/i18n";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { decimalToNumber, formatCurrency } from "@/lib/utils";
+
+type Copy = ReturnType<typeof getDictionary>;
 
 import {
   createTodoTaskAction,
@@ -48,7 +51,7 @@ interface TasksPageClientProps {
   todos: TodoItem[];
   ungroupedTasks: StandaloneTask[];
   access: UserAccess;
-  copy: any;
+  copy: Copy;
   locale: string;
   users: UserSummary[];
   activeEdition: { id: string } | null;
@@ -347,7 +350,7 @@ interface TodoCardProps {
   users: UserSummary[];
   isAdmin: boolean;
   access: UserAccess;
-  copy: any;
+  copy: Copy;
   locale: string;
 }
 
@@ -452,7 +455,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
           </Field>
           <div className="flex items-end gap-2">
             <Button type="submit" variant="destructive" disabled={isDeletingTodo}>
-              {copy.tasks.delete}
+              {copy.tasks.deleteTodo}
             </Button>
             <Button type="button" variant="secondary" onClick={() => setDeletingTodoId(null)}>
               {copy.shell.cancel}
@@ -468,12 +471,12 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
           <form action={createTaskFormAction} className="grid gap-2 sm:grid-cols-2">
             <FormError message={createTaskState.error} className="sm:col-span-2" />
             <input type="hidden" name="todoId" value={todo.id} />
-            <Input type="text" name="title" required placeholder={copy.tasks.taskTitle} />
+            <Input type="text" name="title" required placeholder={copy.tasks.todoTaskTitle} />
             <Input type="datetime-local" name="dueDate" />
             <Textarea
               name="description"
               rows={2}
-              placeholder={copy.tasks.taskDescription}
+              placeholder={copy.tasks.todoTaskDescription}
               className="sm:col-span-2"
             />
             {isAdmin ? (
@@ -501,7 +504,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
         <FormError message={deleteTaskState.error} />
 
         {todo.tasks.length === 0 ? (
-          <p className="text-xs text-[var(--muted)]">{copy.tasks.noTasks}</p>
+          <p className="text-xs text-[var(--muted)]">{copy.tasks.noTodoTasks}</p>
         ) : (
           <ul className="space-y-2">
             {todo.tasks.map((task) => (
