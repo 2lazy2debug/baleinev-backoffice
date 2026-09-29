@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
@@ -55,6 +55,11 @@ export default function JournalPageClient({ activeEdition, accountBalances, loca
   const copy = dictionaries[locale].journal;
   const isReadOnly = useEditionReadOnly();
 
+  const accountOpeningBalances = useMemo(
+    () => Object.fromEntries(activeEdition.moneyAccounts.map((account) => [account.id, account.openingBalance])),
+    [activeEdition.moneyAccounts],
+  );
+
   const handleModalClose = () => {
     setIsModalOpen(false);
   };
@@ -99,9 +104,7 @@ export default function JournalPageClient({ activeEdition, accountBalances, loca
         <JournalTable
           entries={activeEdition.journalEntries}
           accountBalances={accountBalances}
-          accountOpeningBalances={Object.fromEntries(
-            activeEdition.moneyAccounts.map((account) => [account.id, account.openingBalance]),
-          )}
+          accountOpeningBalances={accountOpeningBalances}
           locale={locale}
           budgets={activeEdition.budgets}
           moneyAccounts={activeEdition.moneyAccounts}

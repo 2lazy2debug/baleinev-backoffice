@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useEffect, useRef } from "react";
+import { useActionState, useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Pencil, PencilLine, Trash2, X } from "lucide-react";
@@ -93,6 +93,408 @@ function ColumnResizeHandle({ onResizeStart }: { onResizeStart: (e: React.MouseE
   );
 }
 
+// Every value the two views show is derived once, in JournalTable. The desktop
+// table and the mobile cardlets render this same array — neither recomputes a
+// label, an amount or a running balance of its own.
+type JournalRow = {
+  entry: JournalEntry;
+  dateLabel: string;
+  budgetName: string;
+  typeText: string;
+  isProduits: boolean;
+  amountLabel: string;
+  counterpart: string;
+  costCenterCode: string;
+  balanceLabel: string;
+  invoiceHref: string | null;
+  invoiceNumber: string | null;
+  isLocked: boolean;
+  deleteDisabled: boolean;
+};
+
+type JournalTableRowProps = {
+  row: JournalRow;
+  draft: EntryDraft | null;
+  isBulkEditing: boolean;
+  onDraftChange: (entryId: string, patch: Partial<EntryDraft>) => void;
+  onEditStart: (entry: JournalEntry) => void;
+  onCancelEdit: () => void;
+  budgets: Array<{ id: string; name: string }>;
+  moneyAccounts: Array<{ id: string; name: string }>;
+  costCenters: Array<{ id: string; code: string }>;
+  locale: Locale;
+  saveFormAction: () => void;
+  isSaving: boolean;
+  deleteFormAction: (formData: FormData) => void;
+  isDeleting: boolean;
+};
+
+const JournalTableRow = memo(function JournalTableRow({
+  row,
+  draft,
+  isBulkEditing,
+  onDraftChange,
+  onEditStart,
+  onCancelEdit,
+  budgets,
+  moneyAccounts,
+  costCenters,
+  locale,
+  saveFormAction,
+  isSaving,
+  deleteFormAction,
+  isDeleting,
+}: JournalTableRowProps) {
+  const copy = dictionaries[locale].journal;
+  const shellCopy = dictionaries[locale].shell;
+  const entry = row.entry;
+  return (
+    <TR className={draft ? "bg-[var(--panel-strong)]" : undefined}>
+      <TD>
+        {draft ? (
+          <Input
+            type="date"
+            value={draft.date}
+            onChange={(e) => onDraftChange(entry.id, { date: e.target.value })}
+            size="sm"
+          />
+        ) : (
+          row.dateLabel
+        )}
+      </TD>
+      <TD>
+        {draft ? (
+          <Select
+            value={draft.budgetId}
+            onChange={(e) => onDraftChange(entry.id, { budgetId: e.target.value })}
+            size="sm"
+          >
+            <option value="">-</option>
+            {budgets.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </Select>
+        ) : (
+          row.budgetName
+        )}
+      </TD>
+      <TD>
+        {draft ? (
+          <Select
+            value={draft.accountType}
+            onChange={(e) => onDraftChange(entry.id, { accountType: e.target.value })}
+            size="sm"
+          >
+            <option value="CHARGES">{dictionaries[locale].common.charges}</option>
+            <option value="PRODUITS">{dictionaries[locale].common.produits}</option>
+          </Select>
+        ) : (
+          row.typeText
+        )}
+      </TD>
+      <TD>
+        {draft ? (
+          <Input
+            type="number"
+            step="0.01"
+            min="0.01"
+            value={draft.amount}
+            onChange={(e) => onDraftChange(entry.id, { amount: e.target.value })}
+            size="sm"
+            className="text-right"
+          />
+        ) : (
+          row.amountLabel
+        )}
+      </TD>
+      <TD>
+        {draft ? (
+          <Input
+            type="text"
+            value={draft.label}
+            onChange={(e) => onDraftChange(entry.id, { label: e.target.value })}
+            size="sm"
+          />
+        ) : row.invoiceHref ? (
+          <a
+            href={row.invoiceHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="truncate text-[var(--accent)] hover:underline"
+            title={row.invoiceNumber ?? undefined}
+          >
+            {row.invoiceNumber ?? entry.label}
+          </a>
+        ) : (
+          <span className="truncate">{entry.label}</span>
+        )}
+      </TD>
+      <TD>
+        {draft ? (
+          <Input
+            type="text"
+            value={draft.counterparty}
+            onChange={(e) => onDraftChange(entry.id, { counterparty: e.target.value })}
+            size="sm"
+          />
+        ) : (
+          row.counterpart
+        )}
+      </TD>
+      <TD>
+        {draft ? (
+          <Select
+            value={draft.moneyAccountId}
+            onChange={(e) => onDraftChange(entry.id, { moneyAccountId: e.target.value })}
+            size="sm"
+          >
+            {moneyAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+          </Select>
+        ) : (
+          entry.moneyAccount.name
+        )}
+      </TD>
+      <TD>
+        {draft ? (
+          <Select
+            value={draft.costCenterId}
+            onChange={(e) => onDraftChange(entry.id, { costCenterId: e.target.value })}
+            size="sm"
+          >
+            <option value="">-</option>
+            {costCenters.map((cc) => <option key={cc.id} value={cc.id}>{cc.code}</option>)}
+          </Select>
+        ) : (
+          row.costCenterCode
+        )}
+      </TD>
+      <TD className="font-semibold">{row.balanceLabel}</TD>
+      <TD>
+        {/* Bulk mode owns saving: a row shows no save, cancel or delete of
+            its own until the header's Save all or Cancel ends the mode. A
+            locked row still says so — that is why it has no draft. */}
+        {row.isLocked ? (
+          <span className="text-xs text-[var(--muted)]">{copy.locked}</span>
+        ) : isBulkEditing ? null : draft ? (
+          <div className="flex items-center gap-2">
+            <IconButton
+              onClick={() => saveFormAction()}
+              disabled={isSaving}
+              tone="save"
+              label={shellCopy.save}
+            >
+              <Check />
+            </IconButton>
+            <IconButton onClick={onCancelEdit} tone="neutral" label={shellCopy.cancel}>
+              <X />
+            </IconButton>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <IconButton onClick={() => onEditStart(entry)} tone="accent" label={copy.edit}>
+              <Pencil />
+            </IconButton>
+            <form action={deleteFormAction}>
+              <input type="hidden" name="journalEntryId" value={entry.id} />
+              <IconButton
+                type="submit"
+                tone="delete"
+                label={row.deleteDisabled ? copy.locked : copy.deleteEntry}
+                disabled={row.deleteDisabled || isDeleting}
+              >
+                <Trash2 />
+              </IconButton>
+            </form>
+          </div>
+        )}
+      </TD>
+    </TR>
+  );
+});
+
+type JournalCardletProps = {
+  row: JournalRow;
+  draft: EntryDraft | null;
+  isBulkEditing: boolean;
+  onDraftChange: (entryId: string, patch: Partial<EntryDraft>) => void;
+  budgets: Array<{ id: string; name: string }>;
+  moneyAccounts: Array<{ id: string; name: string }>;
+  costCenters: Array<{ id: string; code: string }>;
+  locale: Locale;
+  deleteFormAction: (formData: FormData) => void;
+  isDeleting: boolean;
+};
+
+const JournalCardlet = memo(function JournalCardlet({
+  row,
+  draft,
+  isBulkEditing,
+  onDraftChange,
+  budgets,
+  moneyAccounts,
+  costCenters,
+  locale,
+  deleteFormAction,
+  isDeleting,
+}: JournalCardletProps) {
+  const copy = dictionaries[locale].journal;
+  return (
+    <Cardlet>
+      <CardletHeader
+        title={
+          <>
+            <p className="text-3xs font-normal text-[var(--muted)]">
+              {draft ? `#${row.entry.sequenceNumber}` : `#${row.entry.sequenceNumber} · ${row.dateLabel}`}
+            </p>
+            {draft ? (
+              <Input
+                type="text"
+                value={draft.label}
+                onChange={(e) => onDraftChange(row.entry.id, { label: e.target.value })}
+                size="sm"
+                className="mt-1"
+              />
+            ) : row.invoiceHref ? (
+              <a
+                href={row.invoiceHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-0.5 block truncate text-[var(--accent)]"
+                title={row.invoiceNumber ?? undefined}
+              >
+                {row.entry.label}
+              </a>
+            ) : (
+              <p className="mt-0.5 truncate">{row.entry.label}</p>
+            )}
+          </>
+        }
+        action={
+          draft ? null : (
+            <div className="shrink-0 text-right">
+              <Badge tone={row.isProduits ? "success" : "neutral"}>{row.typeText}</Badge>
+              <p className={cn("mt-1 text-sm font-semibold", row.isProduits ? "text-emerald-300" : null)}>
+                {row.amountLabel}
+              </p>
+            </div>
+          )
+        }
+      />
+
+      {/* The same eight fields as a table row, stacked — a phone in bulk mode
+          edits the entry it is looking at, it does not leave for a form page. */}
+      {draft ? (
+        <CardletFields>
+          <CardletField label={copy.date}>
+            <Input
+              type="date"
+              value={draft.date}
+              onChange={(e) => onDraftChange(row.entry.id, { date: e.target.value })}
+              size="sm"
+            />
+          </CardletField>
+          <CardletField label={copy.amount}>
+            <Input
+              type="number"
+              step="0.01"
+              min="0.01"
+              value={draft.amount}
+              onChange={(e) => onDraftChange(row.entry.id, { amount: e.target.value })}
+              size="sm"
+              className="text-right"
+            />
+          </CardletField>
+          <CardletField label={copy.type} className="col-span-2">
+            <Select
+              value={draft.accountType}
+              onChange={(e) => onDraftChange(row.entry.id, { accountType: e.target.value })}
+              size="sm"
+            >
+              <option value="CHARGES">{dictionaries[locale].common.charges}</option>
+              <option value="PRODUITS">{dictionaries[locale].common.produits}</option>
+            </Select>
+          </CardletField>
+          <CardletField label={copy.budget} className="col-span-2">
+            <Select
+              value={draft.budgetId}
+              onChange={(e) => onDraftChange(row.entry.id, { budgetId: e.target.value })}
+              size="sm"
+            >
+              <option value="">-</option>
+              {budgets.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </Select>
+          </CardletField>
+          <CardletField label={copy.account} className="col-span-2">
+            <Select
+              value={draft.moneyAccountId}
+              onChange={(e) => onDraftChange(row.entry.id, { moneyAccountId: e.target.value })}
+              size="sm"
+            >
+              {moneyAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </Select>
+          </CardletField>
+          <CardletField label={copy.costCenter} className="col-span-2">
+            <Select
+              value={draft.costCenterId}
+              onChange={(e) => onDraftChange(row.entry.id, { costCenterId: e.target.value })}
+              size="sm"
+            >
+              <option value="">-</option>
+              {costCenters.map((cc) => <option key={cc.id} value={cc.id}>{cc.code}</option>)}
+            </Select>
+          </CardletField>
+          <CardletField label={copy.counterpart} className="col-span-2">
+            <Input
+              type="text"
+              value={draft.counterparty}
+              onChange={(e) => onDraftChange(row.entry.id, { counterparty: e.target.value })}
+              size="sm"
+            />
+          </CardletField>
+        </CardletFields>
+      ) : (
+        <CardletFields>
+          <CardletField label={copy.budget}>{row.budgetName}</CardletField>
+          <CardletField label={copy.account}>{row.entry.moneyAccount.name}</CardletField>
+          <CardletField label={copy.costCenter}>{row.costCenterCode}</CardletField>
+          <CardletField label={copy.counterpart}>{row.counterpart}</CardletField>
+        </CardletFields>
+      )}
+
+      {draft ? null : (
+        <p className="text-xs text-[var(--muted)]">
+          {copy.balance}: <span className="font-semibold text-[var(--ink)]">{row.balanceLabel}</span>
+        </p>
+      )}
+
+      {row.isLocked ? (
+        <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.locked}</p>
+      ) : isBulkEditing ? null : (
+        <div className="flex gap-2">
+          {/* Editing one entry on a phone is the existing full-page form, not the
+              table's inline row editor — seven controls do not fit inside a card. */}
+          <Link
+            href={`/journal/${row.entry.id}`}
+            title={copy.edit}
+            aria-label={copy.edit}
+            className={iconButtonClasses("accent")}
+          >
+            <Pencil />
+          </Link>
+          <form action={deleteFormAction}>
+            <input type="hidden" name="journalEntryId" value={row.entry.id} />
+            <IconButton
+              type="submit"
+              tone="delete"
+              label={row.deleteDisabled ? copy.locked : copy.deleteEntry}
+              disabled={row.deleteDisabled || isDeleting}
+            >
+              <Trash2 />
+            </IconButton>
+          </form>
+        </div>
+      )}
+    </Cardlet>
+  );
+});
 
 export function JournalTable({ entries, accountBalances, accountOpeningBalances, locale, budgets, moneyAccounts, costCenters, canBulkEdit }: JournalTableProps) {
   const copy = dictionaries[locale].journal;
@@ -171,9 +573,15 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   }, []);
 
   // Build deterministic running balances from opening balances and journal sequence.
-  const runningBalanceByEntryId = buildRunningBalances(entries, accountOpeningBalances);
+  const runningBalanceByEntryId = useMemo(
+    () => buildRunningBalances(entries, accountOpeningBalances),
+    [entries, accountOpeningBalances],
+  );
 
-  const sortedEntries = sortEntries(filterEntries(entries, filters), sortBy);
+  const sortedEntries = useMemo(
+    () => sortEntries(filterEntries(entries, filters), sortBy),
+    [entries, filters, sortBy],
+  );
 
   const handleSort = (column: string) => {
     if (sortBy?.column === column) {
@@ -219,10 +627,15 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
     };
   }
 
-  function handleEditStart(entry: JournalEntry) {
+  const handleEditStart = useCallback((entry: JournalEntry) => {
     setEditingId(entry.id);
     setEditDraft(draftFromEntry(entry));
-  }
+  }, []);
+
+  const cancelInlineEdit = useCallback(() => {
+    setEditingId(null);
+    setEditDraft(null);
+  }, []);
 
   async function handleSaveEntry(_prevState: ActionState): Promise<ActionState> {
     if (!editingId || !editDraft) {
@@ -256,19 +669,30 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
 
   // Opening entries stay locked in bulk mode too — the server refuses them, so
   // the grid never offers them.
-  const bulkEditableEntries = entries.filter((entry) => !entry.isOpeningEntry);
-  const changedEntries = bulkDrafts
-    ? bulkEditableEntries.filter(
-        (entry) => bulkDrafts[entry.id] && isDraftDirty(draftFromEntry(entry), bulkDrafts[entry.id]),
-      )
-    : [];
+  const bulkEditableEntries = useMemo(
+    () => entries.filter((entry) => !entry.isOpeningEntry),
+    [entries],
+  );
+  const baselineById = useMemo(
+    () => Object.fromEntries(bulkEditableEntries.map((entry) => [entry.id, draftFromEntry(entry)])),
+    [bulkEditableEntries],
+  );
+  const changedEntries = useMemo(
+    () =>
+      bulkDrafts
+        ? bulkEditableEntries.filter(
+            (entry) => bulkDrafts[entry.id] && isDraftDirty(baselineById[entry.id], bulkDrafts[entry.id]),
+          )
+        : [],
+    [bulkDrafts, bulkEditableEntries, baselineById],
+  );
 
   function startBulkEdit() {
     // A row half-edited inline is discarded rather than merged: the grid is
     // seeded from what is stored, so what you see is what will be saved.
     setEditingId(null);
     setEditDraft(null);
-    setBulkDrafts(Object.fromEntries(bulkEditableEntries.map((entry) => [entry.id, draftFromEntry(entry)])));
+    setBulkDrafts(Object.fromEntries(bulkEditableEntries.map((entry) => [entry.id, { ...baselineById[entry.id] }])));
   }
 
   function cancelBulkEdit() {
@@ -299,42 +723,51 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   }
   const [bulkState, bulkSaveFormAction, isBulkSaving] = useActionState(handleSaveAll, initialActionState);
 
-  function updateDraft(entryId: string, patch: Partial<EntryDraft>) {
-    if (isBulkEditing) {
-      setBulkDrafts((current) => (current ? { ...current, [entryId]: { ...current[entryId], ...patch } } : current));
-      return;
-    }
+  const updateBulkDraft = useCallback((entryId: string, patch: Partial<EntryDraft>) => {
+    setBulkDrafts((current) => (current ? { ...current, [entryId]: { ...current[entryId], ...patch } } : current));
+  }, []);
+
+  const updateEditDraft = useCallback((_entryId: string, patch: Partial<EntryDraft>) => {
     setEditDraft((current) => (current ? { ...current, ...patch } : current));
-  }
+  }, []);
 
-  const uniqueBudgets = [...new Set(entries.map((e) => e.budget?.name).filter(Boolean))];
-  const uniqueAccounts = [...new Set(entries.map((e) => e.moneyAccount.name))];
-  const uniqueCostCenters = [...new Set(entries.map((e) => e.costCenter?.code).filter(Boolean))];
+  const onDraftChange = isBulkEditing ? updateBulkDraft : updateEditDraft;
 
-  // Every value the two views show is derived once, here. The desktop table and the
-  // mobile cardlets render this same array — neither recomputes a label, an amount or
-  // a running balance of its own.
-  const rows = sortedEntries.map((entry) => ({
-    entry,
-    dateLabel: entry.date.toISOString().slice(0, 10),
-    budgetName: entry.budget?.name ?? "-",
-    typeText: typeLabel(entry.accountType, locale),
-    isProduits: entry.accountType === "PRODUITS",
-    amountLabel: formatCurrency(Number(entry.amount.toString())),
-    counterpart: entry.counterparty ?? "-",
-    costCenterCode: entry.costCenter?.code ?? "-",
-    balanceLabel: formatCurrency(
-      runningBalanceByEntryId[entry.id] ?? accountBalances[entry.moneyAccount.name] ?? 0,
-    ),
-    invoiceHref: entry.linkedInvoice ? `/api/invoices/${entry.linkedInvoice.id}/pdf` : null,
-    invoiceNumber: entry.linkedInvoice?.invoiceNumber ?? null,
-    // An opening entry, or any entry in a closed edition, has no actions at all;
-    // an invoice-linked entry can still be edited but never deleted.
-    isLocked: entry.isOpeningEntry || isReadOnly,
-    deleteDisabled: Boolean(entry.linkedInvoice),
-    // The row's live draft, whichever mode put it there — null when it is read-only.
-    draft: (isBulkEditing ? bulkDrafts[entry.id] : editingId === entry.id ? editDraft : null) ?? null,
-  }));
+  const { uniqueBudgets, uniqueAccounts, uniqueCostCenters } = useMemo(
+    () => ({
+      uniqueBudgets: [...new Set(entries.map((e) => e.budget?.name).filter(Boolean))],
+      uniqueAccounts: [...new Set(entries.map((e) => e.moneyAccount.name))],
+      uniqueCostCenters: [...new Set(entries.map((e) => e.costCenter?.code).filter(Boolean))],
+    }),
+    [entries],
+  );
+
+  const rows: JournalRow[] = useMemo(
+    () =>
+      sortedEntries.map((entry) => ({
+        entry,
+        dateLabel: entry.date.toISOString().slice(0, 10),
+        budgetName: entry.budget?.name ?? "-",
+        typeText: typeLabel(entry.accountType, locale),
+        isProduits: entry.accountType === "PRODUITS",
+        amountLabel: formatCurrency(Number(entry.amount.toString())),
+        counterpart: entry.counterparty ?? "-",
+        costCenterCode: entry.costCenter?.code ?? "-",
+        balanceLabel: formatCurrency(
+          runningBalanceByEntryId[entry.id] ?? accountBalances[entry.moneyAccount.name] ?? 0,
+        ),
+        invoiceHref: entry.linkedInvoice ? `/api/invoices/${entry.linkedInvoice.id}/pdf` : null,
+        invoiceNumber: entry.linkedInvoice?.invoiceNumber ?? null,
+        // An opening entry, or any entry in a closed edition, has no actions at all;
+        // an invoice-linked entry can still be edited but never deleted.
+        isLocked: entry.isOpeningEntry || isReadOnly,
+        deleteDisabled: Boolean(entry.linkedInvoice),
+      })),
+    [sortedEntries, runningBalanceByEntryId, accountBalances, locale, isReadOnly],
+  );
+
+  // The row's live draft, whichever mode put it there — null when it is read-only.
+  const draftFor = (id: string) => (isBulkEditing ? bulkDrafts[id] : editingId === id ? editDraft : null) ?? null;
 
   return (
     <Panel flushOnMobile as="div" className="flex h-full flex-col">
@@ -529,174 +962,25 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
             </TR>
           </THead>
           <tbody>
-            {rows.map((row) => {
-              const entry = row.entry;
-              const draft = row.draft;
-              return (
-                <TR key={entry.id} className={draft ? "bg-[var(--panel-strong)]" : undefined}>
-                  <TD>
-                    {draft ? (
-                      <Input
-                        type="date"
-                        value={draft.date}
-                        onChange={(e) => updateDraft(entry.id, { date: e.target.value })}
-                        size="sm"
-                      />
-                    ) : (
-                      row.dateLabel
-                    )}
-                  </TD>
-                  <TD>
-                    {draft ? (
-                      <Select
-                        value={draft.budgetId}
-                        onChange={(e) => updateDraft(entry.id, { budgetId: e.target.value })}
-                        size="sm"
-                      >
-                        <option value="">-</option>
-                        {budgets.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                      </Select>
-                    ) : (
-                      row.budgetName
-                    )}
-                  </TD>
-                  <TD>
-                    {draft ? (
-                      <Select
-                        value={draft.accountType}
-                        onChange={(e) => updateDraft(entry.id, { accountType: e.target.value })}
-                        size="sm"
-                      >
-                        <option value="CHARGES">{dictionaries[locale].common.charges}</option>
-                        <option value="PRODUITS">{dictionaries[locale].common.produits}</option>
-                      </Select>
-                    ) : (
-                      row.typeText
-                    )}
-                  </TD>
-                  <TD>
-                    {draft ? (
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        value={draft.amount}
-                        onChange={(e) => updateDraft(entry.id, { amount: e.target.value })}
-                        size="sm"
-                        className="text-right"
-                      />
-                    ) : (
-                      row.amountLabel
-                    )}
-                  </TD>
-                  <TD>
-                    {draft ? (
-                      <Input
-                        type="text"
-                        value={draft.label}
-                        onChange={(e) => updateDraft(entry.id, { label: e.target.value })}
-                        size="sm"
-                      />
-                    ) : row.invoiceHref ? (
-                      <a
-                        href={row.invoiceHref}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="truncate text-[var(--accent)] hover:underline"
-                        title={row.invoiceNumber ?? undefined}
-                      >
-                        {row.invoiceNumber ?? entry.label}
-                      </a>
-                    ) : (
-                      <span className="truncate">{entry.label}</span>
-                    )}
-                  </TD>
-                  <TD>
-                    {draft ? (
-                      <Input
-                        type="text"
-                        value={draft.counterparty}
-                        onChange={(e) => updateDraft(entry.id, { counterparty: e.target.value })}
-                        size="sm"
-                      />
-                    ) : (
-                      row.counterpart
-                    )}
-                  </TD>
-                  <TD>
-                    {draft ? (
-                      <Select
-                        value={draft.moneyAccountId}
-                        onChange={(e) => updateDraft(entry.id, { moneyAccountId: e.target.value })}
-                        size="sm"
-                      >
-                        {moneyAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                      </Select>
-                    ) : (
-                      entry.moneyAccount.name
-                    )}
-                  </TD>
-                  <TD>
-                    {draft ? (
-                      <Select
-                        value={draft.costCenterId}
-                        onChange={(e) => updateDraft(entry.id, { costCenterId: e.target.value })}
-                        size="sm"
-                      >
-                        <option value="">-</option>
-                        {costCenters.map((cc) => <option key={cc.id} value={cc.id}>{cc.code}</option>)}
-                      </Select>
-                    ) : (
-                      row.costCenterCode
-                    )}
-                  </TD>
-                  <TD className="font-semibold">{row.balanceLabel}</TD>
-                  <TD>
-                    {/* Bulk mode owns saving: a row shows no save, cancel or delete of
-                        its own until the header's Save all or Cancel ends the mode. A
-                        locked row still says so — that is why it has no draft. */}
-                    {row.isLocked ? (
-                      <span className="text-xs text-[var(--muted)]">{copy.locked}</span>
-                    ) : isBulkEditing ? null : draft ? (
-                      <div className="flex items-center gap-2">
-                        <IconButton
-                          onClick={() => saveFormAction()}
-                          disabled={isSaving}
-                          tone="save"
-                          label={shellCopy.save}
-                        >
-                          <Check />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => { setEditingId(null); setEditDraft(null); }}
-                          tone="neutral"
-                          label={shellCopy.cancel}
-                        >
-                          <X />
-                        </IconButton>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-3">
-                        <IconButton onClick={() => handleEditStart(entry)} tone="accent" label={copy.edit}>
-                          <Pencil />
-                        </IconButton>
-                        <form action={deleteFormAction}>
-                          <input type="hidden" name="journalEntryId" value={entry.id} />
-                          <IconButton
-                            type="submit"
-                            tone="delete"
-                            label={row.deleteDisabled ? copy.locked : copy.deleteEntry}
-                            disabled={row.deleteDisabled || isDeleting}
-                          >
-                            <Trash2 />
-                          </IconButton>
-                        </form>
-                      </div>
-                    )}
-                  </TD>
-                </TR>
-              );
-            })}
+            {rows.map((row) => (
+              <JournalTableRow
+                key={row.entry.id}
+                row={row}
+                draft={draftFor(row.entry.id)}
+                isBulkEditing={isBulkEditing}
+                onDraftChange={onDraftChange}
+                onEditStart={handleEditStart}
+                onCancelEdit={cancelInlineEdit}
+                budgets={budgets}
+                moneyAccounts={moneyAccounts}
+                costCenters={costCenters}
+                locale={locale}
+                saveFormAction={saveFormAction}
+                isSaving={isSaving}
+                deleteFormAction={deleteFormAction}
+                isDeleting={isDeleting}
+              />
+            ))}
           </tbody>
         </Table>
 
@@ -704,167 +988,21 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
           cards. Filtering and sorting live in the table header and stay desktop-only —
           a phone gets the entries in journal order. */}
       <CardletList>
-        {rows.map((row) => {
-          const draft = row.draft;
-          return (
-            <Cardlet key={row.entry.id}>
-              <CardletHeader
-                title={
-                  <>
-                    <p className="text-3xs font-normal text-[var(--muted)]">
-                      {draft ? `#${row.entry.sequenceNumber}` : `#${row.entry.sequenceNumber} · ${row.dateLabel}`}
-                    </p>
-                    {draft ? (
-                      <Input
-                        type="text"
-                        value={draft.label}
-                        onChange={(e) => updateDraft(row.entry.id, { label: e.target.value })}
-                        size="sm"
-                        className="mt-1"
-                      />
-                    ) : row.invoiceHref ? (
-                      <a
-                        href={row.invoiceHref}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-0.5 block truncate text-[var(--accent)]"
-                        title={row.invoiceNumber ?? undefined}
-                      >
-                        {row.entry.label}
-                      </a>
-                    ) : (
-                      <p className="mt-0.5 truncate">{row.entry.label}</p>
-                    )}
-                  </>
-                }
-                action={
-                  draft ? null : (
-                    <div className="shrink-0 text-right">
-                      <Badge tone={row.isProduits ? "success" : "neutral"}>{row.typeText}</Badge>
-                      <p className={cn("mt-1 text-sm font-semibold", row.isProduits ? "text-emerald-300" : null)}>
-                        {row.amountLabel}
-                      </p>
-                    </div>
-                  )
-                }
-              />
-
-              {/* The same eight fields as a table row, stacked — a phone in bulk mode
-                  edits the entry it is looking at, it does not leave for a form page. */}
-              {draft ? (
-                <CardletFields>
-                  <CardletField label={copy.date}>
-                    <Input
-                      type="date"
-                      value={draft.date}
-                      onChange={(e) => updateDraft(row.entry.id, { date: e.target.value })}
-                      size="sm"
-                    />
-                  </CardletField>
-                  <CardletField label={copy.amount}>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      value={draft.amount}
-                      onChange={(e) => updateDraft(row.entry.id, { amount: e.target.value })}
-                      size="sm"
-                      className="text-right"
-                    />
-                  </CardletField>
-                  <CardletField label={copy.type} className="col-span-2">
-                    <Select
-                      value={draft.accountType}
-                      onChange={(e) => updateDraft(row.entry.id, { accountType: e.target.value })}
-                      size="sm"
-                    >
-                      <option value="CHARGES">{dictionaries[locale].common.charges}</option>
-                      <option value="PRODUITS">{dictionaries[locale].common.produits}</option>
-                    </Select>
-                  </CardletField>
-                  <CardletField label={copy.budget} className="col-span-2">
-                    <Select
-                      value={draft.budgetId}
-                      onChange={(e) => updateDraft(row.entry.id, { budgetId: e.target.value })}
-                      size="sm"
-                    >
-                      <option value="">-</option>
-                      {budgets.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                    </Select>
-                  </CardletField>
-                  <CardletField label={copy.account} className="col-span-2">
-                    <Select
-                      value={draft.moneyAccountId}
-                      onChange={(e) => updateDraft(row.entry.id, { moneyAccountId: e.target.value })}
-                      size="sm"
-                    >
-                      {moneyAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                    </Select>
-                  </CardletField>
-                  <CardletField label={copy.costCenter} className="col-span-2">
-                    <Select
-                      value={draft.costCenterId}
-                      onChange={(e) => updateDraft(row.entry.id, { costCenterId: e.target.value })}
-                      size="sm"
-                    >
-                      <option value="">-</option>
-                      {costCenters.map((cc) => <option key={cc.id} value={cc.id}>{cc.code}</option>)}
-                    </Select>
-                  </CardletField>
-                  <CardletField label={copy.counterpart} className="col-span-2">
-                    <Input
-                      type="text"
-                      value={draft.counterparty}
-                      onChange={(e) => updateDraft(row.entry.id, { counterparty: e.target.value })}
-                      size="sm"
-                    />
-                  </CardletField>
-                </CardletFields>
-              ) : (
-                <CardletFields>
-                  <CardletField label={copy.budget}>{row.budgetName}</CardletField>
-                  <CardletField label={copy.account}>{row.entry.moneyAccount.name}</CardletField>
-                  <CardletField label={copy.costCenter}>{row.costCenterCode}</CardletField>
-                  <CardletField label={copy.counterpart}>{row.counterpart}</CardletField>
-                </CardletFields>
-              )}
-
-              {draft ? null : (
-                <p className="text-xs text-[var(--muted)]">
-                  {copy.balance}: <span className="font-semibold text-[var(--ink)]">{row.balanceLabel}</span>
-                </p>
-              )}
-
-              {row.isLocked ? (
-                <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.locked}</p>
-              ) : isBulkEditing ? null : (
-                <div className="flex gap-2">
-                  {/* Editing one entry on a phone is the existing full-page form, not the
-                      table's inline row editor — seven controls do not fit inside a card. */}
-                  <Link
-                    href={`/journal/${row.entry.id}`}
-                    title={copy.edit}
-                    aria-label={copy.edit}
-                    className={iconButtonClasses("accent")}
-                  >
-                    <Pencil />
-                  </Link>
-                  <form action={deleteFormAction}>
-                    <input type="hidden" name="journalEntryId" value={row.entry.id} />
-                    <IconButton
-                      type="submit"
-                      tone="delete"
-                      label={row.deleteDisabled ? copy.locked : copy.deleteEntry}
-                      disabled={row.deleteDisabled || isDeleting}
-                    >
-                      <Trash2 />
-                    </IconButton>
-                  </form>
-                </div>
-              )}
-            </Cardlet>
-          );
-        })}
+        {rows.map((row) => (
+          <JournalCardlet
+            key={row.entry.id}
+            row={row}
+            draft={draftFor(row.entry.id)}
+            isBulkEditing={isBulkEditing}
+            onDraftChange={onDraftChange}
+            budgets={budgets}
+            moneyAccounts={moneyAccounts}
+            costCenters={costCenters}
+            locale={locale}
+            deleteFormAction={deleteFormAction}
+            isDeleting={isDeleting}
+          />
+        ))}
       </CardletList>
     </Panel>
   );
