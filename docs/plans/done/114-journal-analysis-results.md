@@ -424,8 +424,28 @@ Inline edit save + cancel and delete (entry 12) still work.
 Found, not changed (pre-existing, out of scope):
 - `THead`'s `sticky top-0` has never stuck: its sticky container is the table's
   `overflow-auto` wrapper, which does not scroll. Windowing leaves it as it was.
+  **Fixed afterward** in `fix(journal): make the table's own box the sticky
+  header's scroll container` — the wrapper is bounded to `max-h-[70vh]` (the
+  same pattern as calendar/budget's `client.tsx`), so it becomes a real
+  scrollport and the header finally sticks. `useBulkRowWindow` now measures the
+  visible range against that box's own height instead of `window.innerHeight`.
 - At 1280 px with the sidebar open, the nine fixed columns (1 200 px) squeeze the
   flexible Label column to ~22 px, so its input sits under the Counterparty one.
   The measurement harness's "label" keystrokes land in Counterparty; the numbers
-  are still one row's input, so they stand.
+  are still one row's input, so they stand. Still open.
+
+### Step 7 — close out
+
+Checks (re-run from `app/`): build ✓ · lint ✓ (0 errors, 2 pre-existing warnings:
+`lib/proof-upload.ts` unused `eslint-disable`, `types/next-auth.d.ts` unused
+`JWT` import) · check:design ✓ · check:i18n ✓ · npm test ✓ (254 tests).
+
+`docs/testing.md` gained a "Measuring the journal bulk-edit" section (the three
+commands, the production-build requirement, the fixture/edition-restore note)
+and its stale lint-warning line (which named a since-fixed `tasks/client.tsx`
+issue) was corrected to the two warnings actually in the tree today.
+
+User to confirm: record a new trace on production after deploy and run
+`python3 docs/soa/analyze-trace.py <file>`; compare with the baseline table at
+the top of this plan.
 

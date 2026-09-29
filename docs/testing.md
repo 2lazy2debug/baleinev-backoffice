@@ -7,7 +7,7 @@ run all four before shipping, and the release protocol in
 | Command | What it catches |
 |---|---|
 | `npm run build` | The real type gate — `next build` type-checks and compiles every route. |
-| `npm run lint` | ESLint. As of v0.34.0 there are 2 pre-existing errors in `app/(app)/tasks/client.tsx` (`copy: any`) — known, not yours. |
+| `npm run lint` | ESLint. There are 2 pre-existing warnings (an unused `eslint-disable` in `lib/proof-upload.ts`, an unused `JWT` import in `types/next-auth.d.ts`) — known, not yours. |
 | `npm run check:design` | Hardcoded hex, arbitrary radius, bare `var(--space-…)` in markup (CLAUDE.md → "Design system rules"). |
 | `npm run check:i18n` | `lib/i18n-dictionaries.ts` `en` and `fr` out of step — a key in one locale and not the other, an object where the other has a string. |
 | `npm test` | Unit tests (`vitest run`). `npm run test:watch` to iterate. |
@@ -61,6 +61,25 @@ plan verification steps assume:
 
 Admin-only pages throw `Unauthorized` (HTTP 500, same as `/templates`,
 `/editions`) for a non-admin — that is the expected negative, not a bug.
+
+### Measuring the journal bulk-edit
+
+`app/scripts/measure-journal-typing.mjs` traces a keystroke inside the journal
+bulk-edit grid and reports `input`-handler and paint timings. It needs a
+**production build** — dev React is several times slower and would mislead:
+
+```bash
+npm run build
+npm start &        # wait for /login to return 200
+node scripts/measure-journal-typing.mjs <label>
+```
+
+It reads `ADMIN_EMAIL`/`ADMIN_PASSWORD` from `app/.env`, seeds/reuses a
+700-entry fixture edition against the local DB, and points the admin at it for
+the run — restoring the admin's original selected edition in a `finally` block
+whatever happens. Traces land in `docs/soa/traces/<label>.json` (gitignored);
+compare with `python3 docs/soa/analyze-trace.py <file>` against the numbers in
+`docs/plans/done/114-journal-analysis-results.md`.
 
 ### Smoke-testing a page over curl
 
