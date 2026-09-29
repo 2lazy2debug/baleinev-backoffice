@@ -35,6 +35,14 @@ import {
   iconButtonClasses,
 } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
+import {
+  buildRunningBalances,
+  draftFromEntry,
+  filterEntries,
+  isDraftDirty,
+  sortEntries,
+  type EntryDraft,
+} from "@/lib/journal-grid";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
 type JournalEntry = {
@@ -67,18 +75,6 @@ type JournalTableProps = {
   canBulkEdit: boolean;
 };
 
-/** The eight fields the journal is edited by, inline or in bulk. */
-type EntryDraft = {
-  date: string;
-  budgetId: string;
-  accountType: string;
-  amount: string;
-  label: string;
-  counterparty: string;
-  moneyAccountId: string;
-  costCenterId: string;
-};
-
 function typeLabel(type: string, locale: Locale) {
   const copy = dictionaries[locale].common;
   return type === "PRODUITS" ? copy.produits : copy.charges;
@@ -97,24 +93,6 @@ function ColumnResizeHandle({ onResizeStart }: { onResizeStart: (e: React.MouseE
   );
 }
 
-/** An entry as the editor sees it — the baseline both edit modes start from. */
-function draftFromEntry(entry: JournalEntry): EntryDraft {
-  return {
-    date: entry.date.toISOString().slice(0, 10),
-    budgetId: entry.budgetId ?? "",
-    accountType: entry.accountType,
-    amount: Number(entry.amount).toFixed(2),
-    label: entry.label,
-    counterparty: entry.counterparty ?? "",
-    moneyAccountId: entry.moneyAccountId,
-    costCenterId: entry.costCenterId ?? "",
-  };
-}
-
-function isDirty(entry: JournalEntry, draft: EntryDraft) {
-  const stored = draftFromEntry(entry);
-  return (Object.keys(stored) as Array<keyof EntryDraft>).some((field) => stored[field] !== draft[field]);
-}
 
 export function JournalTable({ entries, accountBalances, accountOpeningBalances, locale, budgets, moneyAccounts, costCenters, canBulkEdit }: JournalTableProps) {
   const copy = dictionaries[locale].journal;
@@ -193,88 +171,9 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   }, []);
 
   // Build deterministic running balances from opening balances and journal sequence.
-  const runningBalanceByEntryId: Record<string, number> = {};
-  const accountRunningTotals: Record<string, number> = { ...accountOpeningBalances };
-  const entriesBySequence = [...entries].sort((a, b) => {
-    if (a.sequenceNumber !== b.sequenceNumber) {
-      return a.sequenceNumber - b.sequenceNumber;
-    }
-    return a.id.localeCompare(b.id);
-  });
+  const runningBalanceByEntryId = buildRunningBalances(entries, accountOpeningBalances);
 
-  for (const entry of entriesBySequence) {
-    const previous = accountRunningTotals[entry.moneyAccountId] ?? 0;
-    const amount = Number(entry.amount);
-    const signedAmount = entry.accountType === "PRODUITS" ? amount : -amount;
-    const next = previous + signedAmount;
-    accountRunningTotals[entry.moneyAccountId] = next;
-    runningBalanceByEntryId[entry.id] = next;
-  }
-
-  // Apply filters
-  const filteredEntries = entries.filter((entry) => {
-    if (filters.sequenceNumber && !entry.sequenceNumber.toString().includes(filters.sequenceNumber)) {
-      return false;
-    }
-    if (filters.date && !entry.date.toISOString().slice(0, 10).includes(filters.date)) {
-      return false;
-    }
-    if (filters.budget && entry.budget?.name && !entry.budget.name.toLowerCase().includes(filters.budget.toLowerCase())) {
-      return false;
-    }
-    if (filters.type && !entry.accountType.toLowerCase().includes(filters.type.toLowerCase())) {
-      return false;
-    }
-    if (filters.amount && !Number(entry.amount).toFixed(2).includes(filters.amount)) {
-      return false;
-    }
-    if (filters.label && !entry.label.toLowerCase().includes(filters.label.toLowerCase())) {
-      return false;
-    }
-    if (filters.counterpart && !String(entry.counterparty ?? "").toLowerCase().includes(filters.counterpart.toLowerCase())) {
-      return false;
-    }
-    if (filters.account && !entry.moneyAccount.name.toLowerCase().includes(filters.account.toLowerCase())) {
-      return false;
-    }
-    if (filters.costCenter && entry.costCenter && !entry.costCenter.code.toLowerCase().includes(filters.costCenter.toLowerCase())) {
-      return false;
-    }
-    return true;
-  });
-
-  // Apply sorting
-  const sortedEntries = [...filteredEntries].sort((a, b) => {
-    if (!sortBy) return 0;
-
-      let aVal: string | number;
-      let bVal: string | number;
-
-    switch (sortBy.column) {
-      case "sequenceNumber":
-        aVal = a.sequenceNumber;
-        bVal = b.sequenceNumber;
-        break;
-      case "date":
-        aVal = a.date.getTime();
-        bVal = b.date.getTime();
-        break;
-      case "budget":
-        aVal = a.budget?.name ?? "";
-        bVal = b.budget?.name ?? "";
-        break;
-      case "amount":
-        aVal = Number(a.amount);
-        bVal = Number(b.amount);
-        break;
-      default:
-        return 0;
-    }
-
-    if (aVal < bVal) return sortBy.direction === "asc" ? -1 : 1;
-    if (aVal > bVal) return sortBy.direction === "asc" ? 1 : -1;
-    return 0;
-  });
+  const sortedEntries = sortEntries(filterEntries(entries, filters), sortBy);
 
   const handleSort = (column: string) => {
     if (sortBy?.column === column) {
@@ -359,7 +258,9 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   // the grid never offers them.
   const bulkEditableEntries = entries.filter((entry) => !entry.isOpeningEntry);
   const changedEntries = bulkDrafts
-    ? bulkEditableEntries.filter((entry) => bulkDrafts[entry.id] && isDirty(entry, bulkDrafts[entry.id]))
+    ? bulkEditableEntries.filter(
+        (entry) => bulkDrafts[entry.id] && isDraftDirty(draftFromEntry(entry), bulkDrafts[entry.id]),
+      )
     : [];
 
   function startBulkEdit() {
