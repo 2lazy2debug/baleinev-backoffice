@@ -104,6 +104,7 @@ function useBulkRowWindow(
   enabled: boolean,
   rowCount: number,
   tbodyRef: React.RefObject<HTMLTableSectionElement | null>,
+  tableRef: React.RefObject<HTMLTableElement | null>,
 ): RowWindow | null {
   const [rowWindow, setRowWindow] = useState<RowWindow | null>(null);
   const rowHeightRef = useRef<number | null>(null);
@@ -130,8 +131,13 @@ function useBulkRowWindow(
         rowHeightRef.current = total / rendered.length;
       }
       const rowHeight = rowHeightRef.current;
-      // The tbody's top is where row 0 sits, whichever ancestor is scrolling.
-      const next = visibleRowRange(-tbody.getBoundingClientRect().top, window.innerHeight, rowHeight, rowCount, WINDOW_OVERSCAN);
+      // The table's own wrapper (Table.tsx) is the scrolling box — it carries
+      // `max-h-[70vh]` so `sticky top-0` has a real scrollport. Measure the
+      // visible slice against its box, not the window: it is usually shorter.
+      const scrollBox = tableRef.current?.parentElement ?? null;
+      const boxTop = scrollBox?.getBoundingClientRect().top ?? 0;
+      const viewportHeight = scrollBox?.clientHeight ?? window.innerHeight;
+      const next = visibleRowRange(boxTop - tbody.getBoundingClientRect().top, viewportHeight, rowHeight, rowCount, WINDOW_OVERSCAN);
       setRowWindow((current) =>
         current && current.start === next.start && current.end === next.end && current.rowHeight === rowHeight
           ? current
@@ -151,7 +157,7 @@ function useBulkRowWindow(
       window.removeEventListener("scroll", schedule, { capture: true });
       window.removeEventListener("resize", schedule);
     };
-  }, [enabled, rowCount, tbodyRef]);
+  }, [enabled, rowCount, tbodyRef, tableRef]);
 
   return enabled ? rowWindow : null;
 }
@@ -859,7 +865,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   // controls to weigh it down, and the cardlets render for a phone, where the
   // table is hidden. Drafts live in state, not in rows, so a row scrolled out
   // of the window keeps its edits.
-  const rowWindow = useBulkRowWindow(isBulkEditing, rows.length, tbodyRef);
+  const rowWindow = useBulkRowWindow(isBulkEditing, rows.length, tbodyRef, tableRef);
   const tableRows = rowWindow ? rows.slice(rowWindow.start, rowWindow.end) : rows;
 
   return (
@@ -902,7 +908,11 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
         </div>
       ) : null}
 
-      <Table ref={tableRef} frame={false} desktopOnly frameClassName="flex-1" className="table-fixed">
+      {/* Bounded and scrollable in its own right: `sticky top-0` on THead only
+          sticks to an ancestor that actually scrolls, and the page itself does
+          not — it grows to fit the table. `max-h-[70vh]` matches the same
+          pattern in calendar/budget's client.tsx. */}
+      <Table ref={tableRef} frame={false} desktopOnly frameClassName="flex-1 min-h-0 max-h-[70vh]" className="table-fixed">
           <colgroup>
             <col className="w-32" />
             <col className="w-40" />
