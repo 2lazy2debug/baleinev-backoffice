@@ -371,33 +371,23 @@ row changed.
 
 | | Baseline (headless) | After step 4 (headless) | After step 6 (headless) |
 |---|---|---|---|
-| input handler median / p95 | 223.1 ms / 477.6 ms | | |
-| Paint median | 33.5 ms | | |
-| HitTest median | 5.5 ms | | |
-| layout objects | 44487 | | |
-| long tasks (>50 ms) n / total | 40 / 7398.1 ms | | |
+| input handler median / p95 | 223.1 ms / 477.6 ms | 4.5 ms / 10.7 ms | |
+| Paint median | 33.5 ms | 34.2 ms | |
+| HitTest median | 5.5 ms | 5.6 ms | |
+| layout objects | 44487 | 44487 | |
+| long tasks (>50 ms) n / total | 40 / 7398.1 ms | 21 / 2309.2 ms | |
 
 Checks (step 5 / step 7):
 
 **npm run build:** ✓ PASS
-**npm run lint:** ✗ FAIL
+**npm run lint:** ✓ PASS (0 errors, 2 pre-existing warnings)
+**npm run check:design:** ✓ PASS
+**npm run check:i18n:** ✓ PASS
+**npm test:** ✓ PASS (249 tests)
 
-```
-/home/mcabras/Developer/baleinev-backoffice/app/app/(app)/tasks/client.tsx
-   51:9  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  350:9  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-/home/mcabras/Developer/baleinev-backoffice/app/lib/proof-upload.ts
-  57:3  warning  Unused eslint-disable directive (no problems were reported from 'no-control-regex')
-
-/home/mcabras/Developer/baleinev-backoffice/app/types/next-auth.d.ts
-  2:15  warning  'JWT' is defined but never used  @typescript-eslint/no-unused-vars
-
-✖ 4 problems (2 errors, 2 warnings)
-```
-
-Step 4 (Sonnet) returned with lint errors. Step 5 stopped per plan.
-
-Gate verdict (step 5): BLOCKED — lint errors in step 4
+Gate verdict (step 5): FAIL — input handler ✓ (4.5 ms ≤ 16 ms) but Paint ✗ (34.2 ms > 16 ms)
 
 Notes:
+- Input handler latency improved from 223.1 ms baseline to 4.5 ms (49× faster) — memoisation achieved the goal.
+- Paint remained at 34.2 ms, exceeding the 16 ms threshold. DOM weight (44487 layout objects) is the remaining bottleneck.
+- Step 6 (Opus windowing) required to address Paint latency.
