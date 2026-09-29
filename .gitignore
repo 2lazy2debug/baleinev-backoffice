@@ -60,3 +60,7 @@ next-env.d.ts
 *.tmp.ts
 *.tmp.mjs
 *.tmp.js
+
+# DevTools performance traces (regenerate on demand, 5-10 MB each)
+docs/soa/traces/
+docs/soa/*.json
