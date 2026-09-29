@@ -379,6 +379,25 @@ row changed.
 
 Checks (step 5 / step 7):
 
-Gate verdict (step 5):
+**npm run build:** ✓ PASS
+**npm run lint:** ✗ FAIL
+
+```
+/home/mcabras/Developer/baleinev-backoffice/app/app/(app)/tasks/client.tsx
+   51:9  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  350:9  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/mcabras/Developer/baleinev-backoffice/app/lib/proof-upload.ts
+  57:3  warning  Unused eslint-disable directive (no problems were reported from 'no-control-regex')
+
+/home/mcabras/Developer/baleinev-backoffice/app/types/next-auth.d.ts
+  2:15  warning  'JWT' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 4 problems (2 errors, 2 warnings)
+```
+
+Step 4 (Sonnet) returned with lint errors. Step 5 stopped per plan.
+
+Gate verdict (step 5): BLOCKED — lint errors in step 4
 
 Notes:
