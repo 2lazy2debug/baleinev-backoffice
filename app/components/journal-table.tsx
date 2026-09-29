@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
+import { useActionState, useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Pencil, PencilLine, Trash2, X } from "lucide-react";
@@ -41,7 +41,9 @@ import {
   filterEntries,
   isDraftDirty,
   sortEntries,
+  visibleRowRange,
   type EntryDraft,
+  type RowRange,
 } from "@/lib/journal-grid";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
@@ -81,6 +83,89 @@ function typeLabel(type: string, locale: Locale) {
 }
 
 const RESIZE_MIN_WIDTH = 48;
+
+/** Rows kept rendered above and below the viewport while the bulk grid is windowed. */
+const WINDOW_OVERSCAN = 20;
+
+type RowWindow = RowRange & { rowHeight: number };
+
+/**
+ * The slice of the bulk-edit grid worth rendering. Every row in bulk mode holds
+ * eight live controls, and ~700 of them make each paint and hit test cost more
+ * than a frame even when React re-renders nothing — so only the rows near the
+ * viewport exist, and a spacer row above and below stands in for the rest.
+ *
+ * Null means "render everything": bulk mode is off, or the row height is not
+ * known yet. The first bulk render is complete, which keeps the page as tall as
+ * it was — the scroll position survives — and gives a real row to measure. On a
+ * phone the table is `display: none`, nothing measures, and it stays complete.
+ */
+function useBulkRowWindow(
+  enabled: boolean,
+  rowCount: number,
+  tbodyRef: React.RefObject<HTMLTableSectionElement | null>,
+): RowWindow | null {
+  const [rowWindow, setRowWindow] = useState<RowWindow | null>(null);
+  const rowHeightRef = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (!enabled) {
+      rowHeightRef.current = null;
+      return;
+    }
+
+    let frame = 0;
+    function update() {
+      frame = 0;
+      const tbody = tbodyRef.current;
+      if (!tbody) return;
+      if (rowHeightRef.current === null) {
+        // Averaged, not the first row: opening entries have no inputs and are shorter.
+        const rendered = tbody.querySelectorAll(":scope > tr:not([data-row-spacer])");
+        let total = 0;
+        rendered.forEach((row) => {
+          total += row.getBoundingClientRect().height;
+        });
+        if (total === 0) return;
+        rowHeightRef.current = total / rendered.length;
+      }
+      const rowHeight = rowHeightRef.current;
+      // The tbody's top is where row 0 sits, whichever ancestor is scrolling.
+      const next = visibleRowRange(-tbody.getBoundingClientRect().top, window.innerHeight, rowHeight, rowCount, WINDOW_OVERSCAN);
+      setRowWindow((current) =>
+        current && current.start === next.start && current.end === next.end && current.rowHeight === rowHeight
+          ? current
+          : { ...next, rowHeight },
+      );
+    }
+    function schedule() {
+      if (!frame) frame = requestAnimationFrame(update);
+    }
+
+    update();
+    // Scroll events do not bubble, but they do pass window on the capture phase.
+    window.addEventListener("scroll", schedule, { capture: true, passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule, { capture: true });
+      window.removeEventListener("resize", schedule);
+    };
+  }, [enabled, rowCount, tbodyRef]);
+
+  return enabled ? rowWindow : null;
+}
+
+/** Stands in for the rows a windowed grid does not render. */
+function RowSpacer({ height }: { height: number }) {
+  if (height <= 0) return null;
+  return (
+    <tr data-row-spacer aria-hidden="true">
+      {/* Inline padding: the table's density classes pad every td, and a spacer is only its height. */}
+      <td colSpan={10} style={{ height, padding: 0 }} />
+    </tr>
+  );
+}
 
 /** A drag grip on a header cell's right edge — the cell must be `relative`. */
 function ColumnResizeHandle({ onResizeStart }: { onResizeStart: (e: React.MouseEvent<HTMLDivElement>) => void }) {
@@ -524,6 +609,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   const isBulkEditing = bulkDrafts !== null;
   const router = useRouter();
   const tableRef = useRef<HTMLTableElement | null>(null);
+  const tbodyRef = useRef<HTMLTableSectionElement | null>(null);
 
   useEffect(() => {
     function onSidebarToggled(e: Event) {
@@ -769,6 +855,13 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   // The row's live draft, whichever mode put it there — null when it is read-only.
   const draftFor = (id: string) => (isBulkEditing ? bulkDrafts[id] : editingId === id ? editDraft : null) ?? null;
 
+  // Only the desktop table is windowed, and only in bulk mode: read mode has no
+  // controls to weigh it down, and the cardlets render for a phone, where the
+  // table is hidden. Drafts live in state, not in rows, so a row scrolled out
+  // of the window keeps its edits.
+  const rowWindow = useBulkRowWindow(isBulkEditing, rows.length, tbodyRef);
+  const tableRows = rowWindow ? rows.slice(rowWindow.start, rowWindow.end) : rows;
+
   return (
     <Panel flushOnMobile as="div" className="flex h-full flex-col">
       <PanelHeader flushOnMobile className="shrink-0 flex-wrap">
@@ -961,8 +1054,9 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
               <TH></TH>
             </TR>
           </THead>
-          <tbody>
-            {rows.map((row) => (
+          <tbody ref={tbodyRef}>
+            {rowWindow ? <RowSpacer height={rowWindow.start * rowWindow.rowHeight} /> : null}
+            {tableRows.map((row) => (
               <JournalTableRow
                 key={row.entry.id}
                 row={row}
@@ -981,6 +1075,9 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                 isDeleting={isDeleting}
               />
             ))}
+            {rowWindow ? (
+              <RowSpacer height={Math.max(0, rows.length - rowWindow.end) * rowWindow.rowHeight} />
+            ) : null}
           </tbody>
         </Table>
 

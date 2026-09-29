@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildRunningBalances, filterEntries, isDraftDirty, sortEntries, type EntryDraft } from "./journal-grid";
+import { buildRunningBalances, filterEntries, isDraftDirty, sortEntries, visibleRowRange, type EntryDraft } from "./journal-grid";
 
 type GridEntry = {
   id: string;
@@ -141,5 +141,28 @@ describe("sortEntries", () => {
   it("sorts by amount descending", () => {
     const entries = [entry({ id: "small", amount: "9.00" }), entry({ id: "big", amount: "100.00" })];
     expect(sortEntries(entries, { column: "amount", direction: "desc" }).map((e) => e.id)).toEqual(["big", "small"]);
+  });
+});
+
+describe("visibleRowRange", () => {
+  it("renders the first screen plus overscan while the list starts below the viewport top", () => {
+    expect(visibleRowRange(-300, 1000, 50, 700, 20)).toEqual({ start: 0, end: 34 });
+  });
+
+  it("windows around the viewport once scrolled into the middle", () => {
+    // rows 200..220 are on screen
+    expect(visibleRowRange(10_000, 1000, 50, 700, 20)).toEqual({ start: 180, end: 240 });
+  });
+
+  it("clamps to the list's end", () => {
+    expect(visibleRowRange(34_000, 1000, 50, 700, 20)).toEqual({ start: 660, end: 700 });
+  });
+
+  it("returns an empty range when the list is scrolled far past", () => {
+    expect(visibleRowRange(100_000, 1000, 50, 700, 20)).toEqual({ start: 700, end: 700 });
+  });
+
+  it("returns an empty range for an empty list", () => {
+    expect(visibleRowRange(0, 1000, 50, 0, 20)).toEqual({ start: 0, end: 0 });
   });
 });

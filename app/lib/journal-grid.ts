@@ -138,3 +138,26 @@ export function sortEntries<T extends GridEntry>(
     return 0;
   });
 }
+
+export type RowRange = { start: number; end: number };
+
+/**
+ * Which rows of a list of `rowCount` equal-height rows to render, given how far
+ * the list's top edge sits above the viewport (`offset`, negative while it is
+ * still below the viewport's top). `end` is exclusive; `overscan` rows are kept
+ * on each side so Tab and small scrolls never land on an unrendered row.
+ */
+export function visibleRowRange(
+  offset: number,
+  viewportHeight: number,
+  rowHeight: number,
+  rowCount: number,
+  overscan: number,
+): RowRange {
+  const first = Math.floor(Math.max(0, offset) / rowHeight);
+  const last = Math.ceil(Math.max(0, offset + viewportHeight) / rowHeight);
+  return {
+    start: Math.min(rowCount, Math.max(0, first - overscan)),
+    end: Math.min(rowCount, last + overscan),
+  };
+}

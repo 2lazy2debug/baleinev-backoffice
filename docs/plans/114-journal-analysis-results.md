@@ -371,11 +371,11 @@ row changed.
 
 | | Baseline (headless) | After step 4 (headless) | After step 6 (headless) |
 |---|---|---|---|
-| input handler median / p95 | 223.1 ms / 477.6 ms | 4.5 ms / 10.7 ms | |
-| Paint median | 33.5 ms | 34.2 ms | |
-| HitTest median | 5.5 ms | 5.6 ms | |
-| layout objects | 44487 | 44487 | |
-| long tasks (>50 ms) n / total | 40 / 7398.1 ms | 21 / 2309.2 ms | |
+| input handler median / p95 | 223.1 ms / 477.6 ms | 4.5 ms / 10.7 ms | 3.0 ms / 6.6 ms |
+| Paint median | 33.5 ms | 34.2 ms | 1.3 ms |
+| HitTest median | 5.5 ms | 5.6 ms | 0.3 ms |
+| layout objects | 44487 | 44487 | 2279 |
+| long tasks (>50 ms) n / total | 40 / 7398.1 ms | 21 / 2309.2 ms | 1 / 114.0 ms |
 
 Checks (step 5 / step 7):
 
@@ -391,3 +391,41 @@ Notes:
 - Input handler latency improved from 223.1 ms baseline to 4.5 ms (49× faster) — memoisation achieved the goal.
 - Paint remained at 34.2 ms, exceeding the 16 ms threshold. DOM weight (44487 layout objects) is the remaining bottleneck.
 - Step 6 (Opus windowing) required to address Paint latency.
+
+### Step 6 — windowing (Opus)
+
+Checks: build ✓ · lint ✓ (0 errors, same 2 pre-existing warnings) · check:design ✓ ·
+check:i18n ✓ · npm test ✓ (254 tests, +5 for `visibleRowRange`).
+
+Gate re-evaluated (after step 6): **PASS** — input handler 3.0 ms ≤ 16 ms, Paint 1.3 ms ≤ 16 ms.
+
+What shipped:
+- `useBulkRowWindow` in `app/components/journal-table.tsx` renders only the rows
+  near the viewport (± 20 overscan) while bulk editing, with a spacer `<tr>` above
+  and below. Read mode and the cardlets are untouched. The pure range math is
+  `visibleRowRange` in `app/lib/journal-grid.ts`, unit-tested.
+- Scroll container, confirmed in the browser: **the document** (40 k px tall at
+  700 rows). The table's `overflow-auto` wrapper grows to the table's full height
+  and never scrolls. The hook reads the tbody's viewport position and listens for
+  `scroll` on window in the capture phase, so it keeps working if that changes.
+- Row height is the **average** of the rendered rows, measured once per bulk
+  session, not the first row's: opening entries have no inputs and are shorter.
+  The first bulk render is complete (as before) so the page keeps its height and
+  the scroll position survives entering bulk mode mid-list. Then it windows before paint.
+- Stayed in the screen, not in the `Table` primitive: one screen needs it.
+
+Smoke test (puppeteer against the production build, 700-entry fixture): bulk mode
+entered at scrollY 15 000 kept its position and page height; edited label, amount
+and cost centre on entry 265, scrolled to the end so the row unmounted →
+"Save all (1)" → all three persisted on entry 265. Tab ×1 000 from entry 265
+walked to entry 356 without leaving the grid. Bulk Cancel restored all 700 rows.
+Inline edit save + cancel and delete (entry 12) still work.
+
+Found, not changed (pre-existing, out of scope):
+- `THead`'s `sticky top-0` has never stuck: its sticky container is the table's
+  `overflow-auto` wrapper, which does not scroll. Windowing leaves it as it was.
+- At 1280 px with the sidebar open, the nine fixed columns (1 200 px) squeeze the
+  flexible Label column to ~22 px, so its input sits under the Counterparty one.
+  The measurement harness's "label" keystrokes land in Counterparty; the numbers
+  are still one row's input, so they stand.
+
