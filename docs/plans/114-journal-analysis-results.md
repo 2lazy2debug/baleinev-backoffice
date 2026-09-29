@@ -371,11 +371,11 @@ row changed.
 
 | | Baseline (headless) | After step 4 (headless) | After step 6 (headless) |
 |---|---|---|---|
-| input handler median / p95 | | | |
-| Paint median | | | |
-| HitTest median | | | |
-| layout objects | | | |
-| long tasks (>50 ms) n / total | | | |
+| input handler median / p95 | 223.1 ms / 477.6 ms | | |
+| Paint median | 33.5 ms | | |
+| HitTest median | 5.5 ms | | |
+| layout objects | 44487 | | |
+| long tasks (>50 ms) n / total | 40 / 7398.1 ms | | |
 
 Checks (step 5 / step 7):
 
