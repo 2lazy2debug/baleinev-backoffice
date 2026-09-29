@@ -7,6 +7,8 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
 
 import JournalPageClient from "./client";
+import { AddJournalEntryButton } from "./add-entry-button";
+import { WritableEditionOnly } from "@/components/edition-read-only";
 import { EmptyPage, PageHeader } from "@/components/ui";
 
 type JournalPageProps = {
@@ -89,12 +91,32 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
     accountBalances[account.name] = balance;
   }
 
+  const expensePrefill = prefillExpenseReport ? {
+    expenseReportId: prefillExpenseReport.id,
+    budgetId: prefillBudgetId,
+    date: prefillExpenseReport.date.toISOString().slice(0, 10),
+    amount: decimalToNumber(prefillExpenseReport.amount).toFixed(2),
+    label: prefillExpenseReport.description,
+    referenceNumber: `NDF-${prefillExpenseReport.id.slice(-6).toUpperCase()}`,
+  } : null;
+
   return (
     <div className="space-y-4 lg:space-y-8 flex flex-col h-full">
       <PageHeader
         eyebrow={copy.journal.title}
         title={<>{copy.journal.entriesFor} - {activeEdition.name}</>}
         description={copy.journal.subtitle}
+        actions={
+          <WritableEditionOnly>
+            <AddJournalEntryButton
+              budgets={budgets}
+              moneyAccounts={activeEdition.moneyAccounts.map((account) => ({ id: account.id, name: account.name }))}
+              costCenters={activeEdition.costCenters.map((center) => ({ id: center.id, code: center.code }))}
+              locale={locale}
+              expensePrefill={expensePrefill}
+            />
+          </WritableEditionOnly>
+        }
       />
 
       <JournalPageClient
@@ -129,14 +151,6 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
         accountBalances={accountBalances}
         locale={locale}
         isAdmin={isAdmin(access)}
-        expensePrefill={prefillExpenseReport ? {
-          expenseReportId: prefillExpenseReport.id,
-          budgetId: prefillBudgetId,
-          date: prefillExpenseReport.date.toISOString().slice(0, 10),
-          amount: decimalToNumber(prefillExpenseReport.amount).toFixed(2),
-          label: prefillExpenseReport.description,
-          referenceNumber: `NDF-${prefillExpenseReport.id.slice(-6).toUpperCase()}`,
-        } : null}
       />
     </div>
   );

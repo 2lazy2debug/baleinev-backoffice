@@ -1,14 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { useMemo } from "react";
 
-import { useEditionReadOnly } from "@/components/edition-read-only";
 import { JournalTable } from "@/components/journal-table";
-import { AddJournalEntryModal } from "@/components/add-journal-entry-modal";
-import { Button } from "@/components/ui";
-import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
+import { type Locale } from "@/lib/i18n-dictionaries";
 
 type JournalPageClientProps = {
   activeEdition: {
@@ -39,66 +34,16 @@ type JournalPageClientProps = {
   locale: Locale;
   /** Admins only — bulk edit rewrites every entry of the ledger at once. */
   isAdmin: boolean;
-  expensePrefill?: {
-    expenseReportId: string;
-    budgetId: string | null;
-    date: string;
-    amount: string;
-    label: string;
-    referenceNumber: string;
-  } | null;
 };
 
-export default function JournalPageClient({ activeEdition, accountBalances, locale, isAdmin, expensePrefill }: JournalPageClientProps) {
-  const [isModalOpen, setIsModalOpen] = useState(Boolean(expensePrefill));
-  const router = useRouter();
-  const copy = dictionaries[locale].journal;
-  const isReadOnly = useEditionReadOnly();
-
+export default function JournalPageClient({ activeEdition, accountBalances, locale, isAdmin }: JournalPageClientProps) {
   const accountOpeningBalances = useMemo(
     () => Object.fromEntries(activeEdition.moneyAccounts.map((account) => [account.id, account.openingBalance])),
     [activeEdition.moneyAccounts],
   );
 
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-  };
-
-  const handleAfterSubmit = () => {
-    router.refresh();
-    handleModalClose();
-  };
-
   return (
     <div className="relative flex-1 flex flex-col gap-4">
-      {/* Plus button above table */}
-      {isReadOnly ? null : (
-        <Button variant="primary" icon={<Plus />} compactOnMobile onClick={() => setIsModalOpen(true)} className="self-start">
-          {copy.addEntry}
-        </Button>
-      )}
-
-      {/* Modal for adding entry */}
-      <AddJournalEntryModal
-        key={expensePrefill ? `prefill-${expensePrefill.referenceNumber}` : "default"}
-        isOpen={isModalOpen}
-        onClose={handleModalClose}
-        budgets={activeEdition.budgets}
-        moneyAccounts={activeEdition.moneyAccounts}
-        costCenters={activeEdition.costCenters}
-        onAfterSubmit={handleAfterSubmit}
-        locale={locale}
-        fromExpenseReportId={expensePrefill?.expenseReportId ?? null}
-        initialValues={expensePrefill ? {
-          budgetId: expensePrefill.budgetId ?? undefined,
-          accountType: "CHARGES",
-          date: expensePrefill.date,
-          amount: expensePrefill.amount,
-          label: expensePrefill.label,
-          referenceNumber: expensePrefill.referenceNumber,
-        } : undefined}
-      />
-
       {/* Journal table */}
       <div className="flex-1 min-h-0">
         <JournalTable
