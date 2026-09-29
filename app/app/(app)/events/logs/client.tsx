@@ -91,7 +91,7 @@ export function EventStaffLogClient({ locale, logs }: Props) {
           <col className="w-40" />
           <col className="w-40" />
         </colgroup>
-        <THead className="sticky top-0">
+        <THead sticky>
           <TR>
             <TH>{copy.logsWhen}</TH>
             <TH>{copy.logsAction}</TH>

@@ -334,7 +334,7 @@ export function StockClient({ locale, rows, places, currentPlaceId, eyebrow, tit
             <col className="w-28" />
             <col className="w-36" />
           </colgroup>
-          <THead className="sticky top-0">
+          <THead sticky>
             <TR>
               <TH>{copy.item}</TH>
               <TH>{copy.piece}</TH>

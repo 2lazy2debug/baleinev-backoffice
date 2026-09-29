@@ -113,7 +113,7 @@ export function ArticlesClient({ locale, units, conversions, items }: Props) {
             <col className="w-28" />
             <col className="w-28" />
           </colgroup>
-          <THead className="sticky top-0">
+          <THead sticky>
             <TR>
               <TH>{copy.name}</TH>
               <TH>{copy.brand}</TH>

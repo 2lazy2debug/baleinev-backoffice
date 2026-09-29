@@ -259,7 +259,7 @@ export function AddressesClient({ locale, addresses, canDelete, addressTypes, ac
             <col className="w-40" />
             <col className="w-36" />
           </colgroup>
-          <THead className="sticky top-0">
+          <THead sticky>
             <TR>
               <TH className="cursor-pointer hover:bg-[var(--line)]" onClick={() => toggleSort("name")}>
                 {copy.name}

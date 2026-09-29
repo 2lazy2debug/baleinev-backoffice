@@ -109,7 +109,7 @@ export function StockHistoryClient({ locale, places, movements }: Props) {
           <col className="w-24" />
           <col className="w-40" />
         </colgroup>
-        <THead className="sticky top-0">
+        <THead sticky>
           <TR>
             <TH>{copy.when}</TH>
             <TH>{copy.item}</TH>

@@ -927,7 +927,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
                 header, so the column has nothing left to hold but a rare "locked". */}
             <col className={isBulkEditing ? "w-16" : "w-24"} />
           </colgroup>
-          <THead className="sticky top-0">
+          <THead sticky>
             <TR>
               <TH className="relative cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("date")}>
                 {copy.date}

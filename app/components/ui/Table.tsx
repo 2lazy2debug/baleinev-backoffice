@@ -46,11 +46,19 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
   );
 });
 
-export function THead({ className, children, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
+type THeadProps = React.HTMLAttributes<HTMLTableSectionElement> & {
+  /** Pinned to the top of the table's scrolling frame. Carries its own `z-10`:
+      body cells hold positioned controls (a select's chevron wrapper), and
+      without a z-index those paint over the header as the rows scroll under it. */
+  sticky?: boolean;
+};
+
+export function THead({ sticky = false, className, children, ...props }: THeadProps) {
   return (
     <thead
       className={cn(
         "bg-[var(--panel-strong)] text-xs font-medium uppercase tracking-[0.08em] text-[var(--muted)]",
+        sticky ? "sticky top-0 z-10" : null,
         className,
       )}
       {...props}
