@@ -24,6 +24,7 @@ import {
   Table,
   cn,
   nestedSurfaceClasses,
+  PanelEmpty,
 } from "@/components/ui";
 import { formatDenomination, fromRappen } from "@/lib/cash";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
@@ -115,7 +116,7 @@ export function SessionDetailClient({
         </PanelHeader>
 
         {sales.length === 0 ? (
-          <p className="px-3 py-4 text-sm text-[var(--muted)] sm:px-5">{copy.noSales}</p>
+          <PanelEmpty>{copy.noSales}</PanelEmpty>
         ) : (
           <>
             <Table desktopOnly dense frame={false}>

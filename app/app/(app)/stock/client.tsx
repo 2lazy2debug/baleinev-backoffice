@@ -22,6 +22,7 @@ import {
   TR,
   Table,
   cn,
+  PanelEmpty,
 } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
@@ -400,7 +401,7 @@ export function StockClient({ locale, rows, places, currentPlaceId, eyebrow, tit
         </CardletList>
 
         {visible.length === 0 ? (
-          <p className="py-6 text-sm text-[var(--muted)] sm:px-5">{rows.length === 0 ? copy.empty : copy.noMatch}</p>
+          <PanelEmpty>{rows.length === 0 ? copy.empty : copy.noMatch}</PanelEmpty>
         ) : null}
       </Panel>
 

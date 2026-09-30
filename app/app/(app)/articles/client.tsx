@@ -22,6 +22,7 @@ import {
   THead,
   TR,
   Table,
+  PanelEmpty,
 } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
@@ -198,9 +199,9 @@ export function ArticlesClient({ locale, units, conversions, items }: Props) {
         </CardletList>
 
         {visible.length === 0 ? (
-          <p className="py-6 text-sm text-[var(--muted)] sm:px-5">
+          <PanelEmpty>
             {items.length === 0 ? copy.itemsEmpty : copy.itemsNoMatch}
-          </p>
+          </PanelEmpty>
         ) : null}
       </Panel>
 

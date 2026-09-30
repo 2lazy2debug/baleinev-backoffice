@@ -70,6 +70,11 @@ export function PanelHeader({ flushOnMobile = false, className, children, ...pro
   );
 }
 
+/** The "nothing here yet" line inside a Panel — same padding scale as PanelHeader. */
+export function PanelEmpty({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
+  return <p className={cn("px-3 py-4 text-sm text-[var(--muted)] sm:px-5", className)} {...props} />;
+}
+
 type SectionTitleProps = React.HTMLAttributes<HTMLHeadingElement> & {
   as?: "h2" | "h3";
   /**

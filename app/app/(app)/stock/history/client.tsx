@@ -18,6 +18,7 @@ import {
   THead,
   TR,
   Table,
+  PanelEmpty,
 } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 
@@ -203,9 +204,9 @@ export function StockHistoryClient({ locale, places, movements }: Props) {
       </CardletList>
 
       {visible.length === 0 ? (
-        <p className="py-6 text-sm text-[var(--muted)] sm:px-5">
+        <PanelEmpty>
           {movements.length === 0 ? copy.historyEmpty : copy.historyNoMatch}
-        </p>
+        </PanelEmpty>
       ) : null}
     </Panel>
   );

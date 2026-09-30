@@ -40,6 +40,7 @@ import {
   Table,
   buttonClasses,
   compactOnMobileWidths,
+  PanelEmpty,
 } from "@/components/ui";
 import { addressDisplayName, addressPersonName, formatPhone, formatPostalLine } from "@/lib/addresses";
 import { countryName, type CountryOption } from "@/lib/countries";
@@ -299,7 +300,7 @@ export function AddressDetailClient({ locale, countries, addressTypes, canDelete
         ) : null}
 
         {bankAccounts.length === 0 ? (
-          <p className="py-6 text-sm text-[var(--muted)] sm:px-5">{copy.noBankAccounts}</p>
+          <PanelEmpty>{copy.noBankAccounts}</PanelEmpty>
         ) : (
           <>
             <Table frame={false} desktopOnly>

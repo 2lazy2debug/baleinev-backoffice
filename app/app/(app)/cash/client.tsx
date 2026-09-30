@@ -23,6 +23,7 @@ import {
   THead,
   TR,
   Table,
+  PanelEmpty,
 } from "@/components/ui";
 import { CASH_DENOMINATIONS, countTotal, formatDenomination, fromRappen } from "@/lib/cash";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
@@ -168,7 +169,7 @@ export function CashRegistersClient({
         </PanelHeader>
 
         {registers.length === 0 ? (
-          <p className="px-3 py-4 text-sm text-[var(--muted)] sm:px-5">{copy.noRegisters}</p>
+          <PanelEmpty>{copy.noRegisters}</PanelEmpty>
         ) : (
           <>
             <Table desktopOnly dense frame={false}>

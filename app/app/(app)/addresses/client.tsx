@@ -29,6 +29,7 @@ import {
   Table,
   buttonClasses,
   iconButtonClasses,
+  PanelEmpty,
 } from "@/components/ui";
 import { addressPersonName, formatPhone } from "@/lib/addresses";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
@@ -546,9 +547,9 @@ export function AddressesClient({ locale, addresses, canDelete, addressTypes, ac
         </CardletList>
 
         {rows.length === 0 ? (
-          <p className="py-6 text-sm text-[var(--muted)] sm:px-5">
+          <PanelEmpty>
             {addresses.length === 0 ? copy.empty : copy.noMatch}
-          </p>
+          </PanelEmpty>
         ) : null}
       </Panel>
     </div>
