@@ -5,5 +5,14 @@
       "Bash(ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes root@leaddesk.cabras.ch:*)",
       "Bash(scp:*)"
     ]
+  },
+  "mcpServers": {
+    "npm": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@yawlabs/npmjs-mcp@latest"
+      ]
+    }
   }
 }
