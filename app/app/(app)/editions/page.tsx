@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { getDictionary, getLocale } from "@/lib/i18n";
 
+import CreateEditionModal from "./create-edition-modal";
 import { EditionsPageClient } from "./client";
 import { PageHeader } from "@/components/ui";
 
@@ -23,6 +24,12 @@ export default async function EditionsPage() {
         eyebrow={copy.editions.title}
         title={copy.editions.manageYears}
         description={copy.editions.subtitle}
+        actions={
+          <CreateEditionModal
+            locale={locale}
+            editions={editions.map((e) => ({ id: e.id, name: e.name, closed: e.closedAt !== null }))}
+          />
+        }
       />
 
       <EditionsPageClient editions={editions} copy={copy} />
