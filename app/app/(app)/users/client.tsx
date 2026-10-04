@@ -87,13 +87,13 @@ export function UsersPageClient({
                 >
                   <input type="hidden" name="userId" value={user.id} />
                   <Field label={copy.users.name}>
-                    <Input type="text" name="name" defaultValue={user.name} required size="sm" />
+                    <Input type="text" name="name" defaultValue={user.name} required />
                   </Field>
                   <Field label={copy.users.email}>
-                    <Input type="email" name="email" defaultValue={user.email} required size="sm" />
+                    <Input type="email" name="email" defaultValue={user.email} required />
                   </Field>
                   <Field label={copy.users.role}>
-                    <Select name="role" defaultValue={user.role} size="sm">
+                    <Select name="role" defaultValue={user.role}>
                       <option value={UserRole.ADMIN}>{copy.users.admin}</option>
                       <option value={UserRole.DEPARTMENT}>{copy.users.department}</option>
                     </Select>
@@ -112,7 +112,7 @@ export function UsersPageClient({
                     </MultiSelect>
                   </Field>
                   <Field label={copy.users.newPasswordOptional} className="sm:col-span-2 xl:col-span-4">
-                    <Input type="password" name="newPassword" size="sm" />
+                    <Input type="password" name="newPassword" />
                   </Field>
                 </form>
 
@@ -129,7 +129,7 @@ export function UsersPageClient({
                     type="submit"
                     form={`update-user-${user.id}`}
                     variant="primary"
-                    size="sm"
+                   
                     disabled={isUpdating}
                   >
                     {copy.users.updateButton}
@@ -138,7 +138,7 @@ export function UsersPageClient({
                     type="submit"
                     form={`delete-user-${user.id}`}
                     variant="destructive"
-                    size="sm"
+                   
                     icon={<Trash2 />}
                     disabled={isSelf || isDeleting}
                     title={isSelf ? copy.users.cannotDeleteSelf : undefined}
