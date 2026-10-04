@@ -6,7 +6,8 @@ import { Check, Circle, Pencil, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, Field, IconButton, Input, SectionTitle, Select, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
+import { useCloseOnSuccess } from "@/components/use-close-on-success";
+import { Button, Card, Field, IconButton, Input, Modal, SectionTitle, Select, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
 import { getDictionary } from "@/lib/i18n";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { decimalToNumber, formatCurrency } from "@/lib/utils";
@@ -14,14 +15,13 @@ import { decimalToNumber, formatCurrency } from "@/lib/utils";
 type Copy = ReturnType<typeof getDictionary>;
 
 import {
-  createTodoTaskAction,
   deleteTodoAction,
   deleteTodoTaskAction,
   resolveTaskAction,
   setTodoTaskStatusAction,
   updateTodoAction,
-  updateTodoTaskAction,
 } from "./actions";
+import { CreateTodoTaskModal, EditTaskModal } from "./task-modals";
 
 function TaskTypeLabel({
   type,
@@ -54,7 +54,6 @@ interface TasksPageClientProps {
   copy: Copy;
   locale: string;
   users: UserSummary[];
-  activeEdition: { id: string } | null;
 }
 
 interface UserSummary {
@@ -133,14 +132,9 @@ export function TasksPageClient({
   copy,
   locale,
   users,
-  activeEdition,
 }: TasksPageClientProps) {
   const isReadOnly = useEditionReadOnly();
   const [resolveState, resolveFormAction, isResolving] = useActionState(resolveTaskAction, initialActionState);
-  const [updateTaskState, updateTaskFormAction, isUpdatingTask] = useActionState(
-    updateTodoTaskAction,
-    initialActionState
-  );
   const [statusState, statusFormAction, isTogglingStatus] = useActionState(
     setTodoTaskStatusAction,
     initialActionState
@@ -150,20 +144,8 @@ export function TasksPageClient({
     initialActionState
   );
 
-  if (!activeEdition) {
-    return (
-      <div className="space-y-4">
-        <p className="text-sm text-[var(--muted)]">{copy.common.noEditionSelected}</p>
-      </div>
-    );
-  }
-
   if (todos.length === 0 && ungroupedTasks.length === 0) {
-    return (
-      <div className="space-y-4">
-        <p className="text-sm text-[var(--muted)]">{copy.tasks.noPendingTasks}</p>
-      </div>
-    );
+    return <Card dashed>{copy.tasks.noPendingTasks}</Card>;
   }
 
   return (
@@ -183,7 +165,6 @@ export function TasksPageClient({
       {ungroupedTasks.length > 0 ? (
         <Card as="div" className="space-y-2">
           <h3 className="text-sm font-semibold">{copy.tasks.standaloneTasks}</h3>
-          <FormError message={updateTaskState.error} />
           <FormError message={statusState.error} />
           <FormError message={deleteTaskState.error} />
           <FormError message={resolveState.error} />
@@ -201,41 +182,8 @@ export function TasksPageClient({
 
                 {isGeneral ? (
                   <>
-                    {canManageTask ? (
-                      <form action={updateTaskFormAction} className="mt-2 grid gap-2 sm:grid-cols-2">
-                        <input type="hidden" name="todoTaskId" value={task.id} />
-                        <Input type="text" name="title" required defaultValue={task.title} />
-                        <Input
-                          type="datetime-local"
-                          name="dueDate"
-                          defaultValue={task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : ""}
-                        />
-                        <Textarea
-                          name="description"
-                          rows={2}
-                          defaultValue={task.description ?? ""}
-                          className="sm:col-span-2"
-                        />
-                        {access.role === "ADMIN" ? (
-                          <div className="sm:col-span-2">
-                            <Select name="assignedToUserId" defaultValue={task.assignedToUserId ?? ""}>
-                              <option value="">{copy.tasks.unassigned}</option>
-                              {users.map((user) => (
-                                <option key={user.id} value={user.id}>
-                                  {user.name}
-                                </option>
-                              ))}
-                            </Select>
-                          </div>
-                        ) : null}
-                        <div className="sm:col-span-2">
-                          <Button type="submit" variant="primary" disabled={isUpdatingTask}>
-                            {copy.tasks.saveTask}
-                          </Button>
-                        </div>
-                      </form>
-                    ) : (
-                      <div className="mt-2 space-y-1">
+                    <div className="mt-2 flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1 space-y-1">
                         <p className="font-medium break-words">{task.title}</p>
                         {task.description ? (
                           <p className="text-sm text-[var(--muted)] whitespace-pre-wrap break-words">{task.description}</p>
@@ -246,7 +194,16 @@ export function TasksPageClient({
                           </p>
                         ) : null}
                       </div>
-                    )}
+                      {canManageTask ? (
+                        <EditTaskModal
+                          task={task}
+                          copy={copy.tasks}
+                          cancelLabel={copy.shell.cancel}
+                          users={users}
+                          isAdmin={access.role === "ADMIN"}
+                        />
+                      ) : null}
+                    </div>
 
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
                       <span>
@@ -357,24 +314,16 @@ interface TodoCardProps {
 function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps) {
   const isReadOnly = useEditionReadOnly();
   const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
-  const [deletingTodoId, setDeletingTodoId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const canManageTodoTasks = todo.createdById === access.id && !isReadOnly;
 
   const isEditing = editingTodoId === todo.id;
-  const isDeleting = deletingTodoId === todo.id;
 
   const [updateTodoState, updateTodoFormAction, isSavingTodo] = useActionState(updateTodoAction, initialActionState);
   const [deleteTodoState, deleteTodoFormAction, isDeletingTodo] = useActionState(deleteTodoAction, initialActionState);
-  const [createTaskState, createTaskFormAction, isCreatingTask] = useActionState(
-    createTodoTaskAction,
-    initialActionState
-  );
+  const markDeleteSubmitted = useCloseOnSuccess(deleteTodoState, isDeletingTodo, () => setIsDeleting(false));
   const [statusState, statusFormAction, isTogglingStatus] = useActionState(
     setTodoTaskStatusAction,
-    initialActionState
-  );
-  const [updateTaskState, updateTaskFormAction, isUpdatingTask] = useActionState(
-    updateTodoTaskAction,
     initialActionState
   );
   const [deleteTaskState, deleteTaskFormAction, isDeletingTask] = useActionState(
@@ -434,7 +383,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
                 <IconButton type="button" tone="accent" label="Edit" onClick={() => setEditingTodoId(todo.id)}>
                   <Pencil />
                 </IconButton>
-                <IconButton type="button" tone="delete" label="Delete" onClick={() => setDeletingTodoId(todo.id)}>
+                <IconButton type="button" tone="delete" label="Delete" onClick={() => setIsDeleting(true)}>
                   <Trash2 />
                 </IconButton>
               </>
@@ -443,64 +392,51 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
         </div>
       )}
 
-      {isDeleting ? (
-        <form
-          action={deleteTodoFormAction}
-          className="grid gap-2 rounded-xl border border-dashed border-rose-400/50 bg-rose-950/20 p-3 md:grid-cols-[1fr_auto]"
-        >
-          <FormError message={deleteTodoState.error} className="sm:col-span-2" />
-          <input type="hidden" name="todoId" value={todo.id} />
-          <Field label={copy.tasks.typeDeleteToConfirm} className="text-rose-300">
-            <Input type="text" name="confirmDelete" tone="danger" required placeholder="delete" autoFocus />
-          </Field>
-          <div className="flex items-end gap-2">
-            <Button type="submit" variant="destructive" disabled={isDeletingTodo}>
-              {copy.tasks.deleteTodo}
-            </Button>
-            <Button type="button" variant="secondary" onClick={() => setDeletingTodoId(null)}>
+      <Modal
+        open={isDeleting}
+        onClose={() => setIsDeleting(false)}
+        title={copy.tasks.deleteTodo}
+        size="sm"
+        footer={
+          <>
+            <Button type="button" variant="secondary" onClick={() => setIsDeleting(false)}>
               {copy.shell.cancel}
             </Button>
-          </div>
+            <Button type="submit" form={`delete-todo-${todo.id}`} variant="destructive" disabled={isDeletingTodo}>
+              {copy.tasks.deleteTodo}
+            </Button>
+          </>
+        }
+      >
+        <form
+          id={`delete-todo-${todo.id}`}
+          action={deleteTodoFormAction}
+          onSubmit={markDeleteSubmitted}
+          className="space-y-4"
+        >
+          <FormError message={deleteTodoState.error} />
+          <input type="hidden" name="todoId" value={todo.id} />
+          <Field label={copy.tasks.typeDeleteToConfirm}>
+            <Input type="text" name="confirmDelete" tone="danger" required placeholder="delete" autoFocus />
+          </Field>
         </form>
-      ) : null}
+      </Modal>
 
       <div className={cn(nestedSurfaceClasses, "space-y-2 p-2 sm:p-3")}>
-        <SectionTitle>{copy.tasks.todoTasks}</SectionTitle>
-
-        {canManageTodoTasks ? (
-          <form action={createTaskFormAction} className="grid gap-2 sm:grid-cols-2">
-            <FormError message={createTaskState.error} className="sm:col-span-2" />
-            <input type="hidden" name="todoId" value={todo.id} />
-            <Input type="text" name="title" required placeholder={copy.tasks.todoTaskTitle} />
-            <Input type="datetime-local" name="dueDate" />
-            <Textarea
-              name="description"
-              rows={2}
-              placeholder={copy.tasks.todoTaskDescription}
-              className="sm:col-span-2"
+        <div className="flex items-center justify-between gap-2">
+          <SectionTitle>{copy.tasks.todoTasks}</SectionTitle>
+          {canManageTodoTasks ? (
+            <CreateTodoTaskModal
+              todoId={todo.id}
+              copy={copy.tasks}
+              cancelLabel={copy.shell.cancel}
+              users={users}
+              isAdmin={isAdmin}
             />
-            {isAdmin ? (
-              <div className="sm:col-span-2">
-                <Select name="assignedToUserId" defaultValue="">
-                  <option value="">{copy.tasks.unassigned}</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            ) : null}
-            <div className="sm:col-span-2">
-              <Button type="submit" variant="primary" disabled={isCreatingTask}>
-                {copy.tasks.createTask}
-              </Button>
-            </div>
-          </form>
-        ) : null}
+          ) : null}
+        </div>
 
         <FormError message={statusState.error} />
-        <FormError message={updateTaskState.error} />
         <FormError message={deleteTaskState.error} />
 
         {todo.tasks.length === 0 ? (
@@ -558,12 +494,13 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
                   )}
                   {canManageTodoTasks ? (
                     <>
-                      <form action={updateTaskFormAction} className="inline">
-                        <input type="hidden" name="todoTaskId" value={task.id} />
-                        <IconButton type="submit" tone="accent" label="Edit" disabled={isUpdatingTask}>
-                          <Pencil />
-                        </IconButton>
-                      </form>
+                      <EditTaskModal
+                        task={task}
+                        copy={copy.tasks}
+                        cancelLabel={copy.shell.cancel}
+                        users={users}
+                        isAdmin={isAdmin}
+                      />
                       <form action={deleteTaskFormAction} className="inline">
                         <input type="hidden" name="todoTaskId" value={task.id} />
                         <IconButton type="submit" tone="delete" label="Delete" disabled={isDeletingTask}>

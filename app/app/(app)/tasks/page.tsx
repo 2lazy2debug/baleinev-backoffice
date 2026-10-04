@@ -1,6 +1,6 @@
 import { WritableEditionOnly } from "@/components/edition-read-only";
 import { TasksCreateModal } from "@/components/tasks-create-modal";
-import { Card, PageHeader, SectionTitle } from "@/components/ui";
+import { EmptyPage, PageHeader, SectionTitle } from "@/components/ui";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
@@ -33,6 +33,10 @@ export default async function TasksPage() {
       })
     : [];
 
+  if (!editionId) {
+    return <EmptyPage title={copy.tasks.title}>{copy.common.noEditionSelected}</EmptyPage>;
+  }
+
   return (
     <div className="space-y-4 lg:space-y-8">
       <PageHeader
@@ -51,7 +55,7 @@ export default async function TasksPage() {
         }
       />
 
-      <Card as="section" className="space-y-5">
+      <section className="space-y-5">
         <SectionTitle>{copy.tasks.allTasks}</SectionTitle>
         <TasksPageClient
           todos={todos}
@@ -60,9 +64,8 @@ export default async function TasksPage() {
           copy={copy}
           locale={locale}
           users={users}
-          activeEdition={editionId ? { id: editionId } : null}
         />
-      </Card>
+      </section>
     </div>
   );
 }

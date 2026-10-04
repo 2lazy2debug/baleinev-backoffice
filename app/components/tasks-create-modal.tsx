@@ -4,7 +4,8 @@ import { useActionState, useState } from "react";
 import { Plus } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
-import { Button, Field, Input, Modal, Select, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
+import { useCloseOnSuccess } from "@/components/use-close-on-success";
+import { Button, Field, Input, Modal, Select, Textarea } from "@/components/ui";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
 type UserItem = {
@@ -36,13 +37,18 @@ type Props = {
   createTodoTaskAction: (prevState: ActionState, formData: FormData) => Promise<ActionState>;
 };
 
+type Kind = "todo" | "task";
+
 export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, createTodoTaskAction }: Props) {
   const [open, setOpen] = useState(false);
-  const [createTodoState, createTodoFormAction, isCreatingTodo] = useActionState(createTodoAction, initialActionState);
-  const [createTaskState, createTaskFormAction, isCreatingTask] = useActionState(
-    createTodoTaskAction,
-    initialActionState
-  );
+  const [kind, setKind] = useState<Kind>("todo");
+  const [todoState, todoFormAction, isCreatingTodo] = useActionState(createTodoAction, initialActionState);
+  const [taskState, taskFormAction, isCreatingTask] = useActionState(createTodoTaskAction, initialActionState);
+
+  const isTodo = kind === "todo";
+  const state = isTodo ? todoState : taskState;
+  const pending = isTodo ? isCreatingTodo : isCreatingTask;
+  const markSubmitted = useCloseOnSuccess(state, pending, () => setOpen(false));
 
   return (
     <>
@@ -54,76 +60,57 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
         open={open}
         onClose={() => setOpen(false)}
         title={copy.openCreateModal}
-        size="xl"
+        size="md"
         mobileFullScreen
         footer={
-          <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-            {copy.closeCreateModal}
-          </Button>
+          <>
+            <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
+              {copy.closeCreateModal}
+            </Button>
+            <Button type="submit" form="tasks-create-form" variant="primary" disabled={pending}>
+              {isTodo ? copy.createTodo : copy.createTask}
+            </Button>
+          </>
         }
       >
-        <div className="grid gap-4 md:grid-cols-2">
-          <form
-            action={createTodoFormAction}
-            className={cn(nestedSurfaceClasses, "space-y-3 p-3 sm:p-4")}
-          >
-            <h4 className="font-semibold">{copy.createTodo}</h4>
-            <FormError message={createTodoState.error} />
-            <Field label={copy.todoTitle}>
-              <Input type="text" name="title" required />
-            </Field>
-            <Field label={copy.todoDescription}>
-              <Textarea name="description" rows={2} />
-            </Field>
-            {isAdmin ? (
-              <Field label={copy.assignTodoTo}>
-                <Select name="assignedToUserId" defaultValue="">
-                  <option value="">{copy.unassigned}</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-            ) : null}
-            <Button type="submit" variant="secondary" disabled={isCreatingTodo}>
-              {copy.createTodo}
-            </Button>
-          </form>
-
-          <form
-            action={createTaskFormAction}
-            className={cn(nestedSurfaceClasses, "space-y-3 p-3 sm:p-4")}
-          >
-            <h4 className="font-semibold">{copy.createStandaloneTask}</h4>
-            <FormError message={createTaskState.error} />
-            <Field label={copy.todoTaskTitle}>
-              <Input type="text" name="title" required />
-            </Field>
-            <Field label={copy.todoTaskDescription}>
-              <Textarea name="description" rows={2} />
-            </Field>
+        <form
+          id="tasks-create-form"
+          key={kind}
+          action={isTodo ? todoFormAction : taskFormAction}
+          onSubmit={markSubmitted}
+          className="space-y-4"
+        >
+          <FormError message={state.error} />
+          <Field label={copy.openCreateModal}>
+            <Select value={kind} onChange={(event) => setKind(event.target.value as Kind)}>
+              <option value="todo">{copy.createTodo}</option>
+              <option value="task">{copy.createStandaloneTask}</option>
+            </Select>
+          </Field>
+          <Field label={isTodo ? copy.todoTitle : copy.todoTaskTitle}>
+            <Input type="text" name="title" required />
+          </Field>
+          <Field label={isTodo ? copy.todoDescription : copy.todoTaskDescription}>
+            <Textarea name="description" rows={2} />
+          </Field>
+          {isTodo ? null : (
             <Field label={copy.dueDateOptional}>
               <Input type="datetime-local" name="dueDate" />
             </Field>
-            {isAdmin ? (
-              <Field label={copy.assignTaskTo}>
-                <Select name="assignedToUserId" defaultValue="">
-                  <option value="">{copy.unassigned}</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-            ) : null}
-            <Button type="submit" variant="secondary" disabled={isCreatingTask}>
-              {copy.createTask}
-            </Button>
-          </form>
-        </div>
+          )}
+          {isAdmin ? (
+            <Field label={isTodo ? copy.assignTodoTo : copy.assignTaskTo}>
+              <Select name="assignedToUserId" defaultValue="">
+                <option value="">{copy.unassigned}</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          ) : null}
+        </form>
       </Modal>
     </>
   );
