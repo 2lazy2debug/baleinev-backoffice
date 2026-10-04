@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Users } from "lucide-react";
 
-import { Badge, IconButton, Modal } from "@/components/ui";
+import { Badge, IconButton, Modal, microLabelClasses } from "@/components/ui";
 
 export type ResponseSummary = {
   id: string;
@@ -48,7 +48,7 @@ export default function EventResponsesModal({ eventName, responses, copy }: Prop
       <Modal open={open} onClose={() => setOpen(false)} title={eventName} size="lg">
         <div className="space-y-5">
           <div>
-            <p className="text-2xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+            <p className={microLabelClasses}>
               {copy.responsesAnswered}
             </p>
             <div className="mt-2 space-y-1.5">
@@ -66,7 +66,7 @@ export default function EventResponsesModal({ eventName, responses, copy }: Prop
           </div>
 
           <div>
-            <p className="text-2xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+            <p className={microLabelClasses}>
               {copy.responsesNoAnswer}
             </p>
             {responses.noAnswer.length === 0 ? (

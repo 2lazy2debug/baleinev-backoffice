@@ -5,7 +5,7 @@ import { Check, ChevronDown, ChevronUp, FileText, Link2, Pencil, Plus, Trash2 } 
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Chip, ChipRemoveButton, IconButton, Panel, PanelHeader, SectionTitle, Select, cn, nestedSurfaceClasses, scrollToBelowTopBar } from "@/components/ui";
+import { Badge, Button, Chip, ChipRemoveButton, IconButton, Panel, PanelHeader, SectionTitle, Select, cn, microLabelClasses, nestedSurfaceClasses, scrollToBelowTopBar } from "@/components/ui";
 import type { Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -692,7 +692,7 @@ export default function EventsPageClient({
                                 {/* Admin: who declined — read-only, no retracting someone's answer */}
                                 {isAdmin && shift.unavailabilities.length > 0 ? (
                                   <div className="flex flex-wrap items-center gap-1.5 border-t border-[var(--line)] px-2.5 py-2 sm:px-4">
-                                    <span className="text-2xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                                    <span className={microLabelClasses}>
                                       {copy.unavailableStaff}
                                     </span>
                                     {shift.unavailabilities.map((u) => (

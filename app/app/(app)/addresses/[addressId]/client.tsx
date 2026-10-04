@@ -28,6 +28,7 @@ import {
   CardletHeader,
   CardletList,
   IconButton,
+  microLabelClasses,
   Modal,
   PageHeader,
   Panel,
@@ -71,7 +72,7 @@ type ReadFieldProps = {
 function ReadField({ label, children }: ReadFieldProps) {
   return (
     <div className="min-w-0">
-      <p className="text-3xs font-medium uppercase tracking-[0.08em] text-[var(--muted)]">{label}</p>
+      <p className={microLabelClasses}>{label}</p>
       <div className="break-words text-sm">{children || <span className="text-[var(--muted)]">-</span>}</div>
     </div>
   );

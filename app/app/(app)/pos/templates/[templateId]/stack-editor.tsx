@@ -532,7 +532,7 @@ function PreviewModal({
                 )}
               >
                 {spacer ? (
-                  <span className="text-2xs font-medium uppercase tracking-[0.08em] text-[var(--muted)]">
+                  <span className={microLabelClasses}>
                     {copy.whitespace}
                   </span>
                 ) : (

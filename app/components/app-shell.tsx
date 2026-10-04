@@ -37,7 +37,7 @@ import { MobileShell } from "@/components/mobile/mobile-shell";
 import { MobileShellProvider } from "@/components/mobile/mobile-shell-context";
 import type { EditionOption, NavigationItem } from "@/components/navigation";
 import { SignOutButton } from "@/components/sign-out-button";
-import { IconButton, Select, buttonClasses, iconButtonClasses } from "@/components/ui";
+import { IconButton, Select, cn, microLabelClasses, buttonClasses, iconButtonClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import type { Theme } from "@/lib/theme";
 
@@ -205,7 +205,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
               <Image src="/logo_blv.png" alt="Baleinev" width={320} height={128} className="brand-logo w-full object-contain" priority />
               {!isCollapsed ? (
                 <div className="mt-3 space-y-1">
-                  <label htmlFor="edition-picker" className="block text-3xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                  <label htmlFor="edition-picker" className={cn("block", microLabelClasses)}>
                     {copy.edition}
                   </label>
                   {editions.length > 0 ? (

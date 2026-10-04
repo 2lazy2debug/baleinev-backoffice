@@ -1,4 +1,5 @@
 import { cn } from "./cn";
+import { microLabelClasses } from "./microLabel";
 
 /**
  * The mobile stand-in for a wide table row.
@@ -79,7 +80,7 @@ type CardletFieldProps = React.HTMLAttributes<HTMLDivElement> & { label: React.R
 export function CardletField({ label, className, children, ...props }: CardletFieldProps) {
   return (
     <div className={cn("min-w-0", className)} {...props}>
-      <p className="text-3xs font-medium uppercase tracking-[0.08em] text-[var(--muted)]">{label}</p>
+      <p className={microLabelClasses}>{label}</p>
       <div className="truncate">{children}</div>
     </div>
   );
