@@ -285,29 +285,27 @@ export function Till({
 
       {totalPages > 1 ? (
         <div className="flex w-full items-center gap-3">
-          <button
-            type="button"
-            title={copy.previousPage}
-            aria-label={copy.previousPage}
+          <IconButton
+            size="touch"
+            label={copy.previousPage}
             disabled={currentPage === 0}
             onClick={() => setPage(Math.max(0, currentPage - 1))}
-            className="flex h-[66px] basis-[30%] shrink-0 items-center justify-center rounded-md border border-[var(--line)] text-[var(--muted)] transition hover:bg-[var(--panel-strong)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50 lg:h-[48px] [&_svg]:h-6 [&_svg]:w-6"
+            className="basis-[30%]"
           >
             <ChevronLeft />
-          </button>
+          </IconButton>
           <span className="flex-1 text-center text-sm tabular-nums text-[var(--muted)]">
             {copy.pageOf.replace("{page}", String(currentPage + 1)).replace("{total}", String(totalPages))}
           </span>
-          <button
-            type="button"
-            title={copy.nextPage}
-            aria-label={copy.nextPage}
+          <IconButton
+            size="touch"
+            label={copy.nextPage}
             disabled={currentPage >= totalPages - 1}
             onClick={() => setPage(currentPage + 1)}
-            className="flex h-[66px] basis-[30%] shrink-0 items-center justify-center rounded-md border border-[var(--line)] text-[var(--muted)] transition hover:bg-[var(--panel-strong)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-50 lg:h-[48px] [&_svg]:h-6 [&_svg]:w-6"
+            className="basis-[30%]"
           >
             <ChevronRight />
-          </button>
+          </IconButton>
         </div>
       ) : null}
 

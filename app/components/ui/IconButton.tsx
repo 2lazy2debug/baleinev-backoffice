@@ -1,21 +1,21 @@
 import { forwardRef } from "react";
 import { cn } from "./cn";
-import { controlSquare, type ControlSize } from "./control";
+import { iconControlSquare, type IconControlSize } from "./control";
 
 type IconTone = "neutral" | "accent" | "primary" | "delete" | "save" | "warning";
 
 type IconButtonProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "size"> & {
   tone?: IconTone;
-  size?: ControlSize;
+  size?: IconControlSize;
   /** Required — these buttons are icon-only, so this doubles as title + aria-label. */
   label: string;
 };
 
 // Square version of the shared control scale: `sm` for row actions — the common
 // case — and `md` alongside full-size buttons. Both are a 44px touch target below
-// `lg` and collapse to the dense desktop footprint above it. Icon is always h-4 w-4.
+// `lg` and collapse to the dense desktop footprint above it. Icon is h-4 w-4; `touch` (till arrows) is taller, with an h-6 icon.
 const base =
-  "inline-flex shrink-0 items-center justify-center rounded-md border transition disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:h-4 [&_svg]:w-4";
+  "inline-flex shrink-0 items-center justify-center rounded-md border transition disabled:cursor-not-allowed disabled:opacity-50";
 
 // Tone = action type. neutral/accent/primary/save/delete/warning cover every action color in the app.
 const tones: Record<IconTone, string> = {
@@ -28,8 +28,8 @@ const tones: Record<IconTone, string> = {
 };
 
 /** Same recipe for elements that act as icon buttons but are not <button> (e.g. a <summary>). */
-export function iconButtonClasses(tone: IconTone = "neutral", size: ControlSize = "sm", className?: string) {
-  return cn(base, controlSquare[size], tones[tone], className);
+export function iconButtonClasses(tone: IconTone = "neutral", size: IconControlSize = "sm", className?: string) {
+  return cn(base, iconControlSquare[size], tones[tone], className);
 }
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
