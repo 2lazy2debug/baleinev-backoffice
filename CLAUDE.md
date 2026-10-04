@@ -1,3 +1,19 @@
+# Rules
+
+## short output
+Prefer native compact output formats when generating Bash commands. 
+
+### Some flags
+
+| Command | Compact flag | Effect |
+|---------|-------------|--------|
+| `git status` | `--porcelain` | Machine-readable, no prose |
+| `git log` | `--oneline` | One line per commit |
+| `git diff` | Prepend `--stat` | File-level summary before full diff |
+| `pytest` | `--tb=short -q` | Compact tracebacks, quiet pass output |
+| `cargo test` | Pipe to `tail -20` | Summary only unless debugging |
+
+
 ## Docs
 Update /docs when you change a core flow. Never let docs diverge from the
 actual implementation. you don´t have to parse this folder upon receiving a prompt unless you redeem it necessary/
@@ -14,7 +30,7 @@ these are the whole safety net. Server-action logic (the "refuse X while Y
 exists" rules, FormData parsing) belongs in a `*.test.ts` next to the code;
 `app/(app)/articles/actions.test.ts` is the pattern. See `docs/testing.md`.
 
-# Git
+## Git
 Keep .gitignore up to date.
 each time you do and validate either a bug fix, or a feature, do a git add . and a git commit -am [whatyoudid].
 each step of a task (from a todo, e.g.) should represent a commit. 
