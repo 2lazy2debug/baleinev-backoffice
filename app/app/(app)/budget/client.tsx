@@ -22,6 +22,7 @@ import {
   Input,
   Modal,
   PageHeader,
+  Panel,
   SectionTitle,
   Select,
   SignedAmount,
@@ -192,18 +193,14 @@ export default function BudgetPageClient({
   const [editingBudget, setEditingBudget] = useState<BudgetItem | null>(null);
   const [deletingBudget, setDeletingBudget] = useState<BudgetItem | null>(null);
 
-  async function handleCreateBudgetLine(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-    const result = await createBudgetLineAction(_prevState, formData);
-    if (!result.error) {
-      setEntryModalBudget(null);
-      router.refresh();
-    }
-    return result;
-  }
   const [createLineState, createLineFormAction, isSavingBudgetLine] = useActionState(
-    handleCreateBudgetLine,
+    createBudgetLineAction,
     initialActionState
   );
+  const markCreateLineSubmitted = useCloseOnSuccess(createLineState, isSavingBudgetLine, () => {
+    setEntryModalBudget(null);
+    router.refresh();
+  });
 
   const [deleteLineState, deleteLineFormAction, isDeletingLine] = useActionState(
     deleteBudgetLineAction,
@@ -316,10 +313,7 @@ export default function BudgetPageClient({
                         </div>
                       )}
                     </div>
-                    {/* Budget management stays desktop-only in this pass: a phone gets the
-                        read-only roll-up below, and the details modal behind the eye is
-                        three wide tables that do not fit one. */}
-                    <div className="hidden items-center gap-2 sm:flex">
+                    <div className="flex shrink-0 items-center gap-2">
                       <IconButton tone="neutral" label={copy.budget.viewDetails} onClick={() => setDetailsBudgetId(budget.id)}>
                         <Eye />
                       </IconButton>
@@ -364,7 +358,7 @@ export default function BudgetPageClient({
 
                       return (
                         <section key={section.accountType}>
-                          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{section.title}</p>
+                          <p className="mb-2 text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{section.title}</p>
                           <Table desktopOnly>
                             <THead>
                               <TR>
@@ -495,10 +489,11 @@ export default function BudgetPageClient({
           onClose={() => setDetailsBudgetId(null)}
           title={`${copy.budget.detailsTitle} - ${detailsSummary.budget.name}`}
           size="full"
+          mobileFullScreen
         >
-          <Card as="div" className="mb-5 grid gap-3 sm:grid-cols-3">
+          <Panel nested className="mb-5 grid gap-3 p-2 sm:grid-cols-3 sm:p-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{copy.budget.chargesAvailability}</p>
+              <p className="text-2xs uppercase tracking-[0.08em] text-[var(--muted)]">{copy.budget.chargesAvailability}</p>
               <p className="text-sm font-semibold">
                 <SignedAmount
                   value={detailsSummary.chargesAvailability}
@@ -508,22 +503,22 @@ export default function BudgetPageClient({
               </p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{copy.budget.budgetResult}</p>
+              <p className="text-2xs uppercase tracking-[0.08em] text-[var(--muted)]">{copy.budget.budgetResult}</p>
               <p className="text-sm font-semibold">{formatCurrency(detailsSummary.budgetResult)}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{copy.budget.actualResult}</p>
+              <p className="text-2xs uppercase tracking-[0.08em] text-[var(--muted)]">{copy.budget.actualResult}</p>
               <p className="text-sm font-semibold">{formatCurrency(detailsSummary.actualResult)}</p>
             </div>
-          </Card>
+          </Panel>
 
           <div className="grid gap-5 lg:grid-cols-2">
             <div className="space-y-5 lg:max-h-[62vh] lg:overflow-y-auto lg:pr-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{copy.budget.budgetEntries}</p>
+              <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.budget.budgetEntries}</p>
               {detailsSummary.sections.map((section) => (
                 <section key={section.accountType} className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{section.title}</p>
-                  <Table>
+                  <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{section.title}</p>
+                  <Table desktopOnly>
                     <THead>
                       <TR>
                         <TH>{copy.budget.label}</TH>
@@ -555,23 +550,48 @@ export default function BudgetPageClient({
                       </TFoot>
                     ) : null}
                   </Table>
+                  <CardletList>
+                    {section.lines.length === 0 ? (
+                      <p className="text-xs text-[var(--muted)]">{section.emptyMessage}</p>
+                    ) : (
+                      <>
+                        {section.lines.map((line) => (
+                          <Cardlet key={`${section.accountType}-${line.id}`}>
+                            <CardletHeader
+                              title={line.label}
+                              action={<span className="shrink-0 text-sm font-semibold">{formatCurrency(line.amount)}</span>}
+                            />
+                            {line.notes ? (
+                              <CardletFields>
+                                <CardletField label={copy.budget.notes} className="col-span-2">{line.notes}</CardletField>
+                              </CardletFields>
+                            ) : null}
+                          </Cardlet>
+                        ))}
+                        <p className="flex justify-between px-1 text-xs font-semibold text-[var(--muted)]">
+                          <span>{copy.common.total}</span>
+                          <span>{formatCurrency(section.budgetTotal)}</span>
+                        </p>
+                      </>
+                    )}
+                  </CardletList>
                 </section>
               ))}
             </div>
 
             <div className="space-y-2 lg:max-h-[62vh] lg:overflow-y-auto lg:pl-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{copy.budget.journalEntries}</p>
-              <Card as="div" className="grid gap-3 sm:grid-cols-2">
+              <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.budget.journalEntries}</p>
+              <Panel nested className="grid gap-3 p-2 sm:grid-cols-2 sm:p-3">
                 <div>
-                  <p className="text-2xs uppercase tracking-[0.14em] text-[var(--muted)]">{copy.common.charges}</p>
+                  <p className="text-2xs uppercase tracking-[0.08em] text-[var(--muted)]">{copy.common.charges}</p>
                   <p className="text-sm font-semibold text-rose-300">{formatCurrency(detailsSummary.charges.actualTotal)}</p>
                 </div>
                 <div>
-                  <p className="text-2xs uppercase tracking-[0.14em] text-[var(--muted)]">{copy.common.produits}</p>
+                  <p className="text-2xs uppercase tracking-[0.08em] text-[var(--muted)]">{copy.common.produits}</p>
                   <p className="text-sm font-semibold text-emerald-300">{formatCurrency(detailsSummary.produits.actualTotal)}</p>
                 </div>
-              </Card>
-              <Table>
+              </Panel>
+              <Table desktopOnly>
                 <THead>
                   <TR>
                     <TH>{copy.journal.date}</TH>
@@ -603,6 +623,30 @@ export default function BudgetPageClient({
                   )}
                 </tbody>
               </Table>
+              <CardletList>
+                {detailsSummary.budget.journalEntries.length === 0 ? (
+                  <p className="text-xs text-[var(--muted)]">{copy.budget.noJournalEntries}</p>
+                ) : (
+                  detailsSummary.budget.journalEntries.map((entry) => (
+                    <Cardlet key={entry.id}>
+                      <CardletHeader
+                        title={entry.label}
+                        action={
+                          <span className={`shrink-0 text-sm font-semibold ${entry.accountType === "CHARGES" ? "text-rose-300" : "text-emerald-300"}`}>
+                            {formatCurrency(entry.amount)}
+                          </span>
+                        }
+                      />
+                      <CardletFields>
+                        <CardletField label={copy.journal.date}>{new Date(entry.date).toLocaleDateString(locale)}</CardletField>
+                        <CardletField label={copy.journal.type}>{entry.accountType === "CHARGES" ? copy.common.charges : copy.common.produits}</CardletField>
+                        <CardletField label={copy.journal.counterpart}>{entry.counterparty ?? "-"}</CardletField>
+                        <CardletField label={copy.journal.reference}>{entry.referenceNumber ?? "-"}</CardletField>
+                      </CardletFields>
+                    </Cardlet>
+                  ))
+                )}
+              </CardletList>
             </div>
           </div>
         </Modal>
@@ -626,7 +670,12 @@ export default function BudgetPageClient({
             </>
           }
         >
-          <form id="create-budget-line-form" action={createLineFormAction} className="space-y-4">
+          <form
+            id="create-budget-line-form"
+            action={createLineFormAction}
+            onSubmit={markCreateLineSubmitted}
+            className="space-y-4"
+          >
             <FormError message={createLineState.error} />
             <input type="hidden" name="budgetId" value={entryModalBudget?.id ?? ""} />
 
