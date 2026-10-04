@@ -95,7 +95,7 @@ export function AddJournalEntryModal({
           <input type="hidden" name="fromExpenseReportId" value={fromExpenseReportId} />
         ) : null}
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label={`${copy.budget} *`}>
+          <Field label={copy.budget} required>
             <Select name="budgetId" required defaultValue={initialValues?.budgetId ?? ""}>
               <option value="" disabled>
                 {copy.selectBudget}
@@ -108,7 +108,7 @@ export function AddJournalEntryModal({
             </Select>
           </Field>
 
-          <Field label={`${copy.type} *`}>
+          <Field label={copy.type} required>
             <Select name="accountType" required defaultValue={initialValues?.accountType ?? "CHARGES"}>
               <option value="CHARGES">{common.charges}</option>
               <option value="PRODUITS">{common.produits}</option>
@@ -117,11 +117,11 @@ export function AddJournalEntryModal({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label={`${copy.date} *`}>
+          <Field label={copy.date} required>
             <Input type="date" name="date" required defaultValue={initialValues?.date} />
           </Field>
 
-          <Field label={`${copy.amount} *`}>
+          <Field label={copy.amount} required>
             <Input
               type="number"
               step="0.01"
@@ -134,7 +134,7 @@ export function AddJournalEntryModal({
           </Field>
         </div>
 
-        <Field label={`${copy.moneyAccount} *`}>
+        <Field label={copy.moneyAccount} required>
           <Select name="moneyAccountId" required defaultValue="">
             <option value="" disabled>
               {copy.selectAccount}
@@ -147,7 +147,7 @@ export function AddJournalEntryModal({
           </Select>
         </Field>
 
-        <Field label={`${copy.label} *`}>
+        <Field label={copy.label} required>
           <Input type="text" name="label" required defaultValue={initialValues?.label} placeholder={copy.descriptionPlaceholder} />
         </Field>
 

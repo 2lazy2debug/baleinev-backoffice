@@ -113,11 +113,11 @@ export default function CreateEventModal({ eventTypes, costCenters, editionStart
           >
             <FormError message={state.error} className="sm:col-span-2" />
             <div className="sm:col-span-2">
-              <Field label={`${copy.eventName} *`}>
+              <Field label={copy.eventName} required>
                 <Input type="text" name="name" required />
               </Field>
             </div>
-            <Field label={`${copy.eventType} *`}>
+            <Field label={copy.eventType} required>
               <Select name="eventTypeId" required defaultValue="">
                 <option value="" disabled>{copy.eventType}</option>
                 {eventTypes.map((et) => (
@@ -133,7 +133,7 @@ export default function CreateEventModal({ eventTypes, costCenters, editionStart
                 ))}
               </Select>
             </Field>
-            <Field label={`${copy.startDate} *`}>
+            <Field label={copy.startDate} required>
               <Input
                 type="date"
                 name="startDate"
@@ -144,7 +144,7 @@ export default function CreateEventModal({ eventTypes, costCenters, editionStart
                 onChange={(event) => setStartDate(event.target.value)}
               />
             </Field>
-            <Field label={`${copy.endDate} *`}>
+            <Field label={copy.endDate} required>
               <Input
                 type="date"
                 name="endDate"
