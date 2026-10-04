@@ -149,14 +149,13 @@ export function ExpenseReportsPageClient({
       report.reportType === "DRIVING"
         ? `${report.departure} -> ${report.arrival} | ${decimalToNumber(report.kilometers ?? 0)} km @ CHF ${decimalToNumber(report.ratePerKm ?? 0).toFixed(2)}`
         : null,
-    bankInfoTitle: [
-      copy.expenseReports.userBankInfo,
+    bankInfoLines: [
       `${copy.expenseReports.bankFirstName}: ${report.submittedBy.refundFirstName || copy.expenseReports.missingBankInfo}`,
       `${copy.expenseReports.bankLastName}: ${report.submittedBy.refundLastName || copy.expenseReports.missingBankInfo}`,
       `${copy.expenseReports.bankIban}: ${report.submittedBy.refundIban || copy.expenseReports.missingBankInfo}`,
       `${copy.expenseReports.bankZip}: ${report.submittedBy.refundZip || copy.expenseReports.missingBankInfo}`,
       `${copy.expenseReports.bankCity}: ${report.submittedBy.refundCity || copy.expenseReports.missingBankInfo}`,
-    ].join("\n"),
+    ],
     canReview: isAdmin && !isReadOnly && report.status === ExpenseReportStatus.PENDING,
     canRecord: isAdmin && !isReadOnly && report.status === ExpenseReportStatus.APPROVED,
     reviewerLabel:
@@ -208,18 +207,14 @@ export function ExpenseReportsPageClient({
                       ) : null}
                       <p className="flex items-center gap-2 text-xs text-[var(--muted)]">
                         <span>{copy.expenseReports.submittedBy}: {row.report.submittedBy.name}</span>
-                        {isAdmin ? (
-                          <Badge tone="neutral" title={row.bankInfoTitle}>
-                            i
-                          </Badge>
-                        ) : null}
                       </p>
+                      {isAdmin ? <BankInfo title={copy.expenseReports.userBankInfo} lines={row.bankInfoLines} /> : null}
                     </TD>
                     <TD>{row.report.department.name}</TD>
                     <TD>{row.amountLabel}</TD>
                     <TD>{row.paymentLabel}</TD>
                     <TD>
-                      <p>{row.statusLabel}</p>
+                      <Badge tone={row.statusTone}>{row.statusLabel}</Badge>
                       {row.reviewerLabel ? (
                         <p className="text-[var(--muted)]">{copy.expenseReports.reviewedBy}: {row.reviewerLabel}</p>
                       ) : null}
@@ -320,6 +315,8 @@ export function ExpenseReportsPageClient({
                     {row.reviewerLabel ? ` · ${copy.expenseReports.reviewedBy}: ${row.reviewerLabel}` : null}
                   </p>
 
+                  {isAdmin ? <BankInfo title={copy.expenseReports.userBankInfo} lines={row.bankInfoLines} /> : null}
+
                   {row.report.rejectionReason ? (
                     <p className="text-xs text-rose-300">{row.report.rejectionReason}</p>
                   ) : null}
@@ -361,5 +358,16 @@ export function ExpenseReportsPageClient({
         )}
       </Card>
     </div>
+  );
+}
+
+function BankInfo({ title, lines }: { title: string; lines: string[] }) {
+  return (
+    <details className="text-xs text-[var(--muted)]">
+      <summary className="cursor-pointer">{title}</summary>
+      {lines.map((line) => (
+        <p key={line}>{line}</p>
+      ))}
+    </details>
   );
 }
