@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import { useActionState, useMemo, useState, useTransition } from "react";
 import { Check, Copy, Eye, EyeOff, KeyRound, Pencil, Plus, Search, ShieldCheck, Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import { Badge, Button, Card, Checkbox, Field, IconButton, Input, Modal, MultiSelect, PageHeader, Panel } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
-import { initialActionState } from "@/lib/server-action-helpers";
+import { useCloseOnSuccess } from "@/components/use-close-on-success";
+import { initialActionState, type ActionState } from "@/lib/server-action-helpers";
 
 import {
   createPasswordEntryAction,
@@ -341,16 +342,9 @@ function EntryDialog({
   pending: boolean;
   error: string | null;
   onClose: () => void;
-  closeOnSuccessKey: { error: string | null };
+  closeOnSuccessKey: ActionState;
 }) {
-  const [submitted, setSubmitted] = useState(false);
-
-  // Close after a submission that produced no error.
-  useEffect(() => {
-    if (submitted && !pending && closeOnSuccessKey.error === null) {
-      onClose();
-    }
-  }, [submitted, pending, closeOnSuccessKey, onClose]);
+  const markSubmitted = useCloseOnSuccess(closeOnSuccessKey, pending, onClose);
 
   return (
     <Modal
@@ -370,7 +364,7 @@ function EntryDialog({
         </>
       }
     >
-      <form id="password-entry-form" action={formAction} onSubmit={() => setSubmitted(true)} className="space-y-4">
+      <form id="password-entry-form" action={formAction} onSubmit={markSubmitted} className="space-y-4">
         {entry ? <input type="hidden" name="entryId" value={entry.id} /> : null}
         <FormError message={error} />
 
@@ -458,15 +452,9 @@ function DeleteDialog({
   pending: boolean;
   error: string | null;
   onClose: () => void;
-  closeOnSuccessKey: { error: string | null };
+  closeOnSuccessKey: ActionState;
 }) {
-  const [submitted, setSubmitted] = useState(false);
-
-  useEffect(() => {
-    if (submitted && !pending && closeOnSuccessKey.error === null) {
-      onClose();
-    }
-  }, [submitted, pending, closeOnSuccessKey, onClose]);
+  const markSubmitted = useCloseOnSuccess(closeOnSuccessKey, pending, onClose);
 
   return (
     <Modal
@@ -489,7 +477,7 @@ function DeleteDialog({
         {copy.deleteConfirm} <span className="font-semibold text-[var(--ink)]">{entry.name}</span>?
       </p>
       <FormError message={error} className="mt-4" />
-      <form id="password-delete-form" action={formAction} onSubmit={() => setSubmitted(true)}>
+      <form id="password-delete-form" action={formAction} onSubmit={markSubmitted}>
         <input type="hidden" name="entryId" value={entry.id} />
       </form>
     </Modal>
