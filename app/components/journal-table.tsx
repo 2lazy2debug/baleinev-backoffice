@@ -33,6 +33,7 @@ import {
   Table,
   cn,
   iconButtonClasses,
+  signedAmountClasses,
 } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import {
@@ -293,7 +294,7 @@ const JournalTableRow = memo(function JournalTableRow({
             className="text-right"
           />
         ) : (
-          row.amountLabel
+          <span className={row.isProduits ? signedAmountClasses(true) : undefined}>{row.amountLabel}</span>
         )}
       </TD>
       <TD>
@@ -462,7 +463,7 @@ const JournalCardlet = memo(function JournalCardlet({
           draft ? null : (
             <div className="shrink-0 text-right">
               <Badge tone={row.isProduits ? "success" : "neutral"}>{row.typeText}</Badge>
-              <p className={cn("mt-1 text-sm font-semibold", row.isProduits ? "text-emerald-300" : null)}>
+              <p className={cn("mt-1 text-sm font-semibold", row.isProduits ? signedAmountClasses(true) : null)}>
                 {row.amountLabel}
               </p>
             </div>

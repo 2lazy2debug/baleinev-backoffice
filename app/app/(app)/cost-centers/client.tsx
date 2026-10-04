@@ -1,11 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
-import { Pencil, TrendingDown, TrendingUp, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, CardGrid, IconButton, Input, SectionTitle, iconButtonClasses } from "@/components/ui";
+import { Button, Card, CardGrid, IconButton, Input, SectionTitle, SignedAmount, iconButtonClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -66,10 +66,7 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
                       <p>{copy.common.produits}: <span className="font-semibold whitespace-nowrap">{formatCurrency(costCenter.produits)}</span></p>
                       <div className="flex flex-nowrap items-center gap-1.5">
                         <span>{copy.common.result}:</span>
-                        <span className={`font-semibold whitespace-nowrap ${result >= 0 ? "text-emerald-400" : "text-rose-400"}`}>{formatCurrency(result)}</span>
-                        {result >= 0
-                          ? <TrendingUp className="h-4 w-4 text-emerald-400" />
-                          : <TrendingDown className="h-4 w-4 text-rose-400" />}
+                        <SignedAmount value={result} label={formatCurrency(result)} trend className="font-semibold" />
                       </div>
                     </div>
                   </div>

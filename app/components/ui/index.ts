@@ -20,6 +20,7 @@ export * from "./Menu";
 export * from "./Modal";
 export * from "./Alert";
 export * from "./Badge";
+export * from "./SignedAmount";
 export * from "./SegmentedControl";
 export * from "./Table";
 export * from "./Cardlet";

@@ -1,7 +1,6 @@
 import { AccountType, TaskType } from "@prisma/client";
-import { TrendingDown, TrendingUp } from "lucide-react";
 
-import { Card, CardGrid, DonutChart, colourOrder, EmptyPage, PageHeader, Panel, PanelHeader, SectionTitle, TD, TFoot, TH, THead, TR, Table, buttonClasses } from "@/components/ui";
+import { Card, CardGrid, DonutChart, SignedAmount, colourOrder, EmptyPage, PageHeader, Panel, PanelHeader, SectionTitle, TD, TFoot, TH, THead, TR, Table, buttonClasses } from "@/components/ui";
 import type { DonutSlice } from "@/components/ui";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
@@ -251,12 +250,7 @@ export default async function DashboardPage() {
                     <TD>{formatCurrency(row.actualProduits)}</TD>
                     <TD>{formatCurrency(row.actualResult)}</TD>
                     <TD className="border-l border-[var(--line)]">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`font-semibold ${delta >= 0 ? "text-emerald-400" : "text-rose-400"}`}>{formatCurrency(delta)}</span>
-                        {delta >= 0
-                          ? <TrendingUp className="h-4 w-4 text-emerald-400" />
-                          : <TrendingDown className="h-4 w-4 text-rose-400" />}
-                      </div>
+                      <SignedAmount value={delta} label={formatCurrency(delta)} trend className="font-semibold" />
                     </TD>
                   </TR>
                 );
@@ -272,12 +266,7 @@ export default async function DashboardPage() {
                 <TD>{formatCurrency(totals.actualProduits)}</TD>
                 <TD>{formatCurrency(totals.actualResult)}</TD>
                 <TD className="border-l border-[var(--line)]">
-                  <div className="flex items-center gap-1.5">
-                    <span className={totalDelta >= 0 ? "text-emerald-400" : "text-rose-400"}>{formatCurrency(totalDelta)}</span>
-                    {totalDelta >= 0
-                      ? <TrendingUp className="h-4 w-4 text-emerald-400" />
-                      : <TrendingDown className="h-4 w-4 text-rose-400" />}
-                  </div>
+                  <SignedAmount value={totalDelta} label={formatCurrency(totalDelta)} trend />
                 </TD>
               </TR>
             </TFoot>

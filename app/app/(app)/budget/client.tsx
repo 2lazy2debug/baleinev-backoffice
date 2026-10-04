@@ -2,7 +2,7 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Eye, Pencil, Plus, TrendingDown, TrendingUp, Trash2, X } from "lucide-react";
+import { Check, Eye, Pencil, Plus, Trash2, X } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
@@ -24,6 +24,7 @@ import {
   PageHeader,
   SectionTitle,
   Select,
+  SignedAmount,
   TD,
   TFoot,
   TH,
@@ -310,11 +311,8 @@ export default function BudgetPageClient({
                         <p className="mt-2 text-sm text-[var(--muted)]">{copy.budget.noDepartment}</p>
                       )}
                       {budget.budgetLines.length > 0 && (
-                        <div className="mt-2 flex items-center gap-1.5 text-sm font-semibold">
-                          <span className={summary.budgetResult >= 0 ? "text-emerald-400" : "text-rose-400"}>{formatCurrency(summary.budgetResult)}</span>
-                          {summary.budgetResult >= 0
-                            ? <TrendingUp className="h-4 w-4 text-emerald-400" />
-                            : <TrendingDown className="h-4 w-4 text-rose-400" />}
+                        <div className="mt-2 text-sm font-semibold">
+                          <SignedAmount value={summary.budgetResult} label={formatCurrency(summary.budgetResult)} trend />
                         </div>
                       )}
                     </div>
@@ -501,8 +499,12 @@ export default function BudgetPageClient({
           <Card as="div" className="mb-5 grid gap-3 sm:grid-cols-3">
             <div>
               <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{copy.budget.chargesAvailability}</p>
-              <p className={`text-sm font-semibold ${detailsSummary.chargesAvailability >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                {detailsSummary.chargesAvailability >= 0 ? copy.budget.available : copy.budget.overexpense} {formatCurrency(Math.abs(detailsSummary.chargesAvailability))}
+              <p className="text-sm font-semibold">
+                <SignedAmount
+                  value={detailsSummary.chargesAvailability}
+                  label={`${detailsSummary.chargesAvailability >= 0 ? copy.budget.available : copy.budget.overexpense} ${formatCurrency(Math.abs(detailsSummary.chargesAvailability))}`}
+                  className="whitespace-normal"
+                />
               </p>
             </div>
             <div>
