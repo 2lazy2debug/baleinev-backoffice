@@ -22,3 +22,4 @@
 - #14 — passwords dialogs use useCloseOnSuccess (budget done earlier)
 - #20 — editions/templates create forms moved to header modals (also closes the editions half of #15) — see git log "(#20)"
 - #25 — expense-reports status Badge on desktop, bank info as `<details>` instead of title tooltip
+- #24 — empty states: events now `<Card dashed>` (tasks/invoices done earlier)

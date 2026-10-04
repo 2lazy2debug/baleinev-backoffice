@@ -5,7 +5,7 @@ import { Check, ChevronDown, ChevronUp, FileText, Link2, Pencil, Plus, Trash2 } 
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Chip, ChipRemoveButton, IconButton, Panel, PanelHeader, SectionTitle, Select, cn, microLabelClasses, nestedSurfaceClasses, scrollToBelowTopBar } from "@/components/ui";
+import { Badge, Button, Card, Chip, ChipRemoveButton, IconButton, Panel, PanelHeader, SectionTitle, Select, cn, microLabelClasses, nestedSurfaceClasses, scrollToBelowTopBar } from "@/components/ui";
 import type { Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -345,7 +345,7 @@ export default function EventsPageClient({
   // The screen is the events themselves now — the event-type admin block that
   // used to sit above them lives in /events/settings.
   return events.length === 0 ? (
-    <p className="text-sm text-[var(--muted)]">{copy.noEvents}</p>
+    <Card dashed>{copy.noEvents}</Card>
   ) : (
     <div className="space-y-4 lg:space-y-8">
       <FormError message={deleteEventState.error} />
