@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { useActionState, useState } from "react";
+import { Check, Pencil, Trash2, X } from "lucide-react";
 
+import { useCloseOnSuccess } from "@/components/use-close-on-success";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, CardGrid, IconButton, Input, SectionTitle, SignedAmount, iconButtonClasses } from "@/components/ui";
+import { Button, Card, CardGrid, IconButton, Input, SectionTitle, SignedAmount } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -38,6 +39,8 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
     initialActionState
   );
   const isReadOnly = useEditionReadOnly();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const markSubmitted = useCloseOnSuccess(updateState, isSavingCostCenter, () => setEditingId(null));
 
   return (
     <section className="space-y-4">
@@ -56,8 +59,20 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
               <Card key={costCenter.id} as="article" span="1/2">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{costCenter.code}</p>
-                    <SectionTitle className="mt-2">{costCenter.name}</SectionTitle>
+                    <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{costCenter.code}</p>
+                    {editingId === costCenter.id ? (
+                      <form
+                        id={`rename-${costCenter.id}`}
+                        action={updateFormAction}
+                        onSubmit={markSubmitted}
+                        className="mt-2"
+                      >
+                        <input type="hidden" name="costCenterId" value={costCenter.id} />
+                        <Input type="text" name="name" defaultValue={costCenter.name} required size="sm" autoFocus />
+                      </form>
+                    ) : (
+                      <SectionTitle className="mt-2">{costCenter.name}</SectionTitle>
+                    )}
                     <p className="mt-3 text-sm text-[var(--muted)]">
                       {costCenter.journalEntriesCount} {copy.costCenters.journalEntries}
                     </p>
@@ -74,18 +89,26 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
                   {isReadOnly ? null : (
                   <div className="space-y-3">
                     <div className="flex items-center justify-end gap-2">
-                      <details className="group">
-                        <summary className={iconButtonClasses("neutral", "sm", "list-none cursor-pointer")}>
+                      {editingId === costCenter.id ? (
+                        <>
+                          <IconButton
+                            type="submit"
+                            form={`rename-${costCenter.id}`}
+                            tone="save"
+                            label={copy.shell.save}
+                            disabled={isSavingCostCenter}
+                          >
+                            <Check />
+                          </IconButton>
+                          <IconButton tone="neutral" label={copy.shell.cancel} onClick={() => setEditingId(null)}>
+                            <X />
+                          </IconButton>
+                        </>
+                      ) : (
+                        <IconButton tone="accent" label={copy.costCenters.rename} onClick={() => setEditingId(costCenter.id)}>
                           <Pencil />
-                        </summary>
-                        <form action={updateFormAction} className="mt-3 flex items-center gap-2">
-                          <input type="hidden" name="costCenterId" value={costCenter.id} />
-                          <Input type="text" name="name" defaultValue={costCenter.name} required size="sm" />
-                          <Button type="submit" variant="secondary" size="sm" disabled={isSavingCostCenter}>
-                            {copy.shell.save}
-                          </Button>
-                        </form>
-                      </details>
+                        </IconButton>
+                      )}
 
                       <form action={deleteFormAction}>
                         <input type="hidden" name="costCenterId" value={costCenter.id} />
