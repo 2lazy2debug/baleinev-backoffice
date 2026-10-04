@@ -6,6 +6,7 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { PageHeader } from "@/components/ui";
 
 import { TemplatesPageClient } from "./client";
+import CreateTemplateModal from "./create-template-modal";
 
 export default async function TemplatesPage() {
   await requireAdmin();
@@ -28,6 +29,14 @@ export default async function TemplatesPage() {
           <>
             {copy.templates.subtitle} {copy.templates.seededNote}
           </>
+        }
+        actions={
+          <CreateTemplateModal
+            locale={locale}
+            defaultInvoiceHtml={
+              templates.find((template) => template.isDefault && template.documentType === "INVOICE")?.html ?? ""
+            }
+          />
         }
       />
 

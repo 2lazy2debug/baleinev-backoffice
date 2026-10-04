@@ -20,3 +20,4 @@
 | 35 | Haiku via Sonnet | `app/components/journal-table.tsx:634` renders `{row.invoiceHref}` as the link text, so the desktop table prints a raw URL in the label column while the mobile cardlet at `:751` prints `row.entry.label`. | Render the label (`row.invoiceNumber ?? entry.label`) as the link text and keep the href on the `<a>`, so both views show the same string. | journal-table.tsx:634 | Changed the anchor's visible text to `{row.invoiceNumber ?? entry.label}`; `href` untouched. |
 | 6 | Micro labels: `microLabelClasses` in `components/ui/microLabel.ts`, used everywhere | 3ee9338 + follow-up |
 - #14 — passwords dialogs use useCloseOnSuccess (budget done earlier)
+- #20 — editions/templates create forms moved to header modals (also closes the editions half of #15) — see git log "(#20)"
