@@ -1,11 +1,13 @@
 import { cn } from "./cn";
 
-type CardSpan = "1/4" | "1/3" | "1/2" | "2/3" | "full" | "auto";
+type CardSpan = "1/4" | "1/3" | "1/3-lg" | "1/2" | "2/3" | "full" | "auto";
 
 // Working area = body minus sidebar. Cards sit in a 12-col grid; span picks the fraction.
 const spanClasses: Record<CardSpan, string> = {
   "1/4": "col-span-12 sm:col-span-6 lg:col-span-3",
   "1/3": "col-span-12 sm:col-span-6 lg:col-span-4",
+  // The partner of "2/3": a third only once there is room, full width before that.
+  "1/3-lg": "col-span-12 lg:col-span-4",
   "1/2": "col-span-12 lg:col-span-6",
   "2/3": "col-span-12 lg:col-span-8",
   full: "col-span-12",

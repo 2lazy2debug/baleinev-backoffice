@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, Field, Input, Modal, PageHeader, SectionTitle, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
+import { Badge, Button, Card, CardGrid, Field, Input, Modal, PageHeader, SectionTitle, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
 import { type ActionState } from "@/lib/server-action-helpers";
 
 type CalendarTask = {
@@ -58,11 +58,14 @@ type Copy = {
   deleteAppointment: string;
   saveAppointment: string;
   deleteAppointmentConfirm: string;
+  cancel: string;
   actionFailed: string;
 };
 
 type Props = {
   copy: Copy;
+  /** BCP-47 tag for the weekday row. */
+  locale: string;
   /**
    * The page header's create button. It is rendered by the server page (which
    * owns the admin + writable-edition gate) and handed down, because the header
@@ -146,6 +149,7 @@ function formatDateTimeLocalInput(value: string) {
 
 export default function CalendarPageClient({
   copy,
+  locale,
   createAction,
   currentUserId,
   updateAppointmentAction,
@@ -155,6 +159,7 @@ export default function CalendarPageClient({
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const isReadOnly = useEditionReadOnly();
   const [currentMonth, setCurrentMonth] = useState(() => toDayStart(new Date()));
   const [selectedDay, setSelectedDay] = useState(() => toDayKey(new Date()));
@@ -174,6 +179,12 @@ export default function CalendarPageClient({
     () => new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0),
     [currentMonth],
   );
+
+  // 2024-01-01 is a Monday, so day 1..7 gives Mon..Sun in the user's language.
+  const weekdayLabels = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(locale, { weekday: "short" });
+    return Array.from({ length: 7 }, (_, i) => formatter.format(new Date(2024, 0, 1 + i)));
+  }, [locale]);
 
   const monthDays = useMemo(() => {
     const firstWeekday = (monthStart.getDay() + 6) % 7;
@@ -338,6 +349,7 @@ export default function CalendarPageClient({
 
   function closeAppointmentDetails() {
     setSelectedAppointment(null);
+    setConfirmingDelete(false);
     setIsEditingAppointment(false);
     setAppointmentActionError(null);
   }
@@ -371,11 +383,6 @@ export default function CalendarPageClient({
       return;
     }
 
-    const confirmed = window.confirm(copy.deleteAppointmentConfirm);
-    if (!confirmed) {
-      return;
-    }
-
     setAppointmentActionError(null);
     const formData = new FormData();
     formData.set("appointmentId", selectedAppointment.id);
@@ -395,9 +402,8 @@ export default function CalendarPageClient({
     <div className="space-y-4 lg:space-y-8">
       <PageHeader title={copy.title} description={copy.subtitle} actions={createAction} />
 
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div>
-        <Card as="section" className="space-y-4">
+      <CardGrid>
+        <Card as="section" span="2/3" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <SectionTitle desktopOnly>{copy.monthView}: {monthStart.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</SectionTitle>
             <div className="flex gap-2">
@@ -438,7 +444,7 @@ export default function CalendarPageClient({
           </div>
 
           <div className="grid grid-cols-7 gap-1 text-center text-xs text-[var(--muted)] sm:gap-2">
-            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+            {weekdayLabels.map((d) => (
               <div key={d}>{d}</div>
             ))}
           </div>
@@ -494,10 +500,8 @@ export default function CalendarPageClient({
             })}
           </div>
         </Card>
-        </div>
 
-        <div>
-        <Card as="section" className="space-y-4">
+        <Card as="section" span="1/3-lg" className="space-y-4">
           <SectionTitle desktopOnly>
             {copy.dayView}: {selectedDate.toLocaleDateString(undefined, { weekday: "long", day: "2-digit", month: "long" })}
           </SectionTitle>
@@ -648,8 +652,7 @@ export default function CalendarPageClient({
             </div>
           </div>
         </Card>
-        </div>
-      </section>
+      </CardGrid>
 
       {selectedAppointment ? (
         <Modal
@@ -671,7 +674,7 @@ export default function CalendarPageClient({
                   </Button>
                 )}
 
-                <Button variant="destructive" onClick={submitAppointmentDelete} disabled={isPending}>
+                <Button variant="destructive" onClick={() => setConfirmingDelete(true)} disabled={isPending}>
                   {copy.deleteAppointment}
                 </Button>
               </>
@@ -739,6 +742,26 @@ export default function CalendarPageClient({
         </Modal>
       ) : null}
 
+      {selectedAppointment && confirmingDelete ? (
+        <Modal
+          open
+          onClose={() => setConfirmingDelete(false)}
+          title={copy.deleteAppointment}
+          size="sm"
+          footer={
+            <>
+              <Button type="button" variant="secondary" onClick={() => setConfirmingDelete(false)}>
+                {copy.cancel}
+              </Button>
+              <Button type="button" variant="destructive" onClick={submitAppointmentDelete} disabled={isPending}>
+                {copy.deleteAppointment}
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm">{copy.deleteAppointmentConfirm}</p>
+        </Modal>
+      ) : null}
     </div>
   );
 }

@@ -64,7 +64,8 @@ export default async function CalendarPage() {
 
   return (
     <CalendarPageClient
-      copy={copy.calendar}
+      copy={{ ...copy.calendar, cancel: copy.shell.cancel }}
+      locale={locale}
       createAction={
         access.role === "ADMIN" ? (
           <WritableEditionOnly>
