@@ -165,7 +165,7 @@ function StatCard({
 }) {
   return (
     <Card span={span}>
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">{label}</p>
+      <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{label}</p>
       <p className="mt-4 text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
     </Card>
   );

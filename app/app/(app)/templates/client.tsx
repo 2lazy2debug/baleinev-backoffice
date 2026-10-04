@@ -59,7 +59,7 @@ export function TemplatesPageClient({
               <Card key={template.id}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 space-y-3">
-                    <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
+                    <div className="flex flex-wrap items-center gap-2 text-2xs uppercase tracking-[0.08em] text-[var(--muted)]">
                       <span>{template.documentType === DocumentType.INVOICE ? copy.templates.invoiceType : template.documentType}</span>
                       <span>•</span>
                       <span>{copy.templates.pdfFormat}</span>

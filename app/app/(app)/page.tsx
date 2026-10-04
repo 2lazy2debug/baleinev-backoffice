@@ -196,7 +196,7 @@ export default async function DashboardPage() {
         ) : (
           moneyAccountCards.map((account) => (
             <Card key={account.name} span="1/4">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">{account.type}</p>
+              <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{account.type}</p>
               <SectionTitle className="mt-2">{account.name}</SectionTitle>
               <p className="mt-4 text-2xl font-semibold tracking-tight">{formatCurrency(account.balance)}</p>
             </Card>

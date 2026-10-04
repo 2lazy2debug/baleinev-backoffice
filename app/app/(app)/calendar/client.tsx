@@ -720,19 +720,19 @@ export default function CalendarPageClient({
             ) : (
               <div className="mt-4 space-y-3 text-sm">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">{copy.appointmentTitle}</p>
+                  <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.appointmentTitle}</p>
                   <p className="font-semibold">{selectedAppointment.title}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">{copy.appointmentDescription}</p>
+                  <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.appointmentDescription}</p>
                   <p className="whitespace-pre-line">{selectedAppointment.description}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">{copy.fromLabel}</p>
+                  <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.fromLabel}</p>
                   <p>{new Date(selectedAppointment.startAt).toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">{copy.toLabel}</p>
+                  <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.toLabel}</p>
                   <p>{selectedAppointment.endAt ? new Date(selectedAppointment.endAt).toLocaleString() : "-"}</p>
                 </div>
               </div>
