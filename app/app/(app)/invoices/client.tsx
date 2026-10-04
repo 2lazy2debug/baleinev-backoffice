@@ -7,7 +7,7 @@ import type { AddressTypeOption } from "@/components/address-fields";
 import { AddressPicker, type PickableAddress } from "@/components/address-picker";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, Field, IconButton, Input, Modal, PageHeader, SectionTitle, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
+import { Button, Card, Cardlet, CardletActions, CardletField, CardletFields, CardletHeader, CardletList, Field, IconButton, Input, Modal, PageHeader, SectionTitle, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
 import { addressNameBlock } from "@/lib/addresses";
 import type { CountryOption } from "@/lib/countries";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
@@ -638,6 +638,68 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
     setError(null);
   }
 
+  function firstLine(value: string) {
+    return value.split(/\r?\n/)[0]?.trim() || value;
+  }
+
+  function renderHistoryActions(item: HistoryInvoice) {
+    return (
+      <>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => handleDownloadHistoryPdf(item)}
+          disabled={downloadingHistoryId === item.id}
+        >
+          {downloadingHistoryId === item.id ? "..." : copy.invoices.generatePdf}
+        </Button>
+        {isReadOnly ? null : item.paidAt ? (
+          <IconButton
+            tone="warning"
+            label={copy.invoices.setUnpaid}
+            onClick={() => handleSetInvoiceUnpaid(item)}
+            disabled={statusActionInvoiceId === item.id}
+          >
+            <RotateCcw />
+          </IconButton>
+        ) : (
+          <IconButton
+            tone="save"
+            label={copy.invoices.setPaid}
+            onClick={() => {
+              setPaidModalInvoice(item);
+              setSelectedJournalEntryId("");
+              setError(null);
+            }}
+            disabled={statusActionInvoiceId === item.id}
+          >
+            <Check />
+          </IconButton>
+        )}
+        {isReadOnly ? null : (
+          <>
+            <IconButton
+              tone="neutral"
+              label={copy.invoices.duplicateInvoice}
+              onClick={() => duplicateFromHistory(item)}
+            >
+              <Copy />
+            </IconButton>
+            <IconButton
+              tone="delete"
+              label={copy.invoices.deleteInvoice}
+              onClick={() => handleDeleteInvoice(item)}
+              disabled={Boolean(item.paidAt) || deleteActionInvoiceId === item.id}
+              title={item.paidAt ? copy.invoices.deleteBlockedPaid : copy.invoices.deleteInvoice}
+            >
+              <Trash2 />
+            </IconButton>
+          </>
+        )}
+      </>
+    );
+  }
+
   return (
     <div className="space-y-4 lg:space-y-8">
       <PageHeader
@@ -660,106 +722,73 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
 
       {error ? <FormError message={error} /> : null}
 
-      <Card as="section">
-        <SectionTitle>{copy.invoices.historyTitle}</SectionTitle>
+      {invoiceHistory.length === 0 ? (
+        <Card as="section" dashed>
+          {copy.invoices.noHistory}
+        </Card>
+      ) : (
+        <Card as="section" flushOnMobile>
+          <SectionTitle desktopOnly>{copy.invoices.historyTitle}</SectionTitle>
 
-        {invoiceHistory.length === 0 ? (
-          <p className="mt-3 text-sm text-[var(--muted)]">{copy.invoices.noHistory}</p>
-        ) : (
-          <Table frameClassName="mt-3">
-              <THead>
-                <TR>
-                  <TH>{copy.invoices.invoiceNumber}</TH>
-                  <TH>{copy.invoices.invoiceDate}</TH>
-                  <TH>{copy.invoices.supplierName}</TH>
-                  <TH className="text-right">{copy.invoices.total}</TH>
-                  <TH className="text-right">{copy.journal.actions}</TH>
+          <Table desktopOnly frameClassName="mt-3">
+            <THead>
+              <TR>
+                <TH>{copy.invoices.invoiceNumber}</TH>
+                <TH>{copy.invoices.invoiceDate}</TH>
+                <TH>{copy.invoices.supplierName}</TH>
+                <TH className="text-right">{copy.invoices.total}</TH>
+                <TH className="text-right">{copy.journal.actions}</TH>
+              </TR>
+            </THead>
+            <tbody>
+              {invoiceHistory.map((item) => (
+                <TR key={item.id}>
+                  <TD>
+                    {isReadOnly ? (
+                      <span className="font-semibold">{item.invoiceNumber}</span>
+                    ) : (
+                      <Button variant="ghost" size="sm" onClick={() => refillFromHistory(item)}>
+                        {item.invoiceNumber}
+                      </Button>
+                    )}
+                  </TD>
+                  <TD>{item.invoiceDate}</TD>
+                  <TD>{firstLine(item.supplierName)}</TD>
+                  <TD className="text-right font-semibold">{formatCurrency(item.totalAmount)}</TD>
+                  <TD>
+                    <div className="flex items-center justify-end gap-2">
+                      {renderHistoryActions(item)}
+                    </div>
+                  </TD>
                 </TR>
-              </THead>
-              <tbody>
-                {invoiceHistory.map((item) => {
-                  const receiverFirstLine = item.supplierName.split(/\r?\n/)[0]?.trim() || item.supplierName;
-
-                  return (
-                    <TR key={item.id} className="bg-[var(--panel-strong)]">
-                      <TD>
-                        {isReadOnly ? (
-                          <span className="font-semibold">{item.invoiceNumber}</span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => refillFromHistory(item)}
-                            className="font-semibold hover:text-[var(--accent)]"
-                          >
-                            {item.invoiceNumber}
-                          </button>
-                        )}
-                      </TD>
-                      <TD>{item.invoiceDate}</TD>
-                      <TD>{receiverFirstLine}</TD>
-                      <TD className="text-right font-semibold">{formatCurrency(item.totalAmount)}</TD>
-                      <TD>
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => handleDownloadHistoryPdf(item)}
-                            disabled={downloadingHistoryId === item.id}
-                          >
-                            {downloadingHistoryId === item.id ? "..." : copy.invoices.generatePdf}
-                          </Button>
-                          {isReadOnly ? null : item.paidAt ? (
-                            <IconButton
-                              tone="warning"
-                              label={copy.invoices.setUnpaid}
-                              onClick={() => handleSetInvoiceUnpaid(item)}
-                              disabled={statusActionInvoiceId === item.id}
-                            >
-                              <RotateCcw />
-                            </IconButton>
-                          ) : (
-                            <IconButton
-                              tone="save"
-                              label={copy.invoices.setPaid}
-                              onClick={() => {
-                                setPaidModalInvoice(item);
-                                setSelectedJournalEntryId("");
-                                setError(null);
-                              }}
-                              disabled={statusActionInvoiceId === item.id}
-                            >
-                              <Check />
-                            </IconButton>
-                          )}
-                          {isReadOnly ? null : (
-                            <>
-                              <IconButton
-                                tone="neutral"
-                                label={copy.invoices.duplicateInvoice}
-                                onClick={() => duplicateFromHistory(item)}
-                              >
-                                <Copy />
-                              </IconButton>
-                              <IconButton
-                                tone="delete"
-                                label={copy.invoices.deleteInvoice}
-                                onClick={() => handleDeleteInvoice(item)}
-                                disabled={Boolean(item.paidAt) || deleteActionInvoiceId === item.id}
-                                title={item.paidAt ? copy.invoices.deleteBlockedPaid : copy.invoices.deleteInvoice}
-                              >
-                                <Trash2 />
-                              </IconButton>
-                            </>
-                          )}
-                        </div>
-                      </TD>
-                    </TR>
-                  );
-                })}
-              </tbody>
+              ))}
+            </tbody>
           </Table>
-        )}
-      </Card>
+          <CardletList>
+            {invoiceHistory.map((item) => (
+              <Cardlet key={item.id}>
+                <CardletHeader
+                  title={
+                    isReadOnly ? (
+                      item.invoiceNumber
+                    ) : (
+                      <Button variant="ghost" size="sm" onClick={() => refillFromHistory(item)}>
+                        {item.invoiceNumber}
+                      </Button>
+                    )
+                  }
+                  action={<span className="shrink-0 text-sm font-semibold">{formatCurrency(item.totalAmount)}</span>}
+                />
+                <CardletFields>
+                  <CardletField label={copy.invoices.invoiceDate}>{item.invoiceDate}</CardletField>
+                  <CardletField label={copy.invoices.supplierName}>{firstLine(item.supplierName)}</CardletField>
+                </CardletFields>
+                <CardletActions inline>{renderHistoryActions(item)}</CardletActions>
+              </Cardlet>
+            ))}
+          </CardletList>
+        </Card>
+      )}
 
       <Modal
         open={isModalOpen}
