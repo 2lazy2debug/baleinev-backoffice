@@ -147,4 +147,3 @@ guard cannot see.
 
 | # | Model | What's broken (file:line) | Fix | Fixed at | Solution |
 |---|-------|----------------------------|-----|----------|----------|
-| 37 | Opus | `app/app/(app)/pos/till.tsx:299-321` — the two page-nav arrows are raw `<button>`s carrying `h-[66px] … lg:h-[48px]` plus their own border, hover and disabled recipe. CLAUDE.md: "Never hand-size a control … if a size is missing, change the scale, not the screen." | Add the oversized till size to `app/components/ui/control.ts` (e.g. a `touch` step) and use `<IconButton size="touch" label={copy.previousPage}>`, or if the till is genuinely a one-off, add the variant to `IconButton` rather than to the screen. Keep `basis-[30%]` — that is layout and may stay on the screen. |  |  |
