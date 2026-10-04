@@ -7,35 +7,7 @@ import { Check, Eye, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import {
-  Button,
-  Card,
-  CardGrid,
-  Cardlet,
-  CardletField,
-  CardletFields,
-  CardletHeader,
-  CardletList,
-  Chip,
-  Field,
-  IconButton,
-  Input,
-  Modal,
-  PageHeader,
-  Panel,
-  SectionTitle,
-  Select,
-  SignedAmount,
-  TD,
-  TFoot,
-  TH,
-  THead,
-  TR,
-  Table,
-  Textarea,
-  cn,
-  nestedSurfaceClasses,
-} from "@/components/ui";
+import { Button, Card, CardGrid, Cardlet, CardletField, CardletFields, CardletHeader, CardletList, Chip, Field, IconButton, Input, Modal, PageHeader, Panel, SectionTitle, Select, SignedAmount, TD, TFoot, TH, THead, TR, Table, Textarea, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -358,7 +330,7 @@ export default function BudgetPageClient({
 
                       return (
                         <section key={section.accountType}>
-                          <p className="mb-2 text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{section.title}</p>
+                          <p className={cn(microLabelClasses, "mb-2")}>{section.title}</p>
                           <Table desktopOnly>
                             <THead>
                               <TR>
@@ -493,7 +465,7 @@ export default function BudgetPageClient({
         >
           <Panel nested className="mb-5 grid gap-3 p-2 sm:grid-cols-3 sm:p-3">
             <div>
-              <p className="text-2xs uppercase tracking-[0.08em] text-[var(--muted)]">{copy.budget.chargesAvailability}</p>
+              <p className={microLabelClasses}>{copy.budget.chargesAvailability}</p>
               <p className="text-sm font-semibold">
                 <SignedAmount
                   value={detailsSummary.chargesAvailability}
@@ -503,21 +475,21 @@ export default function BudgetPageClient({
               </p>
             </div>
             <div>
-              <p className="text-2xs uppercase tracking-[0.08em] text-[var(--muted)]">{copy.budget.budgetResult}</p>
+              <p className={microLabelClasses}>{copy.budget.budgetResult}</p>
               <p className="text-sm font-semibold">{formatCurrency(detailsSummary.budgetResult)}</p>
             </div>
             <div>
-              <p className="text-2xs uppercase tracking-[0.08em] text-[var(--muted)]">{copy.budget.actualResult}</p>
+              <p className={microLabelClasses}>{copy.budget.actualResult}</p>
               <p className="text-sm font-semibold">{formatCurrency(detailsSummary.actualResult)}</p>
             </div>
           </Panel>
 
           <div className="grid gap-5 lg:grid-cols-2">
             <div className="space-y-5 lg:max-h-[62vh] lg:overflow-y-auto lg:pr-1">
-              <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.budget.budgetEntries}</p>
+              <p className={microLabelClasses}>{copy.budget.budgetEntries}</p>
               {detailsSummary.sections.map((section) => (
                 <section key={section.accountType} className="space-y-2">
-                  <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{section.title}</p>
+                  <p className={microLabelClasses}>{section.title}</p>
                   <Table desktopOnly>
                     <THead>
                       <TR>
@@ -580,14 +552,14 @@ export default function BudgetPageClient({
             </div>
 
             <div className="space-y-2 lg:max-h-[62vh] lg:overflow-y-auto lg:pl-1">
-              <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.budget.journalEntries}</p>
+              <p className={microLabelClasses}>{copy.budget.journalEntries}</p>
               <Panel nested className="grid gap-3 p-2 sm:grid-cols-2 sm:p-3">
                 <div>
-                  <p className="text-2xs uppercase tracking-[0.08em] text-[var(--muted)]">{copy.common.charges}</p>
+                  <p className={microLabelClasses}>{copy.common.charges}</p>
                   <p className="text-sm font-semibold text-rose-300">{formatCurrency(detailsSummary.charges.actualTotal)}</p>
                 </div>
                 <div>
-                  <p className="text-2xs uppercase tracking-[0.08em] text-[var(--muted)]">{copy.common.produits}</p>
+                  <p className={microLabelClasses}>{copy.common.produits}</p>
                   <p className="text-sm font-semibold text-emerald-300">{formatCurrency(detailsSummary.produits.actualTotal)}</p>
                 </div>
               </Panel>

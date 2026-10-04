@@ -12,29 +12,7 @@ import {
 } from "@/app/(app)/journal/actions";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import {
-  Badge,
-  Button,
-  Cardlet,
-  CardletField,
-  CardletFields,
-  CardletHeader,
-  CardletList,
-  IconButton,
-  Input,
-  Panel,
-  PanelHeader,
-  SectionTitle,
-  Select,
-  TD,
-  TH,
-  THead,
-  TR,
-  Table,
-  cn,
-  iconButtonClasses,
-  signedAmountClasses,
-} from "@/components/ui";
+import { Badge, Button, Cardlet, CardletField, CardletFields, CardletHeader, CardletList, IconButton, Input, Panel, PanelHeader, SectionTitle, Select, TD, TH, THead, TR, Table, cn, iconButtonClasses, microLabelClasses, signedAmountClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import {
   buildRunningBalances,
@@ -558,7 +536,7 @@ const JournalCardlet = memo(function JournalCardlet({
       )}
 
       {row.isLocked ? (
-        <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.locked}</p>
+        <p className={microLabelClasses}>{copy.locked}</p>
       ) : isBulkEditing ? null : (
         <div className="flex gap-2">
           {/* Editing one entry on a phone is the existing full-page form, not the

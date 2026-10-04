@@ -1,6 +1,6 @@
 import { AccountType, TaskType } from "@prisma/client";
 
-import { Card, CardGrid, DonutChart, SignedAmount, colourOrder, EmptyPage, PageHeader, Panel, PanelHeader, SectionTitle, TD, TFoot, TH, THead, TR, Table, buttonClasses } from "@/components/ui";
+import { Card, CardGrid, DonutChart, EmptyPage, PageHeader, Panel, PanelHeader, SectionTitle, SignedAmount, TD, TFoot, TH, THead, TR, Table, buttonClasses, colourOrder, microLabelClasses } from "@/components/ui";
 import type { DonutSlice } from "@/components/ui";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
@@ -196,7 +196,7 @@ export default async function DashboardPage() {
         ) : (
           moneyAccountCards.map((account) => (
             <Card key={account.name} span="1/4">
-              <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{account.type}</p>
+              <p className={microLabelClasses}>{account.type}</p>
               <SectionTitle className="mt-2">{account.name}</SectionTitle>
               <p className="mt-4 text-2xl font-semibold tracking-tight">{formatCurrency(account.balance)}</p>
             </Card>

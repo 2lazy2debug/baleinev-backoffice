@@ -3,17 +3,7 @@
 import { useActionState, useState, useTransition } from "react";
 
 import { FormError } from "@/components/form-error";
-import {
-  Alert,
-  Badge,
-  Button,
-  Card,
-  Field,
-  Input,
-  SectionTitle,
-  cn,
-  nestedSurfaceClasses,
-} from "@/components/ui";
+import { Alert, Badge, Button, Card, Field, Input, SectionTitle, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -138,7 +128,7 @@ export function TwoFactorCard({ copy, enabled, configured }: Props) {
 
             <div className="min-w-0 flex-1 space-y-3">
               <div className={cn(nestedSurfaceClasses, "px-3 py-2")}>
-                <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+                <p className={microLabelClasses}>
                   {copy.twoFactorManualKey}
                 </p>
                 <p className="mt-1 font-mono text-sm">{groupSecret(enrolment.secret)}</p>

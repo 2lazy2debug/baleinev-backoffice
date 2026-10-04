@@ -6,7 +6,7 @@ import { Check, Pencil, Trash2, X } from "lucide-react";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, CardGrid, IconButton, Input, SectionTitle, SignedAmount } from "@/components/ui";
+import { Button, Card, CardGrid, IconButton, Input, SectionTitle, SignedAmount, microLabelClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -59,7 +59,7 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
               <Card key={costCenter.id} as="article" span="1/2">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{costCenter.code}</p>
+                    <p className={microLabelClasses}>{costCenter.code}</p>
                     {editingId === costCenter.id ? (
                       <form
                         id={`rename-${costCenter.id}`}

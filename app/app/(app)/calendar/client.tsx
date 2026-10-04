@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, CardGrid, Field, Input, Modal, PageHeader, SectionTitle, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
+import { Badge, Button, Card, CardGrid, Field, Input, Modal, PageHeader, SectionTitle, Textarea, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
 import { type ActionState } from "@/lib/server-action-helpers";
 
 type CalendarTask = {
@@ -720,19 +720,19 @@ export default function CalendarPageClient({
             ) : (
               <div className="mt-4 space-y-3 text-sm">
                 <div>
-                  <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.appointmentTitle}</p>
+                  <p className={microLabelClasses}>{copy.appointmentTitle}</p>
                   <p className="font-semibold">{selectedAppointment.title}</p>
                 </div>
                 <div>
-                  <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.appointmentDescription}</p>
+                  <p className={microLabelClasses}>{copy.appointmentDescription}</p>
                   <p className="whitespace-pre-line">{selectedAppointment.description}</p>
                 </div>
                 <div>
-                  <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.fromLabel}</p>
+                  <p className={microLabelClasses}>{copy.fromLabel}</p>
                   <p>{new Date(selectedAppointment.startAt).toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.toLabel}</p>
+                  <p className={microLabelClasses}>{copy.toLabel}</p>
                   <p>{selectedAppointment.endAt ? new Date(selectedAppointment.endAt).toLocaleString() : "-"}</p>
                 </div>
               </div>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import { Button, Field, Input, Modal, Panel, Select } from "@/components/ui";
+import { Button, Field, Input, Modal, Panel, Select, microLabelClasses } from "@/components/ui";
 import { fromRappen } from "@/lib/cash";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
@@ -126,7 +126,7 @@ export default function JournalRegisterModal({ locale, register, budgets, costCe
           </Panel>
 
           <div className="space-y-1">
-            <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{cash.preview}</p>
+            <p className={microLabelClasses}>{cash.preview}</p>
             <Panel nested className="space-y-1 p-3">
               {booking.entries.map((entry, index) => (
                 <div

@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import { Button, Checkbox, Field, Input, Modal, Textarea, nestedSurfaceClasses } from "@/components/ui";
+import { Button, Checkbox, Field, Input, Modal, Textarea, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
 import { initialActionState } from "@/lib/server-action-helpers";
 
 import { createAppointmentAction } from "./actions";
@@ -94,7 +94,7 @@ export function CreateAppointmentModal({
               <summary className="cursor-pointer px-3 py-2 text-sm text-[var(--muted)]">{copy.audienceHelp}</summary>
               <div className="max-h-56 space-y-2 overflow-y-auto border-t border-[var(--line)] px-3 py-2 text-sm">
                 <Checkbox id="audience-everyone" name="audience" value="@everyone" label="@everyone" />
-                <p className="pt-1 text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.person}</p>
+                <p className={cn(microLabelClasses, "pt-1")}>{copy.person}</p>
                 {users.map((user) => (
                   <Checkbox
                     key={user.id}
@@ -104,7 +104,7 @@ export function CreateAppointmentModal({
                     label={user.name}
                   />
                 ))}
-                <p className="pt-1 text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.department}</p>
+                <p className={cn(microLabelClasses, "pt-1")}>{copy.department}</p>
                 {departments.map((department) => (
                   <Checkbox
                     key={department.id}

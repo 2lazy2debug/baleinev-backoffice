@@ -18,21 +18,7 @@ import {
 
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import {
-  Alert,
-  Button,
-  Card,
-  IconButton,
-  Modal,
-  PageHeader,
-  Panel,
-  PanelHeader,
-  SectionTitle,
-  SegmentedControl,
-  buttonClasses,
-  cn,
-  compactOnMobileWidths,
-} from "@/components/ui";
+import { Alert, Button, Card, IconButton, Modal, PageHeader, Panel, PanelHeader, SectionTitle, SegmentedControl, buttonClasses, cn, compactOnMobileWidths, microLabelClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { COLUMN_CHOICES, drawnSlots, pageCount, tilesOnPage, tilesPerPage } from "@/lib/pos-layout";
 import { tileColorStyle, tileSwatchStyle } from "@/lib/pos-tile-colors";
@@ -465,7 +451,7 @@ function PreviewModal({
           ) : null}
 
           <div className="flex items-center gap-2">
-            <span className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+            <span className={microLabelClasses}>
               {copy.columns}
             </span>
             <SegmentedControl

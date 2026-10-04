@@ -7,18 +7,7 @@ import type { PosCellColor } from "@prisma/client";
 
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import {
-  Alert,
-  Button,
-  Card,
-  Field,
-  IconButton,
-  Input,
-  Modal,
-  SegmentedControl,
-  cn,
-  nestedSurfaceClasses,
-} from "@/components/ui";
+import { Alert, Button, Card, Field, IconButton, Input, Modal, SegmentedControl, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
 import { formatDenomination, fromRappen, makeChange } from "@/lib/cash";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { drawnSlots, pageCount, tilesOnPage } from "@/lib/pos-layout";
@@ -222,12 +211,12 @@ export function Till({
       {paused ? <Alert tone="warning">{copy.paused}</Alert> : null}
 
       <Card className="text-center">
-        <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{copy.total}</p>
+        <p className={microLabelClasses}>{copy.total}</p>
         <p className="text-3xl font-semibold tabular-nums">{formatCurrency(fromRappen(total))}</p>
       </Card>
 
       <div className="flex items-center justify-center gap-2">
-        <span className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+        <span className={microLabelClasses}>
           {copy.columns}
         </span>
         <SegmentedControl

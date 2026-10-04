@@ -2,20 +2,7 @@
 
 import { useActionState } from "react";
 import { FormError } from "@/components/form-error";
-import {
-  Alert,
-  Badge,
-  Button,
-  Card,
-  CardGrid,
-  Chip,
-  Field,
-  Input,
-  SectionTitle,
-  Select,
-  cn,
-  nestedSurfaceClasses,
-} from "@/components/ui";
+import { Alert, Badge, Button, Card, CardGrid, Chip, Field, Input, SectionTitle, Select, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
@@ -280,7 +267,7 @@ export function AccountPageClient({
 function ReadOnlyRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-wrap items-baseline justify-between gap-2">
-      <dt className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{label}</dt>
+      <dt className={microLabelClasses}>{label}</dt>
       <dd className="min-w-0 text-right">{children}</dd>
     </div>
   );

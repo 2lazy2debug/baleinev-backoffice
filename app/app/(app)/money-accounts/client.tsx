@@ -6,7 +6,7 @@ import { Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Card, IconButton, SectionTitle } from "@/components/ui";
+import { Card, IconButton, SectionTitle, microLabelClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -89,7 +89,7 @@ function MoneyAccountCard({
     <Card as="article" span="1/2">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
-          <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+          <p className={microLabelClasses}>
             {copy.moneyAccounts[typeLabels[account.type]]}
           </p>
           <SectionTitle className="mt-2">{account.name}</SectionTitle>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-import { Card, CardGrid, PageHeader, SectionTitle, buttonClasses, compactOnMobileWidths } from "@/components/ui";
+import { Card, CardGrid, PageHeader, SectionTitle, buttonClasses, compactOnMobileWidths, microLabelClasses } from "@/components/ui";
 import { requireAdmin } from "@/lib/access";
 import { fromRappen, toRappen } from "@/lib/cash";
 import { prisma } from "@/lib/db";
@@ -165,7 +165,7 @@ function StatCard({
 }) {
   return (
     <Card span={span}>
-      <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{label}</p>
+      <p className={microLabelClasses}>{label}</p>
       <p className="mt-4 text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
     </Card>
   );

@@ -3,29 +3,7 @@
 import { useState } from "react";
 import { Eye } from "lucide-react";
 
-import {
-  Badge,
-  Cardlet,
-  CardletActions,
-  CardletField,
-  CardletFields,
-  CardletHeader,
-  CardletList,
-  IconButton,
-  Modal,
-  Panel,
-  PanelHeader,
-  SectionTitle,
-  TD,
-  TFoot,
-  TH,
-  THead,
-  TR,
-  Table,
-  cn,
-  nestedSurfaceClasses,
-  PanelEmpty,
-} from "@/components/ui";
+import { Badge, Cardlet, CardletActions, CardletField, CardletFields, CardletHeader, CardletList, IconButton, Modal, Panel, PanelEmpty, PanelHeader, SectionTitle, TD, TFoot, TH, THead, TR, Table, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
 import { formatDenomination, fromRappen } from "@/lib/cash";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import type { ItemTotal } from "@/lib/pos";
@@ -221,7 +199,7 @@ export function SessionDetailClient({
                 </div>
                 {viewing.change.length > 0 ? (
                   <div className="space-y-0.5 border-t border-[var(--line)] pt-1">
-                    <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+                    <p className={microLabelClasses}>
                       {copy.changeSheet}
                     </p>
                     {viewing.change.map((row) => (

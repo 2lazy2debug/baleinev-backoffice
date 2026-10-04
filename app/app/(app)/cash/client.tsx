@@ -4,27 +4,7 @@ import { useState } from "react";
 import { Eye } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
-import {
-  Badge,
-  Button,
-  Cardlet,
-  CardletActions,
-  CardletField,
-  CardletFields,
-  CardletHeader,
-  CardletList,
-  IconButton,
-  Modal,
-  Panel,
-  PanelHeader,
-  SectionTitle,
-  TD,
-  TH,
-  THead,
-  TR,
-  Table,
-  PanelEmpty,
-} from "@/components/ui";
+import { Badge, Button, Cardlet, CardletActions, CardletField, CardletFields, CardletHeader, CardletList, IconButton, Modal, Panel, PanelEmpty, PanelHeader, SectionTitle, TD, TH, THead, TR, Table, microLabelClasses } from "@/components/ui";
 import { CASH_DENOMINATIONS, countTotal, formatDenomination, fromRappen } from "@/lib/cash";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { formatCurrency } from "@/lib/utils";
@@ -73,7 +53,7 @@ function Sheet({
 
   return (
     <div className="space-y-1">
-      <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{title}</p>
+      <p className={microLabelClasses}>{title}</p>
       {present.length === 0 ? (
         <p className="text-sm text-[var(--muted)]">—</p>
       ) : (

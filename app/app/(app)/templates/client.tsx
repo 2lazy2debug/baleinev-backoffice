@@ -5,7 +5,7 @@ import { DocumentType } from "@prisma/client";
 import { Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, CardGrid, Field, IconButton, Input, SectionTitle, Select, Textarea } from "@/components/ui";
+import { Badge, Button, Card, CardGrid, Field, IconButton, Input, SectionTitle, Select, Textarea, cn, microLabelClasses } from "@/components/ui";
 import type { getDictionary } from "@/lib/i18n";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -59,7 +59,7 @@ export function TemplatesPageClient({
               <Card key={template.id}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 space-y-3">
-                    <div className="flex flex-wrap items-center gap-2 text-2xs uppercase tracking-[0.08em] text-[var(--muted)]">
+                    <div className={cn(microLabelClasses, "flex flex-wrap items-center gap-2")}>
                       <span>{template.documentType === DocumentType.INVOICE ? copy.templates.invoiceType : template.documentType}</span>
                       <span>•</span>
                       <span>{copy.templates.pdfFormat}</span>

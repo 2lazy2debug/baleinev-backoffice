@@ -1,5 +1,6 @@
 export * from "./cn";
 export * from "./control";
+export * from "./microLabel";
 export * from "./Button";
 export * from "./IconButton";
 export * from "./Card";
