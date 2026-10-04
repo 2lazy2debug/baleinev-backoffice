@@ -1,6 +1,6 @@
 import { AccountType, TaskType } from "@prisma/client";
 
-import { Card, CardGrid, DonutChart, EmptyPage, PageHeader, Panel, PanelHeader, SectionTitle, SignedAmount, TD, TFoot, TH, THead, TR, Table, buttonClasses, colourOrder, microLabelClasses } from "@/components/ui";
+import { Card, CardGrid, Cardlet, CardletField, CardletFields, CardletHeader, CardletList, DonutChart, EmptyPage, PageHeader, Panel, PanelHeader, SectionTitle, SignedAmount, TD, TFoot, TH, THead, TR, Table, buttonClasses, colourOrder, microLabelClasses } from "@/components/ui";
 import type { DonutSlice } from "@/components/ui";
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
@@ -220,11 +220,40 @@ export default async function DashboardPage() {
         ))}
       </CardGrid>
 
-      <Panel>
-        <PanelHeader>
+      <Panel flushOnMobile>
+        <PanelHeader flushOnMobile>
           <SectionTitle>{copy.dashboard.budgetVsActuals}</SectionTitle>
         </PanelHeader>
-        <Table frame={false} className="min-w-full">
+        <CardletList>
+          {departmentRows.map((row) => {
+            const delta = row.actualResult - row.budgetResult;
+            return (
+              <Cardlet key={row.name}>
+                <CardletHeader title={row.name} action={<SignedAmount value={delta} label={formatCurrency(delta)} trend className="text-sm font-semibold" />} />
+                <CardletFields>
+                  <CardletField label={copy.dashboard.budgetCharges}>{formatCurrency(row.budgetCharges)}</CardletField>
+                  <CardletField label={copy.dashboard.actualCharges}>{formatCurrency(row.actualCharges)}</CardletField>
+                  <CardletField label={copy.dashboard.budgetProduits}>{formatCurrency(row.budgetProduits)}</CardletField>
+                  <CardletField label={copy.dashboard.actualProduits}>{formatCurrency(row.actualProduits)}</CardletField>
+                  <CardletField label={copy.dashboard.budgetResult}>{formatCurrency(row.budgetResult)}</CardletField>
+                  <CardletField label={copy.dashboard.actualResult}>{formatCurrency(row.actualResult)}</CardletField>
+                </CardletFields>
+              </Cardlet>
+            );
+          })}
+          <Cardlet>
+            <CardletHeader title={copy.common.total} action={<SignedAmount value={totalDelta} label={formatCurrency(totalDelta)} trend className="text-sm font-semibold" />} />
+            <CardletFields>
+              <CardletField label={copy.dashboard.budgetCharges}>{formatCurrency(totals.budgetCharges)}</CardletField>
+              <CardletField label={copy.dashboard.actualCharges}>{formatCurrency(totals.actualCharges)}</CardletField>
+              <CardletField label={copy.dashboard.budgetProduits}>{formatCurrency(totals.budgetProduits)}</CardletField>
+              <CardletField label={copy.dashboard.actualProduits}>{formatCurrency(totals.actualProduits)}</CardletField>
+              <CardletField label={copy.dashboard.budgetResult}>{formatCurrency(totals.budgetResult)}</CardletField>
+              <CardletField label={copy.dashboard.actualResult}>{formatCurrency(totals.actualResult)}</CardletField>
+            </CardletFields>
+          </Cardlet>
+        </CardletList>
+        <Table frame={false} desktopOnly className="min-w-full">
             <THead>
               <TR>
                 <TH>{copy.dashboard.budget}</TH>
