@@ -9,13 +9,13 @@
 
 | # | After | Fix | Fixed at | Solution |
 |---|-------|-----|----------|----------|
-| C5 | | `(app)/cost-centers/client.tsx:9`: remove the unused `Button` import. | | |
-| C6 | | `(app)/users/client.tsx:132` and `:141`: delete the whitespace-only lines. | | |
-| E1 | | `(app)/tasks/client.tsx`: change `:383` `label="Edit"` to `copy.tasks.editTodo`, and add that key next to `tasks.deleteTodo` (en "Edit todo" / fr "Modifier la liste"). Change `:386` `label="Delete"` to `copy.tasks.deleteTodo`, and `:506` `label="Delete"` to `copy.tasks.deleteTask`. Run `npm run check:i18n`. | | |
-| E2 | | `(app)/tasks/client.tsx:167`: replace `<h3 className="text-sm font-semibold">` with `<SectionTitle as="h3">`. | | |
-| E6 | | Change `(app)/tasks/page.tsx:58` `space-y-5` and `components/ui/EmptyPage.tsx:30` `space-y-6` to `space-y-4 lg:space-y-8`. | | |
-| E7 | | `(app)/passwords/client.tsx:127`: remove `bg-[var(--panel-strong)]` from the `<Panel>` className. | | |
-| B1 | | In 112b, fill in the missing commit hashes: #6 → `3ee9338`, `7d5376f`, `fb06e47`; #14 → `3b99ac8`, `fa67e31`; #19 → `50fe956`; #20 → `3f80953`, `d00860d`; #24 → `d7e45a4`, `3cfa5fc`, `2e56580`; #25 → `c146177`. | | |
+| C5 | | `(app)/cost-centers/client.tsx:9`: remove the unused `Button` import. | 5f1f8a8 | Removed the unused `Button` import. |
+| C6 | | `(app)/users/client.tsx:132` and `:141`: delete the whitespace-only lines. | 9a95d93 | Deleted both whitespace-only lines. |
+| E1 | | `(app)/tasks/client.tsx`: change `:383` `label="Edit"` to `copy.tasks.editTodo`, and add that key next to `tasks.deleteTodo` (en "Edit todo" / fr "Modifier la liste"). Change `:386` `label="Delete"` to `copy.tasks.deleteTodo`, and `:506` `label="Delete"` to `copy.tasks.deleteTask`. Run `npm run check:i18n`. | 2362954 | Labels now use `copy.tasks.editTodo` (new key, en/fr), `deleteTodo` and `deleteTask`; check:i18n passes. |
+| E2 | | `(app)/tasks/client.tsx:167`: replace `<h3 className="text-sm font-semibold">` with `<SectionTitle as="h3">`. | 2362954 | Standalone tasks heading is now `<SectionTitle as="h3">`. |
+| E6 | | Change `(app)/tasks/page.tsx:58` `space-y-5` and `components/ui/EmptyPage.tsx:30` `space-y-6` to `space-y-4 lg:space-y-8`. | a07d18a | `tasks/page.tsx` and `EmptyPage` use `space-y-4 lg:space-y-8`. |
+| E7 | | `(app)/passwords/client.tsx:127`: remove `bg-[var(--panel-strong)]` from the `<Panel>` className. | c00e70c | Removed `bg-[var(--panel-strong)]` from the `<Panel>` className. |
+| B1 | | In 112b, fill in the missing commit hashes: #6 → `3ee9338`, `7d5376f`, `fb06e47`; #14 → `3b99ac8`, `fa67e31`; #19 → `50fe956`; #20 → `3f80953`, `d00860d`; #24 → `d7e45a4`, `3cfa5fc`, `2e56580`; #25 → `c146177`. | 5c24937 | Filled the missing hashes for #6, #14, #19, #20, #24 and #25 in 112b. |
 | D1c | D1a | `(app)/pos/sessions/client.tsx` and `(app)/pos/templates/client.tsx`: delete the `confirmDelete` functions (sessions `:69-73`, templates `:61-65`). Remove `onSubmit={confirmDelete}` (sessions `:81`, templates `:83`). Wrap each delete in `<ConfirmDelete>` the same way as D1b, with `message={copy.deleteSessionConfirm}` and `{copy.deleteTemplateConfirm}`. Do not touch the `window.confirm` calls in `(app)/events/add-shift-form.tsx:36`, `(app)/events/edit-shift-form.tsx:62` or `(app)/pos/sessions-modal.tsx:67`. | | |
 | D3b | D3a | Replace each fixed shade with its token, keeping the same opacity modifier: emerald → `var(--good)`, rose → `var(--bad)`, amber → `var(--warn)`. For example, `bg-emerald-400/30` becomes `bg-[var(--good)]/30`. Lines: `(app)/budget/client.tsx:95-96` · `(app)/calendar/client.tsx:101-102`, `:482-483` · `(app)/expense-reports/client.tsx:222`, `:321` · `(app)/events/client.tsx:587` · `(app)/stock/client.tsx:41` · `(app)/cash/journal-register-modal.tsx:120-121` · `(app)/passwords/client.tsx:57` · `(app)/pos/till.tsx:472` · `components/mobile/mobile-sheet.tsx:171`, `:179`. | | |
 
