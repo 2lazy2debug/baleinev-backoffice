@@ -7,7 +7,7 @@ import { Check, Circle, Pencil, Trash2 } from "lucide-react";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import { Button, Card, Field, IconButton, Input, Modal, SectionTitle, Select, Textarea, cn, nestedSurfaceClasses } from "@/components/ui";
+import { Button, Card, Field, IconButton, Input, Modal, SectionTitle, Select, Textarea, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
 import { getDictionary } from "@/lib/i18n";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { decimalToNumber, formatCurrency } from "@/lib/utils";
@@ -44,7 +44,7 @@ function TaskTypeLabel({
     DEPARTMENT_ACCESS_REQUEST: copy.departmentAccessRequest,
   };
 
-  return <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{labels[type]}</span>;
+  return <span className={microLabelClasses}>{labels[type]}</span>;
 }
 
 interface TasksPageClientProps {

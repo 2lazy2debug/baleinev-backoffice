@@ -397,7 +397,7 @@ export default function EventsPageClient({
                       className="inline-block h-2.5 w-2.5 rounded-full"
                       style={{ backgroundColor: event.eventType.color ?? "var(--accent)" }}
                     />
-                    <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{event.eventType.name}</span>
+                    <span className={microLabelClasses}>{event.eventType.name}</span>
                     {event.isExpired ? <Badge tone="neutral">{copy.expired}</Badge> : null}
                   </div>
                   <SectionTitle as="h3" className="mt-0.5">{event.name}</SectionTitle>

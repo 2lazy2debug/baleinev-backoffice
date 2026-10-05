@@ -317,7 +317,7 @@ export default async function DashboardPage() {
               return (
                 <li key={task.id} className="flex items-center justify-between gap-4 bg-[var(--panel-strong)] px-5 py-3">
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                    <p className={microLabelClasses}>
                       {task.type === TaskType.REVIEW_EXPENSE_REPORT
                         ? copy.tasks.reviewExpenseReport
                         : task.type === TaskType.RECORD_JOURNAL
