@@ -164,7 +164,7 @@ export function TasksPageClient({
 
       {ungroupedTasks.length > 0 ? (
         <Card as="div" className="space-y-2">
-          <h3 className="text-sm font-semibold">{copy.tasks.standaloneTasks}</h3>
+          <SectionTitle as="h3">{copy.tasks.standaloneTasks}</SectionTitle>
           <FormError message={statusState.error} />
           <FormError message={deleteTaskState.error} />
           <FormError message={resolveState.error} />
@@ -380,10 +380,10 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
           <div className="flex shrink-0 gap-1">
             {isAdmin && todo.createdById === access.id && !isReadOnly ? (
               <>
-                <IconButton type="button" tone="accent" label="Edit" onClick={() => setEditingTodoId(todo.id)}>
+                <IconButton type="button" tone="accent" label={copy.tasks.editTodo} onClick={() => setEditingTodoId(todo.id)}>
                   <Pencil />
                 </IconButton>
-                <IconButton type="button" tone="delete" label="Delete" onClick={() => setIsDeleting(true)}>
+                <IconButton type="button" tone="delete" label={copy.tasks.deleteTodo} onClick={() => setIsDeleting(true)}>
                   <Trash2 />
                 </IconButton>
               </>
@@ -503,7 +503,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
                       />
                       <form action={deleteTaskFormAction} className="inline">
                         <input type="hidden" name="todoTaskId" value={task.id} />
-                        <IconButton type="submit" tone="delete" label="Delete" disabled={isDeletingTask}>
+                        <IconButton type="submit" tone="delete" label={copy.tasks.deleteTask} disabled={isDeletingTask}>
                           <Trash2 />
                         </IconButton>
                       </form>
