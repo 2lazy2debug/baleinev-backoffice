@@ -320,6 +320,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
   const isEditing = editingTodoId === todo.id;
 
   const [updateTodoState, updateTodoFormAction, isSavingTodo] = useActionState(updateTodoAction, initialActionState);
+  const markUpdateSubmitted = useCloseOnSuccess(updateTodoState, isSavingTodo, () => setEditingTodoId(null));
   const [deleteTodoState, deleteTodoFormAction, isDeletingTodo] = useActionState(deleteTodoAction, initialActionState);
   const markDeleteSubmitted = useCloseOnSuccess(deleteTodoState, isDeletingTodo, () => setIsDeleting(false));
   const [statusState, statusFormAction, isTogglingStatus] = useActionState(
@@ -334,7 +335,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
   return (
     <Card as="article" className="space-y-2 sm:space-y-3">
       {isEditing ? (
-        <form action={updateTodoFormAction} className="grid gap-3 sm:grid-cols-2">
+        <form action={updateTodoFormAction} onSubmit={markUpdateSubmitted} className="grid gap-3 sm:grid-cols-2">
           <FormError message={updateTodoState.error} className="sm:col-span-2" />
           <input type="hidden" name="todoId" value={todo.id} />
           <Field required label={copy.tasks.todoTitle} className="sm:col-span-2">
