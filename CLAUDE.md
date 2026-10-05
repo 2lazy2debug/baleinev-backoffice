@@ -82,6 +82,7 @@ or a heading, one of these already covers it:
 | Status pill / removable token | `<Badge tone>` · `<Chip>` + `<ChipRemoveButton>` |
 | Inline message | `<Alert tone>` (`<FormError>` wraps it for server-action errors) |
 | Dialog | `<Modal open onClose title size footer>` |
+| Delete anything | `<ConfirmDelete form\|onConfirm label subject message cancelLabel>` |
 
 **Every "create X" is a header button and a modal.** There is one shape for
 creating in this app — do not add an inline create form, a sidebar create column

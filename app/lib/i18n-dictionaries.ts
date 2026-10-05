@@ -63,6 +63,7 @@ export const dictionaries = {
       result: "Result",
       total: "Total",
       delta: "Delta",
+      cannotBeUndone: "This cannot be undone.",
     },
     login: {
       badge: "Sign in - Private workspace",
@@ -1144,6 +1145,7 @@ export const dictionaries = {
       result: "Résultat",
       total: "Total",
       delta: "Écart",
+      cannotBeUndone: "Cette action est irréversible.",
     },
     login: {
       badge: "Connexion - Espace privé",

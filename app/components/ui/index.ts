@@ -19,6 +19,7 @@ export * from "./Chip";
 export * from "./Radio";
 export * from "./Menu";
 export * from "./Modal";
+export * from "./ConfirmDelete";
 export * from "./Alert";
 export * from "./Badge";
 export * from "./SignedAmount";
