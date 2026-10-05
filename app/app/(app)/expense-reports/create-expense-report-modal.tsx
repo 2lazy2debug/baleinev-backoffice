@@ -116,31 +116,31 @@ export default function CreateExpenseReportModal({ departments, drivingRatePerKm
 
           {reportType === EXPENSE_REPORT_TYPE.STANDARD ? (
             <>
-              <Field label={copy.description}>
+              <Field required label={copy.description}>
                 <Input type="text" name="description" required />
               </Field>
 
-              <Field label={copy.amount}>
+              <Field required label={copy.amount}>
                 <Input type="number" step="0.01" min="0.01" name="amount" required />
               </Field>
             </>
           ) : (
             <>
-              <Field label={copy.drivingReason}>
+              <Field required label={copy.drivingReason}>
                 <Input type="text" name="drivingReason" required />
               </Field>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label={copy.departure}>
+                <Field required label={copy.departure}>
                   <Input type="text" name="departure" required />
                 </Field>
 
-                <Field label={copy.arrival}>
+                <Field required label={copy.arrival}>
                   <Input type="text" name="arrival" required />
                 </Field>
               </div>
 
-              <Field label={copy.kilometers}>
+              <Field required label={copy.kilometers}>
                 <Input
                   type="number"
                   step="0.1"
@@ -178,7 +178,7 @@ export default function CreateExpenseReportModal({ departments, drivingRatePerKm
             </Field>
           )}
 
-          <Field label={copy.date}>
+          <Field required label={copy.date}>
             <Input type="date" name="date" defaultValue={new Date().toISOString().slice(0, 10)} required />
           </Field>
 
@@ -187,7 +187,7 @@ export default function CreateExpenseReportModal({ departments, drivingRatePerKm
               <Alert tone="info">{copy.noProofRequired}</Alert>
             </Field>
           ) : (
-            <Field label={copy.uploadProof}>
+            <Field required label={copy.uploadProof}>
               <Input
                 type="file"
                 name="proof"
@@ -210,7 +210,7 @@ export default function CreateExpenseReportModal({ departments, drivingRatePerKm
             </Field>
           )}
 
-          <Field label={copy.department}>
+          <Field required label={copy.department}>
             <Select name="departmentId" required defaultValue="">
               <option value="" disabled>{copy.selectDepartment}</option>
               {departments.map((department) => (

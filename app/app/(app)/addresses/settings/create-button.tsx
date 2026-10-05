@@ -46,7 +46,7 @@ export function AddressSettingsCreateButton({ locale }: { locale: Locale }) {
       >
         <form id={FORM_ID} action={formAction} onSubmit={markSubmitted} className="space-y-4">
           <FormError message={state.error} />
-          <Field label={copy.name}>
+          <Field required label={copy.name}>
             <Input type="text" name="name" required autoFocus />
           </Field>
         </form>

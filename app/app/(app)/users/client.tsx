@@ -86,10 +86,10 @@ export function UsersPageClient({
                   className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_170px_200px]"
                 >
                   <input type="hidden" name="userId" value={user.id} />
-                  <Field label={copy.users.name}>
+                  <Field required label={copy.users.name}>
                     <Input type="text" name="name" defaultValue={user.name} required />
                   </Field>
-                  <Field label={copy.users.email}>
+                  <Field required label={copy.users.email}>
                     <Input type="email" name="email" defaultValue={user.email} required />
                   </Field>
                   <Field label={copy.users.role}>

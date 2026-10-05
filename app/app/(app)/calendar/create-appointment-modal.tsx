@@ -69,18 +69,18 @@ export function CreateAppointmentModal({
         >
           <FormError message={state.error} className="sm:col-span-2" />
           <div className="sm:col-span-2">
-            <Field label={copy.appointmentTitle}>
+            <Field required label={copy.appointmentTitle}>
               <Input type="text" name="title" required />
             </Field>
           </div>
 
           <div className="sm:col-span-2">
-            <Field label={copy.appointmentDescription}>
+            <Field required label={copy.appointmentDescription}>
               <Textarea name="description" rows={3} required />
             </Field>
           </div>
 
-          <Field label={copy.startsAt}>
+          <Field required label={copy.startsAt}>
             <Input type="datetime-local" name="startAt" required />
           </Field>
 

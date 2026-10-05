@@ -22,7 +22,7 @@ export function BudgetFormFields({ locale, departments, budget }: Props) {
 
   return (
     <>
-      <Field label={copy.budgetName}>
+      <Field required label={copy.budgetName}>
         <Input type="text" name="name" defaultValue={budget?.name ?? ""} required autoFocus />
       </Field>
 

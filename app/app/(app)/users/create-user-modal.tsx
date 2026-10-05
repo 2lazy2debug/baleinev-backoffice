@@ -67,15 +67,15 @@ export function CreateUserModal({ departments, copy }: Props) {
           <FormError message={createState.error} />
           <p className="text-sm text-[var(--muted)]">{copy.passwordRules}</p>
 
-          <Field label={copy.name}>
+          <Field required label={copy.name}>
             <Input type="text" name="name" required />
           </Field>
 
-          <Field label={copy.email}>
+          <Field required label={copy.email}>
             <Input type="email" name="email" required />
           </Field>
 
-          <Field label={copy.password}>
+          <Field required label={copy.password}>
             <Input type="password" name="password" required />
           </Field>
 

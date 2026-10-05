@@ -18,7 +18,7 @@ export function DepartmentFormFields({ locale, department }: Props) {
 
   return (
     <>
-      <Field label={copy.name}>
+      <Field required label={copy.name}>
         <Input type="text" name="name" defaultValue={department?.name ?? ""} required autoFocus />
       </Field>
 

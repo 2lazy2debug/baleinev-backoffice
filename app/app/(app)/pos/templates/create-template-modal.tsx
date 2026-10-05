@@ -50,7 +50,7 @@ export function CreateTemplateModal({ locale }: { locale: Locale }) {
       >
         <form id={FORM_ID} action={formAction} onSubmit={markSubmitted} className="space-y-4">
           <FormError message={state.error} />
-          <Field label={copy.pos.templateName}>
+          <Field required label={copy.pos.templateName}>
             <Input type="text" name="name" required autoFocus />
           </Field>
         </form>

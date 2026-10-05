@@ -121,7 +121,7 @@ export function EventSettingsClient({ locale, eventTypes }: Props) {
           {/* The colour has no control anywhere; it still has to make the round
               trip, or saving a name would blank the dot beside it. */}
           <input type="hidden" name="color" value={editing?.color ?? ""} />
-          <Field label={copy.name}>
+          <Field required label={copy.name}>
             <Input type="text" name="name" required defaultValue={editing?.name ?? ""} key={`${editing?.id}-name`} />
           </Field>
           <Field label={copy.eventTypeDescription}>

@@ -98,7 +98,7 @@ export function TwoFactorCard({ copy, enabled, configured }: Props) {
 
           <form action={disableAction} className="mt-4 space-y-3">
             <p className="text-sm text-[var(--muted)]">{copy.twoFactorDisableHint}</p>
-            <Field label={copy.currentPassword} htmlFor="two-factor-password">
+            <Field required label={copy.currentPassword} htmlFor="two-factor-password">
               <Input
                 id="two-factor-password"
                 name="currentPassword"
@@ -135,7 +135,7 @@ export function TwoFactorCard({ copy, enabled, configured }: Props) {
               </div>
 
               <form action={confirmAction} className="space-y-3">
-                <Field label={copy.twoFactorCode} htmlFor="two-factor-code">
+                <Field required label={copy.twoFactorCode} htmlFor="two-factor-code">
                   <Input
                     id="two-factor-code"
                     name="code"

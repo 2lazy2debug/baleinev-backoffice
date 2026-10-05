@@ -58,7 +58,7 @@ export default function OpenRegisterModal({ locale, cashAccounts }: Props) {
         <form id="open-register" action={formAction} onSubmit={markSubmitted} className="space-y-4">
           <FormError message={state.error} />
 
-          <Field label={copy.cash.cashAccount}>
+          <Field required label={copy.cash.cashAccount}>
             <Select name="moneyAccountId" required defaultValue="">
               <option value="" disabled>
                 {copy.cash.cashAccount}
@@ -71,7 +71,7 @@ export default function OpenRegisterModal({ locale, cashAccounts }: Props) {
             </Select>
           </Field>
 
-          <Field label={copy.cash.registerName}>
+          <Field required label={copy.cash.registerName}>
             <Input type="text" name="name" required />
           </Field>
 

@@ -77,7 +77,7 @@ export function JournalEntryEditForm({
       <FormError message={state.error} />
       <input type="hidden" name="journalEntryId" value={entry.id} />
 
-      <Field label={copy.budget}>
+      <Field required label={copy.budget}>
         <Select name="budgetId" required defaultValue={entry.budgetId ?? ""}>
           <option value="" disabled>
             {copy.selectBudget}
@@ -91,23 +91,23 @@ export function JournalEntryEditForm({
       </Field>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label={copy.type}>
+        <Field required label={copy.type}>
           <Select name="accountType" required defaultValue={entry.accountType}>
             <option value={AccountType.CHARGES}>{commonCopy.charges}</option>
             <option value={AccountType.PRODUITS}>{commonCopy.produits}</option>
           </Select>
         </Field>
 
-        <Field label={copy.date}>
+        <Field required label={copy.date}>
           <Input type="date" name="date" required defaultValue={entry.date} />
         </Field>
       </div>
 
-      <Field label={copy.amount}>
+      <Field required label={copy.amount}>
         <Input type="number" step="0.01" min="0.01" name="amount" required defaultValue={entry.amount} />
       </Field>
 
-      <Field label={copy.moneyAccount}>
+      <Field required label={copy.moneyAccount}>
         <Select name="moneyAccountId" required defaultValue={entry.moneyAccountId}>
           {moneyAccounts.map((account) => (
             <option key={account.id} value={account.id}>
@@ -117,7 +117,7 @@ export function JournalEntryEditForm({
         </Select>
       </Field>
 
-      <Field label={copy.label}>
+      <Field required label={copy.label}>
         <Input type="text" name="label" required defaultValue={entry.label} />
       </Field>
 

@@ -47,7 +47,7 @@ export default function CreateEditionModal({ locale, editions }: Props) {
       >
         <form id="create-edition-form" action={createFormAction} onSubmit={markSubmitted} className="space-y-4">
           <FormError message={createState.error} />
-          <Field label={copy.editions.editionName}>
+          <Field required label={copy.editions.editionName}>
             <Input
               type="text"
               name="name"
@@ -69,7 +69,7 @@ export default function CreateEditionModal({ locale, editions }: Props) {
             </Field>
           </div>
 
-          <Field label={copy.editions.drivingRatePerKm}>
+          <Field required label={copy.editions.drivingRatePerKm}>
             <Input type="number" name="drivingRatePerKm" step="0.01" min="0.01" defaultValue="0.30" required />
           </Field>
 

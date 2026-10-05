@@ -86,11 +86,11 @@ export function OpenSessionModal({
         <form id={FORM_ID} action={formAction} onSubmit={markSubmitted} className="space-y-4">
           <FormError message={state.error} />
 
-          <Field label={copy.sessionName}>
+          <Field required label={copy.sessionName}>
             <Input type="text" name="name" required autoFocus />
           </Field>
 
-          <Field label={copy.template}>
+          <Field required label={copy.template}>
             <Select name="templateId" required defaultValue="">
               <option value="" disabled>
                 {copy.template}
@@ -123,7 +123,7 @@ export function OpenSessionModal({
             registers.length === 0 ? (
               <Alert tone="warning">{copy.needsOpenRegister}</Alert>
             ) : (
-              <Field label={copy.register}>
+              <Field required label={copy.register}>
                 <Select name="cashRegisterId" required defaultValue="">
                   <option value="" disabled>
                     {copy.register}

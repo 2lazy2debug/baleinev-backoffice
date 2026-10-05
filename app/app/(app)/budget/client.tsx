@@ -651,18 +651,18 @@ export default function BudgetPageClient({
             <FormError message={createLineState.error} />
             <input type="hidden" name="budgetId" value={entryModalBudget?.id ?? ""} />
 
-            <Field label={copy.budget.type}>
+            <Field required label={copy.budget.type}>
               <Select name="accountType" defaultValue="CHARGES" required>
                 <option value="CHARGES">{copy.common.charges}</option>
                 <option value="PRODUITS">{copy.common.produits}</option>
               </Select>
             </Field>
 
-            <Field label={copy.budget.label}>
+            <Field required label={copy.budget.label}>
               <Input type="text" name="label" required />
             </Field>
 
-            <Field label={copy.budget.amount}>
+            <Field required label={copy.budget.amount}>
               <Input type="number" step="0.01" min="0.01" name="amount" required />
             </Field>
 

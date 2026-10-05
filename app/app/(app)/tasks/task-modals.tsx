@@ -85,7 +85,7 @@ export function CreateTodoTaskModal({ todoId, copy, cancelLabel, users, isAdmin 
         <form id={formId} action={formAction} onSubmit={markSubmitted} className="space-y-4">
           <FormError message={state.error} />
           <input type="hidden" name="todoId" value={todoId} />
-          <Field label={copy.todoTaskTitle}>
+          <Field required label={copy.todoTaskTitle}>
             <Input type="text" name="title" required />
           </Field>
           <Field label={copy.todoTaskDescription}>
@@ -143,7 +143,7 @@ export function EditTaskModal({ task, copy, cancelLabel, users, isAdmin }: Props
         <form id={formId} action={formAction} onSubmit={markSubmitted} className="space-y-4">
           <FormError message={state.error} />
           <input type="hidden" name="todoTaskId" value={task.id} />
-          <Field label={copy.todoTaskTitle}>
+          <Field required label={copy.todoTaskTitle}>
             <Input type="text" name="title" required defaultValue={task.title} />
           </Field>
           <Field label={copy.todoTaskDescription}>

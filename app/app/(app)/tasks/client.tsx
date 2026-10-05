@@ -337,7 +337,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
         <form action={updateTodoFormAction} className="grid gap-3 sm:grid-cols-2">
           <FormError message={updateTodoState.error} className="sm:col-span-2" />
           <input type="hidden" name="todoId" value={todo.id} />
-          <Field label={copy.tasks.todoTitle} className="sm:col-span-2">
+          <Field required label={copy.tasks.todoTitle} className="sm:col-span-2">
             <Input type="text" name="title" required defaultValue={todo.title} />
           </Field>
           <Field label={copy.tasks.todoDescription} className="sm:col-span-2">
@@ -416,7 +416,7 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
         >
           <FormError message={deleteTodoState.error} />
           <input type="hidden" name="todoId" value={todo.id} />
-          <Field label={copy.tasks.typeDeleteToConfirm}>
+          <Field required label={copy.tasks.typeDeleteToConfirm}>
             <Input type="text" name="confirmDelete" tone="danger" required placeholder="delete" autoFocus />
           </Field>
         </form>

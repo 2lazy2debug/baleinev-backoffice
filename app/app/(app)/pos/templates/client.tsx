@@ -168,7 +168,7 @@ export function PosTemplatesClient({ locale, templates }: { locale: Locale; temp
           <form id={RENAME_FORM_ID} action={renameAction} onSubmit={markRenamed} className="space-y-4">
             <FormError message={renameState.error} />
             <input type="hidden" name="templateId" value={renaming.id} />
-            <Field label={copy.templateName}>
+            <Field required label={copy.templateName}>
               <Input type="text" name="name" defaultValue={renaming.name} required autoFocus />
             </Field>
           </form>

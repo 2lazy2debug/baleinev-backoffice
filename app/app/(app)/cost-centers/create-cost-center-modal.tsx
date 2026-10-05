@@ -46,11 +46,11 @@ export default function CreateCostCenterModal({ locale }: Props) {
       >
         <form id="create-cost-center-form" action={createFormAction} onSubmit={markSubmitted} className="space-y-4">
           <FormError message={createState.error} />
-          <Field label={copy.costCenters.code}>
+          <Field required label={copy.costCenters.code}>
             <Input type="text" name="code" placeholder="AFTER" required />
           </Field>
 
-          <Field label={copy.costCenters.name}>
+          <Field required label={copy.costCenters.name}>
             <Input type="text" name="name" placeholder="After party" required />
           </Field>
         </form>

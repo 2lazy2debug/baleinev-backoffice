@@ -99,7 +99,7 @@ export function TemplatesPageClient({
                         name="templateId"
                         value={template.id}
                       />
-                      <Field label={copy.templates.name}>
+                      <Field required label={copy.templates.name}>
                         <Input
                           type="text"
                           name="name"
@@ -107,7 +107,7 @@ export function TemplatesPageClient({
                           required
                         />
                       </Field>
-                      <Field label={copy.templates.html}>
+                      <Field required label={copy.templates.html}>
                         <Textarea
                           name="html"
                           defaultValue={template.html}

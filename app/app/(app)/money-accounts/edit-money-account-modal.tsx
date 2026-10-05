@@ -64,7 +64,7 @@ export function EditMoneyAccountModal({ locale, account }: Props) {
         <form id={formId} action={formAction} onSubmit={markSubmitted} className="space-y-4">
           <input type="hidden" name="moneyAccountId" value={account.id} />
           <FormError message={state.error} />
-          <Field label={copy.moneyAccounts.accountName}>
+          <Field required label={copy.moneyAccounts.accountName}>
             <Input type="text" name="name" defaultValue={account.name} required />
           </Field>
           <Field label={copy.moneyAccounts.type}>

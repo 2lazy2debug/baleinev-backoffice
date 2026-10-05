@@ -87,7 +87,7 @@ export function TasksCreateModal({ copy, users, isAdmin, createTodoAction, creat
               <option value="task">{copy.createStandaloneTask}</option>
             </Select>
           </Field>
-          <Field label={isTodo ? copy.todoTitle : copy.todoTaskTitle}>
+          <Field required label={isTodo ? copy.todoTitle : copy.todoTaskTitle}>
             <Input type="text" name="title" required />
           </Field>
           <Field label={isTodo ? copy.todoDescription : copy.todoTaskDescription}>

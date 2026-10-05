@@ -144,7 +144,7 @@ export default function JournalRegisterModal({ locale, register, budgets, costCe
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label={cash.budget}>
+            <Field required label={cash.budget}>
               <Select name="budgetId" required defaultValue="">
                 <option value="" disabled>
                   {copy.journal.selectBudget}

@@ -72,7 +72,7 @@ export function AccountPageClient({
         <SectionTitle>{copy.profile}</SectionTitle>
 
         <form action={nameFormAction} className="mt-4 space-y-3">
-          <Field label={copy.name} htmlFor="account-name">
+          <Field required label={copy.name} htmlFor="account-name">
             <Input id="account-name" name="name" type="text" defaultValue={profile.name} required />
           </Field>
           <div className="flex items-center gap-3">
@@ -163,7 +163,7 @@ export function AccountPageClient({
           action={passwordFormAction}
           className="mt-4 space-y-3"
         >
-          <Field label={copy.currentPassword} htmlFor="current-password">
+          <Field required label={copy.currentPassword} htmlFor="current-password">
             <Input
               id="current-password"
               name="currentPassword"
@@ -172,7 +172,7 @@ export function AccountPageClient({
               required
             />
           </Field>
-          <Field label={copy.newPassword} htmlFor="new-password">
+          <Field required label={copy.newPassword} htmlFor="new-password">
             <Input
               id="new-password"
               name="newPassword"
@@ -182,7 +182,7 @@ export function AccountPageClient({
               required
             />
           </Field>
-          <Field label={copy.confirmPassword} htmlFor="confirm-password">
+          <Field required label={copy.confirmPassword} htmlFor="confirm-password">
             <Input
               id="confirm-password"
               name="confirmPassword"

@@ -383,7 +383,7 @@ export function StockSettingsClient({ locale, places, units, conversions }: Prop
           ) : needsDestination ? (
             <>
               <p className="text-sm text-[var(--muted)]">{copy.deletePlaceMove}</p>
-              <Field label={copy.moveTo}>
+              <Field required label={copy.moveTo}>
                 <Select name="moveToId" required defaultValue="">
                   <option value="" disabled>
                     {copy.pickPlace}

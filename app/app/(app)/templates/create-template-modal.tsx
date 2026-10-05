@@ -48,7 +48,7 @@ export default function CreateTemplateModal({ locale, defaultInvoiceHtml }: Prop
       >
         <form id="create-template-form" action={createFormAction} onSubmit={markSubmitted} className="space-y-4">
           <FormError message={createState.error} />
-          <Field label={copy.templates.name}>
+          <Field required label={copy.templates.name}>
             <Input type="text" name="name" required />
           </Field>
 
@@ -62,7 +62,7 @@ export default function CreateTemplateModal({ locale, defaultInvoiceHtml }: Prop
             <Input type="text" value={copy.templates.pdfFormat} disabled className="text-[var(--muted)]" />
           </Field>
 
-          <Field label={copy.templates.html}>
+          <Field required label={copy.templates.html}>
             <Textarea
               name="html"
               defaultValue={defaultInvoiceHtml}

@@ -198,7 +198,7 @@ export function ArticleFormModal({ locale, units, conversions, open, onClose, it
 
         {scanNote ? <Alert tone="info">{scanNote}</Alert> : null}
 
-        <Field label={copy.name}>
+        <Field required label={copy.name}>
           <Input type="text" name="name" defaultValue={values.name} required autoFocus />
         </Field>
         <Field label={copy.brand}>

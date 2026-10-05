@@ -47,7 +47,7 @@ export default function CreateMoneyAccountModal({ locale }: Props) {
       >
         <form id="create-money-account-form" action={createFormAction} onSubmit={markSubmitted} className="space-y-4">
           <FormError message={createState.error} />
-          <Field label={copy.moneyAccounts.accountName}>
+          <Field required label={copy.moneyAccounts.accountName}>
             <Input type="text" name="name" placeholder="Compte courant" required />
           </Field>
 

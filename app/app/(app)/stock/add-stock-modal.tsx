@@ -199,7 +199,7 @@ export function AddStockModal({ locale, stockPlaceId, elements, units, conversio
               <input type="hidden" name="createElement" value="on" />
               <input type="hidden" name="barcode" value={prefill.barcode} />
               <div className="flex items-end gap-2">
-                <Field label={copy.name} className="flex-1">
+                <Field required label={copy.name} className="flex-1">
                   <Input type="text" name="name" defaultValue={prefill.name} required autoFocus />
                 </Field>
                 {scanButton}
@@ -238,7 +238,7 @@ export function AddStockModal({ locale, stockPlaceId, elements, units, conversio
           ) : (
             <>
               <div className="flex items-end gap-2">
-                <Field label={copy.item} className="flex-1">
+                <Field required label={copy.item} className="flex-1">
                   <Select
                     name="elementId"
                     required
@@ -264,7 +264,7 @@ export function AddStockModal({ locale, stockPlaceId, elements, units, conversio
             </>
           )}
 
-          <Field label={copy.initialQuantity}>
+          <Field required label={copy.initialQuantity}>
             <Input type="number" name="quantity" min={1} step={1} defaultValue={1} required />
           </Field>
 

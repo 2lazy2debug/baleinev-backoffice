@@ -368,11 +368,11 @@ function EntryDialog({
         {entry ? <input type="hidden" name="entryId" value={entry.id} /> : null}
         <FormError message={error} />
 
-        <Field label={copy.fieldName}>
+        <Field required label={copy.fieldName}>
           <Input type="text" name="name" required defaultValue={entry?.name ?? ""} placeholder="Canva" />
         </Field>
 
-        <Field label={copy.fieldLogin}>
+        <Field required label={copy.fieldLogin}>
           <Input
             type="text"
             name="login"
@@ -383,7 +383,7 @@ function EntryDialog({
           />
         </Field>
 
-        <Field label={entry ? copy.fieldPasswordEdit : copy.fieldPassword}>
+        <Field required={!entry} label={entry ? copy.fieldPasswordEdit : copy.fieldPassword}>
           <Input
             type="password"
             name="password"
@@ -410,7 +410,7 @@ function EntryDialog({
           <Input type="url" name="website" defaultValue={entry?.website ?? ""} placeholder="https://…" />
         </Field>
 
-        <Field label={copy.fieldDepartments}>
+        <Field required label={copy.fieldDepartments}>
           <MultiSelect
             name="departmentIds"
             required

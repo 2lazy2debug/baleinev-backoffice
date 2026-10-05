@@ -89,7 +89,7 @@ export function StockSettingsCreateButtons({ locale, units }: Props) {
       >
         <form id="create-stock-place-form" action={placeFormAction} onSubmit={markPlaceSubmitted} className="space-y-4">
           <FormError message={placeState.error} />
-          <Field label={copy.name}>
+          <Field required label={copy.name}>
             <Input type="text" name="name" required autoFocus />
           </Field>
         </form>
@@ -113,7 +113,7 @@ export function StockSettingsCreateButtons({ locale, units }: Props) {
       >
         <form id="create-stock-unit-form" action={unitFormAction} onSubmit={markUnitSubmitted} className="space-y-4">
           <FormError message={unitState.error} />
-          <Field label={copy.name}>
+          <Field required label={copy.name}>
             <Input type="text" name="name" required autoFocus />
           </Field>
           <p className="text-xs text-[var(--muted)]">{copy.unitsHint}</p>
@@ -145,7 +145,7 @@ export function StockSettingsCreateButtons({ locale, units }: Props) {
         >
           <FormError message={conversionState.error} />
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={copy.convertFrom}>
+            <Field required label={copy.convertFrom}>
               <Select name="fromUnitId" required defaultValue="">
                 <option value="" disabled>
                   {copy.unit}
@@ -157,7 +157,7 @@ export function StockSettingsCreateButtons({ locale, units }: Props) {
                 ))}
               </Select>
             </Field>
-            <Field label={copy.convertTo}>
+            <Field required label={copy.convertTo}>
               <Select name="toUnitId" required defaultValue="">
                 <option value="" disabled>
                   {copy.unit}
@@ -170,7 +170,7 @@ export function StockSettingsCreateButtons({ locale, units }: Props) {
               </Select>
             </Field>
           </div>
-          <Field label={copy.factor}>
+          <Field required label={copy.factor}>
             <Input type="text" inputMode="decimal" name="factor" placeholder="0.001" required />
             <span className="block text-xs text-[var(--muted)]">{copy.factorHint}</span>
           </Field>

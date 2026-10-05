@@ -845,7 +845,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                   disabled={Boolean(editingInvoiceId)}
                 />
               </Field>
-              <Field label={copy.invoices.invoiceDate}>
+              <Field required label={copy.invoices.invoiceDate}>
                 <Input
                   type="date"
                   required
@@ -887,7 +887,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
               disabled={isEditingPaidInvoice}
             />
 
-            <Field label={copy.invoices.supplierName}>
+            <Field required label={copy.invoices.supplierName}>
               <Textarea
                 required
                 value={supplierName}
@@ -898,7 +898,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
               />
             </Field>
 
-            <Field label={copy.invoices.supplierAddress}>
+            <Field required label={copy.invoices.supplierAddress}>
               <Input
                 type="text"
                 required
@@ -909,7 +909,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
             </Field>
 
             <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
-              <Field label={copy.invoices.supplierPostalCode}>
+              <Field required label={copy.invoices.supplierPostalCode}>
                 <Input
                   type="text"
                   required
@@ -918,7 +918,7 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
                   disabled={isEditingPaidInvoice}
                 />
               </Field>
-              <Field label={copy.invoices.supplierCity}>
+              <Field required label={copy.invoices.supplierCity}>
                 <Input
                   type="text"
                   required

@@ -95,7 +95,7 @@ export default function LoginForm({ copy }: { copy: LoginCopy }) {
                   <>
                     <p className="text-sm text-[var(--muted)]">{copy.twoFactorHint}</p>
 
-                    <Field label={copy.twoFactorCode}>
+                    <Field required label={copy.twoFactorCode}>
                       <Input
                         name="totp"
                         inputMode="numeric"
@@ -109,11 +109,11 @@ export default function LoginForm({ copy }: { copy: LoginCopy }) {
                   </>
                 ) : (
                   <>
-                    <Field label={copy.email}>
+                    <Field required label={copy.email}>
                       <Input name="email" type="email" autoComplete="email" required />
                     </Field>
 
-                    <Field label={copy.password}>
+                    <Field required label={copy.password}>
                       <Input name="password" type="password" autoComplete="current-password" required />
                     </Field>
                   </>
