@@ -6,7 +6,7 @@ import { Check, Pencil, Trash2, X } from "lucide-react";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, CardGrid, IconButton, Input, SectionTitle, SignedAmount, microLabelClasses } from "@/components/ui";
+import { Card, CardGrid, IconButton, Input, SectionTitle, SignedAmount, microLabelClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
