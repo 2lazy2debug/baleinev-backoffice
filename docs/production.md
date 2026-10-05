@@ -1,7 +1,7 @@
 # Production — the server and the deploy pipeline
 
 How this app runs on `194.99.21.120` (`blv.cabras.ch`), and how a release gets there:
-push an annotated tag, and a systemd timer on the box notices within two minutes,
+push an annotated tag, and a systemd timer on the box notices within a minute,
 backs up, builds, health-checks, and rolls back if the check fails. Nothing is
 copied to the server by hand and no CI is involved — the box pulls.
 
@@ -116,7 +116,7 @@ backup. There is no blob store to snapshot alongside it.
 
 Releases are **annotated** tags matching `v*`, and the tag message is the instruction to
 the pipeline. [deploy/self-update.sh](../deploy/self-update.sh) fetches tags every
-~2 minutes, compares the highest semver tag against `state/deployed-tag`, and acts.
+~1 minute, compares the highest semver tag against `state/deployed-tag`, and acts.
 
 ```bash
 git tag -a v0.2.0 -m "non-breaking"
@@ -168,7 +168,7 @@ the old schema and the app starts throwing at runtime, not at build time.
   snapshot is restored **only when a migration ran** — restoring otherwise would discard
   every write made during the build window to fix a problem that was never in the database.
 - **Quarantine.** A failed tag gets `state/failed-<tag>`, so the timer does not crash-loop
-  through a backup and a full rebuild every two minutes. Remove the marker to retry.
+  through a backup and a full rebuild every minute. Remove the marker to retry.
 - **One at a time.** An `flock` in `state/` keeps a slow build from overlapping the next
   tick, and `self-update.sh` calls `main "$@"` on its last line because a checkout rewrites
   the script while bash is still reading it.
@@ -197,7 +197,7 @@ ls -lt /opt/blv/backups/                  # the newest 3 snapshots
 sudo -iu blv
 cd /opt/blv/checkout
 # do the manual part first — edit app/.env, install the package, whatever the tag asked
-./deploy/approve.sh v0.2.0     # then it deploys on the next tick, within ~2 minutes
+./deploy/approve.sh v0.2.0     # then it deploys on the next tick, within ~1 minute
 ```
 
 To skip the wait, from an account with full sudo:

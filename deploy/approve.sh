@@ -35,7 +35,7 @@ mkdir -p "$STATE_DIR"
 touch "$STATE_DIR/approved-$TAG"
 rm -f "$STATE_DIR/pending-$TAG"
 
-echo "Approved $TAG. It deploys on the next tick, within ~2 minutes — that is the"
+echo "Approved $TAG. It deploys on the next tick, within ~1 minute — that is the"
 echo "normal path and needs nothing further."
 echo
 echo "To start it immediately instead, from an account with full sudo (the app"

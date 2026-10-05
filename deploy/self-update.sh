@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# The tag-driven deploy pipeline. Run every ~2 minutes by blv-updater.timer as
+# The tag-driven deploy pipeline. Run every ~1 minute by blv-updater.timer as
 # the `blv` user. It reacts to release tags pushed to origin: back up first,
 # migrate only when the tag says so, halt for a human when the tag says so,
 # health-check, and auto-roll-back on failure.
@@ -259,11 +259,11 @@ main() {
     deployed_tag="$(cat "$DEPLOYED_TAG_FILE")"
   fi
 
-  # The common case. Stay quiet and cheap — this runs every two minutes forever.
+  # The common case. Stay quiet and cheap — this runs every minute forever.
   [[ "$latest_tag" == "$deployed_tag" ]] && exit 0
 
   # A tag whose deploy already failed is quarantined, so the timer does not
-  # crash-loop through a backup and a full rebuild every two minutes. A higher
+  # crash-loop through a backup and a full rebuild every minute. A higher
   # tag is unaffected; remove the marker to retry this one deliberately.
   if [[ -f "$STATE_DIR/failed-$latest_tag" ]]; then
     log "$latest_tag failed before and is quarantined (rm $STATE_DIR/failed-$latest_tag to retry)."

@@ -3,7 +3,7 @@
 # Install (or refresh) the tag-driven deploy pipeline:
 #
 #   blv-updater.service          oneshot, runs deploy/self-update.sh
-#   blv-updater.timer            polls origin for new release tags every ~2 min
+#   blv-updater.timer            polls origin for new release tags every ~1 min
 #   /etc/sudoers.d/blv-deploy    lets the pipeline restart the app, and nothing else
 #
 # Like install-service.sh it resolves the ABSOLUTE node path on THIS box and

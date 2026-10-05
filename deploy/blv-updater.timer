@@ -2,7 +2,7 @@
 Description=blv self-update poll (checks origin for new release tags)
 
 [Timer]
-# Every two minutes. The tick is cheap: no new tag means one `git fetch` and an
+# Every minute. The tick is cheap: no new tag means one `git fetch` and an
 # exit.
 #
 # OnBootSec is 3min rather than LeadDesk's 2min on purpose. Both apps share one
@@ -10,7 +10,7 @@ Description=blv self-update poll (checks origin for new release tags)
 # Offsetting the boot tick means the two pipelines do not both wake up to a
 # backlog of tags at the same instant after a reboot.
 OnBootSec=3min
-OnUnitActiveSec=2min
+OnUnitActiveSec=1min
 
 [Install]
 WantedBy=timers.target
