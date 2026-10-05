@@ -34,7 +34,11 @@ export default async function TasksPage() {
     : [];
 
   if (!editionId) {
-    return <EmptyPage title={copy.tasks.title}>{copy.common.noEditionSelected}</EmptyPage>;
+    return (
+      <EmptyPage eyebrow={copy.tasks.title} title={copy.common.noEditionSelected}>
+        {copy.common.pickEditionHint}
+      </EmptyPage>
+    );
   }
 
   return (
