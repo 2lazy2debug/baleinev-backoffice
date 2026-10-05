@@ -23,7 +23,7 @@
 
 | # | After | Fix | Fixed at | Solution |
 |---|-------|-----|----------|----------|
-| C1 | | `(app)/calendar/client.tsx:408` and `:506`: remove `desktopOnly` from both `<SectionTitle>`s. Hide only the view prefix below `sm`, as `<span className="hidden sm:inline">{copy.monthView}: </span>{date}`. Do the same with `copy.dayView`. | | |
+| C1 | | `(app)/calendar/client.tsx:408` and `:506`: remove `desktopOnly` from both `<SectionTitle>`s. Hide only the view prefix below `sm`, as `<span className="hidden sm:inline">{copy.monthView}: </span>{date}`. Do the same with `copy.dayView`. | 126aa07 | Dropped `desktopOnly` on both titles; only the `Month:`/`Day:` prefix hides below `sm`. |
 | C2 | C1 | Pass the `locale` prop (`(app)/calendar/client.tsx:152`) as the first argument at `(app)/calendar/client.tsx:408` and `:506` (`toLocaleDateString(undefined, …)`) and at `:732` and `:736` (`toLocaleString()`). At `(app)/page.tsx:333` (`toLocaleDateString()`), pass the `locale` the dashboard already reads. | | |
 | C3 | | Add `required` to every `<Field>` whose child `Input`/`Select`/`Textarea`/`MultiSelect` has `required`. To list them: `grep -rn -A2 '<Field ' app components \| grep -E '(Input\|Select\|Textarea\|MultiSelect)[^>]* required'`. `(app)/events/create-event-modal.tsx` and `components/add-journal-entry-modal.tsx` already have it. | | |
 | C4 | | Keep the `eyebrow` and reduce the `title`: `(app)/budget/client.tsx:247-248` → `{editionName}`, and `(app)/journal/page.tsx:106-107` → `{activeEdition.name}`. Delete `budget.entriesFor` and `journal.entriesFor` from `lib/i18n-dictionaries.ts` (en and fr). Run `npm run check:i18n`. | | |
