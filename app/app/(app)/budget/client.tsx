@@ -245,7 +245,7 @@ export default function BudgetPageClient({
     <div className="space-y-4 lg:space-y-8">
       <PageHeader
         eyebrow={copy.budget.title}
-        title={<>{copy.budget.entriesFor} {editionName}</>}
+        title={editionName}
         description={copy.budget.subtitle}
         actions={canManage ? <CreateBudgetModal locale={locale} departments={attachableDepartments} /> : null}
       />

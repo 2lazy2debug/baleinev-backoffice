@@ -98,7 +98,6 @@ export const dictionaries = {
     },
     budget: {
       title: "Budget",
-      entriesFor: "Budget entries for",
       subtitle: "Planned spendings and earnings, per budget, for this edition.",
       budgetEntries: "budget entries",
       addBudgetEntry: "Add budget entry",
@@ -336,7 +335,6 @@ export const dictionaries = {
     journal: {
       title: "Journal",
       subtitle: "This is where you add entries 1:1 with the Excel JOURNAL tab.",
-      entriesFor: "Journal entries",
       pickEditionHint: "Pick an edition to record entries in.",
       addEntry: "Add journal entry",
       entries: "Entries",
@@ -1181,7 +1179,6 @@ export const dictionaries = {
     },
     budget: {
       title: "Budget",
-      entriesFor: "Lignes budgétaires pour",
       subtitle: "Dépenses et recettes prévisionnelles, par budget, pour cet exercice.",
       budgetEntries: "lignes budgétaires",
       addBudgetEntry: "Ajouter une ligne budget",
@@ -1419,7 +1416,6 @@ export const dictionaries = {
     journal: {
       title: "Journal",
       subtitle: "Vous saisissez ici les lignes 1:1 avec l'onglet JOURNAL Excel.",
-      entriesFor: "Écritures du journal",
       pickEditionHint: "Choisissez un exercice pour y saisir des écritures.",
       addEntry: "Ajouter une écriture",
       entries: "Écritures",

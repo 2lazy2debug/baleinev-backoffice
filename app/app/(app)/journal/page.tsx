@@ -104,7 +104,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
     <div className="space-y-4 lg:space-y-8 flex flex-col h-full">
       <PageHeader
         eyebrow={copy.journal.title}
-        title={<>{copy.journal.entriesFor} - {activeEdition.name}</>}
+        title={activeEdition.name}
         description={copy.journal.subtitle}
         actions={
           <WritableEditionOnly>
