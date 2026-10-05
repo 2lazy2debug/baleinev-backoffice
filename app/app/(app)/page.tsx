@@ -330,7 +330,7 @@ export default async function DashboardPage() {
                     </p>
                     <p className="truncate text-sm font-medium">{task.title}</p>
                     {event && eventDay ? (
-                      <p className="text-xs text-[var(--muted)]">{event.name} — {new Date(eventDay.date).toLocaleDateString()}</p>
+                      <p className="text-xs text-[var(--muted)]">{event.name} — {new Date(eventDay.date).toLocaleDateString(locale)}</p>
                     ) : null}
                   </div>
                   {task.type === TaskType.RECORD_JOURNAL && expenseReport ? (

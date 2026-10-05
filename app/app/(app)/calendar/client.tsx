@@ -405,7 +405,7 @@ export default function CalendarPageClient({
       <CardGrid>
         <Card as="section" span="2/3" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <SectionTitle><span className="hidden sm:inline">{copy.monthView}: </span>{monthStart.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</SectionTitle>
+            <SectionTitle><span className="hidden sm:inline">{copy.monthView}: </span>{monthStart.toLocaleDateString(locale, { month: "long", year: "numeric" })}</SectionTitle>
             <div className="flex gap-2">
               <Button
                 variant="secondary"
@@ -503,7 +503,7 @@ export default function CalendarPageClient({
 
         <Card as="section" span="1/3-lg" className="space-y-4">
           <SectionTitle>
-            <span className="hidden sm:inline">{copy.dayView}: </span>{selectedDate.toLocaleDateString(undefined, { weekday: "long", day: "2-digit", month: "long" })}
+            <span className="hidden sm:inline">{copy.dayView}: </span>{selectedDate.toLocaleDateString(locale, { weekday: "long", day: "2-digit", month: "long" })}
           </SectionTitle>
 
           {/* An hour-by-hour timeline is too fine-grained for a thumb: below `sm` the
@@ -729,11 +729,11 @@ export default function CalendarPageClient({
                 </div>
                 <div>
                   <p className={microLabelClasses}>{copy.fromLabel}</p>
-                  <p>{new Date(selectedAppointment.startAt).toLocaleString()}</p>
+                  <p>{new Date(selectedAppointment.startAt).toLocaleString(locale)}</p>
                 </div>
                 <div>
                   <p className={microLabelClasses}>{copy.toLabel}</p>
-                  <p>{selectedAppointment.endAt ? new Date(selectedAppointment.endAt).toLocaleString() : "-"}</p>
+                  <p>{selectedAppointment.endAt ? new Date(selectedAppointment.endAt).toLocaleString(locale) : "-"}</p>
                 </div>
               </div>
             )}
