@@ -261,6 +261,11 @@ export async function updateJournalEntryAction(_prevState: ActionState, formData
  * one: the client sends only the rows it actually touched, as JSON, and either
  * all of them land or none do. `referenceNumber` has no grid column and is
  * deliberately left alone.
+ *
+ * Only the money has to be there: direction and amount (plus the account and
+ * date the grid always holds). Budget, cost centre and label may be left blank
+ * — bulk edit is where a ledger gets tidied up, and a half-categorised row is
+ * still a valid movement.
  */
 export async function bulkUpdateJournalEntriesAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
@@ -298,12 +303,12 @@ export async function bulkUpdateJournalEntriesAction(_prevState: ActionState, fo
 
       return {
         id: readRequired("journalEntryId"),
-        budgetId: readRequired("budgetId"),
+        budgetId: String(item.budgetId ?? "").trim() || null,
         moneyAccountId: readRequired("moneyAccountId"),
         accountType: readRequired("accountType") as AccountType,
         date,
         amount: toPositiveAmount(readRequired("amount")),
-        label: readRequired("label"),
+        label: String(item.label ?? "").trim(),
         counterparty: String(item.counterparty ?? "").trim() || null,
         costCenterId: String(item.costCenterId ?? "").trim() || null,
       };
@@ -350,7 +355,7 @@ export async function bulkUpdateJournalEntriesAction(_prevState: ActionState, fo
     // Every distinct budget the payload books against must be the edition's —
     // the same guard the inline and single-entry editors run, applied once per id.
     await Promise.all(
-      [...new Set(updates.map((update) => update.budgetId))].map((budgetId) =>
+      [...new Set(updates.flatMap((update) => (update.budgetId ? [update.budgetId] : [])))].map((budgetId) =>
         assertBudgetInEdition(budgetId, editionId),
       ),
     );

@@ -209,6 +209,11 @@ the same row at the same time is one too many. Opening entries stay locked and a
 never given a draft — the server refuses them either way
 (`bulkUpdateJournalEntriesAction` in `app/(app)/journal/actions.ts`).
 
+Bulk save only insists on the money: **direction and amount** (with the date and
+account the grid always holds). Budget, cost centre and label may be left blank — the
+row saves with no budget, no cost centre and an empty label. The inline row and the
+full-page form still require a budget and a label.
+
 Bulk edit is gated on `isAdmin` in the page and on `requireAdmin()` in the action;
 a closed edition hides the button and `requireWritableEdition` refuses the write.
 Counterparty and reference number are not columns of the grid, so neither the bulk
