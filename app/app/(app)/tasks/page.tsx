@@ -55,7 +55,7 @@ export default async function TasksPage() {
         }
       />
 
-      <section className="space-y-5">
+      <section className="space-y-4 lg:space-y-8">
         <SectionTitle>{copy.tasks.allTasks}</SectionTitle>
         <TasksPageClient
           todos={todos}

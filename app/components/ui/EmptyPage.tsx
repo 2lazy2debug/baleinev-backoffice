@@ -27,7 +27,7 @@ type EmptyPageProps = {
  */
 export function EmptyPage({ eyebrow, title, actions, children }: EmptyPageProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-8">
       <PageHeader eyebrow={eyebrow} title={title} actions={actions} />
       <Card dashed>{children}</Card>
     </div>
