@@ -405,7 +405,7 @@ export default function CalendarPageClient({
       <CardGrid>
         <Card as="section" span="2/3" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <SectionTitle desktopOnly>{copy.monthView}: {monthStart.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</SectionTitle>
+            <SectionTitle><span className="hidden sm:inline">{copy.monthView}: </span>{monthStart.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</SectionTitle>
             <div className="flex gap-2">
               <Button
                 variant="secondary"
@@ -502,8 +502,8 @@ export default function CalendarPageClient({
         </Card>
 
         <Card as="section" span="1/3-lg" className="space-y-4">
-          <SectionTitle desktopOnly>
-            {copy.dayView}: {selectedDate.toLocaleDateString(undefined, { weekday: "long", day: "2-digit", month: "long" })}
+          <SectionTitle>
+            <span className="hidden sm:inline">{copy.dayView}: </span>{selectedDate.toLocaleDateString(undefined, { weekday: "long", day: "2-digit", month: "long" })}
           </SectionTitle>
 
           {/* An hour-by-hour timeline is too fine-grained for a thumb: below `sm` the
