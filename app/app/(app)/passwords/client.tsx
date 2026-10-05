@@ -124,7 +124,7 @@ export function PasswordsPageClient({ locale, entries, assignableDepartments, is
           {copy.noResults}
         </Card>
       ) : (
-        <Panel as="ul" className="divide-y divide-[var(--line)] bg-[var(--panel-strong)]">
+        <Panel as="ul" className="divide-y divide-[var(--line)]">
           {filtered.map((entry) => (
             <EntryRow
               key={entry.id}
