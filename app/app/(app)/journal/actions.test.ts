@@ -196,4 +196,31 @@ describe("bulkUpdateJournalEntriesAction", () => {
       expect.objectContaining({ data: expect.objectContaining({ counterparty: "Client via Twint" }) }),
     );
   });
+
+  it("saves a row whose budget, cost centre and label were left blank", async () => {
+    prisma.journalEntry.findMany.mockResolvedValue([{ id: "je_1", ...plain }]);
+    prisma.journalEntry.update.mockReturnValue("updated");
+
+    const result = await bulkUpdateJournalEntriesAction(
+      { error: null },
+      bulkForm({ budgetId: "", costCenterId: "", label: "" }),
+    );
+
+    expect(result.error).toBeNull();
+    expect(assertBudgetInEdition).not.toHaveBeenCalled();
+    expect(prisma.journalEntry.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ budgetId: null, costCenterId: null, label: "" }),
+      }),
+    );
+  });
+
+  it("still refuses a row without an amount", async () => {
+    prisma.journalEntry.findMany.mockResolvedValue([{ id: "je_1", ...plain }]);
+
+    const result = await bulkUpdateJournalEntriesAction({ error: null }, bulkForm({ amount: "" }));
+
+    expect(result.error).toMatch(/amount is required/);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
 });
