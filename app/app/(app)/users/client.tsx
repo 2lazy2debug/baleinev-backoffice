@@ -129,7 +129,6 @@ export function UsersPageClient({
                     type="submit"
                     form={`update-user-${user.id}`}
                     variant="primary"
-                   
                     disabled={isUpdating}
                   >
                     {copy.users.updateButton}
@@ -138,7 +137,6 @@ export function UsersPageClient({
                     type="submit"
                     form={`delete-user-${user.id}`}
                     variant="destructive"
-                   
                     icon={<Trash2 />}
                     disabled={isSelf || isDeleting}
                     title={isSelf ? copy.users.cannotDeleteSelf : undefined}
