@@ -7,7 +7,7 @@ import type { AddressTypeOption } from "@/components/address-fields";
 import { AddressPicker, type PickableAddress } from "@/components/address-picker";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, Cardlet, CardletActions, CardletField, CardletFields, CardletHeader, CardletList, Field, IconButton, Input, Modal, PageHeader, SectionTitle, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
+import { Button, Card, Cardlet, CardletActions, CardletField, CardletFields, CardletHeader, CardletList, ConfirmDelete, Field, IconButton, Input, Modal, PageHeader, SectionTitle, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
 import { addressNameBlock } from "@/lib/addresses";
 import type { CountryOption } from "@/lib/countries";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
@@ -685,15 +685,14 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
             >
               <Copy />
             </IconButton>
-            <IconButton
-              tone="delete"
-              label={copy.invoices.deleteInvoice}
-              onClick={() => handleDeleteInvoice(item)}
+            <ConfirmDelete
+              onConfirm={() => handleDeleteInvoice(item)}
+              label={item.paidAt ? copy.invoices.deleteBlockedPaid : copy.invoices.deleteInvoice}
+              subject={item.invoiceNumber}
+              message={copy.common.cannotBeUndone}
+              cancelLabel={copy.shell.cancel}
               disabled={Boolean(item.paidAt) || deleteActionInvoiceId === item.id}
-              title={item.paidAt ? copy.invoices.deleteBlockedPaid : copy.invoices.deleteInvoice}
-            >
-              <Trash2 />
-            </IconButton>
+            />
           </>
         )}
       </>
