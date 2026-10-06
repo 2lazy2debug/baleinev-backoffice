@@ -2,11 +2,10 @@
 
 import { useActionState } from "react";
 import { MoneyAccountType } from "@prisma/client";
-import { Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Card, IconButton, SectionTitle, microLabelClasses } from "@/components/ui";
+import { Card, ConfirmDelete, SectionTitle, microLabelClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -108,17 +107,17 @@ function MoneyAccountCard({
         {isReadOnly ? null : (
           <div className="flex items-center gap-1">
             <EditMoneyAccountModal locale={locale} account={account} />
-            <form action={deleteFormAction}>
-            <input type="hidden" name="moneyAccountId" value={account.id} />
-            <IconButton
-              type="submit"
-              tone="delete"
-              label={account.canDelete ? copy.moneyAccounts.deleteAccount : copy.moneyAccounts.cannotDelete}
-              disabled={!account.canDelete || isDeletingAccount}
-            >
-              <Trash2 />
-            </IconButton>
+            <form id={`delete-money-account-${account.id}`} action={deleteFormAction}>
+              <input type="hidden" name="moneyAccountId" value={account.id} />
             </form>
+            <ConfirmDelete
+              form={`delete-money-account-${account.id}`}
+              label={account.canDelete ? copy.moneyAccounts.deleteAccount : copy.moneyAccounts.cannotDelete}
+              subject={account.name}
+              message={copy.common.cannotBeUndone}
+              cancelLabel={copy.shell.cancel}
+              disabled={!account.canDelete || isDeletingAccount}
+            />
           </div>
         )}
       </div>

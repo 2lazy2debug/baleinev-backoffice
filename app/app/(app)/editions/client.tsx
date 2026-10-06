@@ -2,14 +2,13 @@
 
 import { useActionState } from "react";
 import type { Prisma } from "@prisma/client";
-import { Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import {
   Badge,
   Button,
   Card,
-  IconButton,
+  ConfirmDelete,
   Input,
   SectionTitle,
 } from "@/components/ui";
@@ -162,18 +161,18 @@ export function EditionsPageClient({
                 </form>
               )}
 
-              <form action={deleteFormAction}>
+              <form id={`delete-edition-${edition.id}`} action={deleteFormAction}>
                 <input type="hidden" name="editionId" value={edition.id} />
-                <IconButton
-                  type="submit"
-                  size="md"
-                  tone="delete"
-                  label={copy.editions.deleteEdition}
-                  disabled={isDeleting}
-                >
-                  <Trash2 />
-                </IconButton>
               </form>
+              <ConfirmDelete
+                form={`delete-edition-${edition.id}`}
+                size="md"
+                label={copy.editions.deleteEdition}
+                subject={edition.name}
+                message={copy.common.cannotBeUndone}
+                cancelLabel={copy.shell.cancel}
+                disabled={isDeleting}
+              />
             </div>
           </div>
         </Card>

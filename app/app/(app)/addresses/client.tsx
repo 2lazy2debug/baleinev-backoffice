@@ -3,18 +3,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
-import { Check, Eye, Pencil, Search, Trash2, X } from "lucide-react";
+import { Check, Eye, Pencil, Search, X } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import {
   Badge,
-  Button,
   Cardlet,
   CardletActions,
   CardletField,
   CardletFields,
   CardletHeader,
   CardletList,
+  ConfirmDelete,
   IconButton,
   Input,
   PageHeader,
@@ -464,17 +464,19 @@ export function AddressesClient({ locale, addresses, canDelete, addressTypes, ac
                           <Pencil />
                         </IconButton>
                         {canDelete ? (
-                          <form action={deleteFormAction}>
-                            <input type="hidden" name="addressId" value={address.id} />
-                            <IconButton
-                              type="submit"
-                              tone="delete"
+                          <>
+                            <form id={`delete-address-${address.id}`} action={deleteFormAction}>
+                              <input type="hidden" name="addressId" value={address.id} />
+                            </form>
+                            <ConfirmDelete
+                              form={`delete-address-${address.id}`}
                               label={copy.deleteAddress}
+                              subject={text.name || address.companyName}
+                              message={dictionaries[locale].common.cannotBeUndone}
+                              cancelLabel={shellCopy.cancel}
                               disabled={isDeleting}
-                            >
-                              <Trash2 />
-                            </IconButton>
-                          </form>
+                            />
+                          </>
                         ) : null}
                       </div>
                     )}
@@ -534,12 +536,21 @@ export function AddressesClient({ locale, addresses, canDelete, addressTypes, ac
                   {copy.view}
                 </Link>
                 {canDelete ? (
-                  <form action={deleteFormAction}>
-                    <input type="hidden" name="addressId" value={address.id} />
-                    <Button type="submit" variant="destructive" size="sm" icon={<Trash2 />} disabled={isDeleting}>
-                      {copy.deleteAddress}
-                    </Button>
-                  </form>
+                  <>
+                    <form id={`delete-address-card-${address.id}`} action={deleteFormAction}>
+                      <input type="hidden" name="addressId" value={address.id} />
+                    </form>
+                    <ConfirmDelete
+                      form={`delete-address-card-${address.id}`}
+                      trigger="button"
+                      size="sm"
+                      label={copy.deleteAddress}
+                      subject={text.name || address.companyName}
+                      message={dictionaries[locale].common.cannotBeUndone}
+                      cancelLabel={shellCopy.cancel}
+                      disabled={isDeleting}
+                    />
+                  </>
                 ) : null}
               </CardletActions>
             </Cardlet>

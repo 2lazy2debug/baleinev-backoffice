@@ -1,11 +1,11 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { Check, ChevronDown, ChevronUp, FileText, Link2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, FileText, Link2, Pencil, Plus } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, Chip, ChipRemoveButton, IconButton, Panel, PanelHeader, SectionTitle, Select, cn, microLabelClasses, nestedSurfaceClasses, scrollToBelowTopBar } from "@/components/ui";
+import { Badge, Button, Card, Chip, ChipRemoveButton, ConfirmDelete, IconButton, Panel, PanelHeader, SectionTitle, Select, cn, microLabelClasses, nestedSurfaceClasses, scrollToBelowTopBar } from "@/components/ui";
 import type { Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -197,6 +197,7 @@ type Props = {
   allUsers: UserItem[];
   copy: EventsCopy;
   shellCopy: { save: string; cancel: string };
+  cannotBeUndone: string;
   locale: Locale;
 };
 
@@ -207,6 +208,7 @@ export default function EventsPageClient({
   allUsers,
   copy,
   shellCopy,
+  cannotBeUndone,
   locale,
 }: Props) {
   const [deleteEventState, deleteEventFormAction, isDeletingEvent] = useActionState(
@@ -461,12 +463,20 @@ export default function EventsPageClient({
                   {copiedEventId === event.id ? <Check /> : <Link2 />}
                 </IconButton>
                 {canManageEvents ? (
-                  <form action={deleteEventFormAction}>
-                    <input type="hidden" name="id" value={event.id} />
-                    <Button type="submit" variant="destructive" disabled={isDeletingEvent}>
-                      {copy.deleteEvent}
-                    </Button>
-                  </form>
+                  <>
+                    <form id={`delete-event-${event.id}`} action={deleteEventFormAction}>
+                      <input type="hidden" name="id" value={event.id} />
+                    </form>
+                    <ConfirmDelete
+                      form={`delete-event-${event.id}`}
+                      trigger="button"
+                      label={copy.deleteEvent}
+                      subject={event.name}
+                      message={cannotBeUndone}
+                      cancelLabel={shellCopy.cancel}
+                      disabled={isDeletingEvent}
+                    />
+                  </>
                 ) : null}
                 {/* Last in the row from `sm` up; on a phone it is already up
                     beside the title. */}
@@ -662,12 +672,17 @@ export default function EventsPageClient({
                                           >
                                             <Pencil />
                                           </IconButton>
-                                          <form action={deleteShiftFormAction}>
+                                          <form id={`delete-shift-${shift.id}`} action={deleteShiftFormAction}>
                                             <input type="hidden" name="id" value={shift.id} />
-                                            <IconButton type="submit" tone="delete" label={copy.deleteShift} disabled={isDeletingShift}>
-                                              <Trash2 />
-                                            </IconButton>
                                           </form>
+                                          <ConfirmDelete
+                                            form={`delete-shift-${shift.id}`}
+                                            label={copy.deleteShift}
+                                            subject={shift.role || copy.genericShiftLabel}
+                                            message={cannotBeUndone}
+                                            cancelLabel={shellCopy.cancel}
+                                            disabled={isDeletingShift}
+                                          />
                                         </div>
                                       ) : null}
                                     </div>

@@ -7,7 +7,7 @@ import { Check, Eye, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import { Button, Card, CardGrid, Cardlet, CardletField, CardletFields, CardletHeader, CardletList, Chip, Field, IconButton, Input, Modal, PageHeader, Panel, SectionTitle, Select, SignedAmount, TD, TFoot, TH, THead, TR, Table, Textarea, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
+import { Button, Card, CardGrid, Cardlet, CardletField, CardletFields, CardletHeader, CardletList, Chip, ConfirmDelete, Field, IconButton, Input, Modal, PageHeader, Panel, SectionTitle, Select, SignedAmount, TD, TFoot, TH, THead, TR, Table, Textarea, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -384,12 +384,17 @@ export default function BudgetPageClient({
                                             >
                                               <Pencil />
                                             </IconButton>
-                                            <form action={deleteLineFormAction}>
+                                            <form id={`delete-budget-line-${line.id}`} action={deleteLineFormAction}>
                                               <input type="hidden" name="budgetLineId" value={line.id} />
-                                              <IconButton type="submit" tone="delete" label={copy.budget.deleteEntry} disabled={isDeletingLine}>
-                                                <Trash2 />
-                                              </IconButton>
                                             </form>
+                                            <ConfirmDelete
+                                              form={`delete-budget-line-${line.id}`}
+                                              label={copy.budget.deleteEntry}
+                                              subject={line.label}
+                                              message={copy.common.cannotBeUndone}
+                                              cancelLabel={copy.shell.cancel}
+                                              disabled={isDeletingLine}
+                                            />
                                           </div>
                                         ) : null}
                                       </TD>

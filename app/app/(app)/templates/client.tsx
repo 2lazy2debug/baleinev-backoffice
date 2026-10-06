@@ -2,16 +2,14 @@
 
 import { useActionState } from "react";
 import { DocumentType } from "@prisma/client";
-import { Trash2 } from "lucide-react";
-
 import { FormError } from "@/components/form-error";
 import {
   Badge,
   Button,
   Card,
   CardGrid,
+  ConfirmDelete,
   Field,
-  IconButton,
   Input,
   SectionTitle,
   Textarea,
@@ -146,26 +144,26 @@ export function TemplatesPageClient({
                         </Button>
                       </form>
                     ) : null}
-                    <form action={deleteFormAction}>
+                    <form id={`delete-template-${template.id}`} action={deleteFormAction}>
                       <input
                         type="hidden"
                         name="templateId"
                         value={template.id}
                       />
-                      <IconButton
-                        type="submit"
-                        size="md"
-                        tone="delete"
-                        label={
-                          template.isDefault
-                            ? copy.templates.cannotDeleteDefault
-                            : copy.templates.deleteButton
-                        }
-                        disabled={template.isDefault || isDeleting}
-                      >
-                        <Trash2 />
-                      </IconButton>
                     </form>
+                    <ConfirmDelete
+                      form={`delete-template-${template.id}`}
+                      size="md"
+                      label={
+                        template.isDefault
+                          ? copy.templates.cannotDeleteDefault
+                          : copy.templates.deleteButton
+                      }
+                      subject={template.name}
+                      message={copy.common.cannotBeUndone}
+                      cancelLabel={copy.shell.cancel}
+                      disabled={template.isDefault || isDeleting}
+                    />
                   </div>
                 </div>
               </Card>

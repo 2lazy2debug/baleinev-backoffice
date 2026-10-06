@@ -10,6 +10,7 @@ import {
   Button,
   Card,
   CardGrid,
+  ConfirmDelete,
   Field,
   IconButton,
   Input,
@@ -326,17 +327,17 @@ export function StockSettingsClient({ locale, places, units, conversions }: Prop
                         >
                           <Pencil />
                         </IconButton>
-                        <form action={conversionDeleteFormAction}>
+                        <form id={`delete-conversion-${conversion.id}`} action={conversionDeleteFormAction}>
                           <input type="hidden" name="conversionId" value={conversion.id} />
-                          <IconButton
-                            type="submit"
-                            tone="delete"
-                            label={copy.deleteConversion}
-                            disabled={isDeletingConversion}
-                          >
-                            <Trash2 />
-                          </IconButton>
                         </form>
+                        <ConfirmDelete
+                          form={`delete-conversion-${conversion.id}`}
+                          label={copy.deleteConversion}
+                          subject={`1 ${conversion.fromUnitName} = ${conversion.factor} ${conversion.toUnitName}`}
+                          message={dictionaries[locale].common.cannotBeUndone}
+                          cancelLabel={shellCopy.cancel}
+                          disabled={isDeletingConversion}
+                        />
                       </>
                     )}
                   </div>

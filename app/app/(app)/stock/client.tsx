@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
-import { ArrowRightLeft, Check, Minus, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowRightLeft, Check, Minus, Pencil, Plus, Search } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import {
@@ -12,6 +12,7 @@ import {
   CardletFields,
   CardletHeader,
   CardletList,
+  ConfirmDelete,
   IconButton,
   Input,
   PageHeader,
@@ -244,12 +245,17 @@ export function StockClient({ locale, rows, places, currentPlaceId, eyebrow, tit
             <ArrowRightLeft />
           </IconButton>
         ) : null}
-        <form action={removeFormAction}>
+        <form id={`remove-stock-${row.id}`} action={removeFormAction}>
           <input type="hidden" name="stockItemId" value={row.id} />
-          <IconButton type="submit" tone="delete" label={copy.removeFromStock} disabled={isRemoving}>
-            <Trash2 />
-          </IconButton>
         </form>
+        <ConfirmDelete
+          form={`remove-stock-${row.id}`}
+          label={copy.removeFromStock}
+          subject={row.name}
+          message={dictionaries[locale].common.cannotBeUndone}
+          cancelLabel={dictionaries[locale].shell.cancel}
+          disabled={isRemoving}
+        />
       </div>
     );
   }

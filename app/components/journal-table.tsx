@@ -3,7 +3,7 @@
 import { useActionState, useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, memo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Pencil, PencilLine, Trash2, X } from "lucide-react";
+import { Check, Pencil, PencilLine, X } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import {
   bulkUpdateJournalEntriesAction,
@@ -12,7 +12,7 @@ import {
 } from "@/app/(app)/journal/actions";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Cardlet, CardletField, CardletFields, CardletHeader, CardletList, IconButton, Input, Panel, PanelHeader, SectionTitle, Select, TD, TH, THead, TR, Table, cn, iconButtonClasses, microLabelClasses, signedAmountClasses } from "@/components/ui";
+import { Badge, Button, Cardlet, CardletField, CardletFields, CardletHeader, CardletList, ConfirmDelete, IconButton, Input, Panel, PanelHeader, SectionTitle, Select, TD, TH, THead, TR, Table, cn, iconButtonClasses, microLabelClasses, signedAmountClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import {
   buildRunningBalances,
@@ -362,17 +362,17 @@ const JournalTableRow = memo(function JournalTableRow({
             <IconButton onClick={() => onEditStart(entry)} tone="accent" label={copy.edit}>
               <Pencil />
             </IconButton>
-            <form action={deleteFormAction}>
+            <form id={`delete-journal-entry-${entry.id}`} action={deleteFormAction}>
               <input type="hidden" name="journalEntryId" value={entry.id} />
-              <IconButton
-                type="submit"
-                tone="delete"
-                label={row.deleteDisabled ? copy.locked : copy.deleteEntry}
-                disabled={row.deleteDisabled || isDeleting}
-              >
-                <Trash2 />
-              </IconButton>
             </form>
+            <ConfirmDelete
+              form={`delete-journal-entry-${entry.id}`}
+              label={row.deleteDisabled ? copy.locked : copy.deleteEntry}
+              subject={entry.label}
+              message={dictionaries[locale].common.cannotBeUndone}
+              cancelLabel={shellCopy.cancel}
+              disabled={row.deleteDisabled || isDeleting}
+            />
           </div>
         )}
       </TD>
@@ -549,17 +549,17 @@ const JournalCardlet = memo(function JournalCardlet({
           >
             <Pencil />
           </Link>
-          <form action={deleteFormAction}>
+          <form id={`delete-journal-entry-card-${row.entry.id}`} action={deleteFormAction}>
             <input type="hidden" name="journalEntryId" value={row.entry.id} />
-            <IconButton
-              type="submit"
-              tone="delete"
-              label={row.deleteDisabled ? copy.locked : copy.deleteEntry}
-              disabled={row.deleteDisabled || isDeleting}
-            >
-              <Trash2 />
-            </IconButton>
           </form>
+          <ConfirmDelete
+            form={`delete-journal-entry-card-${row.entry.id}`}
+            label={row.deleteDisabled ? copy.locked : copy.deleteEntry}
+            subject={row.entry.label}
+            message={dictionaries[locale].common.cannotBeUndone}
+            cancelLabel={dictionaries[locale].shell.cancel}
+            disabled={row.deleteDisabled || isDeleting}
+          />
         </div>
       )}
     </Cardlet>

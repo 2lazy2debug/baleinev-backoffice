@@ -7,7 +7,7 @@ import { Check, Circle, Pencil, Trash2 } from "lucide-react";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import { Button, Card, Field, IconButton, Input, Modal, SectionTitle, Select, Textarea, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
+import { Button, Card, ConfirmDelete, Field, IconButton, Input, Modal, SectionTitle, Select, Textarea, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
 import { getDictionary } from "@/lib/i18n";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { decimalToNumber, formatCurrency } from "@/lib/utils";
@@ -230,12 +230,21 @@ export function TasksPageClient({
                       </form>
                       )}
                       {canManageTask ? (
-                        <form action={deleteTaskFormAction}>
-                          <input type="hidden" name="todoTaskId" value={task.id} />
-                          <Button type="submit" variant="destructive" size="sm" disabled={isDeletingTask}>
-                            {copy.tasks.deleteTask}
-                          </Button>
-                        </form>
+                        <>
+                          <form id={`delete-task-card-${task.id}`} action={deleteTaskFormAction}>
+                            <input type="hidden" name="todoTaskId" value={task.id} />
+                          </form>
+                          <ConfirmDelete
+                            form={`delete-task-card-${task.id}`}
+                            trigger="button"
+                            size="sm"
+                            label={copy.tasks.deleteTask}
+                            subject={task.title}
+                            message={copy.common.cannotBeUndone}
+                            cancelLabel={copy.shell.cancel}
+                            disabled={isDeletingTask}
+                          />
+                        </>
                       ) : null}
                     </div>
                   </>
@@ -502,12 +511,17 @@ function TodoCard({ todo, users, isAdmin, access, copy, locale }: TodoCardProps)
                         users={users}
                         isAdmin={isAdmin}
                       />
-                      <form action={deleteTaskFormAction} className="inline">
+                      <form id={`delete-task-${task.id}`} action={deleteTaskFormAction}>
                         <input type="hidden" name="todoTaskId" value={task.id} />
-                        <IconButton type="submit" tone="delete" label={copy.tasks.deleteTask} disabled={isDeletingTask}>
-                          <Trash2 />
-                        </IconButton>
                       </form>
+                      <ConfirmDelete
+                        form={`delete-task-${task.id}`}
+                        label={copy.tasks.deleteTask}
+                        subject={task.title}
+                        message={copy.common.cannotBeUndone}
+                        cancelLabel={copy.shell.cancel}
+                        disabled={isDeletingTask}
+                      />
                     </>
                   ) : null}
                 </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import {
@@ -13,6 +13,7 @@ import {
   CardletFields,
   CardletHeader,
   CardletList,
+  ConfirmDelete,
   IconButton,
   Input,
   Panel,
@@ -74,19 +75,24 @@ export function ArticlesClient({ locale, units, conversions, items }: Props) {
     const blocked = item.inStock > 0;
     const label = blocked ? copy.deleteItemBlocked : copy.deleteItem;
 
+    const formId = `delete-article-${variant}-${item.id}`;
+
     return (
-      <form action={deleteFormAction}>
-        <input type="hidden" name="elementId" value={item.id} />
-        {variant === "icon" ? (
-          <IconButton type="submit" tone="delete" label={label} disabled={blocked || isDeleting}>
-            <Trash2 />
-          </IconButton>
-        ) : (
-          <Button type="submit" variant="destructive" size="sm" icon={<Trash2 />} disabled={blocked || isDeleting}>
-            {copy.deleteItem}
-          </Button>
-        )}
-      </form>
+      <>
+        <form id={formId} action={deleteFormAction}>
+          <input type="hidden" name="elementId" value={item.id} />
+        </form>
+        <ConfirmDelete
+          form={formId}
+          trigger={variant}
+          size={variant === "button" ? "sm" : undefined}
+          label={variant === "icon" ? label : copy.deleteItem}
+          subject={item.name}
+          message={dictionaries[locale].common.cannotBeUndone}
+          cancelLabel={dictionaries[locale].shell.cancel}
+          disabled={blocked || isDeleting}
+        />
+      </>
     );
   }
 

@@ -1,11 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import { Button, Card, CardGrid, Field, IconButton, Input, Modal, Panel, SectionTitle } from "@/components/ui";
+import { Button, Card, CardGrid, ConfirmDelete, Field, IconButton, Input, Modal, Panel, SectionTitle } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -76,17 +76,17 @@ export function EventSettingsClient({ locale, eventTypes }: Props) {
                   <IconButton tone="accent" label={copy.rename} onClick={() => setEditing(eventType)}>
                     <Pencil />
                   </IconButton>
-                  <form action={deleteFormAction}>
+                  <form id={`delete-event-type-${eventType.id}`} action={deleteFormAction}>
                     <input type="hidden" name="id" value={eventType.id} />
-                    <IconButton
-                      type="submit"
-                      tone="delete"
-                      label={eventType.eventCount > 0 ? copy.cannotDeleteEventType : copy.deleteEventType}
-                      disabled={isDeleting || eventType.eventCount > 0}
-                    >
-                      <Trash2 />
-                    </IconButton>
                   </form>
+                  <ConfirmDelete
+                    form={`delete-event-type-${eventType.id}`}
+                    label={eventType.eventCount > 0 ? copy.cannotDeleteEventType : copy.deleteEventType}
+                    subject={eventType.name}
+                    message={dictionaries[locale].common.cannotBeUndone}
+                    cancelLabel={shellCopy.cancel}
+                    disabled={isDeleting || eventType.eventCount > 0}
+                  />
                 </div>
               </Panel>
             ))}

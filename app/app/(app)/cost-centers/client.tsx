@@ -1,12 +1,12 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Check, Pencil, Trash2, X } from "lucide-react";
+import { Check, Pencil, X } from "lucide-react";
 
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Card, CardGrid, IconButton, Input, SectionTitle, SignedAmount, microLabelClasses } from "@/components/ui";
+import { Card, CardGrid, ConfirmDelete, IconButton, Input, SectionTitle, SignedAmount, microLabelClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -110,17 +110,17 @@ export function CostCentersPageClient({ locale, costCenters }: Props) {
                         </IconButton>
                       )}
 
-                      <form action={deleteFormAction}>
+                      <form id={`delete-cost-center-${costCenter.id}`} action={deleteFormAction}>
                         <input type="hidden" name="costCenterId" value={costCenter.id} />
-                        <IconButton
-                          type="submit"
-                          tone="delete"
-                          label={costCenter.canDelete ? copy.costCenters.delete : copy.costCenters.cannotDelete}
-                          disabled={!costCenter.canDelete || isDeletingCostCenter}
-                        >
-                          <Trash2 />
-                        </IconButton>
                       </form>
+                      <ConfirmDelete
+                        form={`delete-cost-center-${costCenter.id}`}
+                        label={costCenter.canDelete ? copy.costCenters.delete : copy.costCenters.cannotDelete}
+                        subject={costCenter.name}
+                        message={copy.common.cannotBeUndone}
+                        cancelLabel={copy.shell.cancel}
+                        disabled={!costCenter.canDelete || isDeletingCostCenter}
+                      />
                     </div>
                   </div>
                   )}

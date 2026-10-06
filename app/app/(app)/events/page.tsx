@@ -139,6 +139,7 @@ export default async function EventsPage() {
         allUsers={allUsers}
         copy={copy.events}
         shellCopy={{ save: copy.shell.save, cancel: copy.shell.cancel }}
+        cannotBeUndone={copy.common.cannotBeUndone}
         locale={locale}
       />
     </div>

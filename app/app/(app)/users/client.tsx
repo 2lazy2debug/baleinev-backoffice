@@ -1,12 +1,12 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Pencil, Trash2, X } from "lucide-react";
+import { Pencil, X } from "lucide-react";
 import { UserRole } from "@prisma/client";
 
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import { Badge, Button, Card, Field, IconButton, Input, MultiSelect, Select } from "@/components/ui";
+import { Badge, Button, Card, ConfirmDelete, Field, IconButton, Input, MultiSelect, Select } from "@/components/ui";
 import type { getDictionary } from "@/lib/i18n";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -133,17 +133,16 @@ export function UsersPageClient({
                   >
                     {copy.users.updateButton}
                   </Button>
-                  <Button
-                    type="submit"
+                  <ConfirmDelete
                     form={`delete-user-${user.id}`}
-                    variant="destructive"
-                    icon={<Trash2 />}
+                    trigger="button"
+                    label={copy.users.deleteButton}
+                    subject={user.name}
+                    message={copy.common.cannotBeUndone}
+                    cancelLabel={copy.shell.cancel}
                     disabled={isSelf || isDeleting}
-                    title={isSelf ? copy.users.cannotDeleteSelf : undefined}
                     className="ml-auto"
-                  >
-                    {copy.users.deleteButton}
-                  </Button>
+                  />
                 </div>
                 {isSelf ? <p className="mt-2 text-xs text-[var(--muted)]">{copy.users.cannotDeleteSelf}</p> : null}
               </>

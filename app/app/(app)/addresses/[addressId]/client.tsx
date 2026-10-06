@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
-import { ArrowLeft, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, X } from "lucide-react";
 
 import {
   AddressFields,
@@ -27,6 +27,7 @@ import {
   CardletFields,
   CardletHeader,
   CardletList,
+  ConfirmDelete,
   IconButton,
   microLabelClasses,
   Modal,
@@ -234,16 +235,16 @@ export function AddressDetailClient({ locale, countries, addressTypes, canDelete
                 </Button>
                 {saveState.saved ? <Alert tone="success">{copy.saved}</Alert> : null}
                 {canDelete ? (
-                  <Button
-                    type="submit"
+                  <ConfirmDelete
                     form={DELETE_FORM_ID}
-                    variant="destructive"
-                    icon={<Trash2 />}
+                    trigger="button"
+                    label={copy.deleteAddress}
+                    subject={address.companyName}
+                    message={dictionaries[locale].common.cannotBeUndone}
+                    cancelLabel={shellCopy.cancel}
                     disabled={isDeleting}
                     className="ml-auto"
-                  >
-                    {copy.deleteAddress}
-                  </Button>
+                  />
                 ) : null}
               </div>
               <FormError message={deleteState.error} />
@@ -331,17 +332,17 @@ export function AddressDetailClient({ locale, countries, addressTypes, canDelete
                         >
                           <Pencil />
                         </IconButton>
-                        <form action={deleteBankFormAction}>
+                        <form id={`delete-bank-account-${bankAccount.id}`} action={deleteBankFormAction}>
                           <input type="hidden" name="bankAccountId" value={bankAccount.id} />
-                          <IconButton
-                            type="submit"
-                            tone="delete"
-                            label={copy.deleteBankAccount}
-                            disabled={isDeletingBank}
-                          >
-                            <Trash2 />
-                          </IconButton>
                         </form>
+                        <ConfirmDelete
+                          form={`delete-bank-account-${bankAccount.id}`}
+                          label={copy.deleteBankAccount}
+                          subject={bankAccount.displayName}
+                          message={dictionaries[locale].common.cannotBeUndone}
+                          cancelLabel={shellCopy.cancel}
+                          disabled={isDeletingBank}
+                        />
                       </div>
                     </TD>
                   </TR>
@@ -370,18 +371,19 @@ export function AddressDetailClient({ locale, countries, addressTypes, canDelete
                     >
                       {copy.editBankAccount}
                     </Button>
-                    <form action={deleteBankFormAction}>
+                    <form id={`delete-bank-account-card-${bankAccount.id}`} action={deleteBankFormAction}>
                       <input type="hidden" name="bankAccountId" value={bankAccount.id} />
-                      <Button
-                        type="submit"
-                        variant="destructive"
-                        size="sm"
-                        icon={<Trash2 />}
-                        disabled={isDeletingBank}
-                      >
-                        {copy.deleteBankAccount}
-                      </Button>
                     </form>
+                    <ConfirmDelete
+                      form={`delete-bank-account-card-${bankAccount.id}`}
+                      trigger="button"
+                      size="sm"
+                      label={copy.deleteBankAccount}
+                      subject={bankAccount.displayName}
+                      message={dictionaries[locale].common.cannotBeUndone}
+                      cancelLabel={shellCopy.cancel}
+                      disabled={isDeletingBank}
+                    />
                   </CardletActions>
                 </Cardlet>
               ))}
