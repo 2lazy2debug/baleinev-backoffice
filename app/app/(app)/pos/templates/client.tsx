@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LayoutGrid, Pencil, Trash2 } from "lucide-react";
+import { LayoutGrid, Pencil } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
@@ -16,6 +16,7 @@ import {
   CardletFields,
   CardletHeader,
   CardletList,
+  ConfirmDelete,
   Field,
   IconButton,
   Input,
@@ -58,13 +59,9 @@ export function PosTemplatesClient({ locale, templates }: { locale: Locale; temp
 
   const [deleteState, deleteAction, deleting] = useActionState(deletePosTemplateAction, initialActionState);
 
-  function confirmDelete(event: React.FormEvent<HTMLFormElement>) {
-    if (!window.confirm(copy.deleteTemplateConfirm)) {
-      event.preventDefault();
-    }
-  }
+  function rowActions(template: PosTemplateRow, inCard?: boolean) {
+    const formId = `delete-template-${inCard ? "card-" : ""}${template.id}`;
 
-  function rowActions(template: PosTemplateRow) {
     return (
       <div className="flex items-center justify-end gap-2">
         <Link
@@ -80,12 +77,17 @@ export function PosTemplatesClient({ locale, templates }: { locale: Locale; temp
             <IconButton tone="neutral" size="sm" label={copy.renameTemplate} onClick={() => setRenaming(template)}>
               <Pencil />
             </IconButton>
-            <form action={deleteAction} onSubmit={confirmDelete}>
+            <form id={formId} action={deleteAction}>
               <input type="hidden" name="templateId" value={template.id} />
-              <IconButton type="submit" tone="delete" size="sm" label={copy.deleteTemplate} disabled={deleting}>
-                <Trash2 />
-              </IconButton>
             </form>
+            <ConfirmDelete
+              form={formId}
+              label={copy.deleteTemplate}
+              subject={template.name}
+              message={copy.deleteTemplateConfirm}
+              cancelLabel={shell.cancel}
+              disabled={deleting}
+            />
           </>
         )}
       </div>
@@ -141,7 +143,7 @@ export function PosTemplatesClient({ locale, templates }: { locale: Locale; temp
               <CardletFields>
                 <CardletField label={copy.tiles}>{template.tileCount}</CardletField>
               </CardletFields>
-              <CardletActions inline>{rowActions(template)}</CardletActions>
+              <CardletActions inline>{rowActions(template, true)}</CardletActions>
             </Cardlet>
           ))}
         </CardletList>

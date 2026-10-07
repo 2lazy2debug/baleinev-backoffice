@@ -2,7 +2,6 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { Trash2 } from "lucide-react";
 
 import { FormError } from "@/components/form-error";
 import {
@@ -13,7 +12,7 @@ import {
   CardletFields,
   CardletHeader,
   CardletList,
-  IconButton,
+  ConfirmDelete,
   Panel,
   PanelHeader,
   SectionTitle,
@@ -66,24 +65,27 @@ export function PosSessionsClient({ locale, sessions }: { locale: Locale; sessio
 
   const [deleteState, deleteFormAction, deleting] = useActionState(deletePosSessionAction, initialActionState);
 
-  function confirmDelete(event: React.FormEvent<HTMLFormElement>) {
-    if (!window.confirm(copy.deleteSessionConfirm)) {
-      event.preventDefault();
-    }
-  }
-
-  function deleteButton(session: SessionRow, size: "sm") {
+  function deleteButton(session: SessionRow, size: "sm", inCard?: boolean) {
     if (session.saleCount > 0) {
       return null;
     }
 
+    const formId = `delete-session-${inCard ? "card-" : ""}${session.id}`;
+
     return (
-      <form action={deleteFormAction} onSubmit={confirmDelete}>
-        <input type="hidden" name="sessionId" value={session.id} />
-        <IconButton type="submit" tone="delete" size={size} label={copy.deleteSession} disabled={deleting}>
-          <Trash2 />
-        </IconButton>
-      </form>
+      <>
+        <form id={formId} action={deleteFormAction}>
+          <input type="hidden" name="sessionId" value={session.id} />
+        </form>
+        <ConfirmDelete
+          form={formId}
+          label={copy.deleteSession}
+          subject={session.name}
+          message={copy.deleteSessionConfirm}
+          cancelLabel={dictionaries[locale].shell.cancel}
+          disabled={deleting}
+        />
+      </>
     );
   }
 
@@ -194,7 +196,7 @@ export function PosSessionsClient({ locale, sessions }: { locale: Locale; sessio
               ))}
               <CardletField label={copy.total}>{formatCurrency(fromRappen(session.total))}</CardletField>
             </CardletFields>
-            {session.saleCount === 0 ? <CardletActions inline>{deleteButton(session, "sm")}</CardletActions> : null}
+            {session.saleCount === 0 ? <CardletActions inline>{deleteButton(session, "sm", true)}</CardletActions> : null}
           </Cardlet>
         ))}
       </CardletList>
