@@ -334,6 +334,9 @@ app/
     │
     ├── invoices/route.ts           ← POST: persist a new Invoice record
     │
+    ├── journal/
+    │   └── controlling-export/route.ts ← GET (admin): the active edition's controlling workbook (.xlsx)
+    │
     ├── cities/route.ts             ← GET: postal-code ↔ locality proposals for the address fields
     │
     ├── expense-reports/
@@ -443,6 +446,8 @@ which. Nothing here should be re-implemented inline in a page.
 | `departments.ts` | `attachableDepartments()` — every department, `id` and `name`, for the budget app's attach picker (no eligibility filter) |
 | `budgets.ts` | `visibleBudgetsWhere(access, editionId)` — the one place the visibility rule lives (admins see all, others see only their departments' budgets); `editionBudgets()` (the journal picker's options); `assertBudgetInEdition()`; `resolveDefaultBudgetForDepartment()` (the expense-report → journal prefill) |
 | `edition-carry-over.ts` | `carryOverEdition(tx, source, target)` — copies budgets with their lines and department attachments, cost centers and money accounts into another edition and writes each account's closing balance as a locked opening entry |
+| `edition-summary.ts` | `summarizeEdition()` / `loadEditionSummary(editionId)` — money account balances, budget vs actuals and the by-budget / by-cost-center splits. The dashboard and the controlling export both read it |
+| `controlling-workbook.ts` | `buildControllingWorkbook()` — the controlling export (ExcelJS): a summary sheet of `EditionSummary` and the journal sheet, values only, light-theme palette mirrored from `globals.css` |
 | `edition-context.ts` | The single answer to "which edition is this request in", read from `User.selectedEditionId`: `resolveEditionIdOrNull()` (pages), `resolveEditionId()` (write paths, throws), `resolveWritableEditionId()` (write paths, also refuses a closed edition), `requireWritableEdition(id)` (guards a write against a named edition), `resolveEdition()` (the record), `ensureUserEdition()` (the only writer of the seed) |
 | `server-action-helpers.ts` | Shared helpers for server actions: `getRequiredString()`, plus the `ActionState` type (`{ error: string \| null }`), `initialActionState`, and `toActionErrorMessage()` used by every action to report validation failures instead of throwing. Kept free of server-only imports — client components import `initialActionState` from here |
 | `markdown.ts` | `parseMarkdown()` — headings, paragraphs, lists, quotes, fenced code, rules and inline bold/italic/code/links as a node tree for `<Markdown>`; `safeHref()` is the link allowlist (http/https/mailto/tel and this app's own paths). Anything it does not know about, raw HTML included, survives as literal text |

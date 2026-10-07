@@ -9,6 +9,7 @@ import { decimalToNumber } from "@/lib/utils";
 import JournalPageClient from "./client";
 import { AddJournalEntryButton } from "./add-entry-button";
 import { JournalColumnsButton } from "./columns-button";
+import { ControllingExportButton } from "./controlling-export-button";
 import { WritableEditionOnly } from "@/components/edition-read-only";
 import { EmptyPage, PageHeader } from "@/components/ui";
 
@@ -109,6 +110,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
         description={copy.journal.subtitle}
         actions={
           <>
+            <ControllingExportButton label={copy.journal.exportControlling} />
             <JournalColumnsButton locale={locale} />
             <WritableEditionOnly>
               <AddJournalEntryButton

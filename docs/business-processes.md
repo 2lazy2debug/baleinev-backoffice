@@ -186,6 +186,22 @@ account, cost centre, balance). The choice is per browser (`localStorage`,
 `journal:columns`, `components/journal-columns.ts`); reference is off by default. A
 hidden column's filter is ignored, and the same choice trims the phone cards' fields.
 
+### Controlling export
+The *Controlling export* button left of *Columns* downloads
+`controlling-<edition>-<yyyymmdd>.xlsx` from `/api/journal/controlling-export`
+(admins only). Two sheets, values only — no formulas, no validation lists:
+
+- **Summary** — the edition and export time, then the dashboard's accounting figures
+  from `lib/edition-summary.ts`: money account balances, budget vs actuals with delta,
+  and earnings/charges with their share by budget and by cost center (the donuts as
+  tables, same "unassigned" rule as §2).
+- **Journal** — every entry of the edition in `#` order, all columns whatever the
+  browser's *Columns* choice, with the per-account running balance.
+
+The look is the intranet's light theme; its tokens are copied as ARGB in
+`lib/controlling-workbook.ts`, so a change to `:root[data-theme="light"]` has to be
+repeated there. The mark is `public/logo_blv_dark.png`, the inverted `logo_blv.png`.
+
 ### Locked entries
 Entries with `isOpeningEntry = true` were imported from a previous edition's closing balance. They cannot be edited or deleted — they are permanent anchor points for the ledger.
 

@@ -1,40 +1,22 @@
-import { AccountType, TaskType } from "@prisma/client";
+import { TaskType } from "@prisma/client";
 
 import { Card, CardGrid, Cardlet, CardletField, CardletFields, CardletHeader, CardletList, DonutChart, EmptyPage, PageHeader, Panel, PanelHeader, SectionTitle, SignedAmount, TD, TFoot, TH, THead, TR, Table, buttonClasses, colourOrder, microLabelClasses } from "@/components/ui";
 import type { DonutSlice } from "@/components/ui";
 import { getCurrentUserAccess } from "@/lib/access";
-import { prisma } from "@/lib/db";
+import { loadEditionSummary, type Split } from "@/lib/edition-summary";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { getPendingTasksForUser } from "@/lib/tasks";
-import { decimalToNumber, formatCurrency } from "@/lib/utils";
-
-function sumAmounts<T extends { amount: { toString(): string } }>(items: T[]) {
-  return items.reduce((total, item) => total + decimalToNumber(item.amount), 0);
-}
-
-type Bucket = { name: string; journalEntries: { accountType: AccountType; amount: { toString(): string } }[] };
+import { formatCurrency } from "@/lib/utils";
 
 /**
- * The association as its own counterparty — how the bank-statement import spells
- * a move between our own accounts (see `scripts/import-bank-statement.ts`). Such
- * a move is booked twice, a charge on the account it leaves and an earning on the
- * one it reaches, so counting it would inflate both sides of these charts by the
- * same amount without a franc having been earned or spent.
+ * One side of a split, for a donut. Entries with no bucket get their own slice
+ * rather than being dropped: a chart that says "earnings by budget" while
+ * silently leaving out everything unbudgeted shows a total that matches nothing.
  */
-const SELF_COUNTERPARTY = "BLV";
-
-/**
- * One side of the ledger, split across buckets, for a donut. Entries with no
- * bucket get their own slice rather than being dropped: a chart that says
- * "earnings by budget" while silently leaving out everything unbudgeted shows a
- * total that matches nothing.
- */
-function slicesBy(buckets: Bucket[], loose: number, side: AccountType, unassignedLabel: string): DonutSlice[] {
-  const slices = buckets.map((bucket) => ({
-    label: bucket.name,
-    value: sumAmounts(bucket.journalEntries.filter((entry) => entry.accountType === side)),
-  }));
+function slicesBy(split: Split, side: "produits" | "charges", unassignedLabel: string): DonutSlice[] {
+  const slices = split.rows.map((row) => ({ label: row.name, value: row[side] }));
+  const loose = split.unassigned[side];
   return loose > 0 ? [...slices, { label: unassignedLabel, value: loose }] : slices;
 }
 
@@ -46,25 +28,9 @@ export default async function DashboardPage() {
   const pendingTasks = await getPendingTasksForUser(access);
 
   const editionId = await resolveEditionIdOrNull();
-  const activeEdition = editionId ? await prisma.edition.findUnique({
-    where: { id: editionId },
-    include: {
-      budgets: {
-        orderBy: { name: "asc" },
-        include: { budgetLines: true, journalEntries: true },
-      },
-      costCenters: {
-        orderBy: { code: "asc" },
-        include: { journalEntries: true },
-      },
-      moneyAccounts: {
-        orderBy: { name: "asc" },
-        include: { journalEntries: true },
-      },
-    },
-  }) : null;
+  const loaded = editionId ? await loadEditionSummary(editionId) : null;
 
-  if (!activeEdition) {
+  if (!loaded) {
     return (
       <EmptyPage eyebrow={copy.dashboard.title} title={copy.common.noEditionSelected}>
         {copy.common.pickEditionHint}
@@ -72,85 +38,16 @@ export default async function DashboardPage() {
     );
   }
 
-  const departmentRows = activeEdition.budgets.map((budget) => {
-    const budgetCharges = sumAmounts(
-      budget.budgetLines.filter((line) => line.accountType === AccountType.CHARGES),
-    );
-    const budgetProduits = sumAmounts(
-      budget.budgetLines.filter((line) => line.accountType === AccountType.PRODUITS),
-    );
-    const actualCharges = sumAmounts(
-      budget.journalEntries.filter((entry) => entry.accountType === AccountType.CHARGES),
-    );
-    const actualProduits = sumAmounts(
-      budget.journalEntries.filter((entry) => entry.accountType === AccountType.PRODUITS),
-    );
-
-    return {
-      name: budget.name,
-      budgetCharges,
-      budgetProduits,
-      budgetResult: budgetProduits - budgetCharges,
-      actualCharges,
-      actualProduits,
-      actualResult: actualProduits - actualCharges,
-    };
-  });
-
-  const totals = departmentRows.reduce(
-    (acc, row) => ({
-      budgetCharges: acc.budgetCharges + row.budgetCharges,
-      budgetProduits: acc.budgetProduits + row.budgetProduits,
-      budgetResult: acc.budgetResult + row.budgetResult,
-      actualCharges: acc.actualCharges + row.actualCharges,
-      actualProduits: acc.actualProduits + row.actualProduits,
-      actualResult: acc.actualResult + row.actualResult,
-    }),
-    { budgetCharges: 0, budgetProduits: 0, budgetResult: 0, actualCharges: 0, actualProduits: 0, actualResult: 0 },
-  );
+  const { edition: activeEdition, summary } = loaded;
+  const { budgetRows: departmentRows, totals, moneyAccounts: moneyAccountCards } = summary;
   const totalDelta = totals.actualResult - totals.budgetResult;
-
-  // What is booked but unbudgeted / unattributed. Two kinds of entry are left
-  // out because neither is a spending or an earning: an opening entry, which is
-  // a carried balance, and a transfer between our own accounts. Both are
-  // unattributed by nature, so this is the only place they could have crept in —
-  // an entry that carries a budget or a cost center is real money either way.
-  const unattributed = async (field: "budgetId" | "costCenterId") => {
-    const sums = await prisma.journalEntry.groupBy({
-      by: ["accountType"],
-      where: {
-        editionId: activeEdition.id,
-        isOpeningEntry: false,
-        counterparty: { not: SELF_COUNTERPARTY },
-        [field]: null,
-      },
-      _sum: { amount: true },
-    });
-    const of = (side: AccountType) =>
-      decimalToNumber(sums.find((row) => row.accountType === side)?._sum.amount ?? 0);
-    return { produits: of(AccountType.PRODUITS), charges: of(AccountType.CHARGES) };
-  };
-  const [looseBudget, looseCostCenter] = await Promise.all([
-    unattributed("budgetId"),
-    unattributed("costCenterId"),
-  ]);
-
-  const costCenterBuckets = activeEdition.costCenters.map((costCenter) => ({
-    name: costCenter.code,
-    journalEntries: costCenter.journalEntries,
-  }));
 
   // One colour order per dimension, shared by that dimension's two donuts, so a
   // budget keeps its colour between "earnings" and "spendings" instead of being
   // repainted by how it happens to rank on each side.
-  const donutPair = (
-    buckets: Bucket[],
-    loose: { produits: number; charges: number },
-    earningsTitle: string,
-    expensesTitle: string,
-  ) => {
-    const earnings = slicesBy(buckets, loose.produits, AccountType.PRODUITS, copy.dashboard.unassigned);
-    const expenses = slicesBy(buckets, loose.charges, AccountType.CHARGES, copy.dashboard.unassigned);
+  const donutPair = (split: Split, earningsTitle: string, expensesTitle: string) => {
+    const earnings = slicesBy(split, "produits", copy.dashboard.unassigned);
+    const expenses = slicesBy(split, "charges", copy.dashboard.unassigned);
     const order = colourOrder([...earnings, ...expenses]);
     return [
       { title: earningsTitle, slices: earnings, order },
@@ -159,28 +56,9 @@ export default async function DashboardPage() {
   };
 
   const donuts = [
-    ...donutPair(
-      activeEdition.budgets,
-      looseBudget,
-      copy.dashboard.earningsByBudget,
-      copy.dashboard.expensesByBudget,
-    ),
-    ...donutPair(
-      costCenterBuckets,
-      looseCostCenter,
-      copy.dashboard.earningsByCostCenter,
-      copy.dashboard.expensesByCostCenter,
-    ),
+    ...donutPair(summary.byBudget, copy.dashboard.earningsByBudget, copy.dashboard.expensesByBudget),
+    ...donutPair(summary.byCostCenter, copy.dashboard.earningsByCostCenter, copy.dashboard.expensesByCostCenter),
   ];
-
-  const moneyAccountCards = activeEdition.moneyAccounts.map((account) => {
-    const balance = account.journalEntries.reduce((total, entry) => {
-      const amount = decimalToNumber(entry.amount);
-      return entry.accountType === AccountType.PRODUITS ? total + amount : total - amount;
-    }, decimalToNumber(account.openingBalance));
-
-    return { name: account.name, type: account.type, balance };
-  });
 
   return (
     <div className="space-y-4 lg:space-y-8">

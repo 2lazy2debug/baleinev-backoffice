@@ -374,6 +374,16 @@ export const dictionaries = {
       columnsTitle: "Columns to display",
       recordNumber: "Record #",
       resetColumns: "Reset",
+      exportControlling: "Controlling export",
+    },
+    controlling: {
+      title: "Controlling",
+      summarySheet: "Summary",
+      journalSheet: "Journal",
+      exportedAt: "Exported",
+      byBudget: "Earnings and charges by budget",
+      byCostCenter: "Earnings and charges by cost center",
+      share: "Share",
     },
     addresses: {
       title: "Addresses",
@@ -1460,6 +1470,16 @@ export const dictionaries = {
       columnsTitle: "Colonnes à afficher",
       recordNumber: "N° d'écriture",
       resetColumns: "Réinitialiser",
+      exportControlling: "Export controlling",
+    },
+    controlling: {
+      title: "Controlling",
+      summarySheet: "Synthèse",
+      journalSheet: "Journal",
+      exportedAt: "Exporté le",
+      byBudget: "Produits et charges par budget",
+      byCostCenter: "Produits et charges par centre de charge",
+      share: "Part",
     },
     addresses: {
       title: "Adresses",
