@@ -8,6 +8,8 @@ export type TotpCode = {
   code: string;
   /** Seconds until the current code expires. */
   secondsRemaining: number;
+  /** Milliseconds until the current code expires — what a live countdown needs. */
+  msRemaining: number;
   /** Length of the rotation window in seconds (usually 30). */
   period: number;
 };
@@ -77,10 +79,13 @@ export function generateTotpCode(seed: string): TotpCode {
   const period = totp.period;
   const nowSeconds = Date.now() / 1000;
   const secondsRemaining = Math.max(1, Math.ceil(period - (nowSeconds % period)));
+  const periodMs = period * 1000;
+  const msRemaining = periodMs - (Date.now() % periodMs);
 
   return {
     code: totp.generate(),
     secondsRemaining,
+    msRemaining,
     period,
   };
 }

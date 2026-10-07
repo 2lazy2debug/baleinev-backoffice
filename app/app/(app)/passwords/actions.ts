@@ -24,7 +24,7 @@ export type RevealResult =
   | { ok: false; error: string };
 
 export type TotpResult =
-  | { ok: true; code: string; secondsRemaining: number; period: number }
+  | { ok: true; code: string; secondsRemaining: number; msRemaining: number; period: number }
   | { ok: false; error: string };
 
 function parseDepartmentIds(formData: FormData): string[] {
@@ -242,9 +242,9 @@ export async function getTotpCodeAction(entryId: string): Promise<TotpResult> {
       iv: entry.totpIv,
       tag: entry.totpTag,
     });
-    const { code, secondsRemaining, period } = generateTotpCode(seed);
+    const { code, secondsRemaining, msRemaining, period } = generateTotpCode(seed);
 
-    return { ok: true, code, secondsRemaining, period };
+    return { ok: true, code, secondsRemaining, msRemaining, period };
   } catch (err) {
     return { ok: false, error: toActionErrorMessage(err) };
   }

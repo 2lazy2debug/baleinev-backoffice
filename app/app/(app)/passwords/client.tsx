@@ -12,10 +12,10 @@ import { initialActionState, type ActionState } from "@/lib/server-action-helper
 import {
   createPasswordEntryAction,
   deletePasswordEntryAction,
-  getTotpCodeAction,
   revealPasswordAction,
   updatePasswordEntryAction,
 } from "./actions";
+import { useLiveTotp } from "./use-live-totp";
 
 type DepartmentOption = { id: string; name: string };
 
@@ -35,7 +35,7 @@ type Props = {
   isAdmin: boolean;
 };
 
-function CopyButton({ getValue, label }: { getValue: () => Promise<string | null>; label: string }) {
+function CopyButton({ getValue, label, disabled }: { getValue: () => Promise<string | null>; label: string; disabled?: boolean }) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -53,7 +53,7 @@ function CopyButton({ getValue, label }: { getValue: () => Promise<string | null
   }
 
   return (
-    <IconButton tone="neutral" label={label} onClick={handleCopy}>
+    <IconButton tone="neutral" label={label} onClick={handleCopy} disabled={disabled}>
       {copied ? <Check className="text-emerald-400" /> : <Copy />}
     </IconButton>
   );
@@ -198,9 +198,7 @@ function EntryRow({
   const [revealError, setRevealError] = useState<string | null>(null);
   const [isRevealing, startReveal] = useTransition();
 
-  const [totp, setTotp] = useState<{ code: string; secondsRemaining: number } | null>(null);
-  const [totpError, setTotpError] = useState<string | null>(null);
-  const [isLoadingTotp, startTotp] = useTransition();
+  const totp = useLiveTotp(entry.id, entry.has2fa);
 
   function toggleReveal() {
     if (revealed) {
@@ -214,18 +212,6 @@ function EntryRow({
         setRevealed(result.value);
       } else {
         setRevealError(result.error);
-      }
-    });
-  }
-
-  function loadTotp() {
-    setTotpError(null);
-    startTotp(async () => {
-      const result = await getTotpCodeAction(entry.id);
-      if (result.ok) {
-        setTotp({ code: result.code, secondsRemaining: result.secondsRemaining });
-      } else {
-        setTotpError(result.error);
       }
     });
   }
@@ -280,22 +266,29 @@ function EntryRow({
             </IconButton>
             <CopyButton getValue={fetchPasswordValue} label={copy.copyPassword} />
             {entry.has2fa ? (
-              totp ? (
-                <span className="inline-flex items-center gap-1.5 rounded-md bg-[var(--panel)] px-2 py-1">
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-[var(--panel)] px-2 py-1">
+                {totp.code ? (
                   <code className="font-mono text-xs tracking-[0.2em]">{totp.code}</code>
-                  <span className="w-6 text-right text-3xs tabular-nums text-[var(--muted)]">{totp.secondsRemaining}s</span>
-                  <CopyButton getValue={async () => totp.code} label={copy.copyCode} />
-                </span>
-              ) : (
-                <Button variant="secondary" size="sm" onClick={loadTotp} disabled={isLoadingTotp}>
-                  <ShieldCheck />
-                  {isLoadingTotp ? copy.loading : copy.field2fa}
-                </Button>
-              )
+                ) : (
+                  <code className="font-mono text-xs tracking-[0.2em] text-[var(--muted)]">••• •••</code>
+                )}
+                <span className="w-6 text-right text-3xs tabular-nums text-[var(--muted)]">{totp.secondsLeft}s</span>
+                <CopyButton
+                  getValue={async () => totp.code}
+                  label={copy.copyCode}
+                  disabled={!totp.code}
+                />
+              </span>
+            ) : null}
+            {totp.error ? (
+              <Button variant="secondary" size="sm" onClick={totp.retry}>
+                <ShieldCheck />
+                {copy.field2fa}
+              </Button>
             ) : null}
           </div>
           {revealError ? <FormError message={revealError} /> : null}
-          {totpError ? <FormError message={totpError} /> : null}
+          {totp.error ? <FormError message={totp.error} /> : null}
         </div>
 
         {/* Info: website + departments */}

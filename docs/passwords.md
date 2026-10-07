@@ -61,7 +61,7 @@ Secrets are **never** included in the page payload. The list only carries
 metadata (name, login, website, a `has2fa` flag). Plaintext is fetched on demand:
 
 ```
-Card "reveal" / "show 2FA" click
+Card "reveal" click  /  a 2FA code coming due (automatic)
         │
         ▼
 revealPasswordAction(entryId)  /  getTotpCodeAction(entryId)   ← server actions
@@ -74,6 +74,12 @@ revealPasswordAction(entryId)  /  getTotpCodeAction(entryId)   ← server action
 Client shows the value (and a copy button); nothing is persisted client-side
 ```
 
+The 2FA code needs no click: an entry with `has2fa` shows its code as soon as the
+row mounts. [`use-live-totp.ts`](../app/app/(app)/passwords/use-live-totp.ts) counts
+down from the `msRemaining` the action returns and asks for the next code when the
+current one expires. It pauses while the tab is hidden and catches up when it is
+visible again; on an error it stops until the user retries.
+
 Create/edit/delete use the standard `useActionState` + `FormData` server-action
 pattern, consistent with the rest of the app.
 
@@ -85,6 +91,7 @@ pattern, consistent with the rest of the app.
 |---|---|
 | `app/app/(app)/passwords/page.tsx` | Server component: loads visible entries (no ciphertext to client), assignable departments |
 | `app/app/(app)/passwords/client.tsx` | Cards + create/edit/delete modals, reveal & 2FA on demand |
+| `app/app/(app)/passwords/use-live-totp.ts` | Hook behind the always-visible 2FA code: countdown, refetch on expiry, pause while hidden |
 | `app/app/(app)/passwords/actions.ts` | `create` / `update` / `delete` / `revealPassword` / `getTotpCode`, all authorization-checked |
 | `app/lib/secret-crypto.ts` | AES-256-GCM seal/open, key loading |
 | `app/lib/totp.ts` | TOTP code generation from a stored seed |
