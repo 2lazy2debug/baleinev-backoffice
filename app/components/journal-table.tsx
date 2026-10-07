@@ -272,7 +272,7 @@ const JournalTableRow = memo(function JournalTableRow({
             className="text-right"
           />
         ) : (
-          <span className={row.isProduits ? signedAmountClasses(true) : undefined}>{row.amountLabel}</span>
+          <span className={signedAmountClasses(row.isProduits)}>{row.amountLabel}</span>
         )}
       </TD>
       <TD>
@@ -441,7 +441,7 @@ const JournalCardlet = memo(function JournalCardlet({
           draft ? null : (
             <div className="shrink-0 text-right">
               <Badge tone={row.isProduits ? "success" : "neutral"}>{row.typeText}</Badge>
-              <p className={cn("mt-1 text-sm font-semibold", row.isProduits ? signedAmountClasses(true) : null)}>
+              <p className={cn("mt-1 text-sm font-semibold", signedAmountClasses(row.isProduits))}>
                 {row.amountLabel}
               </p>
             </div>

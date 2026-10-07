@@ -7,7 +7,7 @@ import { Check, Eye, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import { Button, Card, CardGrid, Cardlet, CardletField, CardletFields, CardletHeader, CardletList, Chip, ConfirmDelete, Field, IconButton, Input, Modal, PageHeader, Panel, SectionTitle, Select, SignedAmount, TD, TFoot, TH, THead, TR, Table, Textarea, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
+import { Button, Card, CardGrid, Cardlet, CardletField, CardletFields, CardletHeader, CardletList, Chip, ConfirmDelete, Field, IconButton, Input, Modal, PageHeader, Panel, SectionTitle, Select, SignedAmount, TD, TFoot, TH, THead, TR, Table, Textarea, cn, microLabelClasses, nestedSurfaceClasses, signedAmountClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState, toActionErrorMessage } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -561,11 +561,11 @@ export default function BudgetPageClient({
               <Panel nested className="grid gap-3 p-2 sm:grid-cols-2 sm:p-3">
                 <div>
                   <p className={microLabelClasses}>{copy.common.charges}</p>
-                  <p className="text-sm font-semibold text-rose-300">{formatCurrency(detailsSummary.charges.actualTotal)}</p>
+                  <p className={`text-sm font-semibold ${signedAmountClasses(false)}`}>{formatCurrency(detailsSummary.charges.actualTotal)}</p>
                 </div>
                 <div>
                   <p className={microLabelClasses}>{copy.common.produits}</p>
-                  <p className="text-sm font-semibold text-emerald-300">{formatCurrency(detailsSummary.produits.actualTotal)}</p>
+                  <p className={`text-sm font-semibold ${signedAmountClasses(true)}`}>{formatCurrency(detailsSummary.produits.actualTotal)}</p>
                 </div>
               </Panel>
               <Table desktopOnly>
@@ -592,7 +592,7 @@ export default function BudgetPageClient({
                         <TD>{entry.label}</TD>
                         <TD className="text-xs text-[var(--muted)]">{entry.counterparty ?? "-"}</TD>
                         <TD className="text-xs text-[var(--muted)]">{entry.referenceNumber ?? "-"}</TD>
-                        <TD className={`text-right font-semibold ${entry.accountType === "CHARGES" ? "text-rose-300" : "text-emerald-300"}`}>
+                        <TD className={`text-right font-semibold ${signedAmountClasses(entry.accountType !== "CHARGES")}`}>
                           {formatCurrency(entry.amount)}
                         </TD>
                       </TR>
@@ -609,7 +609,7 @@ export default function BudgetPageClient({
                       <CardletHeader
                         title={entry.label}
                         action={
-                          <span className={`shrink-0 text-sm font-semibold ${entry.accountType === "CHARGES" ? "text-rose-300" : "text-emerald-300"}`}>
+                          <span className={`shrink-0 text-sm font-semibold ${signedAmountClasses(entry.accountType !== "CHARGES")}`}>
                             {formatCurrency(entry.amount)}
                           </span>
                         }
