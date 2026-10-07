@@ -50,7 +50,7 @@ a border/background/height recipe of its own.
 few decorative elements. Prefer flat, token-driven surfaces over gradients, glows, and
 large shadows.
 
-**Colors** are the eight Baleinev tokens, used via Tailwind arbitrary values like
+**Colors** are the Baleinev tokens, used via Tailwind arbitrary values like
 `bg-[var(--panel)]` or `text-[var(--muted)]` — do not introduce new hardcoded hex:
 
 - `--page` — app background
@@ -59,9 +59,12 @@ large shadows.
 - `--ink` — primary text
 - `--muted` — secondary text and labels
 - `--accent` / `--accent-strong` — primary action color and its hover/pressed state
+- `--good` / `--bad` / `--warn` — status only: success / error-destructive / warning;
+  light theme has its own values
 
-Destructive/error states use Tailwind `rose-*` utilities directly
-(e.g. `border-rose-400/30 bg-rose-950/30 text-rose-200`).
+Destructive/error states use the `--bad` token, never a fixed `rose-*` shade
+(e.g. `border-[var(--bad)]/30 bg-[var(--bad)]/10 text-[var(--bad)]`).
+`npm run check:design` rejects fixed emerald/rose/amber/red/green shades.
 
 **Components** — import from `@/components/ui`. If a screen needs a surface, a control
 or a heading, one of these already covers it:

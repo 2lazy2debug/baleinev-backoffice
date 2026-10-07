@@ -41,6 +41,11 @@ const RULES = [
     msg: "arbitrary radius — use the rounded-* scale (rounded-md / rounded-2xl / …)",
   },
   {
+    id: "status-shade",
+    re: /\b(?:text|bg|border|ring|fill|stroke|from|to)-(?:emerald|rose|amber|red|green)-\d{2,3}\b/g,
+    msg: "fixed status shade — use var(--good) / var(--bad) / var(--warn)",
+  },
+  {
     id: "raw-space-var",
     re: /var\(--space-[^)]*\)/g,
     msg: "raw var(--space-…) — spacing comes from Tailwind utilities (p-*, gap-*)",
