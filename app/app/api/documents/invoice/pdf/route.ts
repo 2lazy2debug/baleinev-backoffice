@@ -1,18 +1,16 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { DocumentType } from "@prisma/client";
 import { NextResponse } from "next/server";
 import puppeteer from "puppeteer";
 
 import { requireAdmin } from "@/lib/access";
-import { prisma } from "@/lib/db";
 import {
-  ensureDefaultInvoiceTemplate,
+  getInvoiceTemplateHtml,
   renderInvoiceTemplate,
   type InvoiceDocumentLineItem,
   type InvoiceDocumentPayload,
-} from "@/lib/document-templates";
+} from "@/lib/invoice-template";
 import { buildSwissQrSvgDataUrl } from "@/lib/swiss-qr-image";
 
 function getRequiredString(value: unknown, key: string) {
@@ -108,28 +106,16 @@ export async function POST(request: Request) {
     await requireAdmin();
 
     const body = await request.json() as Record<string, unknown>;
-    const templateId = typeof body.templateId === "string" ? body.templateId : null;
-
-    const [logoDataUrl, defaultTemplate] = await Promise.all([
+    const [logoDataUrl, templateHtml] = await Promise.all([
       getLogoDataUrl(),
-      ensureDefaultInvoiceTemplate(),
+      getInvoiceTemplateHtml(),
     ]);
-
-    const template = templateId
-      ? await prisma.documentTemplate.findFirst({
-        where: { id: templateId, documentType: DocumentType.INVOICE },
-      })
-      : defaultTemplate;
-
-    if (!template) {
-      throw new Error("No invoice template available.");
-    }
 
     const qrPayload = getRequiredString(body.qrPayload, "qrPayload");
     const qrImageDataUrl = await buildSwissQrSvgDataUrl(qrPayload);
 
     const payload = buildInvoicePayload(body, qrImageDataUrl, logoDataUrl);
-    const html = renderInvoiceTemplate(template.html, payload);
+    const html = renderInvoiceTemplate(templateHtml, payload);
 
     const browser = await puppeteer.launch({
       headless: true,

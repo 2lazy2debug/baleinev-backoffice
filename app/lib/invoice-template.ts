@@ -1,5 +1,3 @@
-import { DocumentOutputFormat, DocumentType } from "@prisma/client";
-
 import { prisma } from "@/lib/db";
 import { formatCurrency } from "@/lib/utils";
 
@@ -630,37 +628,19 @@ export function renderInvoiceTemplate(templateHtml: string, payload: InvoiceDocu
   return renderTemplateHtml(templateHtml, buildInvoiceTemplateFields(payload));
 }
 
-export async function ensureDefaultInvoiceTemplate() {
-  const existingDefault = await prisma.documentTemplate.findFirst({
-    where: {
-      documentType: DocumentType.INVOICE,
-      isDefault: true,
-    },
+/** The one `InvoiceSettings` row — the invoices app has a single set of settings. */
+export const INVOICE_SETTINGS_ID = "default";
+
+/**
+ * The HTML every invoice PDF renders with: the invoices app's single template
+ * setting (Invoices → Settings). The first read seeds it from the built-in layout.
+ */
+export async function getInvoiceTemplateHtml() {
+  const settings = await prisma.invoiceSettings.upsert({
+    where: { id: INVOICE_SETTINGS_ID },
+    update: {},
+    create: { id: INVOICE_SETTINGS_ID, templateHtml: defaultInvoiceTemplateHtml },
   });
 
-  if (existingDefault) {
-    return existingDefault;
-  }
-
-  const existingInvoiceTemplate = await prisma.documentTemplate.findFirst({
-    where: { documentType: DocumentType.INVOICE },
-    orderBy: { createdAt: "asc" },
-  });
-
-  if (existingInvoiceTemplate) {
-    return prisma.documentTemplate.update({
-      where: { id: existingInvoiceTemplate.id },
-      data: { isDefault: true },
-    });
-  }
-
-  return prisma.documentTemplate.create({
-    data: {
-      documentType: DocumentType.INVOICE,
-      outputFormat: DocumentOutputFormat.PDF,
-      name: "Default invoice",
-      html: defaultInvoiceTemplateHtml,
-      isDefault: true,
-    },
-  });
+  return settings.templateHtml;
 }

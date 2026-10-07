@@ -400,6 +400,14 @@ model DocumentTemplate {
   @@index([documentType, isDefault])
 }
 
+/// The invoices app's settings: one row (id "default"). Today that is the one HTML
+/// layout every invoice PDF renders with — there is a single template, not a library.
+model InvoiceSettings {
+  id           String   @id @default("default")
+  templateHtml String
+  updatedAt    DateTime @updatedAt
+}
+
 model Invoice {
   id                   String    @id @default(cuid())
   editionId            String

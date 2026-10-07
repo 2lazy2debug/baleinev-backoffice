@@ -1,13 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Check, Copy, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { Check, Copy, Plus, RotateCcw, Settings, Trash2 } from "lucide-react";
 
 import type { AddressTypeOption } from "@/components/address-fields";
 import { AddressPicker, type PickableAddress } from "@/components/address-picker";
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Button, Card, Cardlet, CardletActions, CardletField, CardletFields, CardletHeader, CardletList, ConfirmDelete, Field, IconButton, Input, Modal, PageHeader, SectionTitle, Select, TD, TFoot, TH, THead, TR, Table, Textarea } from "@/components/ui";
+import { Button, Card, Cardlet, CardletActions, CardletField, CardletFields, CardletHeader, CardletList, ConfirmDelete, Field, IconButton, Input, Modal, PageHeader, SectionTitle, Select, TD, TFoot, TH, THead, TR, Table, Textarea, iconButtonClasses } from "@/components/ui";
 import { addressNameBlock } from "@/lib/addresses";
 import type { CountryOption } from "@/lib/countries";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
@@ -42,10 +43,6 @@ type Props = {
   addresses: PickableAddress[];
   countries: CountryOption[];
   addressTypes: AddressTypeOption[];
-  defaultTemplate: {
-    id: string;
-    name: string;
-  };
 };
 
 type EarningJournalEntry = {
@@ -114,7 +111,7 @@ type GeneratedInvoice = {
   payload: string;
 };
 
-export default function InvoicesClient({ locale, editionId, accounts, history, earningEntries, addresses, countries, addressTypes, defaultTemplate }: Props) {
+export default function InvoicesClient({ locale, editionId, accounts, history, earningEntries, addresses, countries, addressTypes }: Props) {
   const copy = dictionaries[locale];
   const isReadOnly = useEditionReadOnly();
   const firstAccountId = accounts[0]?.id ?? "";
@@ -305,7 +302,6 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
       const requestBody = {
         editionId,
         moneyAccountId: selectedAccount.id,
-        templateId: defaultTemplate.id,
         invoiceNumber: nextGeneratedInvoice.invoiceNumber,
         header: nextGeneratedInvoice.header,
         invoiceDate: nextGeneratedInvoice.invoiceDate,
@@ -703,19 +699,23 @@ export default function InvoicesClient({ locale, editionId, accounts, history, e
     <div className="space-y-4 lg:space-y-8">
       <PageHeader
         title={copy.invoices.title}
-        description={
-          <>
-            {copy.invoices.subtitle}
-            <br />
-            {copy.invoices.activeTemplate}: {defaultTemplate.name}
-          </>
-        }
+        description={copy.invoices.subtitle}
         actions={
-          isReadOnly ? null : (
-            <Button variant="primary" icon={<Plus />} compactOnMobile onClick={openCreateModal}>
-              {copy.invoices.create}
-            </Button>
-          )
+          <>
+            {isReadOnly ? null : (
+              <Button variant="primary" icon={<Plus />} compactOnMobile onClick={openCreateModal}>
+                {copy.invoices.create}
+              </Button>
+            )}
+            <Link
+              href="/invoices/settings"
+              title={copy.invoices.settingsTitle}
+              aria-label={copy.invoices.settingsTitle}
+              className={iconButtonClasses("neutral", "md")}
+            >
+              <Settings />
+            </Link>
+          </>
         }
       />
 

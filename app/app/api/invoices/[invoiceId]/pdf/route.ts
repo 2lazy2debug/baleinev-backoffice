@@ -7,10 +7,10 @@ import puppeteer from "puppeteer";
 import { requireAdmin } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import {
-  ensureDefaultInvoiceTemplate,
+  getInvoiceTemplateHtml,
   renderInvoiceTemplate,
   type InvoiceDocumentPayload,
-} from "@/lib/document-templates";
+} from "@/lib/invoice-template";
 import { buildSwissQrSvgDataUrl } from "@/lib/swiss-qr-image";
 
 type RouteContext = {
@@ -46,21 +46,17 @@ export async function GET(_: Request, context: RouteContext) {
     const { invoiceId } = await context.params;
     const invoice = await prisma.invoice.findUnique({
       where: { id: invoiceId },
-      include: {
-        template: true,
-      },
     });
 
     if (!invoice) {
       return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
     }
 
-    const [logoDataUrl, defaultTemplate] = await Promise.all([
+    const [logoDataUrl, templateHtml] = await Promise.all([
       getLogoDataUrl(),
-      ensureDefaultInvoiceTemplate(),
+      getInvoiceTemplateHtml(),
     ]);
 
-    const template = invoice.template ?? defaultTemplate;
     const qrImageDataUrl = await buildSwissQrSvgDataUrl(invoice.qrPayload);
 
     const rawItems = Array.isArray(invoice.lineItems) ? invoice.lineItems : [];
@@ -109,7 +105,7 @@ export async function GET(_: Request, context: RouteContext) {
       logoDataUrl,
     };
 
-    const html = renderInvoiceTemplate(template.html, payload);
+    const html = renderInvoiceTemplate(templateHtml, payload);
 
     const browser = await puppeteer.launch({
       headless: true,

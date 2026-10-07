@@ -1,7 +1,6 @@
 import { requireAdmin } from "@/lib/access";
 import { countryOptions } from "@/lib/countries";
 import { prisma } from "@/lib/db";
-import { ensureDefaultInvoiceTemplate } from "@/lib/document-templates";
 import { resolveEditionIdOrNull } from "@/lib/edition-context";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { decimalToNumber } from "@/lib/utils";
@@ -14,7 +13,6 @@ export default async function InvoicesPage() {
 
   const locale = await getLocale();
   const copy = getDictionary(locale);
-  const defaultTemplate = await ensureDefaultInvoiceTemplate();
 
   const editionId = await resolveEditionIdOrNull();
   const activeEdition = editionId ? await prisma.edition.findUnique({
@@ -181,7 +179,6 @@ export default async function InvoicesPage() {
         city: address.city ?? "",
         email: address.email ?? "",
       }))}
-      defaultTemplate={{ id: defaultTemplate.id, name: defaultTemplate.name }}
     />
   );
 }

@@ -91,7 +91,6 @@ export async function POST(request: Request) {
       data: {
         editionId,
         moneyAccountId: getRequiredString(body, "moneyAccountId"),
-        templateId: String(body.templateId ?? "").trim() || null,
         invoiceNumber,
         header: String(body.header ?? "").trim() || null,
         invoiceDate: getRequiredDate(body, "invoiceDate"),
@@ -262,7 +261,6 @@ export async function PUT(request: Request) {
       where: { id: invoiceId },
       data: {
         moneyAccountId: getRequiredString(body, "moneyAccountId"),
-        templateId: String(body.templateId ?? "").trim() || null,
         header: String(body.header ?? "").trim() || null,
         invoiceDate: getRequiredDate(body, "invoiceDate"),
         dueDate: getOptionalDate(body, "dueDate"),

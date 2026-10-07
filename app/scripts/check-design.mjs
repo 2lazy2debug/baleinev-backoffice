@@ -10,7 +10,7 @@
  *
  * Scope is the app UI: markup under app/ and components/. globals.css is the
  * single source of truth and is exempt; the print/QR generators in lib/
- * (document-templates, swiss-qr-image) legitimately use literal hex for PDF
+ * (invoice-template, swiss-qr-image) legitimately use literal hex for PDF
  * and bitmap output and are out of scope.
  *
  * Since the U9 design-system migration, components/ui/ holds the canonical

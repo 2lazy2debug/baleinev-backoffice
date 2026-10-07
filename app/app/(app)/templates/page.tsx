@@ -1,46 +1,6 @@
-import { requireAdmin } from "@/lib/access";
-import { prisma } from "@/lib/db";
-import { ensureDefaultInvoiceTemplate, invoiceTemplatePlaceholders } from "@/lib/document-templates";
-import { getDictionary, getLocale } from "@/lib/i18n";
+import { redirect } from "next/navigation";
 
-import { PageHeader } from "@/components/ui";
-
-import { TemplatesPageClient } from "./client";
-import CreateTemplateModal from "./create-template-modal";
-
-export default async function TemplatesPage() {
-  await requireAdmin();
-
-  const locale = await getLocale();
-  const copy = getDictionary(locale);
-
-  await ensureDefaultInvoiceTemplate();
-
-  const templates = await prisma.documentTemplate.findMany({
-    orderBy: [{ documentType: "asc" }, { isDefault: "desc" }, { name: "asc" }],
-  });
-
-  return (
-    <div className="space-y-4 lg:space-y-8">
-      <PageHeader
-        eyebrow={copy.templates.title}
-        title={copy.templates.manage}
-        description={
-          <>
-            {copy.templates.subtitle} {copy.templates.seededNote}
-          </>
-        }
-        actions={
-          <CreateTemplateModal
-            locale={locale}
-            defaultInvoiceHtml={
-              templates.find((template) => template.isDefault && template.documentType === "INVOICE")?.html ?? ""
-            }
-          />
-        }
-      />
-
-      <TemplatesPageClient templates={templates} placeholders={invoiceTemplatePlaceholders} copy={copy} />
-    </div>
-  );
+/** The template library became one setting of the invoices app. */
+export default function TemplatesPage() {
+  redirect("/invoices/settings");
 }
