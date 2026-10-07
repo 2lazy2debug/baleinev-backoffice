@@ -92,8 +92,8 @@ function sumAmounts(rows: Array<{ amount: number }>) {
 
 const rollupTones = {
   neutral: { fill: "bg-[var(--accent)]", gap: "text-[var(--muted)]", actual: undefined },
-  good: { fill: "bg-emerald-400", gap: "text-emerald-300", actual: "text-emerald-300" },
-  bad: { fill: "bg-rose-400", gap: "text-rose-300", actual: "text-rose-300" },
+  good: { fill: "bg-[var(--good)]", gap: "text-[var(--good)]", actual: "text-[var(--good)]" },
+  bad: { fill: "bg-[var(--bad)]", gap: "text-[var(--bad)]", actual: "text-[var(--bad)]" },
 } as const;
 
 type BudgetRollupProps = {

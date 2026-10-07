@@ -594,7 +594,7 @@ export default function EventsPageClient({
                                       </p>
                                       <p className="text-xs text-[var(--muted)]">
                                         {spotsFilled}/{shift.capacity}{" "}
-                                        {isFull ? <span className="font-semibold text-rose-400">{copy.full}</span> : null}
+                                        {isFull ? <span className="font-semibold text-[var(--bad)]">{copy.full}</span> : null}
                                       </p>
                                       {/* Assigned staff names */}
                                       {shift.assignments.length > 0 ? (

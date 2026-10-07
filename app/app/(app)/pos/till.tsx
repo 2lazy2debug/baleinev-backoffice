@@ -469,7 +469,7 @@ export function Till({
                 </span>
               </div>
               {shortPaid ? (
-                <p className="text-2xs text-rose-300">{copy.amountShort}</p>
+                <p className="text-2xs text-[var(--bad)]">{copy.amountShort}</p>
               ) : (
                 changeSheet.map((row) => (
                   <div

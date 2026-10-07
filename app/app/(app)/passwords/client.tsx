@@ -54,7 +54,7 @@ function CopyButton({ getValue, label, disabled }: { getValue: () => Promise<str
 
   return (
     <IconButton tone="neutral" label={label} onClick={handleCopy} disabled={disabled}>
-      {copied ? <Check className="text-emerald-400" /> : <Copy />}
+      {copied ? <Check className="text-[var(--good)]" /> : <Copy />}
     </IconButton>
   );
 }

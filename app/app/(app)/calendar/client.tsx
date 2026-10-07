@@ -98,8 +98,8 @@ type DayTimelineItem = {
 // Task = green, appointment = rose. One colour mapping, read by both the desktop
 // timeline blocks and the mobile agenda rows.
 const kindClasses = {
-  task: { block: "border-emerald-500/40 bg-emerald-500/15", tag: "text-emerald-300" },
-  appointment: { block: "border-rose-400/40 bg-rose-400/15", tag: "text-rose-300" },
+  task: { block: "border-[var(--good)]/40 bg-[var(--good)]/15", tag: "text-[var(--good)]" },
+  appointment: { block: "border-[var(--bad)]/40 bg-[var(--bad)]/15", tag: "text-[var(--bad)]" },
 } as const;
 
 function toDayKey(d: Date) {
@@ -479,8 +479,8 @@ export default function CalendarPageClient({
                   <p className={`text-xs font-semibold ${isToday ? "text-[var(--accent)]" : "text-[var(--ink)]"}`}>{cell.day}</p>
 
                   <div className="mt-1 flex h-1 items-center gap-1 sm:hidden">
-                    {taskCount > 0 ? <span className="h-1 w-1 rounded-full bg-emerald-400" /> : null}
-                    {appointmentCount > 0 ? <span className="h-1 w-1 rounded-full bg-rose-400" /> : null}
+                    {taskCount > 0 ? <span className="h-1 w-1 rounded-full bg-[var(--good)]" /> : null}
+                    {appointmentCount > 0 ? <span className="h-1 w-1 rounded-full bg-[var(--bad)]" /> : null}
                   </div>
 
                   <div className="mt-1 hidden flex-wrap gap-1 sm:flex">

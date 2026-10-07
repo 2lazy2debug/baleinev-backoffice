@@ -117,8 +117,8 @@ export default function JournalRegisterModal({ locale, register, budgets, costCe
               </div>
             ))}
             <div className="flex items-center justify-between gap-3 border-t border-[var(--line)] pt-1 text-sm font-semibold">
-              <span className={gap !== 0 ? "text-rose-200" : undefined}>{cash.figureGap}</span>
-              <span className={gap !== 0 ? "text-rose-200" : undefined}>
+              <span className={gap !== 0 ? "text-[var(--bad)]" : undefined}>{cash.figureGap}</span>
+              <span className={gap !== 0 ? "text-[var(--bad)]" : undefined}>
                 {formatCurrency(fromRappen(gap))}
                 {gap > 0 ? ` · ${cash.gapShort}` : gap < 0 ? ` · ${cash.gapOver}` : ""}
               </span>

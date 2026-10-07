@@ -39,7 +39,7 @@ import { TransferStockModal } from "./transfer-stock-modal";
  * the row that needs a recount is the one that catches the eye.
  */
 function countTone(quantity: number) {
-  return quantity < 0 ? "text-rose-300" : undefined;
+  return quantity < 0 ? "text-[var(--bad)]" : undefined;
 }
 
 export type StockRow = {

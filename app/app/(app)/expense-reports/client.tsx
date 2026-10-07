@@ -219,7 +219,7 @@ export function ExpenseReportsPageClient({
                         <p className="text-[var(--muted)]">{copy.expenseReports.reviewedBy}: {row.reviewerLabel}</p>
                       ) : null}
                       {row.report.rejectionReason ? (
-                        <p className="mt-1 text-rose-300">{row.report.rejectionReason}</p>
+                        <p className="mt-1 text-[var(--bad)]">{row.report.rejectionReason}</p>
                       ) : null}
                     </TD>
                     <TD>
@@ -318,7 +318,7 @@ export function ExpenseReportsPageClient({
                   {isAdmin ? <BankInfo title={copy.expenseReports.userBankInfo} lines={row.bankInfoLines} /> : null}
 
                   {row.report.rejectionReason ? (
-                    <p className="text-xs text-rose-300">{row.report.rejectionReason}</p>
+                    <p className="text-xs text-[var(--bad)]">{row.report.rejectionReason}</p>
                   ) : null}
 
                   {row.canReview ? (

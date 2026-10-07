@@ -168,7 +168,7 @@ export function MobileSheetRow({
 }: MobileSheetRowProps) {
   const className = cn(
     "flex min-h-14 w-full items-center gap-3 border-b border-[var(--line)] py-3 text-left text-sm last:border-b-0",
-    tone === "danger" ? "text-rose-300" : null,
+    tone === "danger" ? "text-[var(--bad)]" : null,
   );
 
   const body = (
@@ -176,7 +176,7 @@ export function MobileSheetRow({
       <span
         className={cn(
           "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--panel)]",
-          tone === "danger" ? "text-rose-300" : active ? "text-[var(--accent)]" : "text-[var(--muted)]",
+          tone === "danger" ? "text-[var(--bad)]" : active ? "text-[var(--accent)]" : "text-[var(--muted)]",
         )}
       >
         <Icon className="h-4 w-4" />
