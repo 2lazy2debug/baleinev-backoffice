@@ -192,7 +192,9 @@ app/
 │   ├── invoices/
 │   │   ├── page.tsx              ← Invoice form + history (admin only); also loads the address
 │   │   │                            book, so the recipient can be picked instead of typed
-│   │   └── client.tsx            ← Interactive invoice builder + QR preview + PDF download
+│   │   ├── client.tsx            ← Interactive invoice builder + QR preview + PDF download
+│   │   └── settings/             ← The invoice layout (admin only): one HTML template + its
+│   │                                placeholders. `actions.ts` saves it to `InvoiceSettings`
 │   │
 │   ├── addresses/
 │   │   ├── page.tsx              ← The address book (global, any signed-in user; data-fetching only,
@@ -254,11 +256,6 @@ app/
 │   │                                here. Every quantity change goes through `applyMovement()` /
 │   │                                `addToPlace()` in `lib/stock-movements.ts` — a plain module,
 │   │                                not an action file, because the POS calls the same helpers
-│   │
-│   ├── templates/
-│   │   ├── page.tsx              ← Document template manager (admin only, data-fetching only)
-│   │   ├── client.tsx            ← Client-side create/update/delete/set-default forms
-│   │   └── actions.ts            ← Server actions: create/update/delete/set-default template
 │   │
 │   ├── passwords/
 │   │   ├── page.tsx              ← Department-scoped shared password manager (data-fetching, no ciphertext to client)
@@ -330,7 +327,7 @@ app/
     │   └── stock-place/route.ts    ← POST: switch this user's selected stock (same shape, same reason)
     │
     ├── documents/
-    │   └── invoice/pdf/route.ts    ← POST: render invoice template → Puppeteer → PDF
+    │   └── invoice/pdf/route.ts    ← POST: render the invoice layout → Puppeteer → PDF
     │
     ├── invoices/route.ts           ← POST: persist a new Invoice record
     │
@@ -441,7 +438,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `db.ts` | Singleton Prisma client (re-used across hot reloads in dev) |
 | `i18n-dictionaries.ts` | Complete EN/FR translation dictionary as a `const` object; also defines `Locale` type and cookie name |
 | `i18n.ts` | `getLocale()` (reads cookie server-side) and `getDictionary()` |
-| `document-templates.ts` | `[[field]]` renderer, `InvoiceDocumentPayload` type, default invoice HTML template, `ensureDefaultInvoiceTemplate()` |
+| `invoice-template.ts` | `[[field]]` renderer, `InvoiceDocumentPayload` type, built-in invoice HTML layout, `getInvoiceTemplateHtml()` (reads/seeds `InvoiceSettings`) |
 | `swiss-qr.ts` | `buildSwissQrPayload()` — builds a SPC-format QR string for Swiss ISO 20022 QR invoices |
 | `departments.ts` | `attachableDepartments()` — every department, `id` and `name`, for the budget app's attach picker (no eligibility filter) |
 | `budgets.ts` | `visibleBudgetsWhere(access, editionId)` — the one place the visibility rule lives (admins see all, others see only their departments' budgets); `editionBudgets()` (the journal picker's options); `assertBudgetInEdition()`; `resolveDefaultBudgetForDepartment()` (the expense-report → journal prefill) |

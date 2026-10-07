@@ -60,18 +60,18 @@ moves nobody who is already using the app.
 Closing an edition makes it **read-only, not inaccessible**: it stays selectable and browsable,
 exports and invoice PDFs still work, and every write is refused by `requireWritableEdition()`.
 Closing does nothing else — it does not create the next edition, and it is reversible: "Reopen
-year" clears `closedAt` and writes work again. Global data — addresses, stock, passwords, users, templates,
+year" clears `closedAt` and writes work again. Global data — addresses, stock, passwords, users, the invoice layout,
 event types — carries no edition and stays writable.
 
 ### 5. Locale / i18n
 
 The app supports English (`en`) and French (`fr`). The active locale is stored in a cookie (`blv_locale`). All UI text lives in `lib/i18n-dictionaries.ts` under a strongly-typed `dictionaries` object — no string literals in components. The `getDictionary(locale)` helper is called at the top of every server page.
 
-### 6. Document template rendering
+### 6. Invoice layout rendering
 
-Invoice PDFs are generated from HTML templates stored in the database (`DocumentTemplate` model). Templates use `[[fieldName]]` placeholder syntax. The renderer (`lib/document-templates.ts`) replaces each placeholder with an escaped value from a typed `InvoiceDocumentPayload` object, then passes the full HTML to Puppeteer for PDF export.
+Invoice PDFs are generated from one HTML layout stored as a setting of the invoices app (`InvoiceSettings` model, edited at `/invoices/settings`). It uses `[[fieldName]]` placeholder syntax. The renderer (`lib/invoice-template.ts`) replaces each placeholder with an escaped value from a typed `InvoiceDocumentPayload` object, then passes the full HTML to Puppeteer for PDF export.
 
-Not every PDF goes through a stored template — the event shift-schedule export (`/api/events/[eventId]/pdf`, `lib/shift-schedule-pdf.ts`) builds its HTML grid straight from the event/day/shift data (no `DocumentTemplate` row involved) before handing it to Puppeteer the same way. Any signed-in user can pull it, not just admins — staffing visibility isn't gated like the financial documents.
+Not every PDF goes through a stored template — the event shift-schedule export (`/api/events/[eventId]/pdf`, `lib/shift-schedule-pdf.ts`) builds its HTML grid straight from the event/day/shift data (the invoice layout is not involved) before handing it to Puppeteer the same way. Any signed-in user can pull it, not just admins — staffing visibility isn't gated like the financial documents.
 
 ### 7. CSS custom properties for theming
 

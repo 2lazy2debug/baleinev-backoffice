@@ -25,7 +25,7 @@ closed. Two people can work in two different editions at once.
 Two roles, stored on `User.role`:
 
 - **ADMIN** — the festival's finance/committee team. Full access: journal, budget, invoices,
-  money accounts, cost centers, editions, users, document templates. Approves or rejects expense
+  money accounts, cost centers, editions, users, the invoice layout. Approves or rejects expense
   claims and records them in the ledger.
 - **DEPARTMENT** — a department lead (bar, technical, programming, …). Sees only the budget of the
   departments they are attached to, submits expense claims, signs up for event shifts, and manages
@@ -52,7 +52,7 @@ just a name (admins manage the list at `/departments`).
 | `JournalEntry` | An actual accounting movement: date, amount, label, counterparty, money account, budget (optional), cost center, and a per-edition sequence number. Opening entries are locked. |
 | `Invoice` | An outgoing invoice with a Swiss QR-bill payload, renderable to PDF. Can be linked 1:1 to the `PRODUITS` journal entry that settles it. |
 | `ExpenseReport` | A reimbursement claim (standard, with a receipt file; or driving, computed from kilometers × rate). Flows `PENDING → APPROVED / REJECTED`. |
-| `DocumentTemplate` | Admin-authored HTML used to render invoice PDFs, with `[[placeholder]]` substitution. |
+| `InvoiceSettings` | The invoices app's settings (one row): the admin-authored HTML layout every invoice PDF renders with, with `[[placeholder]]` substitution. |
 | `Address` / `AddressBankAccount` / `AddressType` | The address book: everyone the festival writes to, invoices or pays, with the IBANs each of them bills from and the contact type each is filed under. Global, not edition-scoped — a supplier outlives an edition. |
 | `City` | Postal code ↔ locality pairs, seeded with the Swiss list. A *proposal* table only: an address keeps whatever was typed, and every saved pair is filed back into it. |
 | `Event` / `EventDay` / `EventShift` / `StaffAssignment` | Staffing: an event spans days, each day has shifts with a capacity, users sign up or are assigned. |
@@ -76,7 +76,7 @@ resolved. Rejection stores a reason and resolves only the review task.
 **Invoicing.** The invoice form builds a Swiss QR-bill payload client-side
 ([app/lib/swiss-qr.ts](../app/lib/swiss-qr.ts)), posts it to
 [app/app/api/invoices/route.ts](../app/app/api/invoices/route.ts), and the PDF is produced
-server-side by Puppeteer rendering the selected `DocumentTemplate` HTML
+server-side by Puppeteer rendering the invoice layout from `InvoiceSettings`
 ([app/app/api/invoices/[invoiceId]/pdf/route.ts](../app/app/api/invoices/%5BinvoiceId%5D/pdf/route.ts)).
 The QR code image is generated as an SVG with the Swiss cross overlay
 ([app/lib/swiss-qr-image.ts](../app/lib/swiss-qr-image.ts)). Marking an invoice `PAID` requires

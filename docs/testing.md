@@ -59,7 +59,7 @@ plan verification steps assume:
   "as a non-admin…" checks
 - a **closed edition** ("DEV — Closed edition"), for read-only-path checks
 
-Admin-only pages throw `Unauthorized` (HTTP 500, same as `/templates`,
+Admin-only pages throw `Unauthorized` (HTTP 500, same as `/invoices/settings`,
 `/editions`) for a non-admin — that is the expected negative, not a bug.
 
 ### Measuring the journal bulk-edit

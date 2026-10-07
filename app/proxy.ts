@@ -44,7 +44,6 @@ export async function proxy(request: NextRequest) {
       pathname.startsWith("/journal") ||
       pathname.startsWith("/cost-centers") ||
       pathname.startsWith("/invoices") ||
-      pathname.startsWith("/templates") ||
       pathname.startsWith("/pos/templates") ||
       pathname.startsWith("/departments") ||
       pathname.startsWith("/users")

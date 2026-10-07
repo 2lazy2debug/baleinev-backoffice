@@ -52,7 +52,7 @@ Task ─── User (createdBy / assignedTo / resolvedBy)
 
 Invoice ─── MoneyAccount (bankAccount)
 
-DocumentTemplate  (global, not Edition-scoped)
+InvoiceSettings   (global, not Edition-scoped; a single row)
 
 Address ─< AddressBankAccount     (global, not Edition-scoped)
 AddressType ─< Address            (global; the FK is optional and SetNull)
@@ -290,18 +290,19 @@ A single accounting entry (debit or credit) in the general ledger.
 
 ---
 
-### `DocumentTemplate`
-HTML template stored in the database for generating PDFs. Not edition-scoped — templates are global.
+### `InvoiceSettings`
+The invoices app's settings — a single row, `id = "default"`, edited at `/invoices/settings`.
+Not edition-scoped. There is one invoice layout, not a template library.
 
 | Field | Type | Notes |
 |---|---|---|
-| `id` | String (cuid) | |
-| `name` | String | Human-readable name |
-| `content` | String | Full HTML with `[[field]]` placeholders |
-| `isDefault` | Boolean | If true, used for invoice PDF generation |
-| `isBuiltIn` | Boolean | If true, cannot be deleted |
+| `id` | String | Always `"default"` |
+| `templateHtml` | String | Full HTML with `[[field]]` placeholders, rendered for every invoice PDF |
+| `updatedAt` | DateTime | |
 
-Only one template may have `isDefault = true` at a time (enforced in server actions).
+Seeded from the built-in layout (`defaultInvoiceTemplateHtml`) on first read by
+`getInvoiceTemplateHtml()`. Replaced the `DocumentTemplate` table on 2026-10-07; `Invoice` no
+longer carries a `templateId`.
 
 ---
 

@@ -27,6 +27,10 @@ function resolveVersion() {
 
 const nextConfig: NextConfig = {
   env: { NEXT_PUBLIC_APP_VERSION: resolveVersion() },
+  // The template library became one setting of the invoices app.
+  async redirects() {
+    return [{ source: "/templates/:path*", destination: "/invoices/settings", permanent: false }];
+  },
   turbopack: {
     root: path.resolve(__dirname),
   },

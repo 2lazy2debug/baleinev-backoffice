@@ -14,12 +14,12 @@ that item was resolved and removed, not renumbered.
 ### S5. Invoice PDF templates are rendered HTML executed by Puppeteer with `--no-sandbox` — medium
 [app/app/api/invoices/[invoiceId]/pdf/route.ts](../app/app/api/invoices/%5BinvoiceId%5D/pdf/route.ts)
 and the sibling `documents/invoice/pdf` route launch Chromium with `--no-sandbox` and
-`page.setContent(template.html, { waitUntil: "networkidle0" })`. Template HTML is authored by admins
-([templates/actions.ts](../app/app/(app)/templates/actions.ts)) and is **not** sanitized, so a
+`page.setContent(html, { waitUntil: "networkidle0" })`. The invoice layout HTML is authored by admins
+([invoices/settings/actions.ts](../app/app/(app)/invoices/settings/actions.ts)) and is **not** sanitized, so a
 template can embed scripts, `file://` references, or external requests that run server-side with the
 Node process's privileges (local file read / internal-network SSRF). Interpolated invoice fields are
 HTML-escaped, so the injection surface is the template body itself, not the invoice data — but the
-templates are trusted input with no guardrails. Restrict template capabilities, keep the Chromium
+layout is trusted input with no guardrails. Restrict template capabilities, keep the Chromium
 sandbox enabled where possible, and block network/file access during rendering.
 
 ### S6. State-changing REST routes rely on session cookie without explicit CSRF defense — low

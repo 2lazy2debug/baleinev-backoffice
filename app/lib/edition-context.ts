@@ -113,7 +113,7 @@ export async function resolveEdition(): Promise<EditionContext | null> {
  * Refuses a write against a closed edition. Closing means read-only, not gone:
  * pages, exports and PDFs keep working, every write is turned away here.
  *
- * Passwords, users, templates and event types carry no `editionId` — they are
+ * Passwords, users, the invoice layout and event types carry no `editionId` — they are
  * global on purpose and stay writable whatever edition the user is in. Do not
  * add this guard to them.
  */

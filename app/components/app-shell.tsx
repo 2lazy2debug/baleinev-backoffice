@@ -53,7 +53,7 @@ type AppShellProps = {
   pendingTaskCount: number;
 };
 
-const GLOBAL_ROUTES = ["/addresses", "/articles", "/passwords", "/stock", "/users", "/departments", "/templates", "/editions", "/account"];
+const GLOBAL_ROUTES = ["/addresses", "/articles", "/passwords", "/stock", "/users", "/departments", "/invoices/settings", "/editions", "/account"];
 
 export function AppShell({ children, userName, editions, selectedEditionId, locale, theme: initialTheme, role, canManageMoneyAccounts, pendingTaskCount }: AppShellProps) {
   const pathname = usePathname();
@@ -67,7 +67,7 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
 
   const selectedEdition = editions.find((edition) => edition.id === selectedEditionId) ?? null;
   const isEditionReadOnly = selectedEdition?.isClosed ?? false;
-  // Addresses, passwords, users, templates and editions are global — the selected
+  // Addresses, passwords, users, the invoice layout and editions are global — the selected
   // edition being closed says nothing about whether they can be edited.
   const isEditionScopedRoute = !GLOBAL_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
@@ -93,7 +93,6 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
     { type: "item", href: "/addresses", label: copy.addresses, icon: Contact },
     { type: "item", href: "/articles", label: copy.articles, icon: Tags },
     { type: "item", href: "/stock", label: copy.stock, icon: Boxes },
-    { type: "item", href: "/templates", label: copy.templates, icon: FileStack },
     { type: "item", href: "/passwords", label: copy.passwords, icon: KeyRound },
     { type: "divider", key: "d3" },
     { type: "item", href: "/editions", label: copy.editions, icon: FileStack },

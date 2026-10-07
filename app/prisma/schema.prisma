@@ -23,14 +23,6 @@ enum UserRole {
   DEPARTMENT
 }
 
-enum DocumentType {
-  INVOICE
-}
-
-enum DocumentOutputFormat {
-  PDF
-}
-
 enum ExpensePaymentMethod {
   MY_MONEY
   FESTIVAL_ACCOUNT
@@ -384,22 +376,6 @@ model JournalEntry {
   @@index([cashRegisterId])
 }
 
-model DocumentTemplate {
-  id           String               @id @default(cuid())
-  documentType DocumentType
-  outputFormat DocumentOutputFormat @default(PDF)
-  name         String
-  html         String
-  isDefault    Boolean              @default(false)
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
-
-  invoices Invoice[]
-
-  @@unique([documentType, name])
-  @@index([documentType, isDefault])
-}
-
 /// The invoices app's settings: one row (id "default"). Today that is the one HTML
 /// layout every invoice PDF renders with — there is a single template, not a library.
 model InvoiceSettings {
@@ -412,7 +388,6 @@ model Invoice {
   id                   String    @id @default(cuid())
   editionId            String
   moneyAccountId       String
-  templateId           String?
   linkedJournalEntryId String?   @unique
   invoiceNumber        String
   header               String?
@@ -439,10 +414,9 @@ model Invoice {
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
-  edition            Edition           @relation(fields: [editionId], references: [id], onDelete: Cascade)
-  moneyAccount       MoneyAccount      @relation(fields: [moneyAccountId], references: [id], onDelete: Restrict)
-  template           DocumentTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  linkedJournalEntry JournalEntry?     @relation("InvoiceJournalLink", fields: [linkedJournalEntryId], references: [id], onDelete: SetNull)
+  edition            Edition       @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  moneyAccount       MoneyAccount  @relation(fields: [moneyAccountId], references: [id], onDelete: Restrict)
+  linkedJournalEntry JournalEntry? @relation("InvoiceJournalLink", fields: [linkedJournalEntryId], references: [id], onDelete: SetNull)
 
   @@unique([editionId, invoiceNumber])
   @@index([editionId, createdAt])

@@ -63,7 +63,7 @@ Reopening it clears closedAt and writes work again
   `app/app/api/invoices/route.ts`, which guards the `editionId` from its request body rather than
   the caller's own edition. The UI additionally hides create/edit/delete affordances and shows a
   banner, but that is a courtesy; the server guard is the control.
-- **Passwords, users, templates and event types are global** — they carry no `editionId` and stay
+- **Passwords, users, the invoice layout and event types are global** — they carry no `editionId` and stay
   writable whatever edition the user is in.
 - Creating a new edition does NOT delete old data — historical editions remain fully readable.
 - **Bringing data into a new edition is an explicit choice.** The new-edition dialog has an
@@ -314,7 +314,7 @@ QR code image is rendered live via GET /api/qr/swiss
         ▼
 Admin clicks "Download PDF"
   → POST /api/documents/invoice/pdf
-  → lib/document-templates.ts fetches the default DocumentTemplate
+  → lib/invoice-template.ts reads the invoice layout (InvoiceSettings)
   → [[field]] placeholders are replaced with invoice data
   → Puppeteer renders the HTML and exports a PDF
   → PDF is streamed back to the browser
@@ -389,21 +389,20 @@ Proof files are stored as raw bytes in the DB (`ExpenseReport.proof`). They are 
 
 ---
 
-## 6. Document Templates
+## 6. Invoice Layout
 
-Document templates allow the admin to customise the HTML layout used for PDF generation (currently used for invoices).
+The HTML every invoice PDF is rendered with is a single setting of the invoices app, edited by an
+admin at **Invoices → Settings** (`/invoices/settings`, the cog in the invoices header). There is
+one layout, not a library: no names, no default flag, nothing to pick when generating.
 
-### Template mechanics
-- Templates are stored in the `DocumentTemplate` table as raw HTML strings.
-- Placeholders use the `[[fieldName]]` syntax (e.g. `[[recipientName]]`, `[[totalAmount]]`, `[[qrCode]]`).
-- `lib/document-templates.ts` defines `renderInvoiceTemplate(template, payload)` which replaces all placeholders with real values.
-- The `[[qrCode]]` placeholder is replaced with a base64-encoded PNG of the Swiss QR code.
-
-### Default template
-- Exactly one template has `isDefault = true`.
-- `lib/document-templates.ts` includes a built-in fallback template (`isBuiltIn = true`) that is created automatically on first run via `ensureDefaultInvoiceTemplate()`.
-- Admins can create new templates, preview them, and promote any template to default.
-- The built-in template cannot be deleted.
+- Stored in `InvoiceSettings.templateHtml` (one row, `id = "default"`).
+- Placeholders use the `[[fieldName]]` syntax; the settings page lists every one available.
+- `lib/invoice-template.ts` — `renderInvoiceTemplate(html, payload)` replaces each placeholder with
+  an HTML-escaped value; `getInvoiceTemplateHtml()` reads the setting and seeds it from the built-in
+  layout on first use.
+- Both PDF routes (`/api/invoices/[invoiceId]/pdf`, `/api/documents/invoice/pdf`) render with the
+  current layout, so editing it changes every invoice downloaded afterwards, old ones included.
+- The old `/templates` URL redirects to `/invoices/settings` (`next.config.ts`).
 
 ---
 
