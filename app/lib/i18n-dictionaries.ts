@@ -370,6 +370,10 @@ export const dictionaries = {
       bulkEdit: "Bulk edit",
       saveAll: "Save all",
       bulkEditActive: "Every entry is editable — rows save together.",
+      columns: "Columns",
+      columnsTitle: "Columns to display",
+      recordNumber: "Record #",
+      resetColumns: "Reset",
     },
     addresses: {
       title: "Addresses",
@@ -1452,6 +1456,10 @@ export const dictionaries = {
       bulkEdit: "Édition groupée",
       saveAll: "Tout enregistrer",
       bulkEditActive: "Toutes les écritures sont modifiables — l'enregistrement est groupé.",
+      columns: "Colonnes",
+      columnsTitle: "Colonnes à afficher",
+      recordNumber: "N° d'écriture",
+      resetColumns: "Réinitialiser",
     },
     addresses: {
       title: "Adresses",

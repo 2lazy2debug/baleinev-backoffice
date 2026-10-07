@@ -354,7 +354,8 @@ app/
 | `language-modal.tsx` | `<LanguageModal>` — the app's one language switch, opened by the globe button in both shells. Mount it only while open; the pending choice is local state |
 | `navigation.ts` | `NavigationItem` / `EditionOption` — the nav shape shared by the sidebar and the mobile shell |
 | `edition-read-only.tsx` | `useEditionReadOnly()` / `WritableEditionOnly` / `EditionClosedBanner` — lets pages hide create/edit/delete affordances while the selected edition is closed |
-| `journal-table.tsx` | Full interactive journal entry table with filter, sort, inline edit above `sm`; the same rows as `<CardletList>` cards below it (filtering/sorting stay desktop-only, editing goes to `/journal/[journalEntryId]`) |
+| `journal-columns.ts` | Per-browser store of the journal's visible columns (`useJournalColumns`), shared by the header's Columns picker and the table |
+| `journal-table.tsx` | Full interactive journal entry table with filter, sort, inline edit and the chosen columns above `sm`; the same rows as `<CardletList>` cards below it (filtering/sorting stay desktop-only, editing goes to `/journal/[journalEntryId]`) |
 | `add-journal-entry-modal.tsx` | Modal for creating/prefilling journal entries; used on journal page and from expense-report approval |
 | `sign-out-button.tsx` | Sign-out action for the app shell — a labelled `<Button>` when expanded, an icon `<IconButton>` when the sidebar is collapsed, a `<MobileSheetRow>` (`row`) in the mobile account menu |
 | `form-error.tsx` | Renders a server-action error message through the shared `<Alert>` (nothing when there is no message) |

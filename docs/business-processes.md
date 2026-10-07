@@ -172,6 +172,20 @@ The journal is the core accounting ledger. Every financial movement is recorded 
 ### Sequence numbers
 Each entry gets an auto-incrementing `sequenceNumber` within the edition. This provides an audit-friendly ordered log.
 
+It is shown as the journal's **#** column (the *Record #*) and it is what the running
+balance follows — so the ledger only reads chronologically if the numbers do. A
+back-dated entry still takes the next number. On 2026-10-07 the 2025-2026 edition was
+renumbered once by `(date, old #)` because ~50 *Coffre* entries back-filled at #615–664
+carried 2025 dates; numbers went 1–464, gapless, every account in date order. The
+pre-renumber table is in `/opt/blv/backups/journal-entry-pre-renumber-20261007.sql`.
+
+### Visible columns
+The *Columns* button left of *Add journal entry* picks which of the table's data
+columns are drawn (`#`, date, budget, type, amount, label, reference, counterpart,
+account, cost centre, balance). The choice is per browser (`localStorage`,
+`journal:columns`, `components/journal-columns.ts`); reference is off by default. A
+hidden column's filter is ignored, and the same choice trims the phone cards' fields.
+
 ### Locked entries
 Entries with `isOpeningEntry = true` were imported from a previous edition's closing balance. They cannot be edited or deleted — they are permanent anchor points for the ledger.
 

@@ -24,7 +24,52 @@ type GridEntry = {
   moneyAccountId: string;
   costCenter: { code: string } | null;
   costCenterId: string | null;
+  referenceNumber?: string | null;
 };
+
+/**
+ * The journal table's data columns, in the order they are drawn. A column's id
+ * is also its filter key. The actions column is not here: it is not data and
+ * cannot be hidden.
+ */
+export const JOURNAL_COLUMNS = [
+  "sequenceNumber",
+  "date",
+  "budget",
+  "type",
+  "amount",
+  "label",
+  "referenceNumber",
+  "counterpart",
+  "account",
+  "costCenter",
+  "balance",
+] as const;
+
+export type JournalColumn = (typeof JOURNAL_COLUMNS)[number];
+
+/** Reference is off by default — most entries have none. */
+export const DEFAULT_JOURNAL_COLUMNS: readonly JournalColumn[] = JOURNAL_COLUMNS.filter(
+  (column) => column !== "referenceNumber",
+);
+
+/**
+ * A stored column choice back to a list in drawing order. Anything that is not
+ * a JSON array of known ids — nothing stored yet, an old format, a hand-edited
+ * value — falls back to the default rather than to an empty table.
+ */
+export function normalizeJournalColumns(raw: string | null): JournalColumn[] {
+  if (raw === null) return [...DEFAULT_JOURNAL_COLUMNS];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return [...DEFAULT_JOURNAL_COLUMNS];
+  }
+  if (!Array.isArray(parsed)) return [...DEFAULT_JOURNAL_COLUMNS];
+  const chosen = new Set(parsed);
+  return JOURNAL_COLUMNS.filter((column) => chosen.has(column));
+}
 
 /** An entry as the editor sees it — the baseline both edit modes start from. */
 export function draftFromEntry(entry: GridEntry): EntryDraft {
@@ -89,7 +134,10 @@ export function filterEntries<T extends GridEntry>(entries: T[], filters: Record
     if (filters.label && !entry.label.toLowerCase().includes(filters.label.toLowerCase())) {
       return false;
     }
-    if (filters.counterpart && !String(entry.counterparty ?? "").toLowerCase().includes(filters.counterpart.toLowerCase())) {
+    if (filters.referenceNumber && !String(entry.referenceNumber ?? "").toLowerCase().includes(filters.referenceNumber.toLowerCase())) {
+      return false;
+    }
+    if (filters.counterpart &&!String(entry.counterparty ?? "").toLowerCase().includes(filters.counterpart.toLowerCase())) {
       return false;
     }
     if (filters.account && !entry.moneyAccount.name.toLowerCase().includes(filters.account.toLowerCase())) {

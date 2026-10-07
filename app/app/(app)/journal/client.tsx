@@ -20,6 +20,7 @@ type JournalPageClientProps = {
       accountType: "CHARGES" | "PRODUITS";
       amount: string;
       label: string;
+      referenceNumber: string | null;
       counterparty: string | null;
       moneyAccount: { name: string };
       costCenter: { code: string } | null;

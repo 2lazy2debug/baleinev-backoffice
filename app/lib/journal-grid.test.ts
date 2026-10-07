@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { buildRunningBalances, filterEntries, isDraftDirty, sortEntries, visibleRowRange, type EntryDraft } from "./journal-grid";
+import {
+  DEFAULT_JOURNAL_COLUMNS,
+  buildRunningBalances,
+  filterEntries,
+  isDraftDirty,
+  normalizeJournalColumns,
+  sortEntries,
+  visibleRowRange,
+  type EntryDraft,
+} from "./journal-grid";
 
 type GridEntry = {
   id: string;
@@ -16,6 +25,7 @@ type GridEntry = {
   moneyAccountId: string;
   costCenter: { code: string } | null;
   costCenterId: string | null;
+  referenceNumber?: string | null;
 };
 
 function entry(overrides: Partial<GridEntry> = {}): GridEntry {
@@ -124,6 +134,39 @@ describe("filterEntries", () => {
     const withoutCostCenter = entry({ id: "b", costCenter: null });
     const result = filterEntries([withCostCenter, withoutCostCenter], { costCenter: "C99" });
     expect(result.map((e) => e.id)).toEqual(["b"]);
+  });
+
+  it("matches reference case-insensitively and drops entries without one", () => {
+    const entries = [entry({ id: "a", referenceNumber: "NDF-ABC123" }), entry({ id: "b", referenceNumber: null })];
+    expect(filterEntries(entries, { referenceNumber: "abc" }).map((e) => e.id)).toEqual(["a"]);
+  });
+});
+
+describe("normalizeJournalColumns", () => {
+  it("falls back to the default when nothing is stored", () => {
+    expect(normalizeJournalColumns(null)).toEqual([...DEFAULT_JOURNAL_COLUMNS]);
+  });
+
+  it("leaves reference out of the default", () => {
+    expect(DEFAULT_JOURNAL_COLUMNS).not.toContain("referenceNumber");
+    expect(DEFAULT_JOURNAL_COLUMNS).toContain("sequenceNumber");
+  });
+
+  it("falls back to the default on malformed or non-array values", () => {
+    expect(normalizeJournalColumns("{nope")).toEqual([...DEFAULT_JOURNAL_COLUMNS]);
+    expect(normalizeJournalColumns('"date"')).toEqual([...DEFAULT_JOURNAL_COLUMNS]);
+  });
+
+  it("returns the stored choice in drawing order and drops unknown ids", () => {
+    expect(normalizeJournalColumns('["amount","bogus","referenceNumber","date"]')).toEqual([
+      "date",
+      "amount",
+      "referenceNumber",
+    ]);
+  });
+
+  it("keeps an empty choice empty", () => {
+    expect(normalizeJournalColumns("[]")).toEqual([]);
   });
 });
 

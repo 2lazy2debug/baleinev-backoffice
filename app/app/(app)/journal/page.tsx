@@ -8,6 +8,7 @@ import { decimalToNumber } from "@/lib/utils";
 
 import JournalPageClient from "./client";
 import { AddJournalEntryButton } from "./add-entry-button";
+import { JournalColumnsButton } from "./columns-button";
 import { WritableEditionOnly } from "@/components/edition-read-only";
 import { EmptyPage, PageHeader } from "@/components/ui";
 
@@ -107,15 +108,18 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
         title={activeEdition.name}
         description={copy.journal.subtitle}
         actions={
-          <WritableEditionOnly>
-            <AddJournalEntryButton
-              budgets={budgets}
-              moneyAccounts={activeEdition.moneyAccounts.map((account) => ({ id: account.id, name: account.name }))}
-              costCenters={activeEdition.costCenters.map((center) => ({ id: center.id, code: center.code }))}
-              locale={locale}
-              expensePrefill={expensePrefill}
-            />
-          </WritableEditionOnly>
+          <>
+            <JournalColumnsButton locale={locale} />
+            <WritableEditionOnly>
+              <AddJournalEntryButton
+                budgets={budgets}
+                moneyAccounts={activeEdition.moneyAccounts.map((account) => ({ id: account.id, name: account.name }))}
+                costCenters={activeEdition.costCenters.map((center) => ({ id: center.id, code: center.code }))}
+                locale={locale}
+                expensePrefill={expensePrefill}
+              />
+            </WritableEditionOnly>
+          </>
         }
       />
 
@@ -138,6 +142,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
             accountType: entry.accountType,
             amount: entry.amount.toString(),
             label: entry.label,
+            referenceNumber: entry.referenceNumber,
             counterparty: entry.counterparty,
             moneyAccount: entry.moneyAccount,
             costCenter: entry.costCenter,

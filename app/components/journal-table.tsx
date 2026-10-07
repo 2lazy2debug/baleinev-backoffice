@@ -22,8 +22,10 @@ import {
   sortEntries,
   visibleRowRange,
   type EntryDraft,
+  type JournalColumn,
   type RowRange,
 } from "@/lib/journal-grid";
+import { journalColumnLabel, useJournalColumns } from "@/components/journal-columns";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
 type JournalEntry = {
@@ -35,6 +37,7 @@ type JournalEntry = {
   accountType: "CHARGES" | "PRODUITS";
   amount: string;
   label: string;
+  referenceNumber: string | null;
   counterparty: string | null;
   linkedInvoice: { id: string; invoiceNumber: string } | null;
   moneyAccount: { name: string };
@@ -62,6 +65,23 @@ function typeLabel(type: string, locale: Locale) {
 }
 
 const RESIZE_MIN_WIDTH = 48;
+
+/** Fixed widths per column; label has none, so it takes what is left. */
+const COLUMN_WIDTHS: Record<JournalColumn, string | undefined> = {
+  sequenceNumber: "w-16",
+  date: "w-32",
+  budget: "w-40",
+  type: "w-32",
+  amount: "w-36",
+  label: undefined,
+  referenceNumber: "w-32",
+  counterpart: "w-40",
+  account: "w-40",
+  costCenter: "w-20",
+  balance: "w-44",
+};
+
+const SORTABLE_COLUMNS: ReadonlySet<JournalColumn> = new Set(["sequenceNumber", "date", "budget", "amount"]);
 
 /** Rows kept rendered above and below the viewport while the bulk grid is windowed. */
 const WINDOW_OVERSCAN = 20;
@@ -142,12 +162,12 @@ function useBulkRowWindow(
 }
 
 /** Stands in for the rows a windowed grid does not render. */
-function RowSpacer({ height }: { height: number }) {
+function RowSpacer({ height, colSpan }: { height: number; colSpan: number }) {
   if (height <= 0) return null;
   return (
     <tr data-row-spacer aria-hidden="true">
       {/* Inline padding: the table's density classes pad every td, and a spacer is only its height. */}
-      <td colSpan={10} style={{ height, padding: 0 }} />
+      <td colSpan={colSpan} style={{ height, padding: 0 }} />
     </tr>
   );
 }
@@ -184,6 +204,8 @@ type JournalRow = {
 
 type JournalTableRowProps = {
   row: JournalRow;
+  /** The visible data columns, in drawing order — the actions cell always follows. */
+  columns: JournalColumn[];
   draft: EntryDraft | null;
   isBulkEditing: boolean;
   onDraftChange: (entryId: string, patch: Partial<EntryDraft>) => void;
@@ -201,6 +223,7 @@ type JournalTableRowProps = {
 
 const JournalTableRow = memo(function JournalTableRow({
   row,
+  columns,
   draft,
   isBulkEditing,
   onDraftChange,
@@ -218,10 +241,12 @@ const JournalTableRow = memo(function JournalTableRow({
   const copy = dictionaries[locale].journal;
   const shellCopy = dictionaries[locale].shell;
   const entry = row.entry;
-  return (
-    <TR className={draft ? "bg-[var(--panel-strong)]" : undefined}>
-      <TD>
-        {draft ? (
+  function cell(column: JournalColumn) {
+    switch (column) {
+      case "sequenceNumber":
+        return <span className="text-[var(--muted)]">#{entry.sequenceNumber}</span>;
+      case "date":
+        return draft ? (
           <Input
             type="date"
             value={draft.date}
@@ -230,10 +255,9 @@ const JournalTableRow = memo(function JournalTableRow({
           />
         ) : (
           row.dateLabel
-        )}
-      </TD>
-      <TD>
-        {draft ? (
+        );
+      case "budget":
+        return draft ? (
           <Select
             value={draft.budgetId}
             onChange={(e) => onDraftChange(entry.id, { budgetId: e.target.value })}
@@ -244,10 +268,9 @@ const JournalTableRow = memo(function JournalTableRow({
           </Select>
         ) : (
           row.budgetName
-        )}
-      </TD>
-      <TD>
-        {draft ? (
+        );
+      case "type":
+        return draft ? (
           <Select
             value={draft.accountType}
             onChange={(e) => onDraftChange(entry.id, { accountType: e.target.value })}
@@ -258,10 +281,9 @@ const JournalTableRow = memo(function JournalTableRow({
           </Select>
         ) : (
           row.typeText
-        )}
-      </TD>
-      <TD>
-        {draft ? (
+        );
+      case "amount":
+        return draft ? (
           <Input
             type="number"
             step="0.01"
@@ -273,10 +295,9 @@ const JournalTableRow = memo(function JournalTableRow({
           />
         ) : (
           <span className={signedAmountClasses(row.isProduits)}>{row.amountLabel}</span>
-        )}
-      </TD>
-      <TD>
-        {draft ? (
+        );
+      case "label":
+        return draft ? (
           <Input
             type="text"
             value={draft.label}
@@ -295,10 +316,11 @@ const JournalTableRow = memo(function JournalTableRow({
           </a>
         ) : (
           <span className="truncate">{entry.label}</span>
-        )}
-      </TD>
-      <TD>
-        {draft ? (
+        );
+      case "referenceNumber":
+        return entry.referenceNumber ?? "-";
+      case "counterpart":
+        return draft ? (
           <Input
             type="text"
             value={draft.counterparty}
@@ -307,10 +329,9 @@ const JournalTableRow = memo(function JournalTableRow({
           />
         ) : (
           row.counterpart
-        )}
-      </TD>
-      <TD>
-        {draft ? (
+        );
+      case "account":
+        return draft ? (
           <Select
             value={draft.moneyAccountId}
             onChange={(e) => onDraftChange(entry.id, { moneyAccountId: e.target.value })}
@@ -320,10 +341,9 @@ const JournalTableRow = memo(function JournalTableRow({
           </Select>
         ) : (
           entry.moneyAccount.name
-        )}
-      </TD>
-      <TD>
-        {draft ? (
+        );
+      case "costCenter":
+        return draft ? (
           <Select
             value={draft.costCenterId}
             onChange={(e) => onDraftChange(entry.id, { costCenterId: e.target.value })}
@@ -334,9 +354,19 @@ const JournalTableRow = memo(function JournalTableRow({
           </Select>
         ) : (
           row.costCenterCode
-        )}
-      </TD>
-      <TD className="font-semibold">{row.balanceLabel}</TD>
+        );
+      case "balance":
+        return row.balanceLabel;
+    }
+  }
+
+  return (
+    <TR className={draft ? "bg-[var(--panel-strong)]" : undefined}>
+      {columns.map((column) => (
+        <TD key={column} className={column === "balance" ? "font-semibold" : undefined}>
+          {cell(column)}
+        </TD>
+      ))}
       <TD>
         {/* Bulk mode owns saving: a row shows no save, cancel or delete of
             its own until the header's Save all or Cancel ends the mode. A
@@ -382,6 +412,7 @@ const JournalTableRow = memo(function JournalTableRow({
 
 type JournalCardletProps = {
   row: JournalRow;
+  columns: JournalColumn[];
   draft: EntryDraft | null;
   isBulkEditing: boolean;
   onDraftChange: (entryId: string, patch: Partial<EntryDraft>) => void;
@@ -395,6 +426,7 @@ type JournalCardletProps = {
 
 const JournalCardlet = memo(function JournalCardlet({
   row,
+  columns,
   draft,
   isBulkEditing,
   onDraftChange,
@@ -522,14 +554,19 @@ const JournalCardlet = memo(function JournalCardlet({
         </CardletFields>
       ) : (
         <CardletFields>
-          <CardletField label={copy.budget}>{row.budgetName}</CardletField>
-          <CardletField label={copy.account}>{row.entry.moneyAccount.name}</CardletField>
-          <CardletField label={copy.costCenter}>{row.costCenterCode}</CardletField>
-          <CardletField label={copy.counterpart}>{row.counterpart}</CardletField>
+          {/* The table's column choice applies here too; the header line (#,
+              date, label, type, amount) is what identifies a card and stays. */}
+          {columns.includes("budget") ? <CardletField label={copy.budget}>{row.budgetName}</CardletField> : null}
+          {columns.includes("account") ? <CardletField label={copy.account}>{row.entry.moneyAccount.name}</CardletField> : null}
+          {columns.includes("costCenter") ? <CardletField label={copy.costCenter}>{row.costCenterCode}</CardletField> : null}
+          {columns.includes("counterpart") ? <CardletField label={copy.counterpart}>{row.counterpart}</CardletField> : null}
+          {columns.includes("referenceNumber") ? (
+            <CardletField label={copy.reference}>{row.entry.referenceNumber ?? "-"}</CardletField>
+          ) : null}
         </CardletFields>
       )}
 
-      {draft ? null : (
+      {draft || !columns.includes("balance") ? null : (
         <p className="text-xs text-[var(--muted)]">
           {copy.balance}: <span className="font-semibold text-[var(--ink)]">{row.balanceLabel}</span>
         </p>
@@ -577,6 +614,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
     type: "",
     amount: "",
     label: "",
+    referenceNumber: "",
     counterpart: "",
     account: "",
     costCenter: "",
@@ -649,10 +687,16 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
     [entries, accountOpeningBalances],
   );
 
-  const sortedEntries = useMemo(
-    () => sortEntries(filterEntries(entries, filters), sortBy),
-    [entries, filters, sortBy],
-  );
+  const { columns } = useJournalColumns();
+
+  // A hidden column's filter would narrow the list with no visible input to
+  // explain or clear it, so only the shown columns filter.
+  const sortedEntries = useMemo(() => {
+    const activeFilters = Object.fromEntries(
+      Object.entries(filters).filter(([key]) => (columns as string[]).includes(key)),
+    );
+    return sortEntries(filterEntries(entries, activeFilters), sortBy);
+  }, [entries, filters, sortBy, columns]);
 
   const handleSort = (column: string) => {
     if (sortBy?.column === column) {
@@ -847,6 +891,53 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
   const rowWindow = useBulkRowWindow(isBulkEditing, rows.length, tbodyRef, tableRef);
   const tableRows = rowWindow ? rows.slice(rowWindow.start, rowWindow.end) : rows;
 
+  function headerLabel(column: JournalColumn) {
+    if (column === "sequenceNumber") return "#";
+    if (column === "costCenter") return copy.costCenterShort;
+    return journalColumnLabel(column, locale);
+  }
+
+  function filterSelect(column: JournalColumn, options: Array<{ value: string; label: string }>) {
+    return (
+      <Select value={filters[column]} onChange={(e) => handleFilterChange(column, e.target.value)} size="sm">
+        <option value="">{copy.all}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </Select>
+    );
+  }
+
+  function filterControl(column: JournalColumn) {
+    switch (column) {
+      case "balance":
+        return null;
+      case "budget":
+        return filterSelect(column, uniqueBudgets.map((name) => ({ value: name!, label: name! })));
+      case "type":
+        return filterSelect(column, [
+          { value: "CHARGES", label: dictionaries[locale].common.charges },
+          { value: "PRODUITS", label: dictionaries[locale].common.produits },
+        ]);
+      case "account":
+        return filterSelect(column, uniqueAccounts.map((name) => ({ value: name, label: name })));
+      case "costCenter":
+        return filterSelect(column, uniqueCostCenters.map((code) => ({ value: code!, label: code! })));
+      default:
+        return (
+          <Input
+            type="text"
+            placeholder={copy.filter}
+            value={filters[column]}
+            onChange={(e) => handleFilterChange(column, e.target.value)}
+            size="sm"
+          />
+        );
+    }
+  }
+
   return (
     <Panel flushOnMobile as="div" className="flex h-full flex-col">
       <PanelHeader flushOnMobile className="shrink-0 flex-wrap">
@@ -893,162 +984,44 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
           pattern in calendar/budget's client.tsx. */}
       <Table ref={tableRef} frame={false} desktopOnly frameClassName="flex-1 min-h-0 max-h-[70vh]" className="table-fixed">
           <colgroup>
-            <col className="w-32" />
-            <col className="w-40" />
-            <col className="w-32" />
-            <col className="w-36" />
-            <col />
-            <col className="w-40" />
-            <col className="w-40" />
-            <col className="w-20" />
-            <col className="w-44" />
+            {columns.map((column) => (
+              <col key={column} className={COLUMN_WIDTHS[column]} />
+            ))}
             {/* Empty for every row while bulk edit is on — save/cancel moved to the
                 header, so the column has nothing left to hold but a rare "locked". */}
             <col className={isBulkEditing ? "w-16" : "w-24"} />
           </colgroup>
           <THead sticky>
             <TR>
-              <TH className="relative cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("date")}>
-                {copy.date}
-                <ColumnResizeHandle onResizeStart={handleResizeStart(0)} />
-              </TH>
-              <TH className="relative cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("budget")}>
-                {copy.budget}
-                <ColumnResizeHandle onResizeStart={handleResizeStart(1)} />
-              </TH>
-              <TH className="relative">
-                {copy.type}
-                <ColumnResizeHandle onResizeStart={handleResizeStart(2)} />
-              </TH>
-              <TH className="relative cursor-pointer hover:bg-[var(--line)]" onClick={() => handleSort("amount")}>
-                {copy.amount}
-                <ColumnResizeHandle onResizeStart={handleResizeStart(3)} />
-              </TH>
-              <TH className="relative">
-                {copy.label}
-                <ColumnResizeHandle onResizeStart={handleResizeStart(4)} />
-              </TH>
-              <TH className="relative">
-                {copy.counterpart}
-                <ColumnResizeHandle onResizeStart={handleResizeStart(5)} />
-              </TH>
-              <TH className="relative">
-                {copy.account}
-                <ColumnResizeHandle onResizeStart={handleResizeStart(6)} />
-              </TH>
-              <TH className="relative">
-                {copy.costCenterShort}
-                <ColumnResizeHandle onResizeStart={handleResizeStart(7)} />
-              </TH>
-              <TH className="relative">
-                {copy.balance}
-                <ColumnResizeHandle onResizeStart={handleResizeStart(8)} />
-              </TH>
+              {columns.map((column, index) => (
+                <TH
+                  key={column}
+                  className={cn("relative", SORTABLE_COLUMNS.has(column) && "cursor-pointer hover:bg-[var(--line)]")}
+                  onClick={SORTABLE_COLUMNS.has(column) ? () => handleSort(column) : undefined}
+                >
+                  {headerLabel(column)}
+                  <ColumnResizeHandle onResizeStart={handleResizeStart(index)} />
+                </TH>
+              ))}
               <TH className="relative">
                 {copy.actions}
-                <ColumnResizeHandle onResizeStart={handleResizeStart(9)} />
+                <ColumnResizeHandle onResizeStart={handleResizeStart(columns.length)} />
               </TH>
             </TR>
             <TR className="bg-[var(--panel)] normal-case">
-              <TH>
-                <Input
-                  type="text"
-                  placeholder={copy.filter}
-                  value={filters.date}
-                  onChange={(e) => handleFilterChange("date", e.target.value)}
-                  size="sm"
-                />
-              </TH>
-              <TH>
-                <Select
-                  value={filters.budget}
-                  onChange={(e) => handleFilterChange("budget", e.target.value)}
-                  size="sm"
-                >
-                  <option value="">{copy.all}</option>
-                  {uniqueBudgets.map((budgetName) => (
-                    <option key={budgetName} value={budgetName}>
-                      {budgetName}
-                    </option>
-                  ))}
-                </Select>
-              </TH>
-              <TH>
-                <Select
-                  value={filters.type}
-                  onChange={(e) => handleFilterChange("type", e.target.value)}
-                  size="sm"
-                >
-                  <option value="">{copy.all}</option>
-                  <option value="CHARGES">{dictionaries[locale].common.charges}</option>
-                  <option value="PRODUITS">{dictionaries[locale].common.produits}</option>
-                </Select>
-              </TH>
-              <TH>
-                <Input
-                  type="text"
-                  placeholder={copy.filter}
-                  value={filters.amount}
-                  onChange={(e) => handleFilterChange("amount", e.target.value)}
-                  size="sm"
-                />
-              </TH>
-              <TH>
-                <Input
-                  type="text"
-                  placeholder={copy.filter}
-                  value={filters.label}
-                  onChange={(e) => handleFilterChange("label", e.target.value)}
-                  size="sm"
-                />
-              </TH>
-              <TH>
-                <Input
-                  type="text"
-                  placeholder={copy.filter}
-                  value={filters.counterpart}
-                  onChange={(e) => handleFilterChange("counterpart", e.target.value)}
-                  size="sm"
-                />
-              </TH>
-              <TH>
-                <Select
-                  value={filters.account}
-                  onChange={(e) => handleFilterChange("account", e.target.value)}
-                  size="sm"
-                >
-                  <option value="">{copy.all}</option>
-                  {uniqueAccounts.map((account) => (
-                    <option key={account} value={account}>
-                      {account}
-                    </option>
-                  ))}
-                </Select>
-              </TH>
-              <TH>
-                <Select
-                  value={filters.costCenter}
-                  onChange={(e) => handleFilterChange("costCenter", e.target.value)}
-                  size="sm"
-                >
-                  <option value="">{copy.all}</option>
-                  {uniqueCostCenters.map((cc) => (
-                    <option key={cc} value={cc}>
-                      {cc}
-                    </option>
-                  ))}
-                </Select>
-              </TH>
-              <TH></TH>
+              {columns.map((column) => (
+                <TH key={column}>{filterControl(column)}</TH>
+              ))}
               <TH></TH>
             </TR>
           </THead>
           <tbody ref={tbodyRef}>
-            {rowWindow ? <RowSpacer height={rowWindow.start * rowWindow.rowHeight} /> : null}
+            {rowWindow ? <RowSpacer height={rowWindow.start * rowWindow.rowHeight} colSpan={columns.length + 1} /> : null}
             {tableRows.map((row) => (
               <JournalTableRow
                 key={row.entry.id}
                 row={row}
+                columns={columns}
                 draft={draftFor(row.entry.id)}
                 isBulkEditing={isBulkEditing}
                 onDraftChange={onDraftChange}
@@ -1065,12 +1038,12 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
               />
             ))}
             {rowWindow ? (
-              <RowSpacer height={Math.max(0, rows.length - rowWindow.end) * rowWindow.rowHeight} />
+              <RowSpacer height={Math.max(0, rows.length - rowWindow.end) * rowWindow.rowHeight} colSpan={columns.length + 1} />
             ) : null}
           </tbody>
         </Table>
 
-      {/* Below `sm` the 10-column table is unreadable, so the same rows render as
+      {/* Below `sm` the wide table is unreadable, so the same rows render as
           cards. Filtering and sorting live in the table header and stay desktop-only —
           a phone gets the entries in journal order. */}
       <CardletList>
@@ -1078,6 +1051,7 @@ export function JournalTable({ entries, accountBalances, accountOpeningBalances,
           <JournalCardlet
             key={row.entry.id}
             row={row}
+            columns={columns}
             draft={draftFor(row.entry.id)}
             isBulkEditing={isBulkEditing}
             onDraftChange={onDraftChange}
