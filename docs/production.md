@@ -5,8 +5,8 @@ push an annotated tag, and a systemd timer on the box notices within a minute,
 backs up, builds, health-checks, and rolls back if the check fails. Nothing is
 copied to the server by hand and no CI is involved — the box pulls.
 
-The box is **shared with a live application**, LeadDesk (`leaddesk.cabras.ch`).
-Almost every deliberate choice below — the ports, the compose project name, the
+The box is **shared with a live application**, LeadDesk (`leaddesk.cabras.ch`); this app
+has its own DNS entry, `blv.cabras.ch`, pointing at the same host. Almost every deliberate choice below — the ports, the compose project name, the
 separate proxy, the boot offset on the timer — exists because of that.
 
 ---
@@ -28,18 +28,18 @@ This file is the durable description; the plan is the one-time migration.
 
 ## Server facts
 
-Surveyed 2026-08-16.
+Specs updated 2026-10-07.
 
 | Fact | Value |
 | --- | --- |
 | Host | `194.99.21.120`, Ubuntu 24.04, KVM |
-| Access | `ssh -i ~/.ssh/id_ed25519 root@leaddesk.cabras.ch`, then `sudo -iu blv` |
-| CPU / RAM | 1 vCPU · 1.9 GB RAM · 2.4 GB swap |
-| Disk | 23 GB total — **the binding constraint on this box** |
+| Access | `ssh -i ~/.ssh/id_ed25519 root@blv.cabras.ch`, then `sudo -iu blv` |
+| CPU / RAM | 2 vCPU · 4 GB RAM |
+| Disk | 50 GB SSD |
 | Node | system-wide `v20.20.2` at `/usr/bin/node`, shared with LeadDesk |
 | Docker | present; `/etc/docker/daemon.json` sets `"iptables": false` |
 | Firewall | per-app scripts in `/usr/local/sbin`, persisted to `/etc/iptables/rules.v4` |
-| DNS | `blv.cabras.ch` and `leaddesk.cabras.ch` both resolve here |
+| DNS | `blv.cabras.ch` (this app) and `leaddesk.cabras.ch` (LeadDesk), one entry each, both resolve here |
 
 **Do not upgrade Node casually.** Both apps resolve the same `/usr/bin/node`, and both
 sets of systemd units pin its absolute path. Next 16 needs `>= 20.9.0` and LeadDesk's
@@ -299,15 +299,13 @@ there is no path that skips it. Never edit `/opt/caddy/conf.d/blv.caddy` by hand
 
 Each of these is here because the symptom does not name the cause.
 
-- **Disk is the binding constraint.** Every deploy writes a snapshot and rebuilds `.next`.
-  `BACKUP_KEEP=3`, the journald cap (`SystemMaxUse=200M`), and a `df -h` after the first
-  deploy of any release are the whole discipline.
-- **RAM is fine for serving and tight only for building.** Two idle `next start` processes
-  are nothing; one `next build` on 1 vCPU with ~1 GB free swaps and finishes, and two at
-  once will OOM. Both timers only build when a new tag exists, so this needs both repos
-  tagged within the same two minutes — hence the 3-minute `OnBootSec` offset. If it ever
-  actually bites, a shared `flock /var/lock/nextjs-build.lock` in both `self-update.sh`
-  scripts removes it for good.
+- **Every deploy writes a snapshot and rebuilds `.next`.** `BACKUP_KEEP=3`, the journald cap
+  (`SystemMaxUse=200M`), and a `df -h` after the first deploy of any release keep that bounded.
+- **Two builds at once is the one thing to avoid.** Serving is negligible — two idle
+  `next start` processes are nothing. Both timers only build when a new tag exists, so a
+  collision needs both repos tagged within the same two minutes — hence the 3-minute
+  `OnBootSec` offset. If it ever actually bites, a shared `flock /var/lock/nextjs-build.lock`
+  in both `self-update.sh` scripts removes it for good.
 - **`npm ci` uses the server's npm, not yours.** A lockfile written by a newer npm can
   dedupe a transitive dependency in a way npm 10.8.2 rejects, and the build then dies with
   a confusing `Cannot find package`. Regenerate the lockfile with `npx npm@10.8.2 install

@@ -22,7 +22,6 @@ ExecStart=@WORKDIR@/deploy/self-update.sh
 # No NoNewPrivileges here: the pipeline restarts the app through the narrow
 # sudoers rule install-updater.sh writes, and that needs setuid.
 
-# A Next build on one vCPU with ~1 GB of RAM is slow, and it swaps. Do not let
-# systemd kill a legitimate long tick — the flock already prevents two of them
-# overlapping.
+# A Next build can take minutes. Do not let systemd kill a legitimate long
+# tick — the flock already prevents two of them overlapping.
 TimeoutStartSec=1800

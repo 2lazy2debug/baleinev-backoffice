@@ -68,8 +68,7 @@ if ! id -nG "$RUN_USER" | tr ' ' '\n' | grep -qx docker; then
   echo "           sudo usermod -aG docker $RUN_USER   (then log in again)" >&2
 fi
 
-# Every deploy writes a snapshot and rebuilds .next. Neither is large on its own;
-# together on a small VPS they are the thing that fills the disk first.
+# Every deploy writes a snapshot and rebuilds .next; warn if the disk is nearly full.
 AVAIL_KB="$(df -Pk "$CHECKOUT_ROOT" | awk 'NR==2 {print $4}')"
 if [[ -n "$AVAIL_KB" && "$AVAIL_KB" -lt 3000000 ]]; then
   echo "WARNING: only $((AVAIL_KB / 1024)) MB free here. Each deploy writes a" >&2
