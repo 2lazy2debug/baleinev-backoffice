@@ -47,7 +47,7 @@ const variants: Record<ButtonVariant, string> = {
   primary: "bg-[var(--accent)] text-white hover:bg-[var(--accent-strong)]",
   secondary: "border border-[var(--line)] text-[var(--ink)] hover:bg-[var(--panel-strong)]",
   ghost: "text-[var(--muted)] hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]",
-  destructive: "border border-rose-400/60 text-rose-300 hover:bg-rose-950/40",
+  destructive: "border border-[var(--bad)]/60 text-[var(--bad)] hover:bg-[var(--bad)]/10",
 };
 
 /** Same recipe for elements that are links but read as buttons (`<Link href…>`). */

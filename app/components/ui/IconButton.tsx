@@ -22,9 +22,9 @@ const tones: Record<IconTone, string> = {
   neutral: "border-[var(--line)] text-[var(--muted)] hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]",
   accent: "border-[var(--line)] text-[var(--accent)] hover:bg-[var(--panel-strong)]",
   primary: "border-transparent bg-[var(--accent)] text-white hover:bg-[var(--accent-strong)]",
-  save: "border-emerald-400/60 text-emerald-400 hover:bg-emerald-950/40",
-  delete: "border-rose-400/40 text-rose-300 hover:bg-rose-950/40",
-  warning: "border-amber-400/40 text-amber-300 hover:bg-amber-950/40",
+  save: "border-[var(--good)]/60 text-[var(--good)] hover:bg-[var(--good)]/10",
+  delete: "border-[var(--bad)]/40 text-[var(--bad)] hover:bg-[var(--bad)]/10",
+  warning: "border-[var(--warn)]/40 text-[var(--warn)] hover:bg-[var(--warn)]/10",
 };
 
 /** Same recipe for elements that act as icon buttons but are not <button> (e.g. a <summary>). */

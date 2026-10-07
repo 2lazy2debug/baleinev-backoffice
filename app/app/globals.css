@@ -16,6 +16,10 @@
   --muted: #9cb0c4;
   --accent: #00a68c;
   --accent-strong: #008a74;
+  /* status colours, never categories */
+  --good: #6ee7b7;
+  --bad: #fda4af;
+  --warn: #fcd34d;
   /* The sidebar's translucent backdrop-blur fill — kept as a token rather than
      an inline rgba() because it has to shift with the theme (it approximates
      --page at reduced opacity, and the two colors are unrelated across themes). */
@@ -57,6 +61,10 @@
   --line: #c9b393;
   --ink: #3a2c1e;
   --muted: #6e5a40;
+  /* status colours, never categories */
+  --good: #065f46;
+  --bad: #be123c;
+  --warn: #92400e;
   --panel-translucent: rgba(239, 230, 216, 0.9);
 }
 

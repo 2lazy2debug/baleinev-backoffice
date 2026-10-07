@@ -18,7 +18,7 @@ export function Field({ label, htmlFor, error, required, className, children }: 
         {required ? <span aria-hidden="true"> *</span> : null}
       </span>
       {children}
-      {error ? <span className="block text-xs text-rose-300">{error}</span> : null}
+      {error ? <span className="block text-xs text-[var(--bad)]">{error}</span> : null}
     </label>
   );
 }

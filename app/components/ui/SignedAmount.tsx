@@ -1,11 +1,11 @@
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { cn } from "./cn";
 
-// One recipe for "positive is green, negative is rose" — the shade matches
+// One recipe for "positive is green, negative is rose" — the colour matches
 // Badge tone="success"/"error". Use signedAmountClasses for a value that is
 // signed by something other than its number (a PRODUITS entry, say).
 export function signedAmountClasses(positive: boolean) {
-  return positive ? "text-emerald-300" : "text-rose-300";
+  return positive ? "text-[var(--good)]" : "text-[var(--bad)]";
 }
 
 type SignedAmountProps = {

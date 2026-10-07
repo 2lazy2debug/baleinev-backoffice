@@ -33,7 +33,7 @@ export function ChipRemoveButton({ label, className, type, ...props }: ChipRemov
       className={cn(
         // The chip itself stays a compact token; only the tap target grows below
         // `lg`, where the row it sits in is touched rather than clicked.
-        "flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition hover:text-rose-400 disabled:opacity-50 lg:h-5 lg:w-5",
+        "flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition hover:text-[var(--bad)] disabled:opacity-50 lg:h-5 lg:w-5",
         className,
       )}
       {...props}

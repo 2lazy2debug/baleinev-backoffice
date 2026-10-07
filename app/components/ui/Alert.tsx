@@ -3,9 +3,9 @@ import { cn } from "./cn";
 type AlertTone = "error" | "warning" | "success" | "info";
 
 const tones: Record<AlertTone, string> = {
-  error: "border-rose-400/30 bg-rose-950/30 text-rose-200",
-  warning: "border-amber-400/30 bg-amber-950/30 text-amber-200",
-  success: "border-emerald-400/30 bg-emerald-950/30 text-emerald-200",
+  error: "border-[var(--bad)]/30 bg-[var(--bad)]/10 text-[var(--bad)]",
+  warning: "border-[var(--warn)]/30 bg-[var(--warn)]/10 text-[var(--warn)]",
+  success: "border-[var(--good)]/30 bg-[var(--good)]/10 text-[var(--good)]",
   info: "border-[var(--line)] bg-[var(--panel)] text-[var(--muted)]",
 };
 

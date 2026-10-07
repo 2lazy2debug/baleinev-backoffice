@@ -18,7 +18,7 @@ export const inputBaseClasses =
 /** Border colour of a field: the line token, or rose when the field is the risky one. */
 const fieldTones = {
   default: "border-[var(--line)]",
-  danger: "border-rose-400/60",
+  danger: "border-[var(--bad)]/60",
 } as const;
 
 type FieldTone = keyof typeof fieldTones;
