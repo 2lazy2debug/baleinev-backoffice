@@ -172,3 +172,40 @@ export async function deleteUserAction(_prevState: ActionState, formData: FormDa
     return { error: toActionErrorMessage(err) };
   }
 }
+
+/**
+ * The way back for a user who lost their authenticator: an admin clears the
+ * seed, and the account signs in on its password alone until its owner enrols
+ * again. Your own second factor is not reset here — `/account` turns it off,
+ * and asks for the password to do it, so an admin session left open cannot
+ * strip its own account without that proof.
+ */
+export async function resetUserTwoFactorAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    const access = await requireAdmin();
+    const userId = getRequiredString(formData, "userId");
+
+    if (access.id === userId) {
+      throw new Error("Turn off your own two-factor sign-in from your account page.");
+    }
+
+    const { count } = await prisma.user.updateMany({
+      where: { id: userId },
+      data: {
+        twoFactorEnabled: false,
+        twoFactorCipher: null,
+        twoFactorIv: null,
+        twoFactorTag: null,
+      },
+    });
+
+    if (count === 0) {
+      throw new Error("User not found.");
+    }
+
+    revalidatePath("/users");
+    return { error: null, saved: true };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}

@@ -66,6 +66,7 @@ Optional, per account, turned on by the user from the 2FA card on `/account`
 | 2. Confirm | `enableTwoFactorAction()` checks a code against that seed | `twoFactorEnabled` → **true** |
 | Cancel | `cancelTwoFactorEnrolmentAction()` drops a pending seed (never an active one) | the three cipher columns cleared |
 | Turn off | `disableTwoFactorAction()` — **costs the account password**, the same proof changing the password costs, so an open session on a borrowed laptop is not enough | all four columns cleared |
+| Admin reset | `resetUserTwoFactorAction()` in [`users/actions.ts`](../app/(app)/users/actions.ts) — "Turn off 2FA" on another user's card in `/users`. Admin-only, and **refused on the admin's own account**: that goes through `/account` and its password | all four columns cleared |
 
 Between the two steps the account still signs in on its password alone: a seed with
 `twoFactorEnabled = false` is a pending enrolment that `authorize()` ignores, so backing out
@@ -89,8 +90,10 @@ a wrong password never reveals whether an account carries a second factor.
   cannot open, so those accounts need `twoFactorEnabled` cleared in the database before they
   can sign in again. See [passwords.md](passwords.md).
 
-**There are no recovery codes and no admin reset.** A user who loses their authenticator has
-to have `twoFactorEnabled` cleared directly in the database.
+**There are no recovery codes.** A user who loses their authenticator asks an admin, who turns
+their 2FA off from `/users` (the account card carries a "2FA" badge while it is on); the user then
+signs in on their password and enrols again. The last admin locked out of their own second factor
+still has to have `twoFactorEnabled` cleared directly in the database.
 
 ---
 

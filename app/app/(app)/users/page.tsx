@@ -14,7 +14,16 @@ export default async function UsersPage() {
   const [users, departments] = await Promise.all([
     prisma.user.findMany({
       orderBy: [{ role: "asc" }, { name: "asc" }],
-      include: { departments: { select: { id: true, name: true }, orderBy: { name: "asc" } } },
+      // `select`, not `include`: the list goes to a client component, and the
+      // password hash and the sealed 2FA seed have no business in the browser.
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        twoFactorEnabled: true,
+        departments: { select: { id: true, name: true }, orderBy: { name: "asc" } },
+      },
     }),
     prisma.department.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);

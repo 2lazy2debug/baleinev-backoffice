@@ -776,6 +776,10 @@ export const dictionaries = {
       passwordRules: "Use a real password; there is no signup flow for end users.",
       editUser: "Edit user",
       noDepartments: "No department",
+      twoFactorOn: "2FA",
+      resetTwoFactor: "Turn off 2FA",
+      resetTwoFactorMessage:
+        "They will sign in with their password alone until they set up two-factor again on their account page.",
     },
     tasks: {
       title: "Tasks",
@@ -1856,6 +1860,10 @@ export const dictionaries = {
       passwordRules: "Utilisez un vrai mot de passe ; il n'y a pas d'inscription libre-service pour les utilisateurs finaux.",
       editUser: "Modifier l'utilisateur",
       noDepartments: "Aucun département",
+      twoFactorOn: "2FA",
+      resetTwoFactor: "Désactiver la 2FA",
+      resetTwoFactorMessage:
+        "Cette personne se connectera avec son seul mot de passe jusqu'à ce qu'elle réactive la double authentification depuis sa page de compte.",
     },
     tasks: {
       title: "Tâches",
