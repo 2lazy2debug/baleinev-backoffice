@@ -23,8 +23,8 @@ function toDataUrl(buffer: Buffer, mimeType: string) {
 
 async function getLogoDataUrl() {
   const candidatePaths = [
-    path.resolve(process.cwd(), "..", "soa", "qr", "blv-logo-noir-render.png"),
-    path.resolve(process.cwd(), "public", "logo_blv.png"),
+    // Black logo: the white one (logo_blv.png) is for the dark sidebar and vanishes on paper.
+    path.resolve(process.cwd(), "public", "logo_blv_dark.png"),
   ];
 
   for (const candidatePath of candidatePaths) {

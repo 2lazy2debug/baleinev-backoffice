@@ -103,9 +103,8 @@ Two properties this layout exists to guarantee:
   must not be.
 - **The npm project is not the repo root.** `git` runs at `/opt/blv/checkout`; every
   `npm`, `npx` and `docker compose` runs in `/opt/blv/checkout/app`. The service's
-  `WorkingDirectory` is the latter, and it must stay inside the git checkout because
-  `app/api/invoices/[invoiceId]/pdf/route.ts` resolves
-  `process.cwd()/../soa/qr/blv-logo-noir-render.png` at request time.
+  `WorkingDirectory` is the latter, because the PDF and export routes read
+  `process.cwd()/public/logo_blv_dark.png` at request time.
 
 Uploads live in Postgres (`ExpenseReport.proofData`), so a `pg_dump` is a **complete**
 backup. There is no blob store to snapshot alongside it.
