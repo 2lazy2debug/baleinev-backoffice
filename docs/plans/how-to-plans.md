@@ -1,7 +1,7 @@
 ## Implementation plans
 
-Plans live in `plans/NNN-name/` (product plans, numbered on from the last one: `019` → `020`) or
-`plans/ZNN-name/` (side plans unrelated to LeadDesk, e.g. `Z01-pilot`):
+Plans live in `plans/NNN-name/` (product plans, numbered on from the last one: `019` → `020`)
+
 
 ```
 plans/NNN-name/
