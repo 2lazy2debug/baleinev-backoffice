@@ -11,22 +11,28 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   const locale = await getLocale();
   const theme = await getTheme();
   const access = await getCurrentUserAccess({ allowGuest: true });
+  const isGuest = access.role === "GUEST";
 
   const [selectedEdition, editions, pendingTaskCount] = await Promise.all([
     resolveEdition(),
     prisma.edition.findMany({
+      // A guest is always in the default edition (lib/edition-context.ts) and has no
+      // picker; that one row still drives the read-only mode and the closed banner.
+      where: isGuest ? { isDefault: true } : undefined,
       orderBy: { name: "desc" },
       select: { id: true, name: true, closedAt: true },
     }),
-    prisma.task.count({
-      where: {
-        status: TaskStatus.PENDING,
-        OR: [
-          { assignedToUserId: access.id },
-          { assignedToRole: access.role as UserRole },
-        ],
-      },
-    }),
+    isGuest
+      ? Promise.resolve(0)
+      : prisma.task.count({
+          where: {
+            status: TaskStatus.PENDING,
+            OR: [
+              { assignedToUserId: access.id },
+              { assignedToRole: access.role as UserRole },
+            ],
+          },
+        }),
   ]);
 
   return (

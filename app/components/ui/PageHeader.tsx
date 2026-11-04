@@ -45,7 +45,9 @@ type PageHeaderProps = {
  * bottom bar is apps, and the one place that is level with the screen's name is
  * here. <MobileAccountMenu> reads what it needs from the shell's context, so no
  * page has to know about it — and it renders nothing above `lg`, where the
- * sidebar already carries account, language, edition and sign out.
+ * sidebar already carries account, language, edition and sign out, except in
+ * the GUEST shell, which has no sidebar and keeps it at every breakpoint
+ * (`menuOnly`).
  */
 export function PageHeader({ eyebrow, title, description, actions, controls, className }: PageHeaderProps) {
   return (
@@ -62,7 +64,8 @@ export function PageHeader({ eyebrow, title, description, actions, controls, cla
         {/* Below `lg` this is the bar's own line — the screen's name at one end,
             the account at the other — so page actions wrap underneath it instead
             of pushing the account control onto a second row. `lg:contents`
-            dissolves it above `lg`, where there is no account control to place. */}
+            dissolves it above `lg`, where there is no account control to place (in the
+            GUEST shell the control becomes the row's last item instead). */}
         <div className="flex w-full items-start justify-between gap-3 lg:contents">
           <div className="min-w-0 space-y-0.5 lg:space-y-2">
             {eyebrow ? (

@@ -36,7 +36,9 @@ type Overlay = "closed" | "menu" | "edition";
  *
  * It lives in <PageHeader> because that is the mobile top bar; the bottom bar
  * below is apps only. Above `lg` there is a sidebar carrying all four, so this
- * renders nothing.
+ * renders nothing — except in a shell with no sidebar (`menuOnly`, a GUEST), where
+ * it is the account control at every breakpoint and holds only name, language,
+ * theme and sign out.
  */
 export function MobileAccountMenu() {
   const shell = useMobileShell();
@@ -57,6 +59,7 @@ export function MobileAccountMenu() {
     locale,
     theme,
     onToggleTheme,
+    menuOnly,
   } = shell;
   const copy = dictionaries[locale].shell;
 
@@ -68,22 +71,24 @@ export function MobileAccountMenu() {
         size="md"
         tone="neutral"
         label={copy.account}
-        className="lg:hidden"
+        className={menuOnly ? "lg:order-last" : "lg:hidden"}
         aria-expanded={overlay === "menu"}
         onClick={() => setOverlay("menu")}
       >
         <CircleUserRound />
       </IconButton>
 
-      <MobileSheet open={overlay === "menu"} onClose={() => setOverlay("closed")}>
+      <MobileSheet open={overlay === "menu"} onClose={() => setOverlay("closed")} desktopDialog={menuOnly}>
         <p className="mb-1 truncate text-sm font-semibold">{userName}</p>
-        <MobileSheetRow
-          icon={CircleUserRound}
-          label={copy.account}
-          href="/account"
-          active={pathname === "/account" || pathname.startsWith("/account/")}
-          onClick={() => setOverlay("closed")}
-        />
+        {menuOnly ? null : (
+          <MobileSheetRow
+            icon={CircleUserRound}
+            label={copy.account}
+            href="/account"
+            active={pathname === "/account" || pathname.startsWith("/account/")}
+            onClick={() => setOverlay("closed")}
+          />
+        )}
         <MobileSheetRow
           icon={Globe}
           label={copy.language}
@@ -99,12 +104,14 @@ export function MobileAccountMenu() {
           value={theme === "dark" ? copy.lightTheme : copy.darkTheme}
           onClick={onToggleTheme}
         />
-        <MobileSheetRow
-          icon={Layers}
-          label={copy.edition}
-          value={selectedEdition ? shortEditionLabel(selectedEdition.name) : copy.pickEdition}
-          onClick={() => setOverlay("edition")}
-        />
+        {menuOnly ? null : (
+          <MobileSheetRow
+            icon={Layers}
+            label={copy.edition}
+            value={selectedEdition ? shortEditionLabel(selectedEdition.name) : copy.pickEdition}
+            onClick={() => setOverlay("edition")}
+          />
+        )}
         <SignOutButton row label={copy.signOut} />
       </MobileSheet>
 

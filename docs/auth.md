@@ -108,6 +108,7 @@ The middleware protects the entire `(app)` route group. It checks three things:
    `/api/preferences/theme` (plus the pre-token exemptions: `/login`, `/api/auth`,
    `/api/preferences/language`, …). Any other page → `/events`; any other `/api/*` →
    `401 { ok: false, error: "Not allowed" }`.
+   The shell matches: `components/app-shell.tsx` renders a GUEST with no sidebar and no bottom bar; the account menu (name, language, theme, sign out) is the only chrome, at every breakpoint (`MobileShellValue.menuOnly`).
 3. **Is the user a `DEPARTMENT` role trying to access an admin route?**
    - Blocked routes for `DEPARTMENT`: `/`, `/editions`, `/journal`, `/cost-centers`,
      `/invoices`, `/templates`, `/pos/templates`, `/departments`, `/users` — these redirect to

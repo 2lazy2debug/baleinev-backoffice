@@ -24,6 +24,14 @@ export type MobileShellValue = {
   locale: Locale;
   theme: Theme;
   onToggleTheme: () => void;
+  /**
+   * The shell has no app navigation — no sidebar, no bottom bar (a GUEST, who
+   * only ever sees /events). The account menu is then the whole shell: its
+   * trigger shows at every breakpoint, its sheet opens as a dialog above `lg`,
+   * and it drops the Account link and the edition entry, which lead to screens
+   * this user cannot open.
+   */
+  menuOnly: boolean;
 };
 
 const MobileShellContext = createContext<MobileShellValue | null>(null);

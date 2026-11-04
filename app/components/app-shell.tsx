@@ -65,6 +65,9 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
   const [theme, setTheme] = useState<Theme>(initialTheme);
   const asideRef = useRef<HTMLElement | null>(null);
   const copy = dictionaries[locale].shell;
+  // A GUEST sees /events and nothing else (proxy.ts): no app to navigate to, no
+  // edition to pick, no account page. The shell is then just the account menu.
+  const menuOnly = role === "GUEST";
 
   const selectedEdition = editions.find((edition) => edition.id === selectedEditionId) ?? null;
   const isEditionReadOnly = selectedEdition?.isClosed ?? false;
@@ -192,120 +195,98 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
         locale,
         theme,
         onToggleTheme: toggleTheme,
+        menuOnly,
       }}
     >
       <div className="min-h-screen bg-[var(--page)] text-[var(--ink)]">
         <div className="flex min-h-screen">
-          <aside
-            ref={asideRef}
-            className={`sticky top-0 hidden h-screen shrink-0 flex-col border-r border-[var(--line)] bg-[color:var(--panel-translucent)] backdrop-blur lg:flex ${isCollapsed ? "collapsed" : ""}`}
-            style={{ width: isCollapsed ? `${COLLAPSED_WIDTH}px` : "clamp(220px, 14.285vw, 320px)" }}
-          >
-            <div className={`shrink-0 border-b border-[var(--line)] ${isCollapsed ? "px-3 py-4" : "px-5 py-5"}`}>
-              <Image src="/logo_blv.png" alt="Baleinev" width={320} height={128} className="brand-logo w-full object-contain" priority />
-              {!isCollapsed ? (
-                <div className="mt-3 space-y-1">
-                  <label htmlFor="edition-picker" className={cn("block", microLabelClasses)}>
-                    {copy.edition}
-                  </label>
-                  {editions.length > 0 ? (
-                    <Select
-                      id="edition-picker"
-                      size="sm"
-                      value={selectedEditionId ?? ""}
-                      disabled={switchingEdition}
-                      onChange={(event) => selectEdition(event.target.value)}
+          {menuOnly ? null : (
+            <aside
+              ref={asideRef}
+              className={`sticky top-0 hidden h-screen shrink-0 flex-col border-r border-[var(--line)] bg-[color:var(--panel-translucent)] backdrop-blur lg:flex ${isCollapsed ? "collapsed" : ""}`}
+              style={{ width: isCollapsed ? `${COLLAPSED_WIDTH}px` : "clamp(220px, 14.285vw, 320px)" }}
+            >
+              <div className={`shrink-0 border-b border-[var(--line)] ${isCollapsed ? "px-3 py-4" : "px-5 py-5"}`}>
+                <Image src="/logo_blv.png" alt="Baleinev" width={320} height={128} className="brand-logo w-full object-contain" priority />
+                {!isCollapsed ? (
+                  <div className="mt-3 space-y-1">
+                    <label htmlFor="edition-picker" className={cn("block", microLabelClasses)}>
+                      {copy.edition}
+                    </label>
+                    {editions.length > 0 ? (
+                      <Select
+                        id="edition-picker"
+                        size="sm"
+                        value={selectedEditionId ?? ""}
+                        disabled={switchingEdition}
+                        onChange={(event) => selectEdition(event.target.value)}
+                      >
+                        {selectedEditionId ? null : <option value="">{copy.pickEdition}</option>}
+                        {editions.map((edition) => (
+                          <option key={edition.id} value={edition.id}>
+                            {edition.isClosed ? `${edition.name} — ${copy.editionClosed}` : edition.name}
+                          </option>
+                        ))}
+                      </Select>
+                    ) : (
+                      <p className="text-xs text-[var(--muted)]">{copy.noEditions}</p>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+
+              <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+                {navigation.map((item) => {
+                  if (item.type === "divider") {
+                    return <div key={item.key} className="my-2 border-t border-[var(--line)]" />;
+                  }
+
+                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  const Icon = item.icon;
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`relative flex items-center rounded-md px-3 py-2 text-sm ${
+                        isCollapsed ? "justify-center" : "justify-between"
+                      } ${
+                        isActive
+                          ? "bg-[var(--panel-strong)] font-semibold text-[var(--ink)]"
+                          : "text-[var(--muted)] hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
+                      }`}
                     >
-                      {selectedEditionId ? null : <option value="">{copy.pickEdition}</option>}
-                      {editions.map((edition) => (
-                        <option key={edition.id} value={edition.id}>
-                          {edition.isClosed ? `${edition.name} — ${copy.editionClosed}` : edition.name}
-                        </option>
-                      ))}
-                    </Select>
-                  ) : (
-                    <p className="text-xs text-[var(--muted)]">{copy.noEditions}</p>
-                  )}
-                </div>
-              ) : null}
-            </div>
+                      <span className="inline-flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        {!isCollapsed ? <span>{item.label}</span> : null}
+                      </span>
+                      {item.href === "/tasks" && pendingTaskCount > 0 ? (
+                        isCollapsed ? (
+                          // No room for the count at 64px — a dot still says "something is waiting".
+                          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[var(--accent)]" />
+                        ) : (
+                          <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-3xs font-bold text-white">
+                            {pendingTaskCount}
+                          </span>
+                        )
+                      ) : null}
+                    </Link>
+                  );
+                })}
+              </nav>
 
-            <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-              {navigation.map((item) => {
-                if (item.type === "divider") {
-                  return <div key={item.key} className="my-2 border-t border-[var(--line)]" />;
-                }
-
-                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                const Icon = item.icon;
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`relative flex items-center rounded-md px-3 py-2 text-sm ${
-                      isCollapsed ? "justify-center" : "justify-between"
-                    } ${
-                      isActive
-                        ? "bg-[var(--panel-strong)] font-semibold text-[var(--ink)]"
-                        : "text-[var(--muted)] hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]"
-                    }`}
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <Icon className="h-4 w-4" />
-                      {!isCollapsed ? <span>{item.label}</span> : null}
-                    </span>
-                    {item.href === "/tasks" && pendingTaskCount > 0 ? (
-                      isCollapsed ? (
-                        // No room for the count at 64px — a dot still says "something is waiting".
-                        <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[var(--accent)]" />
-                      ) : (
-                        <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-3xs font-bold text-white">
-                          {pendingTaskCount}
-                        </span>
-                      )
-                    ) : null}
-                  </Link>
-                );
-              })}
-            </nav>
-
-            <div className="shrink-0 border-t border-[var(--line)] p-3">
-              {isCollapsed ? (
-                /* Collapsed: account, language, the expand arrow and sign out stack as
-                   four identically sized icon buttons — no labels, no user name. */
-                <div className="flex flex-col items-center gap-2">
-                  <Link
-                    href="/account"
-                    title={copy.account}
-                    aria-label={copy.account}
-                    className={iconButtonClasses("neutral", "md")}
-                  >
-                    <CircleUserRound />
-                  </Link>
-                  <IconButton size="md" tone="neutral" label={copy.language} onClick={() => setIsLanguageOpen(true)}>
-                    <Globe />
-                  </IconButton>
-                  <IconButton
-                    size="md"
-                    tone="neutral"
-                    label={theme === "dark" ? copy.switchToLightTheme : copy.switchToDarkTheme}
-                    onClick={toggleTheme}
-                  >
-                    {theme === "dark" ? <Sun /> : <Moon />}
-                  </IconButton>
-                  <IconButton size="md" tone="neutral" label={copy.expandSidebar} onClick={toggleCollapse}>
-                    <ChevronRight />
-                  </IconButton>
-                  <SignOutButton compact label={copy.signOut} />
-                </div>
-              ) : (
-                <>
-                  <p className="truncate text-sm font-medium">{userName}</p>
-                  <div className="mt-2 flex gap-2">
-                    <Link href="/account" className={buttonClasses("secondary", "md", "flex-1")}>
+              <div className="shrink-0 border-t border-[var(--line)] p-3">
+                {isCollapsed ? (
+                  /* Collapsed: account, language, the expand arrow and sign out stack as
+                     four identically sized icon buttons — no labels, no user name. */
+                  <div className="flex flex-col items-center gap-2">
+                    <Link
+                      href="/account"
+                      title={copy.account}
+                      aria-label={copy.account}
+                      className={iconButtonClasses("neutral", "md")}
+                    >
                       <CircleUserRound />
-                      <span>{copy.account}</span>
                     </Link>
                     <IconButton size="md" tone="neutral" label={copy.language} onClick={() => setIsLanguageOpen(true)}>
                       <Globe />
@@ -318,28 +299,55 @@ export function AppShell({ children, userName, editions, selectedEditionId, loca
                     >
                       {theme === "dark" ? <Sun /> : <Moon />}
                     </IconButton>
-                    <IconButton size="md" tone="neutral" label={copy.collapseSidebar} onClick={toggleCollapse}>
-                      <ChevronLeft />
+                    <IconButton size="md" tone="neutral" label={copy.expandSidebar} onClick={toggleCollapse}>
+                      <ChevronRight />
                     </IconButton>
+                    <SignOutButton compact label={copy.signOut} />
                   </div>
-                  <div className="mt-2">
-                    <SignOutButton label={copy.signOut} />
-                  </div>
-                </>
-              )}
-              <p className="mt-3 truncate text-center text-3xs text-[var(--muted)]">
-                {isCollapsed ? null : "Baleinev Comptes "}v{process.env.NEXT_PUBLIC_APP_VERSION}
-              </p>
-            </div>
-          </aside>
+                ) : (
+                  <>
+                    <p className="truncate text-sm font-medium">{userName}</p>
+                    <div className="mt-2 flex gap-2">
+                      <Link href="/account" className={buttonClasses("secondary", "md", "flex-1")}>
+                        <CircleUserRound />
+                        <span>{copy.account}</span>
+                      </Link>
+                      <IconButton size="md" tone="neutral" label={copy.language} onClick={() => setIsLanguageOpen(true)}>
+                        <Globe />
+                      </IconButton>
+                      <IconButton
+                        size="md"
+                        tone="neutral"
+                        label={theme === "dark" ? copy.switchToLightTheme : copy.switchToDarkTheme}
+                        onClick={toggleTheme}
+                      >
+                        {theme === "dark" ? <Sun /> : <Moon />}
+                      </IconButton>
+                      <IconButton size="md" tone="neutral" label={copy.collapseSidebar} onClick={toggleCollapse}>
+                        <ChevronLeft />
+                      </IconButton>
+                    </div>
+                    <div className="mt-2">
+                      <SignOutButton label={copy.signOut} />
+                    </div>
+                  </>
+                )}
+                <p className="mt-3 truncate text-center text-3xs text-[var(--muted)]">
+                  {isCollapsed ? null : "Baleinev Comptes "}v{process.env.NEXT_PUBLIC_APP_VERSION}
+                </p>
+              </div>
+            </aside>
+          )}
 
-          <MobileShell navigation={navigation} locale={locale} pendingTaskCount={pendingTaskCount} />
+          {menuOnly ? null : (
+            <MobileShell navigation={navigation} locale={locale} pendingTaskCount={pendingTaskCount} />
+          )}
 
           {/* The phone gutter is 12px — every point of it is width a list row does
               not get — and <PageHeader> bleeds by exactly this much. Change the two
-              together. `pb-24` clears the fixed bottom bar; `lg:p-8` gives the
+              together. `pb-24` clears the fixed bottom bar, which a `menuOnly` shell does not have; `lg:p-8` gives the
               desktop padding back once that bar is gone. */}
-          <main className="min-w-0 flex-1 p-3 pb-24 lg:p-8">
+          <main className={cn("min-w-0 flex-1 p-3 lg:p-8", menuOnly ? null : "pb-24")}>
             <EditionReadOnlyProvider isReadOnly={isEditionReadOnly}>
               {isEditionReadOnly && isEditionScopedRoute && selectedEdition ? (
                 <EditionClosedBanner locale={locale} editionName={selectedEdition.name} />

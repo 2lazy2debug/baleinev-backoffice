@@ -236,3 +236,19 @@ Guest menu order, as rendered: name · Language · Theme · Sign out.
    the sheet is still hidden above `lg` (resize a 390px window with the sheet open past 1024px →
    sheet disappears, as today).
 6. Admin: switch edition from the sidebar and from the mobile menu → both still work.
+
+## Verify results (2026-11-04)
+
+| Gate | Result |
+|---|---|
+| `npm run build` | pass |
+| `npm run lint` | 0 errors, 2 pre-existing warnings |
+| `npm run check:design` | pass |
+| `npm run check:i18n` | pass, 1026 keys each |
+| `npm test` | 28 files / 315 tests |
+| `grep menuOnly` | also matches `mobile-sheet.tsx` (the Design's own doc comment); no code use there |
+| `grep desktopDialog` | `mobile-sheet.tsx`, `mobile-account-menu.tsx` |
+
+Manual pass (6 actions) not run by the executor; closed at the user's request without it. No pilot verify rows recorded: the `pilot` script does not exist in this repo.
+
+No deviation from the Design.

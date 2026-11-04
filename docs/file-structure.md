@@ -350,7 +350,7 @@ app/
 
 | File | Purpose |
 |---|---|
-| `app-shell.tsx` | Persistent sidebar navigation (desktop, `lg` and up), edition picker, the Account link and the language dialog's trigger, sign-out. Owns the navigation array both shells render, provides the read-only context and renders the closed-edition banner. Wraps the app in `<MobileShellProvider>` so the account menu in every screen's header can reach the edition and language handlers |
+| `app-shell.tsx` | Persistent sidebar navigation (desktop, `lg` and up), edition picker, the Account link and the language dialog's trigger, sign-out. Owns the navigation array both shells render, provides the read-only context and renders the closed-edition banner. Wraps the app in `<MobileShellProvider>` so the account menu in every screen's header can reach the edition and language handlers. A GUEST (`menuOnly`) gets neither sidebar nor bottom bar — only the account menu |
 | `language-modal.tsx` | `<LanguageModal>` — the app's one language switch, opened by the globe button in both shells. Mount it only while open; the pending choice is local state |
 | `navigation.ts` | `NavigationItem` / `EditionOption` — the nav shape shared by the sidebar and the mobile shell |
 | `edition-read-only.tsx` | `useEditionReadOnly()` / `WritableEditionOnly` / `EditionClosedBanner` — lets pages hide create/edit/delete affordances while the selected edition is closed |
@@ -378,9 +378,9 @@ The split is the point: **the bottom bar is apps, the top bar is the person.**
 | File | Purpose |
 |---|---|
 | `mobile-shell.tsx` | The fixed bottom bar — tasks, expenses, events, calendar, then "Other" — and the one-level app drawer behind that last slot. Bar slots come from the role's own navigation array (`BAR_HREFS`), so an app added later falls into the drawer on its own |
-| `mobile-account-menu.tsx` | `<MobileAccountMenu>` — the account icon at the top right of the mobile top bar and the sheet it opens: Account · Language · Edition · Sign out. Reads its handlers from `mobile-shell-context.tsx`, renders nothing above `lg` |
-| `mobile-shell-context.tsx` | `<MobileShellProvider>` / `useMobileShell()` — how the account menu reaches AppShell's edition and language handlers without every page threading props. Null outside the shell (error and not-found screens) |
-| `mobile-sheet.tsx` | `<MobileSheet open onClose>` and `<MobileSheetRow>` — the bottom sheet and the one row recipe inside it. Escape, backdrop tap, and a two-detent drag on the handle: up goes full height, down steps back and then closes. Renders into `<body>`, or the header's `z-20` would trap it under the bottom bar |
+| `mobile-account-menu.tsx` | `<MobileAccountMenu>` — the account icon at the top right of the mobile top bar and the sheet it opens: Account · Language · Edition · Sign out. Reads its handlers from `mobile-shell-context.tsx`, renders nothing above `lg` unless the shell is `menuOnly` (GUEST: name · Language · Theme · Sign out, every breakpoint) |
+| `mobile-shell-context.tsx` | `<MobileShellProvider>` / `useMobileShell()` — how the account menu reaches AppShell's edition and language handlers without every page threading props. Null outside the shell (error and not-found screens). Carries `menuOnly` — the shell has no app navigation (GUEST) |
+| `mobile-sheet.tsx` | `<MobileSheet open onClose desktopDialog>` and `<MobileSheetRow>` — the bottom sheet and the one row recipe inside it. Escape, backdrop tap, and a two-detent drag on the handle: up goes full height, down steps back and then closes. Renders into `<body>`, or the header's `z-20` would trap it under the bottom bar. `desktopDialog` keeps it above `lg` as a centred dialog, for a shell with no sidebar |
 | `mobile-nav-button.tsx` | `<MobileNavButton>` / `<MobileNavLink badge>` — the one bottom-bar button recipe (slots share the bar evenly, so five fit at 320px) |
 
 ### `components/ui/` — the design system

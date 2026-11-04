@@ -26,11 +26,21 @@ import { cn } from "@/components/ui/cn";
  *
  * The sheet never stacks: a sheet with levels swaps its own content instead of
  * mounting a second one.
+ *
+ * Above `lg` it renders nothing, unless `desktopDialog` asks for it as a centred
+ * dialog (a shell with no sidebar).
  */
 type MobileSheetProps = {
   open: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  /**
+   * Above `lg` a sheet is hidden — the sidebar carries what it holds. A shell
+   * with no sidebar (`menuOnly`, the GUEST shell) has nowhere else to put it,
+   * so this keeps it above `lg` as a centred dialog: the Modal's radius, no
+   * grab handle, the drag gestures unreachable.
+   */
+  desktopDialog?: boolean;
 };
 
 /** How far down the sheet must travel before releasing it gives way. */
@@ -38,7 +48,7 @@ const CLOSE_DISTANCE = 88;
 /** How far up it must travel before releasing it goes full height. */
 const EXPAND_DISTANCE = 44;
 
-export function MobileSheet({ open, onClose, children }: MobileSheetProps) {
+export function MobileSheet({ open, onClose, children, desktopDialog = false }: MobileSheetProps) {
   if (!open || typeof document === "undefined") {
     return null;
   }
@@ -48,10 +58,23 @@ export function MobileSheet({ open, onClose, children }: MobileSheetProps) {
   //
   // The surface only exists while the sheet is open, so every opening starts at
   // the default height instead of wherever the last drag left it — no reset.
-  return createPortal(<SheetSurface onClose={onClose}>{children}</SheetSurface>, document.body);
+  return createPortal(
+    <SheetSurface onClose={onClose} desktopDialog={desktopDialog}>
+      {children}
+    </SheetSurface>,
+    document.body,
+  );
 }
 
-function SheetSurface({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+function SheetSurface({
+  onClose,
+  desktopDialog,
+  children,
+}: {
+  onClose: () => void;
+  desktopDialog: boolean;
+  children: React.ReactNode;
+}) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -106,7 +129,10 @@ function SheetSurface({ onClose, children }: { onClose: () => void; children: Re
 
   return (
     <div
-      className="fixed inset-0 z-40 flex animate-fade-in flex-col justify-end bg-black/60 lg:hidden"
+      className={cn(
+        "fixed inset-0 z-40 flex animate-fade-in flex-col justify-end bg-black/60",
+        desktopDialog ? "lg:items-center lg:justify-center lg:p-6" : "lg:hidden",
+      )}
       onClick={onClose}
     >
       <div
@@ -115,6 +141,7 @@ function SheetSurface({ onClose, children }: { onClose: () => void; children: Re
           "bg-[var(--panel-strong)] px-4 pb-[max(env(safe-area-inset-bottom),1.5rem)]",
           isExpanded ? "h-[100dvh] pt-[env(safe-area-inset-top)]" : "max-h-[78vh]",
           isDragging ? null : "transition-transform duration-150 ease-out",
+          desktopDialog ? "lg:w-full lg:max-w-sm lg:rounded-3xl lg:border-b lg:pb-4 lg:pt-4" : null,
         )}
         style={{ transform: `translateY(${dragY}px)` }}
         onClick={(event) => event.stopPropagation()}
@@ -122,7 +149,7 @@ function SheetSurface({ onClose, children }: { onClose: () => void; children: Re
         {/* The grab zone: the pill is the affordance, the strip around it is the
             target — `touch-none` so the gesture is the sheet's, not the browser's. */}
         <div
-          className="shrink-0 cursor-grab touch-none py-3 active:cursor-grabbing"
+          className={cn("shrink-0 cursor-grab touch-none py-3 active:cursor-grabbing", desktopDialog ? "lg:hidden" : null)}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
