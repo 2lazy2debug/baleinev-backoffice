@@ -19,15 +19,21 @@ function getRequiredString(formData: FormData, key: string) {
   return value;
 }
 
-function getRoleAndDepartmentIds(formData: FormData) {
+function getRoleAndDepartmentIds(formData: FormData, currentRole?: UserRole) {
   const role = getRequiredString(formData, "role") as UserRole;
   const departmentIds = formData
     .getAll("departmentIds")
     .map((value) => String(value).trim())
     .filter(Boolean);
 
-  if (role !== UserRole.ADMIN && role !== UserRole.DEPARTMENT) {
+  const keepsGuest = currentRole === UserRole.GUEST && role === UserRole.GUEST;
+
+  if (!keepsGuest && role !== UserRole.ADMIN && role !== UserRole.DEPARTMENT) {
     throw new Error("Invalid role.");
+  }
+
+  if (currentRole === UserRole.GUEST && role === UserRole.ADMIN) {
+    throw new Error("A guest can only become a department user.");
   }
 
   if (role === UserRole.DEPARTMENT && departmentIds.length === 0) {
@@ -55,18 +61,22 @@ async function ensureDepartmentsExist(departmentIds: string[]) {
   }
 }
 
-async function assertAdminCanBeRemoved(userId: string, nextRole?: UserRole) {
+async function getExistingUser(userId: string) {
   const existingUser = await prisma.user.findUnique({
     where: { id: userId },
-    select: { role: true },
+    select: { role: true, email: true },
   });
 
   if (!existingUser) {
     throw new Error("User not found.");
   }
 
-  const removingAdmin = existingUser.role === UserRole.ADMIN && nextRole === UserRole.DEPARTMENT;
-  const deletingAdmin = existingUser.role === UserRole.ADMIN && nextRole === undefined;
+  return existingUser;
+}
+
+async function assertAdminCanBeRemoved(currentRole: UserRole, nextRole?: UserRole) {
+  const removingAdmin = currentRole === UserRole.ADMIN && nextRole === UserRole.DEPARTMENT;
+  const deletingAdmin = currentRole === UserRole.ADMIN && nextRole === undefined;
 
   if (!removingAdmin && !deletingAdmin) {
     return;
@@ -119,12 +129,19 @@ export async function updateUserAction(_prevState: ActionState, formData: FormDa
 
     const userId = getRequiredString(formData, "userId");
     const name = getRequiredString(formData, "name");
-    const email = getRequiredString(formData, "email").toLowerCase();
+    const existingUser = await getExistingUser(userId);
+    const submittedEmail = getRequiredString(formData, "email");
+    // Guests sign in with the email exactly as they registered it; keep the
+    // stored spelling unless the admin actually changed the address.
+    const email =
+      submittedEmail.toLowerCase() === existingUser.email.toLowerCase()
+        ? existingUser.email
+        : submittedEmail.toLowerCase();
     const newPassword = String(formData.get("newPassword") ?? "").trim();
-    const { role, departmentIds } = getRoleAndDepartmentIds(formData);
+    const { role, departmentIds } = getRoleAndDepartmentIds(formData, existingUser.role);
 
     await ensureDepartmentsExist(departmentIds);
-    await assertAdminCanBeRemoved(userId, role);
+    await assertAdminCanBeRemoved(existingUser.role, role);
 
     await prisma.user.update({
       where: { id: userId },
@@ -138,6 +155,12 @@ export async function updateUserAction(_prevState: ActionState, formData: FormDa
         ...(newPassword ? { passwordHash: await hash(newPassword, 12) } : {}),
       },
     });
+
+    // A promoted guest has no stored edition (guests resolve the default on
+    // every request); give them one as createUserAction does for new members.
+    if (existingUser.role === UserRole.GUEST && role !== UserRole.GUEST) {
+      await ensureUserEdition(userId);
+    }
 
     revalidatePath("/users");
     return { error: null };
@@ -155,7 +178,8 @@ export async function deleteUserAction(_prevState: ActionState, formData: FormDa
       throw new Error("You cannot delete your own account.");
     }
 
-    await assertAdminCanBeRemoved(userId);
+    const existingUser = await getExistingUser(userId);
+    await assertAdminCanBeRemoved(existingUser.role);
 
     // `Task.createdById` is SetNull, so tasks survive their creator on purpose.
     // A department access request must not: nobody is left to grant it to, and

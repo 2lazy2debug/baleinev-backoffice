@@ -1,6 +1,6 @@
 import { cn } from "./cn";
 
-type BadgeTone = "success" | "error" | "warning" | "info" | "neutral";
+export type BadgeTone = "success" | "error" | "warning" | "info" | "neutral";
 
 const tones: Record<BadgeTone, string> = {
   success: "bg-[var(--good)]/15 text-[var(--good)]",

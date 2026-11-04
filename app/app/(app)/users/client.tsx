@@ -6,7 +6,7 @@ import { UserRole } from "@prisma/client";
 
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import { Badge, Button, Card, ConfirmDelete, Field, IconButton, Input, MultiSelect, Select } from "@/components/ui";
+import { Badge, type BadgeTone, Button, Card, ConfirmDelete, Field, IconButton, Input, MultiSelect, Select } from "@/components/ui";
 import type { getDictionary } from "@/lib/i18n";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -49,6 +49,12 @@ export function UsersPageClient({
   const [resetState, resetFormAction, isResetting] = useActionState(resetUserTwoFactorAction, initialActionState);
   const markUpdateSubmitted = useCloseOnSuccess(updateState, isUpdating, () => setEditingUserId(null));
 
+  const roleBadges: Record<UserRole, { tone: BadgeTone; label: string }> = {
+    [UserRole.ADMIN]: { tone: "info", label: copy.users.admin },
+    [UserRole.DEPARTMENT]: { tone: "neutral", label: copy.users.department },
+    [UserRole.GUEST]: { tone: "warning", label: copy.users.guest },
+  };
+
   return (
     <section className="space-y-3">
       <FormError message={updateState.error} />
@@ -67,9 +73,7 @@ export function UsersPageClient({
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 {user.twoFactorEnabled ? <Badge tone="success">{copy.users.twoFactorOn}</Badge> : null}
-                <Badge tone={user.role === UserRole.ADMIN ? "info" : "neutral"}>
-                  {user.role === UserRole.ADMIN ? copy.users.admin : copy.users.department}
-                </Badge>
+                <Badge tone={roleBadges[user.role].tone}>{roleBadges[user.role].label}</Badge>
                 {isEditing ? (
                   <IconButton tone="neutral" label={copy.shell.cancel} onClick={() => setEditingUserId(null)}>
                     <X />
@@ -99,7 +103,11 @@ export function UsersPageClient({
                   </Field>
                   <Field label={copy.users.role}>
                     <Select name="role" defaultValue={user.role}>
-                      <option value={UserRole.ADMIN}>{copy.users.admin}</option>
+                      {user.role === UserRole.GUEST ? (
+                        <option value={UserRole.GUEST}>{copy.users.guest}</option>
+                      ) : (
+                        <option value={UserRole.ADMIN}>{copy.users.admin}</option>
+                      )}
                       <option value={UserRole.DEPARTMENT}>{copy.users.department}</option>
                     </Select>
                   </Field>
@@ -166,7 +174,7 @@ export function UsersPageClient({
                 </div>
                 {isSelf ? <p className="mt-2 text-xs text-[var(--muted)]">{copy.users.cannotDeleteSelf}</p> : null}
               </>
-            ) : (
+            ) : user.role === UserRole.GUEST ? null : (
               /* Departments read as what they are — a list this account belongs
                  to — rather than as a multi-select nobody is about to touch. */
               <div className="mt-3 flex flex-wrap gap-1.5">

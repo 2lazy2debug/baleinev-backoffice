@@ -408,9 +408,10 @@ one layout, not a library: no names, no default flag, nothing to pick when gener
 
 ## 7. User Management
 
-- All user accounts are created by an **admin** — there is no self-service signup.
-- Admin can: create users, change name/email/password/role, assign departments, delete users.
-- **The screen opens read-only.** `/users` lists accounts — name, address, an admin/department badge
+- Members are created by an **admin**; guests sign up themselves from `/login` (see `docs/auth.md` > Guest sign-up).
+- Admin can: create users, change name/email/password/role, assign departments, delete users. A guest can be
+  promoted to a department user or deleted (see `docs/auth.md` > Guests in /users).
+- **The screen opens read-only.** `/users` lists accounts — name, address, an admin/department/guest badge
   and the departments as pills. The pencil turns one card into the update form, and deleting lives
   inside that form: reading an account is safe, and the state that can change it is the one that can
   end it.

@@ -44,6 +44,15 @@ plus the `P2002` race both answer "already has an account". It creates a `role: 
 departments, no edition, no approval). The client then calls `signIn("credentials")` with the same credentials and
 takes the normal redirect (GUEST → `/events`). Returning guests use "Sign in". There is no rate limit or captcha.
 
+### Guests in /users
+Admins see guests on `/users` (warning-tone Guest badge, listed after members: the page orders by role and the enum
+declares `GUEST` last). Deleting one cascades their shift sign-ups and unavailabilities; `/events/logs` keeps the
+lines with the denormalised names. The edit form keeps a guest a guest or promotes them to Department (departments
+required, default edition written), never straight to Admin. Nothing ever becomes GUEST, and the create modal never
+offers the role. The proxy sees the new role at the guest's next sign-in (the JWT role is set at sign-in;
+`getCurrentUserAccess` reads the DB). An unchanged email keeps its stored spelling (guests sign in with it exactly as
+registered). Sign-ups made as a guest have no `STAFF_SHIFT` task and are not backfilled on promotion.
+
 ### Session object shape
 After login, `session.user` contains:
 ```ts
