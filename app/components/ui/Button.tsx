@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import { cn } from "./cn";
 import { controlHeight, type ControlSize } from "./control";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive" | "confirm";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
@@ -48,6 +48,9 @@ const variants: Record<ButtonVariant, string> = {
   secondary: "border border-[var(--line)] text-[var(--ink)] hover:bg-[var(--panel-strong)]",
   ghost: "text-[var(--muted)] hover:bg-[var(--panel-strong)] hover:text-[var(--ink)]",
   destructive: "border border-[var(--bad)]/60 text-[var(--bad)] hover:bg-[var(--bad)]/10",
+  // A yes/no answer's "yes" (shift sign-up): filled with the status color so it
+  // reads opposite its `destructive` "no" neighbour at a glance, even icon-only.
+  confirm: "bg-[var(--good)] text-white hover:bg-[var(--good)]/85",
 };
 
 /** Same recipe for elements that are links but read as buttons (`<Link href…>`). */

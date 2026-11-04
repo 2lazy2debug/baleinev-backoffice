@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { Check, ChevronDown, ChevronUp, FileText, Link2, Pencil, Plus } from "lucide-react";
+import { Ban, Check, ChevronDown, ChevronUp, FileText, Link2, Pencil, Plus } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
@@ -579,11 +579,11 @@ export default function EventsPageClient({
                                     />
                                   </div>
                                 ) : (
-                                  /* On a phone a shift is a full-width card: the info block,
-                                     then its actions stacked underneath. From sm — where the
-                                     row has room again — it is back to one dense line. */
-                                  <div className="flex flex-col gap-3 px-2.5 py-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-4 sm:py-2.5">
-                                    <div className="space-y-0.5">
+                                  /* One dense line on every breakpoint: info on the left, the
+                                     staff member's answer on the right (square icon buttons
+                                     below lg). Admin tools wrap to their own line on a phone. */
+                                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-2.5 py-2 sm:px-4 sm:py-2.5">
+                                    <div className="min-w-0 flex-1 space-y-0.5">
                                       <p className="text-sm font-semibold text-[var(--ink)]">{shift.role || copy.genericShiftLabel}</p>
                                       {/* The one number anyone scans this list for — or, for a
                                           timeless shift, the fact that there isn't one. */}
@@ -604,18 +604,18 @@ export default function EventsPageClient({
                                       ) : null}
                                     </div>
 
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                                    <div className="flex shrink-0 items-center gap-2">
                                       {isReadOnly || event.isExpired ? null : signed ? (
                                         <form action={withdrawFormAction}>
                                           <input type="hidden" name="shiftId" value={shift.id} />
-                                          <Button type="submit" variant="destructive" size="sm" disabled={isWithdrawing} className="w-full sm:w-auto">
+                                          <Button type="submit" variant="destructive" size="sm" disabled={isWithdrawing}>
                                             {copy.withdraw}
                                           </Button>
                                         </form>
                                       ) : unavailable ? (
                                         <form action={clearUnavailableFormAction}>
                                           <input type="hidden" name="shiftId" value={shift.id} />
-                                          <Button type="submit" variant="secondary" size="sm" disabled={isClearingUnavailable} className="w-full sm:w-auto">
+                                          <Button type="submit" variant="secondary" size="sm" disabled={isClearingUnavailable}>
                                             {copy.availableAgain}
                                           </Button>
                                         </form>
@@ -624,20 +624,22 @@ export default function EventsPageClient({
                                           {!isFull ? (
                                             <form action={signUpFormAction}>
                                               <input type="hidden" name="shiftId" value={shift.id} />
-                                              <Button type="submit" variant="primary" size="sm" disabled={isSigningUp} className="w-full sm:w-auto">
+                                              <Button type="submit" variant="confirm" size="sm" icon={<Check />} compactOnMobile disabled={isSigningUp}>
                                                 {copy.signUp}
                                               </Button>
                                             </form>
                                           ) : null}
                                           <form action={markUnavailableFormAction}>
                                             <input type="hidden" name="shiftId" value={shift.id} />
-                                            <Button type="submit" variant="ghost" size="sm" disabled={isMarkingUnavailable} className="w-full sm:w-auto">
+                                            <Button type="submit" variant="destructive" size="sm" icon={<Ban />} compactOnMobile disabled={isMarkingUnavailable}>
                                               {copy.unavailable}
                                             </Button>
                                           </form>
                                         </>
                                       )}
+                                    </div>
 
+                                    <div className="flex w-full flex-col gap-2 empty:hidden sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
                                       {/* Admin: assign someone else */}
                                       {canManageEvents && !isFull ? (
                                         <form action={adminAssignFormAction} className="flex items-center gap-2">
