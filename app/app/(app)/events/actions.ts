@@ -637,21 +637,25 @@ export async function signUpForShiftAction(_prevState: ActionState, formData: Fo
       return created;
     });
 
-    await createUserTask({
-      type: TaskType.STAFF_SHIFT,
-      ...staffShiftTaskFields({
-        eventName: shift.eventDay.event.name,
-        dayDate: shift.eventDay.date,
-        role: shift.role,
-        startTime: shift.startTime,
-        endTime: shift.endTime,
-      }),
-      userId: access.id,
-      staffAssignmentId: assignment.id,
-    });
+    // Guests have no Tasks app: a STAFF_SHIFT task nobody can see is noise.
+    const createsTask = access.role !== "GUEST";
+    if (createsTask) {
+      await createUserTask({
+        type: TaskType.STAFF_SHIFT,
+        ...staffShiftTaskFields({
+          eventName: shift.eventDay.event.name,
+          dayDate: shift.eventDay.date,
+          role: shift.role,
+          startTime: shift.startTime,
+          endTime: shift.endTime,
+        }),
+        userId: access.id,
+        staffAssignmentId: assignment.id,
+      });
+    }
 
     revalidatePath("/events");
-    revalidatePath("/tasks");
+    if (createsTask) revalidatePath("/tasks");
     return { error: null };
   } catch (err) {
     return { error: toActionErrorMessage(err) };

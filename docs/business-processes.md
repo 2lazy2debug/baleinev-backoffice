@@ -968,3 +968,12 @@ reader's own.
 entries), preformatted timestamps, denormalised names so a line still reads once the shift, the
 event, or the person it names is gone. A hidden button is not the rule here either — the log has
 no write path of its own, it only ever records what the staffing actions already did.
+
+**Guests on events.** A guest (`role = GUEST`) always sees the default edition and only its events
+that are not over yet (`lib/events.ts > isEventExpired`); with no default edition or nothing open,
+`/events` says so and asks them to check back later. A guest may sign up and withdraw, sees who
+else is on each shift and may download the schedule PDF — the PDF route answers 404 for any event
+outside that set. A guest has no "unavailable" answer: the page loads no `ShiftUnavailability`
+rows for them, shows no Unavailable / Available again button, and both actions refuse a guest.
+Signing up as a guest writes the `StaffAssignment` and the `SIGNUP` log line but creates no
+`STAFF_SHIFT` task — guests have no Tasks app.

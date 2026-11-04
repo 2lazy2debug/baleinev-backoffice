@@ -18,6 +18,12 @@ export default async function EventsPage() {
   const locale = await getLocale();
   const copy = getDictionary(locale);
   const isAdmin = access.role === "ADMIN";
+  const isGuest = access.role === "GUEST";
+  const guestEmptyPage = (
+    <EmptyPage eyebrow={copy.events.title} title={copy.events.guestNoEventsTitle}>
+      {copy.events.guestNoEventsHint}
+    </EmptyPage>
+  );
 
   const editionId = await resolveEditionIdOrNull();
 
@@ -44,6 +50,8 @@ export default async function EventsPage() {
                       // admin loads everyone's, because telling "no" apart from
                       // "no answer" is their job.
                       where: isAdmin ? undefined : { userId: access.id },
+                      // A guest has no "unavailable" answer — they may only sign up and withdraw.
+                      take: isGuest ? 0 : undefined,
                       select: { id: true, userId: true, user: { select: { id: true, name: true } } },
                     },
                   },
@@ -59,6 +67,7 @@ export default async function EventsPage() {
   ]);
 
   if (!activeEdition) {
+    if (isGuest) return guestEmptyPage;
     return (
       <EmptyPage eyebrow={copy.events.title} title={copy.common.noEditionSelected}>
         {copy.common.pickEditionHint}
@@ -66,7 +75,7 @@ export default async function EventsPage() {
     );
   }
 
-  // Expired events keep their place in the ordering but sit below every
+  // For a member, expired events keep their place in the ordering but sit below every
   // active one — two stable filters over the query's own `startDate` order,
   // rather than a second sort key.
   const now = new Date();
@@ -74,10 +83,16 @@ export default async function EventsPage() {
     ...event,
     isExpired: isEventExpired(event, now),
   }));
-  const events = [
-    ...eventsWithExpiry.filter((event) => !event.isExpired),
-    ...eventsWithExpiry.filter((event) => event.isExpired),
-  ];
+  // A guest sees only what they can still sign up for; a member keeps expired
+  // events, listed below the active ones.
+  const events = isGuest
+    ? eventsWithExpiry.filter((event) => !event.isExpired)
+    : [
+        ...eventsWithExpiry.filter((event) => !event.isExpired),
+        ...eventsWithExpiry.filter((event) => event.isExpired),
+      ];
+
+  if (isGuest && events.length === 0) return guestEmptyPage;
 
   return (
     <div className="space-y-4 lg:space-y-8">
@@ -135,6 +150,7 @@ export default async function EventsPage() {
       <EventsPageClient
         isAdmin={isAdmin}
         accessId={access.id}
+        canDecline={!isGuest}
         events={events}
         allUsers={allUsers}
         copy={copy.events}

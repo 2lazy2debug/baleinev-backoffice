@@ -65,6 +65,8 @@ function shiftFixture(overrides: Record<string, unknown> = {}) {
   };
 }
 
+const guestAccess = { id: "guest_1", userName: "Gail", role: "GUEST" };
+
 function signUpForm(): FormData {
   const fd = new FormData();
   fd.set("shiftId", "shift_1");
@@ -205,5 +207,48 @@ describe("guest opt-in", () => {
   it("withdrawFromShiftAction lets a guest through", async () => {
     await withdrawFromShiftAction({ error: null }, withdrawForm());
     expect(getCurrentUserAccess).toHaveBeenCalledWith({ allowGuest: true });
+  });
+});
+
+describe("guests on shifts", () => {
+  it("guest sign-up writes the assignment and the log but no task", async () => {
+    getCurrentUserAccess.mockResolvedValue(guestAccess);
+
+    const result = await signUpForShiftAction({ error: null }, signUpForm());
+
+    expect(result.error).toBeNull();
+    expect(tx.staffAssignment.create).toHaveBeenCalledWith({ data: { shiftId: "shift_1", userId: "guest_1" } });
+    expect(tx.eventStaffLog.create).toHaveBeenCalledTimes(1);
+    expect(tx.eventStaffLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ action: "SIGNUP", subjectId: "guest_1" }),
+    });
+    expect(createUserTask).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalledWith("/tasks");
+  });
+
+  it("member sign-up still creates the STAFF_SHIFT task", async () => {
+    await signUpForShiftAction({ error: null }, signUpForm());
+
+    expect(createUserTask).toHaveBeenCalledTimes(1);
+    expect(createUserTask).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "STAFF_SHIFT", userId: "user_1", staffAssignmentId: "assignment_1" }),
+    );
+    expect(revalidatePath).toHaveBeenCalledWith("/tasks");
+  });
+
+  it("guest withdraw removes the assignment and resolves no task", async () => {
+    getCurrentUserAccess.mockResolvedValue(guestAccess);
+    prisma.eventShift.findUniqueOrThrow.mockResolvedValue(
+      shiftFixture({ assignments: [{ id: "assignment_g", userId: "guest_1", user: { name: "Gail" } }] }),
+    );
+
+    const result = await withdrawFromShiftAction({ error: null }, withdrawForm());
+
+    expect(result.error).toBeNull();
+    expect(tx.staffAssignment.delete).toHaveBeenCalledWith({ where: { id: "assignment_g" } });
+    expect(tx.eventStaffLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ action: "WITHDRAW" }),
+    });
+    expect(prisma.task.update).not.toHaveBeenCalled();
   });
 });

@@ -193,6 +193,8 @@ type EventsCopy = {
 type Props = {
   isAdmin: boolean;
   accessId: string;
+  /** Whether the viewer may answer "unavailable". Guests may only sign up and withdraw. */
+  canDecline: boolean;
   events: EventItem[];
   allUsers: UserItem[];
   copy: EventsCopy;
@@ -204,6 +206,7 @@ type Props = {
 export default function EventsPageClient({
   isAdmin,
   accessId,
+  canDecline,
   events,
   allUsers,
   copy,
@@ -612,7 +615,7 @@ export default function EventsPageClient({
                                             {copy.withdraw}
                                           </Button>
                                         </form>
-                                      ) : unavailable ? (
+                                      ) : canDecline && unavailable ? (
                                         <form action={clearUnavailableFormAction}>
                                           <input type="hidden" name="shiftId" value={shift.id} />
                                           <Button type="submit" variant="secondary" size="sm" disabled={isClearingUnavailable}>
@@ -629,12 +632,14 @@ export default function EventsPageClient({
                                               </Button>
                                             </form>
                                           ) : null}
-                                          <form action={markUnavailableFormAction}>
-                                            <input type="hidden" name="shiftId" value={shift.id} />
-                                            <Button type="submit" variant="destructive" size="sm" icon={<Ban />} compactOnMobile disabled={isMarkingUnavailable}>
-                                              {copy.unavailable}
-                                            </Button>
-                                          </form>
+                                          {canDecline ? (
+                                            <form action={markUnavailableFormAction}>
+                                              <input type="hidden" name="shiftId" value={shift.id} />
+                                              <Button type="submit" variant="destructive" size="sm" icon={<Ban />} compactOnMobile disabled={isMarkingUnavailable}>
+                                                {copy.unavailable}
+                                              </Button>
+                                            </form>
+                                          ) : null}
                                         </>
                                       )}
                                     </div>

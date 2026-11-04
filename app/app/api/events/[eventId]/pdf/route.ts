@@ -3,6 +3,8 @@ import puppeteer from "puppeteer";
 
 import { getCurrentUserAccess } from "@/lib/access";
 import { prisma } from "@/lib/db";
+import { resolveEditionIdOrNull } from "@/lib/edition-context";
+import { isEventExpired } from "@/lib/events";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { renderShiftSchedulePdf } from "@/lib/shift-schedule-pdf";
 
@@ -14,7 +16,7 @@ export async function GET(_: Request, context: RouteContext) {
   try {
     // Any signed-in user can pull the schedule — staffing visibility isn't
     // admin-gated, unlike the financial documents in /api/invoices.
-    await getCurrentUserAccess({ allowGuest: true });
+    const access = await getCurrentUserAccess({ allowGuest: true });
 
     const { eventId } = await context.params;
 
@@ -22,12 +24,15 @@ export async function GET(_: Request, context: RouteContext) {
       where: { id: eventId },
       select: {
         name: true,
+        editionId: true,
+        endDate: true,
         days: {
           where: { isOff: false },
           orderBy: { date: "asc" },
           select: {
             id: true,
             date: true,
+            isOff: true,
             shifts: {
               orderBy: [{ noTime: "asc" }, { startTime: "asc" }],
               select: {
@@ -46,6 +51,15 @@ export async function GET(_: Request, context: RouteContext) {
     });
 
     if (!event) {
+      return NextResponse.json({ error: "Event not found." }, { status: 404 });
+    }
+
+    // A guest reaches only the events /events lists for them: the default
+    // edition's, not yet over. Anything else reads as not found.
+    if (
+      access.role === "GUEST" &&
+      (event.editionId !== (await resolveEditionIdOrNull()) || isEventExpired(event))
+    ) {
       return NextResponse.json({ error: "Event not found." }, { status: 404 });
     }
 

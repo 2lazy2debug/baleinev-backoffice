@@ -26,7 +26,7 @@ const prisma = {
 
 vi.mock("next/cache", () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
 vi.mock("@/lib/access", () => ({
-  getCurrentUserAccess: () => getCurrentUserAccess(),
+  getCurrentUserAccess: (...a: unknown[]) => getCurrentUserAccess(...a),
   requireAdmin: () => requireAdmin(),
 }));
 vi.mock("@/lib/db", () => ({ prisma }));
@@ -80,6 +80,15 @@ function assignForm(userId: string): FormData {
   fd.set("shiftId", "shift_1");
   fd.set("userId", userId);
   return fd;
+}
+
+// Stand-in for lib/access.ts: a guest is refused unless the caller opts in
+// (lib/access.test.ts pins the real redirect).
+function signInAsGuest() {
+  getCurrentUserAccess.mockImplementation(async (options?: { allowGuest?: boolean }) => {
+    if (!options?.allowGuest) throw new Error("REDIRECT:/events");
+    return { id: "guest_1", userName: "Gail", role: "GUEST" };
+  });
 }
 
 beforeEach(() => {
@@ -191,5 +200,31 @@ describe("admin assigning clears an earlier decline", () => {
     expect(tx.eventStaffLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ action: "ASSIGN" }),
     });
+  });
+});
+
+describe("guests cannot decline", () => {
+  it("markUnavailableForShiftAction refuses a guest and writes nothing", async () => {
+    signInAsGuest();
+
+    const result = await markUnavailableForShiftAction({ error: null }, shiftForm());
+
+    expect(result.error).toBe("REDIRECT:/events");
+    expect(prisma.eventShift.findUnique).not.toHaveBeenCalled();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(tx.shiftUnavailability.create).not.toHaveBeenCalled();
+    expect(tx.eventStaffLog.create).not.toHaveBeenCalled();
+  });
+
+  it("clearUnavailableForShiftAction refuses a guest and writes nothing", async () => {
+    signInAsGuest();
+
+    const result = await clearUnavailableForShiftAction({ error: null }, shiftForm());
+
+    expect(result.error).toBe("REDIRECT:/events");
+    expect(prisma.eventShift.findUnique).not.toHaveBeenCalled();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(tx.shiftUnavailability.delete).not.toHaveBeenCalled();
+    expect(tx.eventStaffLog.create).not.toHaveBeenCalled();
   });
 });
