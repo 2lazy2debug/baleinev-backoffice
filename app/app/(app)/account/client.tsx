@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import type { UserRole } from "@prisma/client";
 import { FormError } from "@/components/form-error";
 import { Alert, Badge, Button, Card, CardGrid, Chip, Field, Input, SectionTitle, Select, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
+import { MIN_PASSWORD_LENGTH } from "@/lib/passwords";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
 import { type ActionState, initialActionState } from "@/lib/server-action-helpers";
 
@@ -179,7 +180,7 @@ export function AccountPageClient({
               name="newPassword"
               type="password"
               autoComplete="new-password"
-              minLength={8}
+              minLength={MIN_PASSWORD_LENGTH}
               required
             />
           </Field>
@@ -189,7 +190,7 @@ export function AccountPageClient({
               name="confirmPassword"
               type="password"
               autoComplete="new-password"
-              minLength={8}
+              minLength={MIN_PASSWORD_LENGTH}
               required
             />
           </Field>

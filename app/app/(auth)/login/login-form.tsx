@@ -2,12 +2,15 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { getSession, signIn } from "next-auth/react";
+import { signIn } from "next-auth/react";
 
-import { Alert, Badge, Button, Card, Field, Input } from "@/components/ui";
+import { Alert, Badge, Button, Card, Field, Input, SegmentedControl } from "@/components/ui";
 import { TWO_FACTOR_INVALID, TWO_FACTOR_REQUIRED } from "@/lib/auth-signals";
 
-type LoginCopy = {
+import { GuestForm } from "./guest-form";
+import { goToLandingPage } from "./landing";
+
+export type LoginCopy = {
   badge: string;
   email: string;
   password: string;
@@ -17,11 +20,22 @@ type LoginCopy = {
   twoFactorInvalid: string;
   signingIn: string;
   submit: string;
+  signInChoice: string;
+  guestChoice: string;
+  name: string;
+  guestSubmit: string;
+  creatingAccount: string;
+  guestMissingFields: string;
+  passwordTooShort: string;
+  emailTaken: string;
+  registerFailed: string;
+  guestSignInFailed: string;
 };
 
 export default function LoginForm({ copy }: { copy: LoginCopy }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [mode, setMode] = useState<"signIn" | "guest">("signIn");
   /**
    * Set once the password has checked out on an account with 2FA on. The
    * credentials call is stateless — the second attempt has to resend what the
@@ -63,11 +77,7 @@ export default function LoginForm({ copy }: { copy: LoginCopy }) {
       return;
     }
 
-    // Send each role straight to its landing page: DEPARTMENT and GUEST users land
-    // on /events rather than loading "/" only to be bounced by the route gating.
-    const session = await getSession();
-    const role = session?.user?.role;
-    window.location.href = role === "DEPARTMENT" || role === "GUEST" ? "/events" : "/";
+    await goToLandingPage();
   }
 
   return (
@@ -91,43 +101,61 @@ export default function LoginForm({ copy }: { copy: LoginCopy }) {
                 </div>
               </div>
 
-              <form action={handleSubmit} className="space-y-5 pt-1">
-                {pendingCredentials ? (
-                  <>
-                    <p className="text-sm text-[var(--muted)]">{copy.twoFactorHint}</p>
+              {pendingCredentials ? null : (
+                <SegmentedControl
+                  options={[
+                    { value: "signIn", label: copy.signInChoice },
+                    { value: "guest", label: copy.guestChoice },
+                  ]}
+                  value={mode}
+                  onChange={(next) => {
+                    setMode(next);
+                    setError(null);
+                  }}
+                />
+              )}
 
-                    <Field required label={copy.twoFactorCode}>
-                      <Input
-                        name="totp"
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                        maxLength={6}
-                        autoFocus
-                        required
-                        className="font-mono tracking-[0.3em]"
-                      />
-                    </Field>
-                  </>
-                ) : (
-                  <>
-                    <Field required label={copy.email}>
-                      <Input name="email" type="email" autoComplete="email" required />
-                    </Field>
+              {mode === "guest" ? (
+                <GuestForm copy={copy} />
+              ) : (
+                <form action={handleSubmit} className="space-y-5 pt-1">
+                  {pendingCredentials ? (
+                    <>
+                      <p className="text-sm text-[var(--muted)]">{copy.twoFactorHint}</p>
 
-                    <Field required label={copy.password}>
-                      <Input name="password" type="password" autoComplete="current-password" required />
-                    </Field>
-                  </>
-                )}
+                      <Field required label={copy.twoFactorCode}>
+                        <Input
+                          name="totp"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          maxLength={6}
+                          autoFocus
+                          required
+                          className="font-mono tracking-[0.3em]"
+                        />
+                      </Field>
+                    </>
+                  ) : (
+                    <>
+                      <Field required label={copy.email}>
+                        <Input name="email" type="email" autoComplete="email" required />
+                      </Field>
 
-                {error ? (
-                  <Alert>{error}</Alert>
-                ) : null}
+                      <Field required label={copy.password}>
+                        <Input name="password" type="password" autoComplete="current-password" required />
+                      </Field>
+                    </>
+                  )}
 
-                <Button type="submit" variant="primary" disabled={pending} className="w-full">
-                  {pending ? copy.signingIn : copy.submit}
-                </Button>
-              </form>
+                  {error ? (
+                    <Alert>{error}</Alert>
+                  ) : null}
+
+                  <Button type="submit" variant="primary" disabled={pending} className="w-full">
+                    {pending ? copy.signingIn : copy.submit}
+                  </Button>
+                </form>
+              )}
             </div>
           </Card>
         </section>

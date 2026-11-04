@@ -37,6 +37,13 @@ session() callback                           ← lib/auth.ts
 Client reads session role and redirects: ADMIN → /  (dashboard), DEPARTMENT and GUEST → /events
 ```
 
+### Guest sign-up
+"Enter as guest" on `/login` calls `app/(auth)/login/actions.ts > registerGuestAction` (name, email, password; min
+`lib/passwords.ts > MIN_PASSWORD_LENGTH`). The email is trimmed and stored as typed; a case-insensitive duplicate check
+plus the `P2002` race both answer "already has an account". It creates a `role: GUEST` user (bcrypt cost 12, no
+departments, no edition, no approval). The client then calls `signIn("credentials")` with the same credentials and
+takes the normal redirect (GUEST → `/events`). Returning guests use "Sign in". There is no rate limit or captcha.
+
 ### Session object shape
 After login, `session.user` contains:
 ```ts
@@ -227,7 +234,7 @@ Passwords are stored as **bcrypt** hashes.
 - **User creation/update:** `app/(app)/users/actions.ts` likewise hashes new passwords before storing.
 - **Login:** `lib/auth.ts` uses `bcrypt.compare(plaintext, hash)`.
 
-There is no self-service signup — all accounts are created by an admin.
+Admins create members from `/users`; guests register themselves from `/login` (see Login Flow > Guest sign-up).
 
 ---
 

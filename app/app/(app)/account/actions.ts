@@ -15,9 +15,7 @@ import {
   sealTwoFactorSecret,
   verifyUserTwoFactorCode,
 } from "@/lib/two-factor";
-
-/** The shortest password the app will accept — matched by the client's `minLength`. */
-const MIN_PASSWORD_LENGTH = 8;
+import { MIN_PASSWORD_LENGTH } from "@/lib/passwords";
 
 function toNullableString(formData: FormData, key: string) {
   const value = String(formData.get(key) ?? "").trim();
