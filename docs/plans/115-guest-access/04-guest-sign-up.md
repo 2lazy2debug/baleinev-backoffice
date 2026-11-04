@@ -305,8 +305,8 @@ Prod build on the local DB: `npm run build && npm run start` (port 3000), base `
 2. Register: `curl -s -o /dev/null -w '%{http_code}' -X POST $BASE/login -H "Next-Action: $ID" -H "Origin: $BASE" -H "Accept: text/x-component" -F '1_name=Smoke Guest' -F '1_email=smoke-guest@test.local' -F '1_password=smokepass1' -F '0=["$K1"]'`
    → `200`; then `psql` on `localhost:5434`: `select role from "User" where email='smoke-guest@test.local'` → `GUEST`.
    Repeat the POST → body contains `emailTaken`, still one row.
-   If step 1 or 2 cannot produce the row, report "registration via curl not verified" and continue with
-   step 3 after inserting nothing — manual pass 1 then covers registration.
+   If step 1 or 2 cannot produce the row, stop and report "registration via curl not verified" with the
+   status and body — manual pass 1 then covers registration and 2 the sign-in. Do not insert a row by hand.
 3. Sign in (memory: curl-login): GET `/api/auth/csrf` → POST `/api/auth/callback/credentials` with
    csrfToken, `smoke-guest@test.local`, `smokepass1`, cookie jar.
 4. GET `/events` with the jar → `200`; GET `/tasks` → `307` to `/events`.
