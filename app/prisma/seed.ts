@@ -59,6 +59,17 @@ async function seedDevFixtures() {
     },
   });
 
+  await prisma.user.upsert({
+    where: { email: "dev-guest@baleinev.local" },
+    update: { role: "GUEST", passwordHash: devPassword },
+    create: {
+      email: "dev-guest@baleinev.local",
+      name: "Dev Guest",
+      role: "GUEST",
+      passwordHash: devPassword,
+    },
+  });
+
   await prisma.edition.upsert({
     where: { name: "DEV — Closed edition" },
     update: { closedAt: new Date("2020-12-31T00:00:00.000Z") },
@@ -72,7 +83,7 @@ async function seedDevFixtures() {
   });
 
   console.log(
-    "🌱  dev fixtures: dev-department@baleinev.local / devpassword (DEPARTMENT), plus a closed edition",
+    "🌱  dev fixtures: dev-department@baleinev.local / devpassword (DEPARTMENT), dev-guest@baleinev.local / devpassword (GUEST), plus a closed edition",
   );
 }
 

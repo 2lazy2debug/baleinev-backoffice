@@ -1,5 +1,6 @@
 import { compare } from "bcrypt";
 import type { NextAuthOptions } from "next-auth";
+import type { UserRole } from "@prisma/client";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 import { TWO_FACTOR_INVALID, TWO_FACTOR_REQUIRED } from "@/lib/auth-signals";
@@ -88,7 +89,7 @@ export const authOptions: NextAuthOptions = {
     session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
-        session.user.role = (token.role as "ADMIN" | "DEPARTMENT") ?? "ADMIN";
+        session.user.role = (token.role as UserRole) ?? "ADMIN";
         session.user.departmentIds = (token.departmentIds as string[] | undefined) ?? [];
         session.user.departmentNames = (token.departmentNames as string[] | undefined) ?? [];
       }

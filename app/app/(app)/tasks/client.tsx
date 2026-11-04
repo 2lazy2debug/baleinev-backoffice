@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { TaskType } from "@prisma/client";
+import { TaskType, type UserRole } from "@prisma/client";
 import { Check, Circle, Pencil, Trash2 } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
@@ -63,7 +63,7 @@ interface UserSummary {
 
 interface UserAccess {
   id: string;
-  role: "ADMIN" | "DEPARTMENT";
+  role: UserRole;
 }
 
 interface ExpenseReportSummary {

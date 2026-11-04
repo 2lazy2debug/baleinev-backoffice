@@ -4,6 +4,14 @@ import { getToken } from "next-auth/jwt";
 
 import { MONEY_ACCOUNT_MANAGER_DEPARTMENT } from "@/lib/money-account-roles";
 
+// A guest gets the Events page, its schedule PDF and the theme toggle — nothing else.
+// `/events` exactly: /events/settings and /events/logs are admin screens.
+const GUEST_EVENT_PDF = /^\/api\/events\/[^/]+\/pdf$/;
+
+function isGuestPath(pathname: string): boolean {
+  return pathname === "/events" || pathname === "/api/preferences/theme" || GUEST_EVENT_PDF.test(pathname);
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -29,6 +37,18 @@ export async function proxy(request: NextRequest) {
 
   if (!token) {
     return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  if (token.role === "GUEST") {
+    if (isGuestPath(pathname)) {
+      return NextResponse.next();
+    }
+
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ ok: false, error: "Not allowed" }, { status: 401 });
+    }
+
+    return NextResponse.redirect(new URL("/events", request.url));
   }
 
   if (token.role === "DEPARTMENT") {

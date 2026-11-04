@@ -42,7 +42,7 @@ Reopening it clears closedAt and writes work again
 - `Edition.isDefault` marks the edition that **seeds accounts with no edition yet**. It is written
   into `User.selectedEditionId` once — at account creation, or at that user's first login — and
   never consulted again. Changing the default therefore affects **new accounts only**; everyone
-  already using the app keeps the edition they are in.
+  already using the app keeps the edition they are in. A GUEST is the exception: always in the default edition, resolved on every request and never written to `selectedEditionId`.
 - Deleting an edition does not delete its users: the relation is `onDelete: SetNull`, so anyone
   pointing at it has their selection cleared and re-seeds from the default on their next request.
 - **Closing means read-only, not gone.** A closed edition stays in the picker (marked "closed"),

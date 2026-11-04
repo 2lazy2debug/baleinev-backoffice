@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 
 type AccessContext = {
   id: string;
-  role: "ADMIN" | "DEPARTMENT";
+  role: UserRole;
 };
 
 export async function createAdminTask(type: TaskType, title: string, expenseReportId: string) {
@@ -212,7 +212,7 @@ export async function getStandaloneTodoTasksForUser({
   role,
 }: {
   userId: string;
-  role: "ADMIN" | "DEPARTMENT";
+  role: UserRole;
 }) {
   return prisma.task.findMany({
     where: {

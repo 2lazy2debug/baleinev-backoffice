@@ -21,6 +21,7 @@ enum MoneyAccountType {
 enum UserRole {
   ADMIN
   DEPARTMENT
+  GUEST
 }
 
 enum ExpensePaymentMethod {

@@ -445,7 +445,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `edition-carry-over.ts` | `carryOverEdition(tx, source, target)` — copies budgets with their lines and department attachments, cost centers and money accounts into another edition and writes each account's closing balance as a locked opening entry |
 | `edition-summary.ts` | `summarizeEdition()` / `loadEditionSummary(editionId)` — money account balances, budget vs actuals and the by-budget / by-cost-center splits. The dashboard and the controlling export both read it |
 | `controlling-workbook.ts` | `buildControllingWorkbook()` — the controlling export (ExcelJS): a summary sheet of `EditionSummary` and the journal sheet, values only, light-theme palette mirrored from `globals.css` |
-| `edition-context.ts` | The single answer to "which edition is this request in", read from `User.selectedEditionId`: `resolveEditionIdOrNull()` (pages), `resolveEditionId()` (write paths, throws), `resolveWritableEditionId()` (write paths, also refuses a closed edition), `requireWritableEdition(id)` (guards a write against a named edition), `resolveEdition()` (the record), `ensureUserEdition()` (the only writer of the seed) |
+| `edition-context.ts` | The single answer to "which edition is this request in", read from `User.selectedEditionId`: `resolveEditionIdOrNull()` (pages), `resolveEditionId()` (write paths, throws), `resolveWritableEditionId()` (write paths, also refuses a closed edition), `requireWritableEdition(id)` (guards a write against a named edition), `resolveEdition()` (the record), `ensureUserEdition()` (the only writer of the seed); a GUEST always resolves to the `isDefault` edition and is never written |
 | `server-action-helpers.ts` | Shared helpers for server actions: `getRequiredString()`, plus the `ActionState` type (`{ error: string \| null }`), `initialActionState`, and `toActionErrorMessage()` used by every action to report validation failures instead of throwing. Kept free of server-only imports — client components import `initialActionState` from here |
 | `markdown.ts` | `parseMarkdown()` — headings, paragraphs, lists, quotes, fenced code, rules and inline bold/italic/code/links as a node tree for `<Markdown>`; `safeHref()` is the link allowlist (http/https/mailto/tel and this app's own paths). Anything it does not know about, raw HTML included, survives as literal text |
 | `utils.ts` | `formatCurrency()`, `decimalToNumber()`, `incrementEditionName()` |
@@ -457,7 +457,7 @@ which. Nothing here should be re-implemented inline in a page.
 | File | Purpose |
 |---|---|
 | `schema.prisma` | Single source of truth for the database schema |
-| `seed.ts` | Upserts the first admin user (reads `ADMIN_EMAIL`, `ADMIN_PASSWORD`). With `SEED_DEV_FIXTURES=1` and `NODE_ENV` ≠ production it also creates `dev-department@baleinev.local` (DEPARTMENT / `devpassword`) and a closed edition — the non-admin and closed-edition fixtures the verification steps in `docs/plans/` need. Both guards must stay: `npm run db:seed` is run on the server too |
+| `seed.ts` | Upserts the first admin user (reads `ADMIN_EMAIL`, `ADMIN_PASSWORD`). With `SEED_DEV_FIXTURES=1` and `NODE_ENV` ≠ production it also creates `dev-department@baleinev.local` (DEPARTMENT / `devpassword`), `dev-guest@baleinev.local` (GUEST / `devpassword`) and a closed edition — the non-admin and closed-edition fixtures the verification steps in `docs/plans/` need. Both guards must stay: `npm run db:seed` is run on the server too |
 
 ---
 

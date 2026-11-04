@@ -9,7 +9,8 @@ import { prisma } from "@/lib/db";
  * The answer lives on the user (`User.selectedEditionId`), not on a global flag.
  * `Edition.isDefault` only *seeds* that column for an account that has none — it
  * is never consulted again, so changing the default affects new accounts only
- * and moves nobody who is already working.
+ * and moves nobody who is already working. Except a GUEST: always the default
+ * edition, resolved on every request, never written to `selectedEditionId`.
  */
 
 export type EditionContext = {
@@ -20,6 +21,15 @@ export type EditionContext = {
 };
 
 /**
+ * A guest is always in the default edition: looked up on every request and never stored,
+ * so moving the default moves every guest with it.
+ */
+async function defaultEditionId(): Promise<string | null> {
+  const edition = await prisma.edition.findFirst({ where: { isDefault: true }, select: { id: true } });
+  return edition?.id ?? null;
+}
+
+/**
  * Writes the seed. The only place that does, so the rule holds however an
  * account comes into being: first login, admin-created, or predating the
  * feature. Returns null when there is no default edition to seed from.
@@ -27,32 +37,33 @@ export type EditionContext = {
 export async function ensureUserEdition(userId: string): Promise<string | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { selectedEditionId: true },
+    select: { selectedEditionId: true, role: true },
   });
 
   if (!user) {
     return null;
   }
 
+  if (user.role === "GUEST") {
+    return defaultEditionId();
+  }
+
   if (user.selectedEditionId) {
     return user.selectedEditionId;
   }
 
-  const defaultEdition = await prisma.edition.findFirst({
-    where: { isDefault: true },
-    select: { id: true },
-  });
+  const defaultId = await defaultEditionId();
 
-  if (!defaultEdition) {
+  if (!defaultId) {
     return null;
   }
 
   await prisma.user.update({
     where: { id: userId },
-    data: { selectedEditionId: defaultEdition.id },
+    data: { selectedEditionId: defaultId },
   });
 
-  return defaultEdition.id;
+  return defaultId;
 }
 
 /**
@@ -70,8 +81,12 @@ export async function resolveEditionIdOrNull(): Promise<string | null> {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { selectedEditionId: true },
+    select: { selectedEditionId: true, role: true },
   });
+
+  if (user?.role === "GUEST") {
+    return defaultEditionId();
+  }
 
   // `onDelete: SetNull` already cleared the column if the edition was deleted,
   // so a non-null value here still points at a row that exists.

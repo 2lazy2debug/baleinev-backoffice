@@ -14,7 +14,7 @@ import CreateEventModal from "./create-event-modal";
 import { EmptyPage, PageHeader, iconButtonClasses } from "@/components/ui";
 
 export default async function EventsPage() {
-  const access = await getCurrentUserAccess();
+  const access = await getCurrentUserAccess({ allowGuest: true });
   const locale = await getLocale();
   const copy = getDictionary(locale);
   const isAdmin = access.role === "ADMIN";

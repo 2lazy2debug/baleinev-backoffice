@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import type { UserRole } from "@prisma/client";
 import { FormError } from "@/components/form-error";
 import { Alert, Badge, Button, Card, CardGrid, Chip, Field, Input, SectionTitle, Select, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
@@ -21,7 +22,7 @@ type Props = {
   profile: {
     name: string;
     email: string;
-    role: "ADMIN" | "DEPARTMENT";
+    role: UserRole;
     departmentNames: string[];
   };
   bankDetails: {

@@ -1,3 +1,4 @@
+import type { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 
@@ -9,7 +10,7 @@ export type AccessContext = {
   id: string;
   userName: string;
   email: string;
-  role: "ADMIN" | "DEPARTMENT";
+  role: UserRole;
   departmentIds: string[];
   departmentNames: string[];
   refundFirstName: string | null;
@@ -19,7 +20,17 @@ export type AccessContext = {
   refundCity: string | null;
 };
 
-export async function getCurrentUserAccess(): Promise<AccessContext> {
+export type AccessOptions = {
+  /**
+   * Let a GUEST through. Only the guest surface passes it: app/(app)/layout.tsx,
+   * app/(app)/events/page.tsx, events/actions.ts > signUpForShiftAction and
+   * withdrawFromShiftAction, app/api/events/[eventId]/pdf/route.ts. Every other caller
+   * leaves it out, which is what keeps a new page or action closed to guests.
+   */
+  allowGuest?: boolean;
+};
+
+export async function getCurrentUserAccess(options: AccessOptions = {}): Promise<AccessContext> {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
@@ -44,6 +55,10 @@ export async function getCurrentUserAccess(): Promise<AccessContext> {
 
   if (!user) {
     redirect("/login");
+  }
+
+  if (user.role === "GUEST" && !options.allowGuest) {
+    redirect("/events");
   }
 
   return {

@@ -598,7 +598,7 @@ async function writeStaffLog(
 
 export async function signUpForShiftAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    const access = await getCurrentUserAccess();
+    const access = await getCurrentUserAccess({ allowGuest: true });
     const shiftId = getRequiredString(formData, "shiftId");
 
     await requireWritableShift(shiftId);
@@ -660,7 +660,7 @@ export async function signUpForShiftAction(_prevState: ActionState, formData: Fo
 
 export async function withdrawFromShiftAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    const access = await getCurrentUserAccess();
+    const access = await getCurrentUserAccess({ allowGuest: true });
     const shiftId = getRequiredString(formData, "shiftId");
     // Admin can also remove someone else
     const targetUserId = String(formData.get("userId") ?? "").trim() || access.id;

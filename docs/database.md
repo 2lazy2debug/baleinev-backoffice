@@ -77,7 +77,7 @@ Represents an authenticated application user.
 | `email` | String | Unique |
 | `name` | String? | Display name |
 | `passwordHash` | String | bcrypt hash |
-| `role` | `Role` enum | `ADMIN` or `DEPARTMENT` |
+| `role` | `Role` enum | `ADMIN`, `DEPARTMENT` or `GUEST` |
 | `refundFirstName` | String? | For refund tracking |
 | `refundLastName` | String? | |
 | `refundIban` | String? | |

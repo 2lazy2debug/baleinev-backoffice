@@ -42,7 +42,7 @@ After a mutation, actions call `revalidatePath(...)` to invalidate the Next.js c
 
 ### 3. Access control in two layers
 
-- **Middleware (`proxy.ts`)** — runs on every request edge, checks the JWT, redirects `DEPARTMENT` role users away from admin-only routes immediately.
+- **Middleware (`proxy.ts`)** — runs on every request edge, checks the JWT, redirects `DEPARTMENT` users away from admin-only routes and holds `GUEST` users to `/events`.
 - **Server functions (`requireAdmin()` / `getCurrentUserAccess()`)** — called inside server components and server actions to enforce checks on the server, regardless of the middleware.
 
 Never rely on the middleware alone. Sensitive actions always call `requireAdmin()`.

@@ -1,5 +1,6 @@
 "use client";
 
+import type { UserRole } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -48,7 +49,7 @@ type AppShellProps = {
   selectedEditionId: string | null;
   locale: Locale;
   theme: Theme;
-  role: "ADMIN" | "DEPARTMENT";
+  role: UserRole;
   canManageMoneyAccounts: boolean;
   pendingTaskCount: number;
 };

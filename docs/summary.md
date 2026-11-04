@@ -32,6 +32,8 @@ Two roles, stored on `User.role`:
   their own todos and calendar. Their navigation is restricted to tasks, calendar, budget,
   expense reports, events, passwords and the address book — except members of the "Comptabilité"
   department, who also get money accounts.
+- **GUEST** — someone outside the association. Signs up for event shifts of the default edition and
+  nothing else.
 
 A user belongs to `Department` records directly (a many-to-many). Departments are
 edition-independent, so a membership survives an edition change; what is per-edition is the

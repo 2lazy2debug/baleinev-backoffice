@@ -14,7 +14,7 @@ export async function GET(_: Request, context: RouteContext) {
   try {
     // Any signed-in user can pull the schedule — staffing visibility isn't
     // admin-gated, unlike the financial documents in /api/invoices.
-    await getCurrentUserAccess();
+    await getCurrentUserAccess({ allowGuest: true });
 
     const { eventId } = await context.params;
 

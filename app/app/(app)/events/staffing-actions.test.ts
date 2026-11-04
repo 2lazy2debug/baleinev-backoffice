@@ -27,7 +27,7 @@ const prisma = {
 
 vi.mock("next/cache", () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
 vi.mock("@/lib/access", () => ({
-  getCurrentUserAccess: () => getCurrentUserAccess(),
+  getCurrentUserAccess: (...a: unknown[]) => getCurrentUserAccess(...a),
   requireAdmin: () => requireAdmin(),
 }));
 vi.mock("@/lib/db", () => ({ prisma }));
@@ -193,5 +193,17 @@ describe("adminAssignUserToShiftAction", () => {
         subjectName: "Jamie",
       }),
     });
+  });
+});
+
+describe("guest opt-in", () => {
+  it("signUpForShiftAction lets a guest through", async () => {
+    await signUpForShiftAction({ error: null }, signUpForm());
+    expect(getCurrentUserAccess).toHaveBeenCalledWith({ allowGuest: true });
+  });
+
+  it("withdrawFromShiftAction lets a guest through", async () => {
+    await withdrawFromShiftAction({ error: null }, withdrawForm());
+    expect(getCurrentUserAccess).toHaveBeenCalledWith({ allowGuest: true });
   });
 });

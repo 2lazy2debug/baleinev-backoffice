@@ -34,7 +34,7 @@ session() callback                           ← lib/auth.ts
   Copies token fields onto session.user so client components can read them
         │
         ▼
-Client reads session role and redirects: ADMIN → /  (dashboard), DEPARTMENT → /budget
+Client reads session role and redirects: ADMIN → /  (dashboard), DEPARTMENT and GUEST → /events
 ```
 
 ### Session object shape
@@ -44,7 +44,7 @@ After login, `session.user` contains:
   id: string              // User.id from database
   email: string
   name: string
-  role: "ADMIN" | "DEPARTMENT"
+  role: "ADMIN" | "DEPARTMENT" | "GUEST"
   departmentIds: string[]    // Department IDs this user belongs to
   departmentNames: string[]  // corresponding department names
 }
@@ -101,10 +101,14 @@ still has to have `twoFactorEnabled` cleared directly in the database.
 
 File: [`proxy.ts`](../proxy.ts) (Next.js middleware, runs on the Edge).
 
-The middleware protects the entire `(app)` route group. It checks two things:
+The middleware protects the entire `(app)` route group. It checks three things:
 
 1. **Is the user authenticated?** If not, redirect to `/login`.
-2. **Is the user a `DEPARTMENT` role trying to access an admin route?**
+2. **Is the user a `GUEST`?** Allowlist: `/events` exactly, `/api/events/<id>/pdf`,
+   `/api/preferences/theme` (plus the pre-token exemptions: `/login`, `/api/auth`,
+   `/api/preferences/language`, …). Any other page → `/events`; any other `/api/*` →
+   `401 { ok: false, error: "Not allowed" }`.
+3. **Is the user a `DEPARTMENT` role trying to access an admin route?**
    - Blocked routes for `DEPARTMENT`: `/`, `/editions`, `/journal`, `/cost-centers`,
      `/invoices`, `/templates`, `/pos/templates`, `/departments`, `/users` — these redirect to
      `/budget`. Note `/pos` itself (the till) is **not** blocked: any signed-in user may sell.
@@ -122,6 +126,10 @@ The middleware reads the role from the **JWT token** (no database round-trip).
 // proxy.ts — simplified logic
 const token = await getToken({ req })
 if (!token) return redirect("/login")
+if (token.role === "GUEST") {
+  if (isGuestPath(pathname)) return next()
+  return pathname.startsWith("/api/") ? json401("Not allowed") : redirect("/events")
+}
 if (token.role === "DEPARTMENT") {
   if (pathname.startsWith("/money-accounts")) {
     if (!token.departmentNames?.includes(MONEY_ACCOUNT_MANAGER_DEPARTMENT)) return redirect("/budget")
@@ -139,16 +147,22 @@ File: [`lib/access.ts`](../lib/access.ts).
 
 Every protected page and server action calls one of these two helpers:
 
-### `getCurrentUserAccess()`
+### `getCurrentUserAccess(options?: { allowGuest?: boolean })`
 Fetches the full `AccessContext` for the authenticated user:
 - Reads the NextAuth session (server-side via `getServerSession`).
 - Queries the database for the user record including `departments`.
-- Returns an `AccessContext` object (or `null` if unauthenticated).
+- Returns an `AccessContext` object. Redirects to `/login` without a session (it never returns `null`).
+- **Refuses `GUEST` by default**: redirects to `/events` unless the caller passes `{ allowGuest: true }`.
+  Only the five guest surfaces do: `app/(app)/layout.tsx`, `app/(app)/events/page.tsx`,
+  `signUpForShiftAction` and `withdrawFromShiftAction` (`events/actions.ts`), and
+  `app/api/events/[eventId]/pdf/route.ts`. A page or action added later is closed to guests
+  without anyone remembering to close it.
+- `toActionErrorMessage` rethrows redirects, so a refused action redirects instead of showing an error.
 
 ```ts
 type AccessContext = {
   userId: string
-  role: "ADMIN" | "DEPARTMENT"
+  role: UserRole  // Prisma enum: ADMIN | DEPARTMENT | GUEST
   departmentIds: string[]
   departmentNames: string[]
   // + all refund profile fields
@@ -156,7 +170,7 @@ type AccessContext = {
 ```
 
 ### `requireAdmin()`
-Calls `getCurrentUserAccess()` and throws (or redirects) if the user is not `ADMIN`. Used at the top of every admin-only page and server action:
+Calls `getCurrentUserAccess()` and throws (or redirects) if the user is not `ADMIN`. A `GUEST` is redirected to `/events` by `getCurrentUserAccess()` before the role check. Used at the top of every admin-only page and server action:
 
 ```ts
 // pattern used in admin pages / actions:
@@ -177,10 +191,10 @@ const access = await requireMoneyAccountManager()  // throws unless ADMIN or Com
 
 | Layer | Where | Protects against |
 |---|---|---|
-| Middleware (`proxy.ts`) | Edge, before page loads | DEPARTMENT users navigating to admin URLs directly |
-| `requireAdmin()` | Server component / server action | Direct API calls, fetch-based attacks, accidental omissions in UI gating |
+| Middleware (`proxy.ts`) | Edge, before page loads | DEPARTMENT users navigating to admin URLs directly; GUEST users reaching anything but `/events` |
+| `getCurrentUserAccess()` (refuse-by-default for GUEST) and `requireAdmin()` | Server component / server action | Direct API calls, fetch-based attacks, accidental omissions in UI gating |
 
-The middleware is the fast path (no DB). `requireAdmin()` is the authoritative check that cannot be bypassed.
+The middleware is the fast path (no DB). The access helpers are the authoritative check that cannot be bypassed.
 
 ---
 

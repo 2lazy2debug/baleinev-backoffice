@@ -403,3 +403,18 @@ grep -rnF '"ADMIN" | "DEPARTMENT"' app lib components types --include='*.ts' --i
 - The PDF route serves any event id to a guest (no edition / expiry filter) — Step 3, with the
   events filtering.
 - Shell, nav, bottom bar, edition picker for guests — Step 2.
+
+## Verify results (2026-11-04)
+
+Closed on the user's go, committed, not tagged or pushed.
+
+| Gate | Result |
+|---|---|
+| `npx prisma migrate status` | 30 migrations, up to date |
+| `prisma migrate diff … --exit-code` | exit 0, no difference |
+| `grep -rn "allowGuest: true" app lib components` | 9 lines: the 5 opt-ins (`layout.tsx`, `events/page.tsx`, `events/actions.ts` ×2, `api/events/[eventId]/pdf/route.ts`) + 4 in tests (`staffing-actions.test.ts` ×2, `lib/access.test.ts` ×2). The "exactly 5" in the gate counted production code only |
+| Old role union grep (a) | 0 lines |
+| `npm test` | 28 files, 315 tests, 0 failures |
+| `npm run build` / `lint` / `check:design` / `check:i18n` | pass. Lint: 0 errors, 2 pre-existing warnings (`lib/proof-upload.ts:57`, `types/next-auth.d.ts` unused `JWT` import) |
+| `SEED_DEV_FIXTURES=1 npm run db:seed` ×2 | both succeed |
+| Default edition (local) | `2026-2027` |

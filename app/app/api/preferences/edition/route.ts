@@ -15,6 +15,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Not signed in" }, { status: 401 });
   }
 
+  if (session.user.role === "GUEST") {
+    return NextResponse.json({ ok: false, error: "Not allowed" }, { status: 403 });
+  }
+
   const payload = (await request.json().catch(() => ({}))) as Payload;
   const editionId = String(payload.editionId ?? "").trim();
 

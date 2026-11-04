@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { ExpenseReportStatus } from "@prisma/client";
+import { ExpenseReportStatus, type UserRole } from "@prisma/client";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
@@ -64,7 +64,7 @@ interface ExpenseReportRow {
 }
 
 interface UserAccess {
-  role: "ADMIN" | "DEPARTMENT";
+  role: UserRole;
 }
 
 interface ExpenseReportsCopy {

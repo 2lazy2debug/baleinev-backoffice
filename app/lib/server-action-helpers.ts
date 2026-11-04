@@ -1,3 +1,5 @@
+import { unstable_rethrow } from "next/navigation";
+
 export type ActionState = {
   error: string | null;
   /**
@@ -10,7 +12,12 @@ export type ActionState = {
 
 export const initialActionState: ActionState = { error: null };
 
+/**
+ * The message a form shows for a failed action. A redirect() thrown inside the action's
+ * try (no session, a guest refused by getCurrentUserAccess) is rethrown so Next performs it.
+ */
 export function toActionErrorMessage(err: unknown): string {
+  unstable_rethrow(err);
   return err instanceof Error ? err.message : "Something went wrong. Please try again.";
 }
 

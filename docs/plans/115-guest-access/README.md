@@ -11,7 +11,7 @@ All paths are relative to `app/` (where `package.json` lives). Quote them in zsh
 
 | # | Step | Migration | Depends on |
 |---|---|---|---|
-| 1 | [Guest role and lockdown](01-guest-role-and-lockdown.md) | **yes** | — |
+| 1 | [Guest role and lockdown](done/01-guest-role-and-lockdown.md) — done, untagged | **yes** | — |
 | 2 | [Guest shell](02-guest-shell.md) | no | 1 |
 | 3 | [Events for guests](03-events-for-guests.md) | no | 1 |
 | 4 | [Guest sign-up](04-guest-sign-up.md) | no | 1, 2, 3 |
@@ -24,7 +24,6 @@ every guard is in place before anyone can create a guest.
 
 | Step | Design | Execute | Beyond the default |
 |---|---|---|---|
-| 1 | opus | sonnet | `scout` for the full `getCurrentUserAccess` call-site inventory; `verifier` runs the migration on the local DB |
 | 2 | opus | sonnet | — |
 | 3 | opus | sonnet | — |
 | 4 | opus | sonnet | `verifier` curl smoke test of register → sign in → `/events` |
@@ -83,7 +82,11 @@ every guard is in place before anyone can create a guest.
 
 ## Current state
 
-Nothing shipped yet.
+- Step 1 shipped (committed, not tagged). `UserRole` has `GUEST`; `getCurrentUserAccess({ allowGuest: true })`
+  is called by exactly the five opt-ins (plus 4 lines in tests); `proxy.ts` holds the GUEST allowlist;
+  `toActionErrorMessage` rethrows `redirect()`.
+- Guest fixture: `dev-guest@baleinev.local` / `devpassword`. Local default edition: `2026-2027`.
+- Gate baseline: 28 test files / 315 tests; lint 0 errors, 2 pre-existing warnings.
 
 ## Verification kit
 
@@ -98,4 +101,8 @@ Nothing shipped yet.
 
 ## Deferred
 
-Nothing yet.
+| Item | Step |
+|---|---|
+| The PDF route serves any event id to a guest (no edition / expiry filter) | 3 |
+| Guest clicking "unavailable" reloads `/events` (refused server-side); hide the buttons | 3 |
+| `/users` shows a GUEST as "Department"; its edit `<Select>` offers only ADMIN/DEPARTMENT (saving promotes it); `getRoleAndDepartmentIds` rejects `GUEST` | 5 |

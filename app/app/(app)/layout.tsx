@@ -10,7 +10,7 @@ import { getTheme } from "@/lib/theme";
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   const theme = await getTheme();
-  const access = await getCurrentUserAccess();
+  const access = await getCurrentUserAccess({ allowGuest: true });
 
   const [selectedEdition, editions, pendingTaskCount] = await Promise.all([
     resolveEdition(),
