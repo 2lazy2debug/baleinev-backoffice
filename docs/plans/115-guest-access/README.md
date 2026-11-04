@@ -11,9 +11,9 @@ All paths are relative to `app/` (where `package.json` lives). Quote them in zsh
 
 | # | Step | Migration | Depends on |
 |---|---|---|---|
-| 1 | [Guest role and lockdown](done/01-guest-role-and-lockdown.md) — done, untagged | **yes** | — |
-| 2 | [Guest shell](done/02-guest-shell.md) — done, untagged | no | 1 |
-| 3 | [Events for guests](03-events-for-guests.md) | no | 1 |
+| 1 | [Guest role and lockdown](done/01-guest-role-and-lockdown.md) — done, `v0.69.0` | **yes** | — |
+| 2 | [Guest shell](done/02-guest-shell.md) — done, `v0.69.0` | no | 1 |
+| 3 | [Events for guests](done/03-events-for-guests.md) — done, `v0.69.0` | no | 1 |
 | 4 | [Guest sign-up](04-guest-sign-up.md) | no | 1, 2, 3 |
 | 5 | [Guests in /users](05-guests-in-users.md) | no | 1 |
 
@@ -24,7 +24,6 @@ every guard is in place before anyone can create a guest.
 
 | Step | Design | Execute | Beyond the default |
 |---|---|---|---|
-| 3 | opus | sonnet | — |
 | 4 | opus | sonnet | `verifier` curl smoke test of register → sign in → `/events` |
 | 5 | opus | sonnet | — |
 
@@ -88,7 +87,10 @@ every guard is in place before anyone can create a guest.
 - Step 2 shipped (committed, not tagged). `AppShell` sets `menuOnly` for a GUEST: no sidebar, no bottom bar, only
   `MobileAccountMenu` (name, language, theme, sign out), shown at every breakpoint; `MobileSheet` has a `desktopDialog` prop.
   The layout loads only the default edition for a guest. Step 2's manual pass is still unrun.
-- Gate baseline: 28 test files / 315 tests; lint 0 errors, 2 pre-existing warnings.
+- Step 3 shipped (`v0.69.0`, local tag, not pushed; `requires-migration` because it also carries Step 1). `/events` shows a guest only non-expired
+  events of the default edition (`isGuest` in `page.tsx`), loads no unavailabilities (`take: 0`), hides the decline buttons (`canDecline`),
+  and guest sign-up creates no STAFF_SHIFT task. The PDF route answers 404 to a guest for another edition's or an expired event. Step 3's manual pass is unrun.
+- Gate baseline: 29 test files / 324 tests; lint 0 errors, 2 pre-existing warnings.
 
 ## Verification kit
 
@@ -105,6 +107,4 @@ every guard is in place before anyone can create a guest.
 
 | Item | Step |
 |---|---|
-| The PDF route serves any event id to a guest (no edition / expiry filter) | 3 |
-| Guest clicking "unavailable" reloads `/events` (refused server-side); hide the buttons | 3 |
 | `/users` shows a GUEST as "Department"; its edit `<Select>` offers only ADMIN/DEPARTMENT (saving promotes it); `getRoleAndDepartmentIds` rejects `GUEST` | 5 |

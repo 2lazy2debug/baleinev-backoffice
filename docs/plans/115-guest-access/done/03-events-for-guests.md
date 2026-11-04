@@ -225,3 +225,10 @@ Guest = `dev-guest@baleinev.local` / `devpassword`; admin = the seeded admin. De
 ### Not in this step (report, do not fix)
 
 - The PDF route's outer `catch` turns any `redirect()` from `getCurrentUserAccess` (no session) into a 400 JSON. Pre-existing, not guest-specific; mention it in the execute report.
+
+## Verify results (execute, 2026-11-04)
+
+- Gates: build, lint (0 errors, 2 pre-existing warnings), check:design, check:i18n (1028 keys), `npm test` 29 files / 324 tests — all pass, no flaky reruns.
+- Manual pass (1–7): not run by the execute session; left to the user.
+- No deviations from the Design. Not fixed (pre-existing, not guest-specific): the PDF route's outer `catch` turns a `redirect()` from `getCurrentUserAccess` (no session) into a 400 JSON.
+- Tagged `v0.69.0` (`requires-migration`: covers Step 1's migration, which was untagged). Local only, not pushed.
