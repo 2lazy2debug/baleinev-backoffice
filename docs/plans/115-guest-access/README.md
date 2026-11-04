@@ -15,7 +15,7 @@ All paths are relative to `app/` (where `package.json` lives). Quote them in zsh
 | 2 | [Guest shell](done/02-guest-shell.md) — done, `v0.69.0` | no | 1 |
 | 3 | [Events for guests](done/03-events-for-guests.md) — done, `v0.69.0` | no | 1 |
 | 4 | [Guest sign-up](done/04-guest-sign-up.md) — done | no | 1, 2, 3 |
-| 5 | [Guests in /users](05-guests-in-users.md) | no | 1 |
+| 5 | [Guests in /users](done/05-guests-in-users.md) — done, `v0.70.0` | no | 1 |
 
 Run in order. Step 4 is the one that opens the door to the public: it ships last-but-one so
 every guard is in place before anyone can create a guest.
@@ -25,7 +25,6 @@ every guard is in place before anyone can create a guest.
 | Step | Design | Execute | Beyond the default |
 |---|---|---|---|
 | 4 | opus | sonnet | `verifier` curl smoke test of register → sign in → `/events` |
-| 5 | opus | sonnet | — |
 
 ## Decisions (user, 2026-11-04)
 
@@ -91,7 +90,8 @@ every guard is in place before anyone can create a guest.
   events of the default edition (`isGuest` in `page.tsx`), loads no unavailabilities (`take: 0`), hides the decline buttons (`canDecline`),
   and guest sign-up creates no STAFF_SHIFT task. The PDF route answers 404 to a guest for another edition's or an expired event. Step 3's manual pass is unrun.
 - Step 4 shipped (committed, not tagged). `/login` has a Sign in / Enter as guest toggle; `registerGuestAction` creates a GUEST; `lib/passwords.ts > MIN_PASSWORD_LENGTH` is shared. Curl smoke test passed (register → duplicate refused → sign in → `/events` 200, `/tasks` 307 → `/events`); browser manual pass unrun.
-- Gate baseline: 30 test files / 335 tests (was 29 / 324 before Step 4); lint 0 errors, 2 pre-existing warnings.
+- Step 5 shipped (`v0.70.0`, `requires-migration` because it also carries Steps 1-4). `/users` shows guests (warning Guest badge, after members); the edit form keeps a guest a guest or promotes to Department, never to Admin; nothing becomes GUEST. `updateUserAction` keeps an unchanged email's stored spelling. Manual pass unrun.
+- Gate baseline: 30 test files / 347 tests; lint 0 errors, 2 pre-existing warnings.
 
 ## Verification kit
 
@@ -106,6 +106,4 @@ every guard is in place before anyone can create a guest.
 
 ## Deferred
 
-| Item | Step |
-|---|---|
-| `/users` shows a GUEST as "Department"; its edit `<Select>` offers only ADMIN/DEPARTMENT (saving promotes it); `getRoleAndDepartmentIds` rejects `GUEST` | 5 |
+None.

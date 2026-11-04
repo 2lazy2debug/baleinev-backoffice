@@ -268,3 +268,9 @@ The five existing `resetUserTwoFactorAction` tests stay green unchanged.
    card gone; the sign-up is gone from `/events`; `/events/logs` still shows the lines with their name.
 6. Create modal: Role offers Admin and Department only.
 7. Pencil on a DEPARTMENT member: Role offers Admin and Department, no Guest.
+
+## Results (2026-11-04)
+
+- Build, lint (0 errors, 2 pre-existing warnings), `check:design`, `check:i18n` (1039 keys) pass; `npm test` 30 files / 347 tests.
+- Executed as designed, no deviations. Manual pass unrun (browser); the `pilot` script does not exist in this repo, so no verify rows were recorded.
+- Tagged `v0.70.0` with `requires-migration`: the unpushed `v0.69.0` (Step 1's migration) is superseded by it, so the box only sees the highest tag.
