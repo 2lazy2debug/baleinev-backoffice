@@ -14,7 +14,7 @@ All paths are relative to `app/` (where `package.json` lives). Quote them in zsh
 | 1 | [Guest role and lockdown](done/01-guest-role-and-lockdown.md) — done, `v0.69.0` | **yes** | — |
 | 2 | [Guest shell](done/02-guest-shell.md) — done, `v0.69.0` | no | 1 |
 | 3 | [Events for guests](done/03-events-for-guests.md) — done, `v0.69.0` | no | 1 |
-| 4 | [Guest sign-up](04-guest-sign-up.md) | no | 1, 2, 3 |
+| 4 | [Guest sign-up](done/04-guest-sign-up.md) — done | no | 1, 2, 3 |
 | 5 | [Guests in /users](05-guests-in-users.md) | no | 1 |
 
 Run in order. Step 4 is the one that opens the door to the public: it ships last-but-one so
@@ -90,7 +90,8 @@ every guard is in place before anyone can create a guest.
 - Step 3 shipped (`v0.69.0`, local tag, not pushed; `requires-migration` because it also carries Step 1). `/events` shows a guest only non-expired
   events of the default edition (`isGuest` in `page.tsx`), loads no unavailabilities (`take: 0`), hides the decline buttons (`canDecline`),
   and guest sign-up creates no STAFF_SHIFT task. The PDF route answers 404 to a guest for another edition's or an expired event. Step 3's manual pass is unrun.
-- Gate baseline: 29 test files / 324 tests; lint 0 errors, 2 pre-existing warnings.
+- Step 4 shipped (committed, not tagged). `/login` has a Sign in / Enter as guest toggle; `registerGuestAction` creates a GUEST; `lib/passwords.ts > MIN_PASSWORD_LENGTH` is shared. Curl smoke test passed (register → duplicate refused → sign in → `/events` 200, `/tasks` 307 → `/events`); browser manual pass unrun.
+- Gate baseline: 30 test files / 335 tests (was 29 / 324 before Step 4); lint 0 errors, 2 pre-existing warnings.
 
 ## Verification kit
 
