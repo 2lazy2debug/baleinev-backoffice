@@ -24,7 +24,7 @@ every guard is in place before anyone can create a guest.
 
 | Step | Design | Execute | Beyond the default |
 |---|---|---|---|
-| 2 | opus | sonnet | — |
+| 2 | opus | sonnet | — (designed) |
 | 3 | opus | sonnet | — |
 | 4 | opus | sonnet | `verifier` curl smoke test of register → sign in → `/events` |
 | 5 | opus | sonnet | — |
