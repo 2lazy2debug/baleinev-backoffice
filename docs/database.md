@@ -459,6 +459,11 @@ that user rather than leaving a stale decline behind. A reader only ever sees th
 admin sees everyone's — enforced in the `page.tsx` query, not in the markup (see
 [Events — the staffing log](business-processes.md#14-events--the-staffing-log)).
 
+### `EventBoard` · `BoardCard` · `BoardCardUser` · `BoardCardDepartment`
+The per-event kanban board (`/events/[eventId]/board`). One board per event, cascading with it;
+cards sit in one of four fixed `BoardLane`s with a dense per-lane `position`. Full model, ordering
+rules and the copy helper: [kanban.md](kanban.md).
+
 ### `EventStaffLog`
 Who put whom on a shift, and when — admin-only, read-only, `/events/logs`.
 

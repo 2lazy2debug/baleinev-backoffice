@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
-import { Ban, Check, ChevronDown, ChevronUp, FileText, Link2, Pencil, Plus } from "lucide-react";
+import { Ban, Check, ChevronDown, ChevronUp, FileText, Link2, Pencil, Plus, SquareKanban } from "lucide-react";
 
 import { useEditionReadOnly } from "@/components/edition-read-only";
 import { FormError } from "@/components/form-error";
-import { Badge, Button, Card, Chip, ChipRemoveButton, ConfirmDelete, IconButton, Panel, PanelHeader, SectionTitle, Select, cn, microLabelClasses, nestedSurfaceClasses, scrollToBelowTopBar } from "@/components/ui";
+import { Badge, Button, Card, Chip, ChipRemoveButton, ConfirmDelete, IconButton, Panel, PanelHeader, SectionTitle, Select, buttonClasses, cn, compactOnMobileWidths, microLabelClasses, nestedSurfaceClasses, scrollToBelowTopBar } from "@/components/ui";
 import type { Locale } from "@/lib/i18n-dictionaries";
 import { initialActionState } from "@/lib/server-action-helpers";
 
@@ -195,6 +196,8 @@ type Props = {
   accessId: string;
   /** Whether the viewer may answer "unavailable". Guests may only sign up and withdraw. */
   canDecline: boolean;
+  /** Label of the per-event kanban link; null hides it (guests have no board). */
+  boardLabel: string | null;
   events: EventItem[];
   allUsers: UserItem[];
   copy: EventsCopy;
@@ -207,6 +210,7 @@ export default function EventsPageClient({
   isAdmin,
   accessId,
   canDecline,
+  boardLabel,
   events,
   allUsers,
   copy,
@@ -444,6 +448,17 @@ export default function EventsPageClient({
                       responsesEveryoneAnswered: copy.responsesEveryoneAnswered,
                     }}
                   />
+                ) : null}
+                {boardLabel ? (
+                  <Link
+                    href={`/events/${event.id}/board`}
+                    aria-label={boardLabel}
+                    title={boardLabel}
+                    className={buttonClasses("secondary", "md", compactOnMobileWidths.md)}
+                  >
+                    <SquareKanban />
+                    <span className="hidden lg:inline">{boardLabel}</span>
+                  </Link>
                 ) : null}
                 <Button
                   type="button"

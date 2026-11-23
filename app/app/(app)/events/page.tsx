@@ -151,6 +151,7 @@ export default async function EventsPage() {
         isAdmin={isAdmin}
         accessId={access.id}
         canDecline={!isGuest}
+        boardLabel={isGuest ? null : copy.kanban.board}
         events={events}
         allUsers={allUsers}
         copy={copy.events}

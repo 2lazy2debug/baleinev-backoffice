@@ -151,6 +151,7 @@ model User {
   resolvedTasks           Task[]                  @relation("TaskResolver")
   createdAppointments     Appointment[]           @relation("AppointmentCreatedBy")
   appointmentInvites      AppointmentInviteUser[]
+  boardCardAssignments    BoardCardUser[]
   createdTodos            Todo[]                  @relation("TodoCreator")
   assignedTodos           Todo[]                  @relation("TodoAssignee")
   createdPasswordEntries  PasswordEntry[]         @relation("PasswordEntryCreatedBy")
@@ -190,6 +191,7 @@ model Department {
   tasks              Task[]
   expenseReports     ExpenseReport[]
   appointmentInvites AppointmentInviteDepartment[]
+  boardCards         BoardCardDepartment[]
 }
 
 // Shared, department-scoped credential store. Secret fields (password, TOTP
@@ -535,8 +537,77 @@ model Event {
   costCenter CostCenter?     @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
   days       EventDay[]
   staffLogs  EventStaffLog[]
+  board      EventBoard?
 
   @@index([editionId, startDate])
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Event kanban board — see docs/kanban.md
+// ────────────────────────────────────────────────────────────────────────────
+
+/// The four fixed lanes of every event board, in display order.
+enum BoardLane {
+  TODO
+  IN_PROGRESS
+  AWAITING
+  DONE
+}
+
+/// One board per event, created on its first card. Cascades with the event.
+model EventBoard {
+  id        String   @id @default(cuid())
+  eventId   String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  cards BoardCard[]
+}
+
+model BoardCard {
+  id          String        @id @default(cuid())
+  boardId     String
+  lane        BoardLane     @default(TODO)
+  /// Dense 0-based order inside the lane. Always computed server-side
+  /// (lib/kanban.ts > moveCard); no unique index, so a renumbering never
+  /// collides with rows that have not moved yet.
+  position    Int
+  title       String
+  description String?
+  /// The POS tile palette — a tint over the card surface, so `--ink` text stays readable.
+  color       PosCellColor?
+  deadline    DateTime?     @db.Date
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  board       EventBoard            @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  users       BoardCardUser[]
+  departments BoardCardDepartment[]
+
+  @@index([boardId, lane, position])
+}
+
+model BoardCardUser {
+  cardId String
+  userId String
+
+  card BoardCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([cardId, userId])
+  @@index([userId])
+}
+
+model BoardCardDepartment {
+  cardId       String
+  departmentId String
+
+  card       BoardCard  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@id([cardId, departmentId])
+  @@index([departmentId])
 }
 
 model EventDay {
