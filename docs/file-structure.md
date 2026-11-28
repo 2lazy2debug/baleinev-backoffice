@@ -132,7 +132,9 @@ app/
 │   │   │                            `deletePosTemplateAction` (refuses a template a session has used) /
 │   │   │                            `addPosTemplatePageAction` (appends) / `renamePosTemplatePageAction` /
 │   │   │                            `removePosTemplatePageAction` (refuses the last page and a page
-│   │   │                            with tiles) / `addPosTemplateCellAction` (appends to a page) /
+│   │   │                            with tiles) / `reorderPosTemplatePagesAction(templateId, pageIds)`
+│   │   │                            (called direct; exactly the template's pages) /
+│   │   │                            `addPosTemplateCellAction` (appends to a page) /
 │   │   │                            `updatePosTemplateCellAction` (by cell id; another `pageId` sends it
 │   │   │                            to the end of that page) / `removePosTemplateCellAction` (closes the
 │   │   │                            gap) / `reorderPosTemplateCellsAction(templateId, layout)` (called
@@ -173,8 +175,9 @@ app/
 │   │           │                    article dialog needs; `notFound()` when it is not in the
 │   │           │                    edition. Renders nothing itself — the editor owns the header
 │   │           ├── stack-editor.tsx ← The whole editor: its own `<PageHeader>` (back, Preview, Add
-│   │           │                    a page, Add a tile), one accordion `<Panel>` per page (rename /
-│   │           │                    remove in its header), and the preview. Moving is one
+│   │           │                    a page, Add a tile), one accordion `<Panel>` per page (move up /
+│   │           │                    down, rename, remove in its header; the header drags onto
+│   │           │                    another to reorder pages), and the preview. Moving is one
 │   │           │                    `move(from, to)` over (page, index) spots behind drag (onto a row,
 │   │           │                    or a page header for "end of page"), the row arrows (which step
 │   │           │                    across page boundaries), and the preview's tap-to-pick/tap-to-

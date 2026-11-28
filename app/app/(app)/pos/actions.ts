@@ -21,7 +21,7 @@ import { type ActionState, getRequiredString, toActionErrorMessage } from "@/lib
  * tile's in its page — are dense 0-based indexes and stay dense: a hole in a
  * page's order would draw as a phantom tile on whatever screen it landed on.
  *
- * Pages do not move. Tiles do, within a page and across pages.
+ * Pages reorder among themselves; tiles move within a page and across pages.
  */
 
 function revalidateTemplate(templateId?: string) {
@@ -73,6 +73,18 @@ async function renumber(tx: Prisma.TransactionClient, templateId: string, layout
     for (const [position, id] of cellIds.entries()) {
       await tx.posTemplateCell.update({ where: { id }, data: { pageId, position } });
     }
+  }
+}
+
+/** Rewrites a template's page positions to 0..n-1 in the order given, parked first like the tiles. */
+async function renumberPages(tx: Prisma.TransactionClient, templateId: string, pageIds: string[]) {
+  await tx.posTemplatePage.updateMany({
+    where: { templateId },
+    data: { position: { increment: POSITION_PARK } },
+  });
+
+  for (const [position, id] of pageIds.entries()) {
+    await tx.posTemplatePage.update({ where: { id }, data: { position } });
   }
 }
 
@@ -248,7 +260,7 @@ function parsePageTitle(formData: FormData): string | null {
   return title === "" ? null : title;
 }
 
-/** Adds a page after the last one. Pages are not reordered, so this is where it stays. */
+/** Adds a page after the last one — reordering it is a separate, direct call. */
 export async function addPosTemplatePageAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
@@ -321,13 +333,7 @@ export async function removePosTemplatePageAction(_prevState: ActionState, formD
         select: { id: true },
       });
 
-      await tx.posTemplatePage.updateMany({
-        where: { templateId },
-        data: { position: { increment: POSITION_PARK } },
-      });
-      for (const [position, page] of remaining.entries()) {
-        await tx.posTemplatePage.update({ where: { id: page.id }, data: { position } });
-      }
+      await renumberPages(tx, templateId, remaining.map((page) => page.id));
     });
 
     revalidateTemplate(templateId);
@@ -467,6 +473,34 @@ export async function reorderPosTemplateCellsAction(templateId: string, layout: 
     }
 
     await prisma.$transaction((tx) => renumber(tx, templateId, layout));
+
+    revalidateTemplate(templateId);
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+/**
+ * Rewrites the order of a template's pages — the order of the till's tabs.
+ * Called direct, like the tile reorder. `pageIds` has to be exactly the
+ * template's pages, each once: a partial list would leave the rest parked.
+ */
+export async function reorderPosTemplatePagesAction(templateId: string, pageIds: string[]): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    const editionId = await resolveWritableEditionId();
+
+    await templateInEdition(templateId, editionId);
+
+    const pages = await prisma.posTemplatePage.findMany({ where: { templateId }, select: { id: true } });
+    const known = new Set(pages.map((page) => page.id));
+
+    if (new Set(pageIds).size !== pageIds.length || pageIds.length !== known.size || pageIds.some((id) => !known.has(id))) {
+      throw new Error("That order is out of date. Refresh and try again.");
+    }
+
+    await prisma.$transaction((tx) => renumberPages(tx, templateId, pageIds));
 
     revalidateTemplate(templateId);
     return { error: null };

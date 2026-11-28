@@ -1085,8 +1085,8 @@ model PosTemplate {
 /// A named page of a template — "Beers", "Softs", "Deposits". The till shows
 /// one tab per page, in `position` order, and a tile lives on exactly one.
 ///
-/// Pages are not reordered: `position` is the order they were added in, dense
-/// and 0-based, and only closes up when one is removed. A template always has
+/// `position` is the tab order, dense and 0-based: a new page goes last, and
+/// pages are reordered from the editor's page headers. A template always has
 /// at least one page, and a page is removed only once it holds no tile.
 ///
 /// A page longer than the device's grid still overflows onto further screens —

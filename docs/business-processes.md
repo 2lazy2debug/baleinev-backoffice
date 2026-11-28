@@ -739,8 +739,8 @@ A **template** is a saved till layout, at `/pos/templates`. It is **per edition*
 
 **A template is a list of named pages, each a stack, not a grid.** A page (`PosTemplatePage`) has an
 optional **title** — "Beers", "Softs", "Deposits"; blank reads "Page n" — and is one **tab** on the
-till. Pages keep the order they were added in and **do not move**; tiles do, within a page and
-across pages. A template is born with one page, keeps at least one, and a page is removed only once
+till. A new page goes last; pages **reorder** from their headers in the editor (drag a header onto
+another, or its arrows), and tiles move within a page and across pages. A template is born with one page, keeps at least one, and a page is removed only once
 it is empty. Inside a page, a cell's `position` is a dense 0-based index into that page's order.
 
 What the author does **not** decide is where a long page overflows onto a second screen. That

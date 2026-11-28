@@ -56,6 +56,7 @@ import {
   removePosTemplateCellAction,
   removePosTemplatePageAction,
   reorderPosTemplateCellsAction,
+  reorderPosTemplatePagesAction,
 } from "../../actions";
 import { PageFormModal } from "./page-form-modal";
 import { TileFormModal, type ArticleOption, type EditorCell } from "./tile-form-modal";
@@ -125,6 +126,18 @@ function movedTile(layout: EditorPage[], from: Spot, to: Spot): EditorPage[] {
   });
 }
 
+/**
+ * A page header being dragged carries its index under its own type, so a tile
+ * drop target never mistakes it for a tile (and the other way round).
+ */
+const PAGE_DRAG_TYPE = "application/x-pos-page";
+
+function pageFrom(event: React.DragEvent): number | null {
+  if (!event.dataTransfer.types.includes(PAGE_DRAG_TYPE)) return null;
+  const index = Number(event.dataTransfer.getData(PAGE_DRAG_TYPE));
+  return Number.isInteger(index) ? index : null;
+}
+
 /** A drag carries the spot it started from as `"page:index"`. */
 function spotFrom(event: React.DragEvent): Spot | null {
   const [page, index] = event.dataTransfer.getData("text/plain").split(":").map(Number);
@@ -140,8 +153,9 @@ function startDrag(event: React.DragEvent, spot: Spot) {
  * The template editor: **named pages, each a stack**.
  *
  * A page is a tab on the till — "Beers", "Softs", "Deposits" — and is drawn
- * here as an accordion holding its tiles in order. Pages do not move; tiles
- * do, within a page and across pages. Where a long page overflows onto a
+ * here as an accordion holding its tiles in order. Pages reorder from their
+ * headers (drag one onto another, or its arrows); tiles move within a page and
+ * across pages. Where a long page overflows onto a
  * second screen is still not the author's to decide — the till pages the same
  * stack differently on a phone at 3 columns and on a counter tablet at 6 — so
  * the grid is what **Preview** shows, at whatever width this device sells at.
@@ -276,6 +290,34 @@ export function StackEditor({
     [isReadOnly, layout, router, templateId],
   );
 
+  /** Moves a whole page — the till's tab order. Tiles stay on their page. */
+  const movePage = useCallback(
+    (from: number, to: number) => {
+      if (isReadOnly) {
+        return;
+      }
+
+      const next = moved(layout, from, to);
+      if (next === layout) {
+        return;
+      }
+
+      setLayout(next);
+      setReorderError(null);
+      startReorder(async () => {
+        const result = await reorderPosTemplatePagesAction(
+          templateId,
+          next.map((page) => page.id),
+        );
+        if (result.error) {
+          setReorderError(result.error);
+          router.refresh();
+        }
+      });
+    },
+    [isReadOnly, layout, router, templateId],
+  );
+
   const tileLabel = (cell: EditorCell) => (cell.kind === "SPACER" ? copy.whitespace : cell.label);
   const totalTiles = layout.reduce((sum, page) => sum + page.cells.length, 0);
   const pageOptions = layout.map((page, index) => ({ id: page.id, label: titleOf(index) }));
@@ -326,7 +368,10 @@ export function StackEditor({
     </>
   );
 
-  /** Drop handlers for "the end of this page" — a page header, or an empty page's body. */
+  /**
+   * Drop handlers for a page header or an empty page's body: a dragged page
+   * takes this page's place, a dragged tile goes to the end of this page.
+   */
   const appendDrop = (pageIndex: number) =>
     isReadOnly
       ? {}
@@ -334,6 +379,11 @@ export function StackEditor({
           onDragOver: (event: React.DragEvent) => event.preventDefault(),
           onDrop: (event: React.DragEvent) => {
             event.preventDefault();
+            const page = pageFrom(event);
+            if (page !== null) {
+              movePage(page, pageIndex);
+              return;
+            }
             const from = spotFrom(event);
             if (from) {
               move(from, { page: pageIndex, index: layout[pageIndex].cells.length });
@@ -357,7 +407,19 @@ export function StackEditor({
             <Panel key={page.id} flushOnMobile>
               {/* `last:` drops the rule under a collapsed header — the panel's
                   own border already closes it. */}
-              <PanelHeader flushOnMobile className="last:border-b-0" {...appendDrop(pageIndex)}>
+              <PanelHeader
+                flushOnMobile
+                draggable={!isReadOnly && layout.length > 1}
+                onDragStart={(event) => {
+                  event.dataTransfer.setData(PAGE_DRAG_TYPE, String(pageIndex));
+                  event.dataTransfer.effectAllowed = "move";
+                }}
+                className={cn(
+                  "last:border-b-0",
+                  !isReadOnly && layout.length > 1 ? "cursor-grab active:cursor-grabbing" : null,
+                )}
+                {...appendDrop(pageIndex)}
+              >
                 <button
                   type="button"
                   aria-expanded={open}
@@ -375,6 +437,28 @@ export function StackEditor({
 
                 {isReadOnly ? null : (
                   <div className="flex shrink-0 items-center gap-1">
+                    {layout.length > 1 ? (
+                      <>
+                        <IconButton
+                          size="sm"
+                          tone="neutral"
+                          label={copy.movePageUp}
+                          disabled={pageIndex === 0}
+                          onClick={() => movePage(pageIndex, pageIndex - 1)}
+                        >
+                          <ChevronUp />
+                        </IconButton>
+                        <IconButton
+                          size="sm"
+                          tone="neutral"
+                          label={copy.movePageDown}
+                          disabled={pageIndex === last}
+                          onClick={() => movePage(pageIndex, pageIndex + 1)}
+                        >
+                          <ChevronDown />
+                        </IconButton>
+                      </>
+                    ) : null}
                     <IconButton size="sm" tone="neutral" label={copy.editPage} onClick={() => setPageForm({ page })}>
                       <Pencil />
                     </IconButton>

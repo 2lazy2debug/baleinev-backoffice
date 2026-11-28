@@ -736,8 +736,9 @@ index can throw.
 
 ### `PosTemplatePage`
 A named page of a template — "Beers", "Softs", "Deposits" — drawn as one tab on the till and one
-accordion in the editor. **Pages do not move**: `position` is the order they were added in, dense
-and 0-based, and only closes up when one is removed. A page is removed only while it holds no tile,
+accordion in the editor. `position` is the tab order, dense and 0-based: a new page goes last, and
+`reorderPosTemplatePagesAction` rewrites the whole order (parked above `1000000` first, like the
+tiles). A page is removed only while it holds no tile,
 and never the last one. A page longer than the device's grid still overflows onto further screens
 of that page (`tillScreens()` in `app/lib/pos-layout.ts`).
 
@@ -745,7 +746,7 @@ of that page (`tillScreens()` in `app/lib/pos-layout.ts`).
 |---|---|---|
 | `id` | String (cuid) | |
 | `templateId` | String | FK → PosTemplate, `Cascade` |
-| `position` | Int | Dense 0-based, fixed order |
+| `position` | Int | Dense 0-based tab order |
 | `title` | String? | Null draws as "Page n" |
 | `cells` | `PosTemplateCell[]` | |
 

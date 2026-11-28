@@ -50,6 +50,7 @@ const {
   addPosTemplatePageAction,
   renamePosTemplatePageAction,
   removePosTemplatePageAction,
+  reorderPosTemplatePagesAction,
 } = await import("./actions");
 
 function form(overrides: Record<string, string> = {}): FormData {
@@ -117,6 +118,7 @@ describe("every POS template action is admin-only", () => {
     ["add page", () => addPosTemplatePageAction({ error: null }, form({ templateId: "tpl_1", title: "Softs" }))],
     ["rename page", () => renamePosTemplatePageAction({ error: null }, form({ templateId: "tpl_1", pageId: "page_1" }))],
     ["remove page", () => removePosTemplatePageAction({ error: null }, form({ templateId: "tpl_1", pageId: "page_1" }))],
+    ["reorder pages", () => reorderPosTemplatePagesAction("tpl_1", ["page_1"])],
   ])("%s refuses a non-admin", async (_name, run) => {
     requireAdmin.mockRejectedValue(new Error("Unauthorized."));
     expect(await run()).toEqual({ error: "Unauthorized." });
@@ -501,5 +503,44 @@ describe("removePosTemplatePageAction", () => {
       { where: { id: "page_1" }, data: { position: 0 } },
       { where: { id: "page_3" }, data: { position: 1 } },
     ]);
+  });
+});
+
+describe("reorderPosTemplatePagesAction", () => {
+  beforeEach(() => {
+    templateIsInEdition();
+    prisma.posTemplatePage.findMany.mockResolvedValue([{ id: "page_1" }, { id: "page_2" }]);
+  });
+
+  it.each([
+    ["missing a page", ["page_1"]],
+    ["naming a page of another template", ["page_1", "page_9"]],
+    ["naming a page twice", ["page_1", "page_1"]],
+  ])("refuses an order %s", async (_name, ids) => {
+    const result = await reorderPosTemplatePagesAction("tpl_1", ids);
+    expect(result.error).toMatch(/out of date/i);
+    expect(prisma.posTemplatePage.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("refuses a template from another edition", async () => {
+    prisma.posTemplate.findUnique.mockResolvedValue({ id: "tpl_1", editionId: "ed_other" });
+    const result = await reorderPosTemplatePagesAction("tpl_1", ["page_2", "page_1"]);
+    expect(result.error).toMatch(/no longer exists/i);
+    expect(prisma.posTemplatePage.update).not.toHaveBeenCalled();
+  });
+
+  it("parks the pages, then writes the given order back as 0..n-1", async () => {
+    const result = await reorderPosTemplatePagesAction("tpl_1", ["page_2", "page_1"]);
+    expect(result).toEqual({ error: null });
+    expect(prisma.posTemplatePage.updateMany).toHaveBeenCalledWith({
+      where: { templateId: "tpl_1" },
+      data: { position: { increment: 1_000_000 } },
+    });
+    expect(prisma.posTemplatePage.update.mock.calls.map((call) => call[0])).toEqual([
+      { where: { id: "page_2" }, data: { position: 0 } },
+      { where: { id: "page_1" }, data: { position: 1 } },
+    ]);
+    // Tiles keep their pages; only the tab order changes.
+    expect(prisma.posTemplateCell.update).not.toHaveBeenCalled();
   });
 });

@@ -15,8 +15,8 @@ const FORM_ID = "pos-page-form";
 
 /**
  * Adds a page, or renames one — the same dialog for both, like the tile's. A
- * page is a title and nothing else: where it sits is the order it was added
- * in, and pages do not move.
+ * page is a title and nothing else: a new one goes after the last, and is
+ * moved from the editor's page headers.
  */
 export function PageFormModal({
   locale,
