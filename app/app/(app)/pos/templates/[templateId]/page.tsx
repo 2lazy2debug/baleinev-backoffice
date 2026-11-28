@@ -7,14 +7,15 @@ import { getLocale } from "@/lib/i18n";
 import { formatPiece } from "@/lib/stock";
 import { decimalToNumber } from "@/lib/utils";
 
-import { StackEditor, type ArticleOption, type EditorCell } from "./stack-editor";
+import { StackEditor, type ArticleOption, type EditorPage } from "./stack-editor";
 
 type Params = { params: Promise<{ templateId: string }> };
 
 /**
- * The template editor: one ordered stack of tiles. Nothing here decides where
- * the pages fall — that is the till's business, and it depends on the width of
- * the device selling. **Preview** is where the author sees the grid.
+ * The template editor: named pages, each an ordered stack of tiles. The author
+ * decides which page a tile is on; where a long page overflows onto a second
+ * screen is the till's business, and it depends on the width of the device
+ * selling. **Preview** is where the author sees the grid.
  *
  * Every article is offered in the picker, including ones with `tracksStock`
  * off — that flag is exactly what makes a poured glass sellable. The whole
@@ -37,7 +38,9 @@ export default async function PosTemplateEditorPage({ params }: Params) {
   const template = edition
     ? await prisma.posTemplate.findFirst({
         where: { id: templateId, editionId: edition.id },
-        include: { cells: { orderBy: { position: "asc" } } },
+        include: {
+          pages: { orderBy: { position: "asc" }, include: { cells: { orderBy: { position: "asc" } } } },
+        },
       })
     : null;
 
@@ -61,13 +64,17 @@ export default async function PosTemplateEditorPage({ params }: Params) {
     }),
   ]);
 
-  const cells: EditorCell[] = template.cells.map((cell) => ({
-    id: cell.id,
-    kind: cell.kind,
-    elementId: cell.elementId,
-    label: cell.label,
-    price: decimalToNumber(cell.price).toFixed(2),
-    color: cell.color,
+  const pages: EditorPage[] = template.pages.map((page) => ({
+    id: page.id,
+    title: page.title,
+    cells: page.cells.map((cell) => ({
+      id: cell.id,
+      kind: cell.kind,
+      elementId: cell.elementId,
+      label: cell.label,
+      price: decimalToNumber(cell.price).toFixed(2),
+      color: cell.color,
+    })),
   }));
 
   const articleOptions: ArticleOption[] = articles.map((article) => ({
@@ -82,7 +89,7 @@ export default async function PosTemplateEditorPage({ params }: Params) {
       locale={locale}
       templateId={template.id}
       templateName={template.name}
-      cells={cells}
+      pages={pages}
       articles={articleOptions}
       articleNames={Object.fromEntries(articles.map((article) => [article.id, article.name]))}
       units={units}

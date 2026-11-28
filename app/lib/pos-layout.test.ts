@@ -6,9 +6,11 @@ import {
   drawnSlots,
   normalizeColumns,
   pageCount,
+  pageTitle,
   slotsPerPage,
   tilesOnPage,
   tilesPerPage,
+  tillScreens,
 } from "./pos-layout";
 
 describe("normalizeColumns", () => {
@@ -80,5 +82,34 @@ describe("tilesOnPage", () => {
 
   it("gives an empty page past the end rather than throwing", () => {
     expect(tilesOnPage(stack, 9, 3)).toEqual([]);
+  });
+});
+
+describe("tillScreens", () => {
+  it("gives every named page at least one screen, empty or not", () => {
+    expect(tillScreens([0, 2], 3)).toEqual([
+      { page: 0, sub: 0 },
+      { page: 1, sub: 0 },
+    ]);
+  });
+
+  it("walks every overflow screen of a page before the next page", () => {
+    const perPage = tilesPerPage(3);
+    expect(tillScreens([perPage + 1, 1], 3)).toEqual([
+      { page: 0, sub: 0 },
+      { page: 0, sub: 1 },
+      { page: 1, sub: 0 },
+    ]);
+  });
+});
+
+describe("pageTitle", () => {
+  it("uses the title, trimmed", () => {
+    expect(pageTitle("  Beers ", 0, "Page {n}")).toBe("Beers");
+  });
+
+  it("numbers an untitled page from one", () => {
+    expect(pageTitle(null, 1, "Page {n}")).toBe("Page 2");
+    expect(pageTitle("   ", 0, "Page {n}")).toBe("Page 1");
   });
 });

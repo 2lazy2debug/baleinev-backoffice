@@ -116,7 +116,8 @@ app/
 │   │   │                            standing in, next to "You're here" — it is the only way back to
 │   │   │                            the picker. Holds the open-session button too
 │   │   ├── till.tsx              ← The selling screen. Client-side cart (nothing written until
-│   │   │                            checkout), running total, the grid + pager + column picker,
+│   │   │                            checkout), running total, the page tabs (one per named page,
+│   │   │                            hidden when there is one) + grid + pager + column picker,
 │   │   │                            custom-sale modal, a List modal with +/−/bin, and a checkout
 │   │   │                            modal that shows the live change sheet from `makeChange()`
 │   │   ├── till-columns.ts       ← How wide *this device* draws the grid (2–6, default 3), kept in
@@ -129,11 +130,15 @@ app/
 │   │   │                            client screens so method order and labels never drift
 │   │   ├── actions.ts            ← `createPosTemplateAction` / `renamePosTemplateAction` /
 │   │   │                            `deletePosTemplateAction` (refuses a template a session has used) /
-│   │   │                            `addPosTemplateCellAction` (appends) / `updatePosTemplateCellAction`
-│   │   │                            (by cell id) / `removePosTemplateCellAction` (closes the gap) /
-│   │   │                            `reorderPosTemplateCellsAction` (called direct, not through a
-│   │   │                            form — a drag is not a submit; refuses an order that is not
-│   │   │                            exactly the template's tiles). `renumber()` parks the stack
+│   │   │                            `addPosTemplatePageAction` (appends) / `renamePosTemplatePageAction` /
+│   │   │                            `removePosTemplatePageAction` (refuses the last page and a page
+│   │   │                            with tiles) / `addPosTemplateCellAction` (appends to a page) /
+│   │   │                            `updatePosTemplateCellAction` (by cell id; another `pageId` sends it
+│   │   │                            to the end of that page) / `removePosTemplateCellAction` (closes the
+│   │   │                            gap) / `reorderPosTemplateCellsAction(templateId, layout)` (called
+│   │   │                            direct, not through a form — a drag is not a submit; refuses a
+│   │   │                            layout that is not exactly the template's pages and tiles, each
+│   │   │                            once). `renumber()` parks the template
 │   │   │                            above 1000000 before writing positions back, because the unique
 │   │   │                            index is checked row by row.
 │   │   │                            Each `requireAdmin()` + `resolveWritableEditionId()` and
@@ -162,19 +167,24 @@ app/
 │   │       │                        confirm-guarded delete, one of each for the list
 │   │       ├── create-template-modal.tsx ← Header button + modal, one name field (the standard shape)
 │   │       └── [templateId]/
-│   │           ├── page.tsx      ← Loads the template's cells in order, the whole catalogue for the
+│   │           ├── page.tsx      ← Loads the template's pages and their cells in order, the whole catalogue for the
 │   │           │                    picker (name, brand and the size of one piece, `tracksStock`
 │   │           │                    off included) and the units + conversions the on-the-fly
 │   │           │                    article dialog needs; `notFound()` when it is not in the
 │   │           │                    edition. Renders nothing itself — the editor owns the header
 │   │           ├── stack-editor.tsx ← The whole editor: its own `<PageHeader>` (back, Preview, Add
-│   │           │                    a tile), the ordered list, and the preview. Reordering is one
-│   │           │                    `move()` behind drag, the row arrows, and the preview's
-│   │           │                    tap-to-pick/tap-to-place; the local order runs ahead of the
-│   │           │                    server and re-seeds when the server sends a different stack.
+│   │           │                    a page, Add a tile), one accordion `<Panel>` per page (rename /
+│   │           │                    remove in its header), and the preview. Moving is one
+│   │           │                    `move(from, to)` over (page, index) spots behind drag (onto a row,
+│   │           │                    or a page header for "end of page"), the row arrows (which step
+│   │           │                    across page boundaries), and the preview's tap-to-pick/tap-to-
+│   │           │                    place; the local layout runs ahead of the server and re-seeds
+│   │           │                    when the server sends a different one.
+│   │           ├── page-form-modal.tsx ← Add or rename a page: one optional title field
 │   │           │                    Preview draws the till's grid at this device's own
 │   │           │                    `pos:columns`, so it is the seller's screen, not a mock-up
-│   │           └── tile-form-modal.tsx ← One tile dialog (add or edit) with a searchable article
+│   │           └── tile-form-modal.tsx ← One tile dialog (add or edit), with a page picker when there
+│   │                                is more than one page, and a searchable article
 │   │                                picker (`<Suggest>` over the catalogue, "brand · 50 cl" as the
 │   │                                row hint so the two sizes of one beer are told apart, the id in
 │   │                                a hidden field) that prefills the editable label. Two pinned
@@ -401,7 +411,7 @@ which. Nothing here should be re-implemented inline in a page.
 | `Panel.tsx` | `<Panel nested>`, `<PanelHeader>`, `<SectionTitle desktopOnly>` and `nestedSurfaceClasses` — frames around flush content |
 | `PageHeader.tsx` | `<PageHeader eyebrow title description actions controls>` — the heading block of every screen, and the sticky full-bleed top bar below `lg`. `description` is desktop-only; `controls` is the screen's own control row, pinned with the title. Below `lg` it also carries `<MobileAccountMenu>` at the top right, level with the title |
 | `EmptyPage.tsx` | `<EmptyPage eyebrow title>` — a whole screen with nothing to show yet: what is missing in the header, what to do about it in a dashed card |
-| `SegmentedControl.tsx` | `<SegmentedControl options value onChange>` — one row of mutually exclusive choices, for a screen that shows one of two panels on a phone |
+| `SegmentedControl.tsx` | `<SegmentedControl options value onChange>` — one row of mutually exclusive choices, for a screen that shows one of two panels on a phone. `scrollable` keeps natural-width segments and scrolls sideways once they overflow — for option lists not known up front (the till's page tabs) |
 | `Table.tsx` | `<Table frame dense desktopOnly>` + `<THead>` `<TFoot>` `<TR>` `<TH>` `<TD>` |
 | `Cardlet.tsx` | `<CardletList>` `<Cardlet>` `<CardletHeader>` `<CardletFields>` `<CardletField>` `<CardletActions>` — a wide table's rows as cards below `sm` |
 | `Menu.tsx` | `<Menu label icon options onSelect>` — a short list of *actions* hanging off one icon button (the unit conversions, today). Not a `<Select>`: nothing is being held, picking a row does something and the menu is gone. Portals from the trigger's rect, like `<Suggest>`, anchored by its **right** edge because its trigger is the last control in a row. "Click outside" means outside the list *and* the trigger — the list is a portal, so a closer that only knows the trigger unmounts the row being clicked |

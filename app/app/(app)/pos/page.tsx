@@ -12,7 +12,7 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { orderMethods, type PosMethod } from "./pos-methods";
 import { SessionPicker, type PickerSession } from "./session-picker";
 import { SessionsModal } from "./sessions-modal";
-import { Till, type Tile } from "./till";
+import { Till, type TillPage } from "./till";
 
 /**
  * The till itself. Any signed-in user may open a session, join one from as many
@@ -143,21 +143,33 @@ export default async function PosPage() {
     );
   }
 
-  // The whole stack, in order. Where the pages fall is the till's business —
-  // it depends on the column count this device sells at.
-  const cells = await prisma.posTemplateCell.findMany({
+  // Every named page, each its stack in order. Where a long page overflows
+  // onto a second screen is the till's business — it depends on the column
+  // count this device sells at.
+  const templatePages = await prisma.posTemplatePage.findMany({
     where: { templateId: joined.templateId },
     orderBy: { position: "asc" },
-    select: { id: true, kind: true, elementId: true, label: true, price: true, color: true },
+    select: {
+      id: true,
+      title: true,
+      cells: {
+        orderBy: { position: "asc" },
+        select: { id: true, kind: true, elementId: true, label: true, price: true, color: true },
+      },
+    },
   });
 
-  const tiles: Tile[] = cells.map((cell) => ({
-    id: cell.id,
-    kind: cell.kind,
-    elementId: cell.elementId,
-    label: cell.label,
-    unitPrice: toRappen(cell.price),
-    color: cell.color,
+  const pages: TillPage[] = templatePages.map((page) => ({
+    id: page.id,
+    title: page.title,
+    tiles: page.cells.map((cell) => ({
+      id: cell.id,
+      kind: cell.kind,
+      elementId: cell.elementId,
+      label: cell.label,
+      unitPrice: toRappen(cell.price),
+      color: cell.color,
+    })),
   }));
 
   return (
@@ -185,7 +197,7 @@ export default async function PosPage() {
         sessionId={joined.id}
         status={joined.status as "OPEN" | "PAUSED"}
         methods={orderMethods(joined.methods.map((row) => row.method as PosMethod))}
-        tiles={tiles}
+        pages={pages}
       />
     </div>
   );

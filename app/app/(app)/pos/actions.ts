@@ -15,10 +15,13 @@ import { type ActionState, getRequiredString, toActionErrorMessage } from "@/lib
  * `templateId` from the form belongs to that edition. A form field is never
  * trusted.
  *
- * A template is an **ordered stack** of tiles, not a grid of slots: a tile is
- * added at the end, edited by its own id, and removed by closing the gap it
- * leaves. `position` is a dense 0-based index and stays dense — a hole in the
- * order would draw as a phantom tile on whatever page it happened to land on.
+ * A template is a list of **pages**, each an **ordered stack** of tiles: a
+ * tile is added at the end of a page, edited by its own id, and removed by
+ * closing the gap it leaves. Both `position`s — a page's in its template, a
+ * tile's in its page — are dense 0-based indexes and stay dense: a hole in a
+ * page's order would draw as a phantom tile on whatever screen it landed on.
+ *
+ * Pages do not move. Tiles do, within a page and across pages.
  */
 
 function revalidateTemplate(templateId?: string) {
@@ -52,16 +55,36 @@ function parsePrice(formData: FormData): string {
  */
 const POSITION_PARK = 1_000_000;
 
-/** Rewrites a template's positions to 0..n-1 in the order the ids are given. */
-async function renumber(tx: Prisma.TransactionClient, templateId: string, orderedIds: string[]) {
+/** Which tiles sit on which page, in order — the shape every reorder writes. */
+export type PageLayout = { pageId: string; cellIds: string[] }[];
+
+/**
+ * Rewrites every tile of a template to the page and the 0..n-1 position the
+ * layout gives it. The whole template is parked first, so a tile moving onto
+ * another page lands in free space there too.
+ */
+async function renumber(tx: Prisma.TransactionClient, templateId: string, layout: PageLayout) {
   await tx.posTemplateCell.updateMany({
     where: { templateId },
     data: { position: { increment: POSITION_PARK } },
   });
 
-  for (const [position, id] of orderedIds.entries()) {
-    await tx.posTemplateCell.update({ where: { id }, data: { position } });
+  for (const { pageId, cellIds } of layout) {
+    for (const [position, id] of cellIds.entries()) {
+      await tx.posTemplateCell.update({ where: { id }, data: { pageId, position } });
+    }
   }
+}
+
+/** The template's layout as it is stored, pages in order and tiles in order. */
+async function storedLayout(tx: Prisma.TransactionClient, templateId: string): Promise<PageLayout> {
+  const pages = await tx.posTemplatePage.findMany({
+    where: { templateId },
+    orderBy: { position: "asc" },
+    select: { id: true, cells: { orderBy: { position: "asc" }, select: { id: true } } },
+  });
+
+  return pages.map((page) => ({ pageId: page.id, cellIds: page.cells.map((cell) => cell.id) }));
 }
 
 /** Every cell action trusts the edition, never the form's `templateId`. */
@@ -93,7 +116,8 @@ export async function createPosTemplateAction(_prevState: ActionState, formData:
       throw new Error("A template with that name already exists.");
     }
 
-    await prisma.posTemplate.create({ data: { editionId, name } });
+    // A template always has a page to put the first tile on.
+    await prisma.posTemplate.create({ data: { editionId, name, pages: { create: { position: 0 } } } });
 
     revalidateTemplate();
     return { error: null };
@@ -194,7 +218,7 @@ async function cellFieldsFrom(formData: FormData) {
 async function cellOnTemplate(cellId: string, templateId: string) {
   const cell = await prisma.posTemplateCell.findUnique({
     where: { id: cellId },
-    select: { id: true, templateId: true, position: true },
+    select: { id: true, templateId: true, pageId: true, position: true },
   });
 
   if (!cell || cell.templateId !== templateId) {
@@ -204,8 +228,28 @@ async function cellOnTemplate(cellId: string, templateId: string) {
   return cell;
 }
 
-/** Appends a tile to the end of the stack. Where it lands on a page is the till's business. */
-export async function addPosTemplateCellAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+/** A page addressed by a form is re-checked to be on that template. */
+async function pageOnTemplate(pageId: string, templateId: string) {
+  const page = await prisma.posTemplatePage.findUnique({
+    where: { id: pageId },
+    select: { id: true, templateId: true },
+  });
+
+  if (!page || page.templateId !== templateId) {
+    throw new Error("That page no longer exists. Refresh and try again.");
+  }
+
+  return page;
+}
+
+/** A blank title is no title — the page then reads "Page n". */
+function parsePageTitle(formData: FormData): string | null {
+  const title = String(formData.get("title") ?? "").trim();
+  return title === "" ? null : title;
+}
+
+/** Adds a page after the last one. Pages are not reordered, so this is where it stays. */
+export async function addPosTemplatePageAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
     const editionId = await resolveWritableEditionId();
@@ -213,10 +257,9 @@ export async function addPosTemplateCellAction(_prevState: ActionState, formData
 
     await templateInEdition(templateId, editionId);
 
-    const fields = await cellFieldsFrom(formData);
-    const position = await prisma.posTemplateCell.count({ where: { templateId } });
+    const position = await prisma.posTemplatePage.count({ where: { templateId } });
 
-    await prisma.posTemplateCell.create({ data: { templateId, position, ...fields } });
+    await prisma.posTemplatePage.create({ data: { templateId, position, title: parsePageTitle(formData) } });
 
     revalidateTemplate(templateId);
     return { error: null };
@@ -225,7 +268,103 @@ export async function addPosTemplateCellAction(_prevState: ActionState, formData
   }
 }
 
-/** Edits one tile in place. It keeps its position — editing is not reordering. */
+export async function renamePosTemplatePageAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    const editionId = await resolveWritableEditionId();
+    const templateId = getRequiredString(formData, "templateId");
+    const pageId = getRequiredString(formData, "pageId");
+
+    await templateInEdition(templateId, editionId);
+    await pageOnTemplate(pageId, templateId);
+
+    await prisma.posTemplatePage.update({ where: { id: pageId }, data: { title: parsePageTitle(formData) } });
+
+    revalidateTemplate(templateId);
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+/**
+ * Removes an empty page and closes the gap. Refused while it holds a tile —
+ * deleting a page is never a quiet way of deleting what is on it — and refused
+ * for the last page, because a template always has somewhere to add a tile.
+ */
+export async function removePosTemplatePageAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    const editionId = await resolveWritableEditionId();
+    const templateId = getRequiredString(formData, "templateId");
+    const pageId = getRequiredString(formData, "pageId");
+
+    await templateInEdition(templateId, editionId);
+    await pageOnTemplate(pageId, templateId);
+
+    const pageCount = await prisma.posTemplatePage.count({ where: { templateId } });
+    if (pageCount <= 1) {
+      throw new Error("A template keeps at least one page.");
+    }
+
+    const tileCount = await prisma.posTemplateCell.count({ where: { pageId } });
+    if (tileCount > 0) {
+      throw new Error("This page still has tiles. Move or remove them first.");
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.posTemplatePage.delete({ where: { id: pageId } });
+
+      const remaining = await tx.posTemplatePage.findMany({
+        where: { templateId },
+        orderBy: { position: "asc" },
+        select: { id: true },
+      });
+
+      await tx.posTemplatePage.updateMany({
+        where: { templateId },
+        data: { position: { increment: POSITION_PARK } },
+      });
+      for (const [position, page] of remaining.entries()) {
+        await tx.posTemplatePage.update({ where: { id: page.id }, data: { position } });
+      }
+    });
+
+    revalidateTemplate(templateId);
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+/** Appends a tile to the end of a page. Which screen of the page it lands on is the till's business. */
+export async function addPosTemplateCellAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  try {
+    await requireAdmin();
+    const editionId = await resolveWritableEditionId();
+    const templateId = getRequiredString(formData, "templateId");
+
+    const pageId = getRequiredString(formData, "pageId");
+
+    await templateInEdition(templateId, editionId);
+    await pageOnTemplate(pageId, templateId);
+
+    const fields = await cellFieldsFrom(formData);
+    const position = await prisma.posTemplateCell.count({ where: { pageId } });
+
+    await prisma.posTemplateCell.create({ data: { templateId, pageId, position, ...fields } });
+
+    revalidateTemplate(templateId);
+    return { error: null };
+  } catch (err) {
+    return { error: toActionErrorMessage(err) };
+  }
+}
+
+/**
+ * Edits one tile in place. It keeps its position — editing is not reordering —
+ * unless the form names another page, and then it goes to the end of that one.
+ */
 export async function updatePosTemplateCellAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
     await requireAdmin();
@@ -233,12 +372,30 @@ export async function updatePosTemplateCellAction(_prevState: ActionState, formD
     const templateId = getRequiredString(formData, "templateId");
     const cellId = getRequiredString(formData, "cellId");
 
+    const pageId = String(formData.get("pageId") ?? "").trim();
+
     await templateInEdition(templateId, editionId);
-    await cellOnTemplate(cellId, templateId);
+    const cell = await cellOnTemplate(cellId, templateId);
 
     const fields = await cellFieldsFrom(formData);
 
-    await prisma.posTemplateCell.update({ where: { id: cellId }, data: fields });
+    if (pageId === "" || pageId === cell.pageId) {
+      await prisma.posTemplateCell.update({ where: { id: cellId }, data: fields });
+    } else {
+      await pageOnTemplate(pageId, templateId);
+
+      await prisma.$transaction(async (tx) => {
+        await tx.posTemplateCell.update({ where: { id: cellId }, data: fields });
+
+        const layout = (await storedLayout(tx, templateId)).map((page) => ({
+          pageId: page.pageId,
+          cellIds: page.cellIds.filter((id) => id !== cellId),
+        }));
+        layout.find((page) => page.pageId === pageId)?.cellIds.push(cellId);
+
+        await renumber(tx, templateId, layout);
+      });
+    }
 
     revalidateTemplate(templateId);
     return { error: null };
@@ -264,14 +421,7 @@ export async function removePosTemplateCellAction(_prevState: ActionState, formD
 
     await prisma.$transaction(async (tx) => {
       await tx.posTemplateCell.delete({ where: { id: cellId } });
-
-      const remaining = await tx.posTemplateCell.findMany({
-        where: { templateId },
-        orderBy: { position: "asc" },
-        select: { id: true },
-      });
-
-      await renumber(tx, templateId, remaining.map((cell) => cell.id));
+      await renumber(tx, templateId, await storedLayout(tx, templateId));
     });
 
     revalidateTemplate(templateId);
@@ -282,30 +432,41 @@ export async function removePosTemplateCellAction(_prevState: ActionState, formD
 }
 
 /**
- * Rewrites the whole order. Called direct rather than through a form: dragging
- * a tile is not a submit, and the screen has already moved it — this is what
- * makes the move survive a refresh.
+ * Rewrites the whole layout — which page every tile is on, and in what order.
+ * Called direct rather than through a form: dragging a tile is not a submit,
+ * and the screen has already moved it — this is what makes the move survive a
+ * refresh.
  *
- * `cellIds` has to be exactly the template's tiles, every one of them once. A
- * partial list would leave the rest parked above `POSITION_PARK`, which is a
- * template whose tiles have silently jumped to the end.
+ * The layout has to name exactly the template's pages, each once, and exactly
+ * its tiles, each once. A partial list would leave the rest parked above
+ * `POSITION_PARK`, which is a template whose tiles have silently jumped to the
+ * end of a page.
  */
-export async function reorderPosTemplateCellsAction(templateId: string, cellIds: string[]): Promise<ActionState> {
+export async function reorderPosTemplateCellsAction(templateId: string, layout: PageLayout): Promise<ActionState> {
   try {
     await requireAdmin();
     const editionId = await resolveWritableEditionId();
 
     await templateInEdition(templateId, editionId);
 
-    const cells = await prisma.posTemplateCell.findMany({ where: { templateId }, select: { id: true } });
-    const known = new Set(cells.map((cell) => cell.id));
-    const given = new Set(cellIds);
+    const [pages, cells] = await Promise.all([
+      prisma.posTemplatePage.findMany({ where: { templateId }, select: { id: true } }),
+      prisma.posTemplateCell.findMany({ where: { templateId }, select: { id: true } }),
+    ]);
 
-    if (given.size !== cellIds.length || given.size !== known.size || cellIds.some((id) => !known.has(id))) {
+    const knownPages = new Set(pages.map((page) => page.id));
+    const givenPages = layout.map((page) => page.pageId);
+    const knownCells = new Set(cells.map((cell) => cell.id));
+    const givenCells = layout.flatMap((page) => page.cellIds);
+
+    const sameSet = (given: string[], known: Set<string>) =>
+      new Set(given).size === given.length && given.length === known.size && given.every((id) => known.has(id));
+
+    if (!sameSet(givenPages, knownPages) || !sameSet(givenCells, knownCells)) {
       throw new Error("That order is out of date. Refresh and try again.");
     }
 
-    await prisma.$transaction((tx) => renumber(tx, templateId, cellIds));
+    await prisma.$transaction((tx) => renumber(tx, templateId, layout));
 
     revalidateTemplate(templateId);
     return { error: null };

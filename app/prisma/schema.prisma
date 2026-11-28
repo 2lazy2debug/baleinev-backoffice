@@ -1074,6 +1074,7 @@ model PosTemplate {
   updatedAt DateTime @updatedAt
 
   edition  Edition           @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  pages    PosTemplatePage[]
   cells    PosTemplateCell[]
   sessions PosSession[]
 
@@ -1081,10 +1082,32 @@ model PosTemplate {
   @@index([editionId])
 }
 
-/// One tile. `position` is a **dense 0-based index into the template's stack**:
-/// the tiles are one ordered list, and where the pages fall is decided when the
-/// till draws them, from the column count that device sells at. Nothing here
-/// knows about pages.
+/// A named page of a template — "Beers", "Softs", "Deposits". The till shows
+/// one tab per page, in `position` order, and a tile lives on exactly one.
+///
+/// Pages are not reordered: `position` is the order they were added in, dense
+/// and 0-based, and only closes up when one is removed. A template always has
+/// at least one page, and a page is removed only once it holds no tile.
+///
+/// A page longer than the device's grid still overflows onto further screens —
+/// a named page is the author's break, the overflow is the device's.
+model PosTemplatePage {
+  id         String  @id @default(cuid())
+  templateId String
+  position   Int
+  /// Null draws as "Page n".
+  title      String?
+
+  template PosTemplate       @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  cells    PosTemplateCell[]
+
+  @@unique([templateId, position])
+}
+
+/// One tile. `position` is a **dense 0-based index into its page's stack**: the
+/// tiles of a page are one ordered list, and where *that* list overflows onto a
+/// second screen is decided when the till draws it, from the column count that
+/// device sells at.
 ///
 /// `label` is a snapshot taken from the article when the tile was made and is
 /// then free text: a bar tile says "Beer 3dl", not "Feldschlösschen Original
@@ -1095,6 +1118,7 @@ model PosTemplate {
 model PosTemplateCell {
   id         String        @id @default(cuid())
   templateId String
+  pageId     String
   position   Int
   kind       PosCellKind   @default(ARTICLE)
   elementId  String?
@@ -1104,10 +1128,12 @@ model PosTemplateCell {
   /// Purely visual, null by default. See `PosCellColor`.
   color      PosCellColor?
 
-  template PosTemplate   @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  element  StockElement? @relation(fields: [elementId], references: [id], onDelete: Restrict)
+  template PosTemplate     @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  page     PosTemplatePage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  element  StockElement?   @relation(fields: [elementId], references: [id], onDelete: Restrict)
 
-  @@unique([templateId, position])
+  @@unique([pageId, position])
+  @@index([templateId])
   @@index([elementId])
 }
 

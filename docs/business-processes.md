@@ -737,14 +737,20 @@ piece is the **template** — the saved layout a bar opens on for the night.
 A **template** is a saved till layout, at `/pos/templates`. It is **per edition** and
 **admin-only**: composing what a bar sells, and at what price, is configuration.
 
-**A template is a stack, not a grid.** It is one ordered list of tiles, and nothing stored knows
-about pages — a cell's `position` is a dense 0-based index into that order. Where the page breaks
-fall is decided when the **till** draws it, from the column count that device is selling at
-(`app/lib/pos-layout.ts`): a page is `columns × POS_ROWS` slots, `POS_ROWS` is **4**, and the last
-slot of every page is "Custom sale". So the same template gives a phone at 3 columns eleven tiles a
-page and a counter tablet at 6 columns twenty-three, and neither is more correct than the other.
-That is exactly why the author does not get to decide the page break, and why the editor stopped
-being a grid.
+**A template is a list of named pages, each a stack, not a grid.** A page (`PosTemplatePage`) has an
+optional **title** — "Beers", "Softs", "Deposits"; blank reads "Page n" — and is one **tab** on the
+till. Pages keep the order they were added in and **do not move**; tiles do, within a page and
+across pages. A template is born with one page, keeps at least one, and a page is removed only once
+it is empty. Inside a page, a cell's `position` is a dense 0-based index into that page's order.
+
+What the author does **not** decide is where a long page overflows onto a second screen. That
+happens when the **till** draws it, from the column count that device is selling at
+(`app/lib/pos-layout.ts`): a screen is `columns × POS_ROWS` slots, `POS_ROWS` is **4**, and the last
+slot of every screen is "Custom sale". So the same page gives a phone at 3 columns eleven tiles a
+screen and a counter tablet at 6 columns twenty-three, and neither is more correct than the other.
+The till's pager walks every screen of a page before the next page (`tillScreens()`); a tab jumps
+to its page's first screen. Named pages are the author's break; spacers and the overflow are how a
+page fills.
 
 A tile is one of two things:
 
@@ -776,16 +782,21 @@ Each article tile carries three things:
   bottle deposit handed back is a tile that takes money out of the till — so nothing validates a
   price for positivity.
 
-**The order is dense and editable.** Adding appends to the end; removing closes the gap; and tiles
-**reorder** — drag them, or use the arrows on a row, in either of the editor's two views. The list
-is the authoring view; **Preview** is the grid, drawn at this device's own column count (it reads
+**The order is dense and editable.** Adding appends to the end of the page picked in the tile dialog
+(by default the one last opened); removing closes the gap; and tiles **reorder** — drag them, or
+use the arrows on a row, in either of the editor's two views. The list is the authoring view: one
+**accordion per page**, each holding its tiles. A tile crosses pages by being dragged onto a row of
+another page (it lands before that row) or onto a page's header (it lands at the end), by the row
+arrows stepping past the first or last tile of a page, or by picking another page in the tile
+dialog (it goes to the end of that page). **Preview** is the grid, with the till's own page tabs, drawn at this device's own column count (it reads
 the same `pos:columns` the till does, so it is the seller's screen, not an approximation of it), and
 tiles can be dragged there too — or tapped once to pick up and once again to place, which is the
-same move on a touchscreen. A template is more often laid out on the tablet it will be sold from
+same move on a touchscreen; switching tab between the two taps moves the tile to another page, and
+tapping an empty slot places it at the end of that page. A template is more often laid out on the tablet it will be sold from
 than on a desk.
 
-There is no page count on the template list any more: how many pages a stack makes is a fact about
-the device that opens it, not about the template.
+There is no screen count on the template list: how many screens a page makes is a fact about the
+device that opens it, not about the template.
 
 An article a template sells **cannot be deleted** until it is taken off every template
 (`PosTemplateCell.elementId` is `Restrict`); the articles app says so in a sentence. A closed

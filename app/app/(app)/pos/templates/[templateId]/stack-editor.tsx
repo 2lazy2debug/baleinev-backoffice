@@ -10,6 +10,7 @@ import {
   ChevronRight,
   ChevronUp,
   Eye,
+  FilePlus,
   GripVertical,
   Pencil,
   Plus,
@@ -18,25 +19,58 @@ import {
 
 import { FormError } from "@/components/form-error";
 import { useCloseOnSuccess } from "@/components/use-close-on-success";
-import { Alert, Button, Card, IconButton, Modal, PageHeader, Panel, PanelHeader, SectionTitle, SegmentedControl, buttonClasses, cn, compactOnMobileWidths, microLabelClasses } from "@/components/ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  IconButton,
+  Modal,
+  PageHeader,
+  Panel,
+  PanelEmpty,
+  PanelHeader,
+  SectionTitle,
+  SegmentedControl,
+  buttonClasses,
+  cn,
+  compactOnMobileWidths,
+  microLabelClasses,
+} from "@/components/ui";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
-import { COLUMN_CHOICES, drawnSlots, pageCount, tilesOnPage, tilesPerPage } from "@/lib/pos-layout";
+import {
+  COLUMN_CHOICES,
+  drawnSlots,
+  pageCount,
+  pageTitle,
+  tilesOnPage,
+  tilesPerPage,
+  tillScreens,
+} from "@/lib/pos-layout";
 import { tileColorStyle, tileSwatchStyle } from "@/lib/pos-tile-colors";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
 
 import { columnClasses, normalizeColumns, useTillColumns } from "../../till-columns";
-import { removePosTemplateCellAction, reorderPosTemplateCellsAction } from "../../actions";
+import {
+  removePosTemplateCellAction,
+  removePosTemplatePageAction,
+  reorderPosTemplateCellsAction,
+} from "../../actions";
+import { PageFormModal } from "./page-form-modal";
 import { TileFormModal, type ArticleOption, type EditorCell } from "./tile-form-modal";
 import type { ConversionOption, UnitOption } from "@/components/unit-size-fields";
 
 export type { ArticleOption, EditorCell };
 
+/** A named page of the template, with its tiles in order. */
+export type EditorPage = { id: string; title: string | null; cells: EditorCell[] };
+
 type Props = {
   locale: Locale;
   templateId: string;
   templateName: string;
-  cells: EditorCell[];
+  pages: EditorPage[];
   articles: ArticleOption[];
   units: UnitOption[];
   conversions: ConversionOption[];
@@ -45,7 +79,11 @@ type Props = {
   articleNames: Record<string, string>;
 };
 
+/** Where a tile is: which page, and where on it. */
+type Spot = { page: number; index: number };
+
 const REMOVE_FORM_ID = "pos-tile-remove";
+const REMOVE_PAGE_FORM_ID = "pos-page-remove";
 
 /** Moves one item of a list to another index, without mutating it. */
 function moved<T>(items: T[], from: number, to: number): T[] {
@@ -59,25 +97,67 @@ function moved<T>(items: T[], from: number, to: number): T[] {
 }
 
 /**
- * The template editor: **a stack, not a grid**.
+ * Moves one tile, within its page or onto another. On the same page `to.index`
+ * is where the tile ends up; on another page it is where it is inserted, and
+ * anything past the end means "at the end". Returns the same layout when
+ * nothing moved, so the caller can tell.
+ */
+function movedTile(layout: EditorPage[], from: Spot, to: Spot): EditorPage[] {
+  const source = layout[from.page];
+  const target = layout[to.page];
+  if (!source || !target || from.index < 0 || from.index >= source.cells.length) {
+    return layout;
+  }
+
+  if (from.page === to.page) {
+    const cells = moved(source.cells, from.index, Math.min(to.index, source.cells.length - 1));
+    return cells === source.cells ? layout : layout.map((page, i) => (i === from.page ? { ...page, cells } : page));
+  }
+
+  const cell = source.cells[from.index];
+  const targetCells = [...target.cells];
+  targetCells.splice(Math.max(0, Math.min(to.index, targetCells.length)), 0, cell);
+
+  return layout.map((page, i) => {
+    if (i === from.page) return { ...page, cells: page.cells.filter((_, j) => j !== from.index) };
+    if (i === to.page) return { ...page, cells: targetCells };
+    return page;
+  });
+}
+
+/** A drag carries the spot it started from as `"page:index"`. */
+function spotFrom(event: React.DragEvent): Spot | null {
+  const [page, index] = event.dataTransfer.getData("text/plain").split(":").map(Number);
+  return Number.isInteger(page) && Number.isInteger(index) ? { page, index } : null;
+}
+
+function startDrag(event: React.DragEvent, spot: Spot) {
+  event.dataTransfer.setData("text/plain", `${spot.page}:${spot.index}`);
+  event.dataTransfer.effectAllowed = "move";
+}
+
+/**
+ * The template editor: **named pages, each a stack**.
  *
- * A template used to be authored page by page in a 3×3, which meant the author
- * was deciding where the page breaks fell. They are not the author's to decide
- * any more — the till pages the same stack differently on a phone at 3 columns
- * and on a counter tablet at 6 — so this screen is a plain ordered list, and
+ * A page is a tab on the till — "Beers", "Softs", "Deposits" — and is drawn
+ * here as an accordion holding its tiles in order. Pages do not move; tiles
+ * do, within a page and across pages. Where a long page overflows onto a
+ * second screen is still not the author's to decide — the till pages the same
+ * stack differently on a phone at 3 columns and on a counter tablet at 6 — so
  * the grid is what **Preview** shows, at whatever width this device sells at.
  *
- * Reordering works the same in both views because it is one `move()`: the list
- * has drag, arrows and keyboard; the preview has drag and a tap-to-pick, tap-
- * to-place pass that a touchscreen can actually do. The order is written
- * straight through to the server — a drag is not a form, and the screen has
- * already moved the tile.
+ * Reordering works the same in both views because it is one `move()`: the
+ * list has drag (onto a row, or onto a page's header to send it to the end of
+ * that page), arrows that step over a page boundary, and the tile dialog's page
+ * picker; the preview has drag and a tap-to-pick, tap-to-place pass that a
+ * touchscreen can actually do. The layout is written straight through to the
+ * server — a drag is not a form, and the screen has already moved the tile.
  */
 export function StackEditor({
   locale,
   templateId,
   templateName,
-  cells,
+  pages,
   articles,
   units,
   conversions,
@@ -88,23 +168,36 @@ export function StackEditor({
   const shell = dictionaries[locale].shell;
   const router = useRouter();
 
-  // The order this screen is showing. It runs ahead of the server between a
+  // The layout this screen is showing. It runs ahead of the server between a
   // drag and the revalidation that follows it, and re-seeds whenever the server
-  // sends a different stack — an add, a remove, or the reorder landing.
-  const serverKey = cells.map((cell) => cell.id).join(",");
+  // sends something different — an add, an edit, a remove, or the reorder landing.
+  const serverKey = JSON.stringify(pages);
   const [seededFrom, setSeededFrom] = useState(serverKey);
-  const [order, setOrder] = useState(cells);
+  const [layout, setLayout] = useState(pages);
+
+  // One page open to start with; a page that has just been added opens itself.
+  const [openIds, setOpenIds] = useState<Set<string>>(() => new Set(pages.slice(0, 1).map((page) => page.id)));
+  // The page "Add a tile" puts a tile on: the one last opened.
+  const [activePageId, setActivePageId] = useState(pages[0]?.id ?? "");
 
   if (seededFrom !== serverKey) {
+    const known = new Set(layout.map((page) => page.id));
+    const added = pages.filter((page) => !known.has(page.id)).map((page) => page.id);
     setSeededFrom(serverKey);
-    setOrder(cells);
+    setLayout(pages);
+    if (added.length > 0) {
+      setOpenIds((current) => new Set([...current, ...added]));
+      setActivePageId(added[added.length - 1]);
+    }
   }
 
   const [reordering, startReorder] = useTransition();
   const [reorderError, setReorderError] = useState<string | null>(null);
 
-  const [editing, setEditing] = useState<{ cell: EditorCell | null } | null>(null);
+  const [editing, setEditing] = useState<{ cell: EditorCell | null; pageId: string } | null>(null);
   const [removing, setRemoving] = useState<EditorCell | null>(null);
+  const [pageForm, setPageForm] = useState<{ page: EditorPage | null } | null>(null);
+  const [removingPage, setRemovingPage] = useState<EditorPage | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const [removeState, removeAction, removePending] = useActionState(
@@ -116,26 +209,63 @@ export function StackEditor({
     router.refresh();
   });
 
-  // The new order is worked out here rather than inside a `setOrder` updater:
+  const [removePageState, removePageAction, removePagePending] = useActionState(
+    removePosTemplatePageAction,
+    initialActionState,
+  );
+  const markPageRemoved = useCloseOnSuccess(removePageState, removePagePending, () => {
+    setRemovingPage(null);
+    router.refresh();
+  });
+
+  const titleOf = useCallback(
+    (index: number) => pageTitle(layout[index]?.title ?? null, index, copy.untitledPage),
+    [copy.untitledPage, layout],
+  );
+
+  function openPage(id: string) {
+    setOpenIds((current) => new Set([...current, id]));
+    setActivePageId(id);
+  }
+
+  function togglePage(id: string) {
+    if (openIds.has(id)) {
+      setOpenIds((current) => {
+        const next = new Set(current);
+        next.delete(id);
+        return next;
+      });
+    } else {
+      openPage(id);
+    }
+  }
+
+  // The new layout is worked out here rather than inside a `setLayout` updater:
   // an updater runs during render, and starting a transition from there is what
   // React means by "cannot call startTransition while rendering".
   const move = useCallback(
-    (from: number, to: number) => {
+    (from: Spot, to: Spot) => {
       if (isReadOnly) {
         return;
       }
 
-      const next = moved(order, from, to);
-      if (next === order) {
+      const next = movedTile(layout, from, to);
+      if (next === layout) {
         return;
       }
 
-      setOrder(next);
+      // A tile sent to a closed page would vanish from view; open it.
+      if (from.page !== to.page && next[to.page]) {
+        const id = next[to.page].id;
+        setOpenIds((current) => new Set([...current, id]));
+      }
+
+      setLayout(next);
       setReorderError(null);
       startReorder(async () => {
         const result = await reorderPosTemplateCellsAction(
           templateId,
-          next.map((cell) => cell.id),
+          next.map((page) => ({ pageId: page.id, cellIds: page.cells.map((cell) => cell.id) })),
         );
         if (result.error) {
           setReorderError(result.error);
@@ -143,10 +273,13 @@ export function StackEditor({
         }
       });
     },
-    [isReadOnly, order, router, templateId],
+    [isReadOnly, layout, router, templateId],
   );
 
   const tileLabel = (cell: EditorCell) => (cell.kind === "SPACER" ? copy.whitespace : cell.label);
+  const totalTiles = layout.reduce((sum, page) => sum + page.cells.length, 0);
+  const pageOptions = layout.map((page, index) => ({ id: page.id, label: titleOf(index) }));
+  const defaultPageId = layout.some((page) => page.id === activePageId) ? activePageId : (layout[0]?.id ?? "");
 
   const headerActions = (
     <>
@@ -169,12 +302,44 @@ export function StackEditor({
         {copy.preview}
       </Button>
       {isReadOnly ? null : (
-        <Button type="button" variant="primary" icon={<Plus />} compactOnMobile onClick={() => setEditing({ cell: null })}>
-          {copy.addTile}
-        </Button>
+        <>
+          <Button
+            type="button"
+            variant="secondary"
+            icon={<FilePlus />}
+            compactOnMobile
+            onClick={() => setPageForm({ page: null })}
+          >
+            {copy.addPage}
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            icon={<Plus />}
+            compactOnMobile
+            onClick={() => setEditing({ cell: null, pageId: defaultPageId })}
+          >
+            {copy.addTile}
+          </Button>
+        </>
       )}
     </>
   );
+
+  /** Drop handlers for "the end of this page" — a page header, or an empty page's body. */
+  const appendDrop = (pageIndex: number) =>
+    isReadOnly
+      ? {}
+      : {
+          onDragOver: (event: React.DragEvent) => event.preventDefault(),
+          onDrop: (event: React.DragEvent) => {
+            event.preventDefault();
+            const from = spotFrom(event);
+            if (from) {
+              move(from, { page: pageIndex, index: layout[pageIndex].cells.length });
+            }
+          },
+        };
 
   return (
     <div className="space-y-4 lg:space-y-8">
@@ -182,36 +347,95 @@ export function StackEditor({
 
       {reorderError ? <Alert tone="error">{reorderError}</Alert> : null}
 
-      <Panel flushOnMobile>
-        <PanelHeader flushOnMobile>
-          <SectionTitle desktopOnly>{copy.tiles}</SectionTitle>
-        </PanelHeader>
+      <div className={cn("space-y-3", reordering ? "opacity-70" : null)}>
+        {layout.map((page, pageIndex) => {
+          const open = openIds.has(page.id);
+          const title = titleOf(pageIndex);
+          const last = layout.length - 1;
 
-        {order.length === 0 ? (
-          <div className="px-3 py-6 text-center sm:px-5">
-            <p className="text-sm font-medium">{copy.noTiles}</p>
-            <p className="mt-1 text-xs text-[var(--muted)]">{copy.noTilesHint}</p>
-          </div>
-        ) : (
-          <ul className={cn("divide-y divide-[var(--line)]", reordering ? "opacity-70" : null)}>
-            {order.map((cell, index) => (
-              <StackRow
-                key={cell.id}
-                cell={cell}
-                index={index}
-                total={order.length}
-                label={tileLabel(cell)}
-                articleName={cell.elementId ? (articleNames[cell.elementId] ?? "") : ""}
-                copy={copy}
-                isReadOnly={isReadOnly}
-                onMove={move}
-                onEdit={() => setEditing({ cell })}
-                onRemove={() => setRemoving(cell)}
-              />
-            ))}
-          </ul>
-        )}
-      </Panel>
+          return (
+            <Panel key={page.id} flushOnMobile>
+              {/* `last:` drops the rule under a collapsed header — the panel's
+                  own border already closes it. */}
+              <PanelHeader flushOnMobile className="last:border-b-0" {...appendDrop(pageIndex)}>
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  onClick={() => togglePage(page.id)}
+                  className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                >
+                  <ChevronDown
+                    className={cn("h-4 w-4 shrink-0 text-[var(--muted)] transition", open ? null : "-rotate-90")}
+                  />
+                  <SectionTitle as="h2" className="truncate">
+                    {title}
+                  </SectionTitle>
+                  <Badge>{page.cells.length}</Badge>
+                </button>
+
+                {isReadOnly ? null : (
+                  <div className="flex shrink-0 items-center gap-1">
+                    <IconButton size="sm" tone="neutral" label={copy.editPage} onClick={() => setPageForm({ page })}>
+                      <Pencil />
+                    </IconButton>
+                    {layout.length > 1 ? (
+                      <IconButton size="sm" tone="delete" label={copy.removePage} onClick={() => setRemovingPage(page)}>
+                        <Trash2 />
+                      </IconButton>
+                    ) : null}
+                  </div>
+                )}
+              </PanelHeader>
+
+              {!open ? null : page.cells.length === 0 ? (
+                totalTiles === 0 ? (
+                  <div className="px-3 py-6 text-center sm:px-5">
+                    <p className="text-sm font-medium">{copy.noTiles}</p>
+                    <p className="mt-1 text-xs text-[var(--muted)]">{copy.noTilesHint}</p>
+                  </div>
+                ) : (
+                  <PanelEmpty {...appendDrop(pageIndex)}>{copy.emptyPage}</PanelEmpty>
+                )
+              ) : (
+                <ul className="divide-y divide-[var(--line)]">
+                  {page.cells.map((cell, index) => {
+                    const firstOverall = pageIndex === 0 && index === 0;
+                    const lastOverall = pageIndex === last && index === page.cells.length - 1;
+                    // Past either end of a page, the arrows carry on into the next one.
+                    const up: Spot =
+                      index > 0
+                        ? { page: pageIndex, index: index - 1 }
+                        : { page: pageIndex - 1, index: layout[pageIndex - 1]?.cells.length ?? 0 };
+                    const down: Spot =
+                      index < page.cells.length - 1
+                        ? { page: pageIndex, index: index + 1 }
+                        : { page: pageIndex + 1, index: 0 };
+
+                    return (
+                      <StackRow
+                        key={cell.id}
+                        cell={cell}
+                        spot={{ page: pageIndex, index }}
+                        label={tileLabel(cell)}
+                        articleName={cell.elementId ? (articleNames[cell.elementId] ?? "") : ""}
+                        copy={copy}
+                        isReadOnly={isReadOnly}
+                        canMoveUp={!firstOverall}
+                        canMoveDown={!lastOverall}
+                        onMoveUp={() => move({ page: pageIndex, index }, up)}
+                        onMoveDown={() => move({ page: pageIndex, index }, down)}
+                        onDropOn={(from) => move(from, { page: pageIndex, index })}
+                        onEdit={() => setEditing({ cell, pageId: page.id })}
+                        onRemove={() => setRemoving(cell)}
+                      />
+                    );
+                  })}
+                </ul>
+              )}
+            </Panel>
+          );
+        })}
+      </div>
 
       <TileFormModal
         locale={locale}
@@ -219,16 +443,27 @@ export function StackEditor({
         articles={articles}
         units={units}
         conversions={conversions}
+        pages={pageOptions}
+        pageId={editing?.pageId ?? defaultPageId}
         open={editing !== null}
         cell={editing?.cell ?? null}
         onClose={() => setEditing(null)}
+      />
+
+      <PageFormModal
+        locale={locale}
+        templateId={templateId}
+        open={pageForm !== null}
+        page={pageForm?.page ?? null}
+        onClose={() => setPageForm(null)}
       />
 
       <PreviewModal
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         copy={copy}
-        order={order}
+        layout={layout}
+        titleOf={titleOf}
         isReadOnly={isReadOnly}
         onMove={move}
       />
@@ -258,6 +493,44 @@ export function StackEditor({
           </form>
         ) : null}
       </Modal>
+
+      <Modal
+        open={removingPage !== null}
+        onClose={() => setRemovingPage(null)}
+        title={copy.removePage}
+        size="sm"
+        footer={
+          <>
+            <Button type="button" variant="secondary" onClick={() => setRemovingPage(null)}>
+              {shell.cancel}
+            </Button>
+            <Button
+              type="submit"
+              form={REMOVE_PAGE_FORM_ID}
+              variant="destructive"
+              disabled={removePagePending || (removingPage?.cells.length ?? 0) > 0}
+            >
+              {copy.removePage}
+            </Button>
+          </>
+        }
+      >
+        {removingPage ? (
+          <form id={REMOVE_PAGE_FORM_ID} action={removePageAction} onSubmit={markPageRemoved} className="space-y-4">
+            <FormError message={removePageState.error} />
+            <input type="hidden" name="templateId" value={templateId} />
+            <input type="hidden" name="pageId" value={removingPage.id} />
+            {(() => {
+              const name = titleOf(layout.findIndex((page) => page.id === removingPage.id));
+              return removingPage.cells.length > 0 ? (
+                <Alert tone="warning">{copy.removePageHasTiles.replace("{page}", name)}</Alert>
+              ) : (
+                <p className="text-sm">{copy.removePageConfirm.replace("{page}", name)}</p>
+              );
+            })()}
+          </form>
+        ) : null}
+      </Modal>
     </div>
   );
 }
@@ -270,29 +543,35 @@ export function StackEditor({
 type RowCopy = (typeof dictionaries)[Locale]["pos"];
 
 /**
- * One tile in the stack. Draggable for a mouse, arrowed for a thumb — the two
- * are the same `onMove`, so neither view has an order the other cannot make.
+ * One tile in a page's stack. Draggable for a mouse, arrowed for a thumb — the
+ * two end in the same `move()`, so neither view has a layout the other cannot make.
  */
 function StackRow({
   cell,
-  index,
-  total,
+  spot,
   label,
   articleName,
   copy,
   isReadOnly,
-  onMove,
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
+  onDropOn,
   onEdit,
   onRemove,
 }: {
   cell: EditorCell;
-  index: number;
-  total: number;
+  spot: Spot;
   label: string;
   articleName: string;
   copy: RowCopy;
   isReadOnly: boolean;
-  onMove: (from: number, to: number) => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onDropOn: (from: Spot) => void;
   onEdit: () => void;
   onRemove: () => void;
 }) {
@@ -301,10 +580,7 @@ function StackRow({
   return (
     <li
       draggable={!isReadOnly}
-      onDragStart={(event) => {
-        event.dataTransfer.setData("text/plain", String(index));
-        event.dataTransfer.effectAllowed = "move";
-      }}
+      onDragStart={(event) => startDrag(event, spot)}
       onDragOver={(event) => {
         if (!isReadOnly) {
           event.preventDefault();
@@ -312,9 +588,11 @@ function StackRow({
       }}
       onDrop={(event) => {
         event.preventDefault();
-        const from = Number(event.dataTransfer.getData("text/plain"));
-        if (Number.isInteger(from)) {
-          onMove(from, index);
+        // The header behind a row is a drop target too; this one wins.
+        event.stopPropagation();
+        const from = spotFrom(event);
+        if (from) {
+          onDropOn(from);
         }
       }}
       className={cn(
@@ -323,7 +601,7 @@ function StackRow({
       )}
     >
       <GripVertical className={cn("h-4 w-4 shrink-0", isReadOnly ? "opacity-0" : "text-[var(--muted)]")} />
-      <span className="w-6 shrink-0 text-2xs tabular-nums text-[var(--muted)]">{index + 1}</span>
+      <span className="w-6 shrink-0 text-2xs tabular-nums text-[var(--muted)]">{spot.index + 1}</span>
 
       {cell.color ? (
         <span className="h-3 w-3 shrink-0 rounded-full" style={tileSwatchStyle(cell.color)} />
@@ -345,22 +623,10 @@ function StackRow({
 
       {isReadOnly ? null : (
         <div className="flex shrink-0 items-center gap-1">
-          <IconButton
-            size="sm"
-            tone="neutral"
-            label={copy.moveUp}
-            disabled={index === 0}
-            onClick={() => onMove(index, index - 1)}
-          >
+          <IconButton size="sm" tone="neutral" label={copy.moveUp} disabled={!canMoveUp} onClick={onMoveUp}>
             <ChevronUp />
           </IconButton>
-          <IconButton
-            size="sm"
-            tone="neutral"
-            label={copy.moveDown}
-            disabled={index === total - 1}
-            onClick={() => onMove(index, index + 1)}
-          >
+          <IconButton size="sm" tone="neutral" label={copy.moveDown} disabled={!canMoveDown} onClick={onMoveDown}>
             <ChevronDown />
           </IconButton>
           <IconButton size="sm" tone="neutral" label={copy.editTile} onClick={onEdit}>
@@ -376,74 +642,100 @@ function StackRow({
 }
 
 /**
- * The stack as the till will draw it, at this device's own column count — the
- * same `pos:columns` the till reads, so the preview is not an approximation of
- * the seller's screen, it is it.
+ * The template as the till will draw it, at this device's own column count —
+ * the same `pos:columns` the till reads, and the same page tabs and pager, so
+ * the preview is not an approximation of the seller's screen, it is it.
  *
- * Tiles reorder here too. Dragging is for a mouse; **tap one tile then tap
- * where it goes** is the same move for a thumb, and a template is more often
- * laid out on the tablet it will be sold from than on a desk.
+ * Tiles move here too. Dragging is for a mouse; **tap one tile then tap where
+ * it goes** is the same move for a thumb — and since the tab strip stays
+ * usable while a tile is picked, that includes another page: pick, switch tab,
+ * tap a tile to land before it or an empty slot to land at the end.
  */
 function PreviewModal({
   open,
   onClose,
   copy,
-  order,
+  layout,
+  titleOf,
   isReadOnly,
   onMove,
 }: {
   open: boolean;
   onClose: () => void;
   copy: RowCopy;
-  order: EditorCell[];
+  layout: EditorPage[];
+  titleOf: (index: number) => string;
   isReadOnly: boolean;
-  onMove: (from: number, to: number) => void;
+  onMove: (from: Spot, to: Spot) => void;
 }) {
   const { columns, chooseColumns } = useTillColumns();
-  const [page, setPage] = useState(0);
-  const [picked, setPicked] = useState<number | null>(null);
+  const [screen, setScreen] = useState(0);
+  const [picked, setPicked] = useState<Spot | null>(null);
 
-  const totalPages = pageCount(order.length, columns);
-  const currentPage = Math.min(page, totalPages - 1);
-  const pageTiles = tilesOnPage(order, currentPage, columns);
+  const screens = tillScreens(layout.map((page) => page.cells.length), columns);
+  const currentScreen = Math.min(screen, screens.length - 1);
+  const { page: pageIndex, sub } = screens[currentScreen] ?? { page: 0, sub: 0 };
+  const pageCells = layout[pageIndex]?.cells ?? [];
+  const subTotal = pageCount(pageCells.length, columns);
+  const pageTiles = tilesOnPage(pageCells, sub, columns);
   const slots = drawnSlots(pageTiles.length, columns);
-  const firstOnPage = currentPage * tilesPerPage(columns);
+  const firstOnPage = sub * tilesPerPage(columns);
 
-  function place(target: number) {
+  const pagerLabel =
+    layout.length <= 1
+      ? copy.pageOf.replace("{page}", String(currentScreen + 1)).replace("{total}", String(screens.length))
+      : subTotal > 1
+        ? `${titleOf(pageIndex)} · ${sub + 1}/${subTotal}`
+        : titleOf(pageIndex);
+
+  const isPicked = (spot: Spot) => picked !== null && picked.page === spot.page && picked.index === spot.index;
+
+  function place(target: Spot) {
     if (picked === null) {
       setPicked(target);
       return;
     }
-    if (picked !== target) {
+    if (!isPicked(target)) {
       onMove(picked, target);
     }
     setPicked(null);
   }
 
+  /** An empty slot takes a picked or dragged tile to the end of this page. */
+  const endOfPage: Spot = { page: pageIndex, index: pageCells.length };
+
   return (
     <Modal open={open} onClose={onClose} title={copy.preview} size="xl" mobileFullScreen>
       <div className="space-y-4">
+        {layout.length > 1 ? (
+          <SegmentedControl
+            size="sm"
+            scrollable
+            options={layout.map((page, index) => ({ value: page.id, label: titleOf(index) }))}
+            value={layout[pageIndex]?.id ?? ""}
+            onChange={(id) => setScreen(screens.findIndex((entry) => layout[entry.page].id === id && entry.sub === 0))}
+          />
+        ) : null}
+
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-          {totalPages > 1 ? (
+          {screens.length > 1 ? (
             <div className="flex items-center gap-3">
               <IconButton
                 size="sm"
                 tone="neutral"
                 label={copy.previousPage}
-                disabled={currentPage === 0}
-                onClick={() => setPage(Math.max(0, currentPage - 1))}
+                disabled={currentScreen === 0}
+                onClick={() => setScreen(Math.max(0, currentScreen - 1))}
               >
                 <ChevronLeft />
               </IconButton>
-              <span className="text-sm tabular-nums text-[var(--muted)]">
-                {copy.pageOf.replace("{page}", String(currentPage + 1)).replace("{total}", String(totalPages))}
-              </span>
+              <span className="text-sm tabular-nums text-[var(--muted)]">{pagerLabel}</span>
               <IconButton
                 size="sm"
                 tone="neutral"
                 label={copy.nextPage}
-                disabled={currentPage >= totalPages - 1}
-                onClick={() => setPage(currentPage + 1)}
+                disabled={currentScreen >= screens.length - 1}
+                onClick={() => setScreen(currentScreen + 1)}
               >
                 <ChevronRight />
               </IconButton>
@@ -451,9 +743,7 @@ function PreviewModal({
           ) : null}
 
           <div className="flex items-center gap-2">
-            <span className={microLabelClasses}>
-              {copy.columns}
-            </span>
+            <span className={microLabelClasses}>{copy.columns}</span>
             <SegmentedControl
               size="sm"
               options={COLUMN_CHOICES.map((count) => ({ value: String(count), label: String(count) }))}
@@ -479,10 +769,29 @@ function PreviewModal({
             const tile = pageTiles[slot];
 
             if (!tile) {
-              return <div key={`blank-${slot}`} className="min-h-24" />;
+              return (
+                <div
+                  key={`blank-${slot}`}
+                  className="min-h-24"
+                  onClick={isReadOnly || picked === null ? undefined : () => place(endOfPage)}
+                  onDragOver={isReadOnly ? undefined : (event) => event.preventDefault()}
+                  onDrop={
+                    isReadOnly
+                      ? undefined
+                      : (event) => {
+                          event.preventDefault();
+                          const from = spotFrom(event);
+                          if (from) {
+                            onMove(from, endOfPage);
+                            setPicked(null);
+                          }
+                        }
+                  }
+                />
+              );
             }
 
-            const index = firstOnPage + slot;
+            const spot: Spot = { page: pageIndex, index: firstOnPage + slot };
             const spacer = tile.kind === "SPACER";
 
             return (
@@ -494,12 +803,9 @@ function PreviewModal({
                 role={isReadOnly ? undefined : "button"}
                 tabIndex={isReadOnly ? undefined : 0}
                 aria-label={spacer ? copy.whitespace : tile.label}
-                aria-pressed={isReadOnly ? undefined : picked === index}
+                aria-pressed={isReadOnly ? undefined : isPicked(spot)}
                 draggable={!isReadOnly}
-                onDragStart={(event) => {
-                  event.dataTransfer.setData("text/plain", String(index));
-                  event.dataTransfer.effectAllowed = "move";
-                }}
+                onDragStart={(event) => startDrag(event, spot)}
                 onDragOver={(event) => {
                   if (!isReadOnly) {
                     event.preventDefault();
@@ -507,20 +813,20 @@ function PreviewModal({
                 }}
                 onDrop={(event) => {
                   event.preventDefault();
-                  const from = Number(event.dataTransfer.getData("text/plain"));
-                  if (Number.isInteger(from)) {
-                    onMove(from, index);
+                  const from = spotFrom(event);
+                  if (from) {
+                    onMove(from, spot);
                     setPicked(null);
                   }
                 }}
-                onClick={isReadOnly ? undefined : () => place(index)}
+                onClick={isReadOnly ? undefined : () => place(spot)}
                 onKeyDown={
                   isReadOnly
                     ? undefined
                     : (event) => {
                         if (event.key === "Enter" || event.key === " ") {
                           event.preventDefault();
-                          place(index);
+                          place(spot);
                         }
                       }
                 }
@@ -528,13 +834,11 @@ function PreviewModal({
                 className={cn(
                   "flex min-h-24 flex-col items-center justify-center gap-1 p-2 text-center transition sm:p-3",
                   isReadOnly ? null : "cursor-grab active:cursor-grabbing",
-                  picked === index ? "border-[var(--accent)] ring-2 ring-[var(--accent)]" : null,
+                  isPicked(spot) ? "border-[var(--accent)] ring-2 ring-[var(--accent)]" : null,
                 )}
               >
                 {spacer ? (
-                  <span className={microLabelClasses}>
-                    {copy.whitespace}
-                  </span>
+                  <span className={microLabelClasses}>{copy.whitespace}</span>
                 ) : (
                   <>
                     <span className="line-clamp-2 text-sm font-medium text-[var(--ink)]">{tile.label}</span>

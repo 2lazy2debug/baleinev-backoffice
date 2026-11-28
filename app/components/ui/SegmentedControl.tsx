@@ -12,6 +12,12 @@ type SegmentedControlProps<T extends string> = {
   value: T;
   onChange: (value: T) => void;
   size?: ControlSize;
+  /**
+   * For a strip whose options are not known up front (a till's named pages):
+   * segments keep their natural width and fill the row while they fit, and the
+   * strip scrolls sideways instead of squeezing a label once they do not.
+   */
+  scrollable?: boolean;
   className?: string;
 };
 
@@ -32,10 +38,14 @@ export function SegmentedControl<T extends string>({
   value,
   onChange,
   size,
+  scrollable = false,
   className,
 }: SegmentedControlProps<T>) {
   return (
-    <div role="group" className={cn("flex gap-1 rounded-lg bg-[var(--panel-strong)] p-1", className)}>
+    <div
+      role="group"
+      className={cn("flex gap-1 rounded-lg bg-[var(--panel-strong)] p-1", scrollable ? "overflow-x-auto" : null, className)}
+    >
       {options.map((option) => (
         <Button
           key={option.value}
@@ -43,7 +53,7 @@ export function SegmentedControl<T extends string>({
           size={size}
           aria-pressed={option.value === value}
           onClick={() => onChange(option.value)}
-          className="grow basis-0"
+          className={scrollable ? "shrink-0 grow" : "grow basis-0"}
         >
           {option.label}
         </Button>

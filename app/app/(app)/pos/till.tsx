@@ -10,7 +10,7 @@ import { useCloseOnSuccess } from "@/components/use-close-on-success";
 import { Alert, Button, Card, Field, IconButton, Input, Modal, SegmentedControl, cn, microLabelClasses, nestedSurfaceClasses } from "@/components/ui";
 import { formatDenomination, fromRappen, makeChange } from "@/lib/cash";
 import { dictionaries, type Locale } from "@/lib/i18n-dictionaries";
-import { drawnSlots, pageCount, tilesOnPage } from "@/lib/pos-layout";
+import { drawnSlots, pageCount, pageTitle, tilesOnPage, tillScreens } from "@/lib/pos-layout";
 import { tileColorStyle } from "@/lib/pos-tile-colors";
 import { initialActionState } from "@/lib/server-action-helpers";
 import { formatCurrency } from "@/lib/utils";
@@ -30,6 +30,9 @@ export type Tile = {
   /** Purely visual — null draws as the plain card. */
   color: PosCellColor | null;
 };
+
+/** A named page of the template — one tab on the till. */
+export type TillPage = { id: string; title: string | null; tiles: Tile[] };
 
 type CartLine = { key: string; elementId: string | null; label: string; unitPrice: number; quantity: number };
 
@@ -84,13 +87,13 @@ export function Till({
   sessionId,
   status,
   methods,
-  tiles,
+  pages: templatePages,
 }: {
   locale: Locale;
   sessionId: string;
   status: "OPEN" | "PAUSED";
   methods: PosMethod[];
-  tiles: Tile[];
+  pages: TillPage[];
 }) {
   const copy = dictionaries[locale].pos;
   const router = useRouter();
@@ -98,7 +101,7 @@ export function Till({
 
   const keyRef = useRef(0);
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [page, setPage] = useState(0);
+  const [screen, setScreen] = useState(0);
   const { columns, chooseColumns } = useTillColumns();
 
   const [listOpen, setListOpen] = useState(false);
@@ -123,13 +126,30 @@ export function Till({
 
   const total = cart.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0);
 
-  // The template is one stack; the page break comes from how wide *this* device
-  // is selling, so re-picking the column count re-pages it. A page that no
-  // longer exists after a widening lands the seller on the last one there is.
-  const totalPages = pageCount(tiles.length, columns);
-  const currentPage = Math.min(page, totalPages - 1);
-  const pageTiles = tilesOnPage(tiles, currentPage, columns);
+  // The template is a list of named pages, each a stack; a page longer than
+  // *this* device's grid overflows onto more screens, so re-picking the column
+  // count re-pages it. A screen that no longer exists after a widening lands
+  // the seller on the last one there is.
+  // A template always has a page; a till that somehow got none still draws
+  // its custom-sale slot rather than nothing.
+  const pages = templatePages.length > 0 ? templatePages : [{ id: "none", title: null, tiles: [] }];
+  const screens = tillScreens(pages.map((page) => page.tiles.length), columns);
+  const currentScreen = Math.min(screen, screens.length - 1);
+  const { page: pageIndex, sub } = screens[currentScreen];
+  const currentPage = pages[pageIndex];
+  const subTotal = pageCount(currentPage.tiles.length, columns);
+  const pageTiles = tilesOnPage(currentPage.tiles, sub, columns);
   const slots = drawnSlots(pageTiles.length, columns);
+  const titleOf = (index: number) => pageTitle(pages[index].title, index, copy.untitledPage);
+
+  // One page: the pager counts screens, as it always did. Several: the tab
+  // already says which page, so the pager says where in it.
+  const pagerLabel =
+    pages.length === 1
+      ? copy.pageOf.replace("{page}", String(currentScreen + 1)).replace("{total}", String(screens.length))
+      : subTotal > 1
+        ? `${titleOf(pageIndex)} · ${sub + 1}/${subTotal}`
+        : titleOf(pageIndex);
 
   function addLine(part: Omit<CartLine, "key" | "quantity">) {
     setCart((current) => {
@@ -227,6 +247,17 @@ export function Till({
         />
       </div>
 
+      {pages.length > 1 ? (
+        <SegmentedControl
+          scrollable
+          options={pages.map((page, index) => ({ value: page.id, label: titleOf(index) }))}
+          value={currentPage.id}
+          onChange={(id) =>
+            setScreen(screens.findIndex((entry) => pages[entry.page].id === id && entry.sub === 0))
+          }
+        />
+      ) : null}
+
       {/* Custom sale is the last slot of every page, so it is in the same corner
           whatever the width — a bar hits it without looking. Everything between
           the last tile and it is air: a spacer the template author placed, or
@@ -283,25 +314,25 @@ export function Till({
         </Button>
       </div>
 
-      {totalPages > 1 ? (
+      {screens.length > 1 ? (
         <div className="flex w-full items-center gap-3">
           <IconButton
             size="touch"
             label={copy.previousPage}
-            disabled={currentPage === 0}
-            onClick={() => setPage(Math.max(0, currentPage - 1))}
+            disabled={currentScreen === 0}
+            onClick={() => setScreen(Math.max(0, currentScreen - 1))}
             className="basis-[30%]"
           >
             <ChevronLeft />
           </IconButton>
-          <span className="flex-1 text-center text-sm tabular-nums text-[var(--muted)]">
-            {copy.pageOf.replace("{page}", String(currentPage + 1)).replace("{total}", String(totalPages))}
+          <span className="min-w-0 flex-1 truncate text-center text-sm tabular-nums text-[var(--muted)]">
+            {pagerLabel}
           </span>
           <IconButton
             size="touch"
             label={copy.nextPage}
-            disabled={currentPage >= totalPages - 1}
-            onClick={() => setPage(currentPage + 1)}
+            disabled={currentScreen >= screens.length - 1}
+            onClick={() => setScreen(currentScreen + 1)}
             className="basis-[30%]"
           >
             <ChevronRight />

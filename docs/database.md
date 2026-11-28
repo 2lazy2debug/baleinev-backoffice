@@ -22,7 +22,7 @@ Edition
  ├─< Invoice
  ├─< ExpenseReport
  ├─< CashRegister
- ├─< PosTemplate ─< PosTemplateCell >─ StockElement (Restrict)
+ ├─< PosTemplate ─< PosTemplatePage ─< PosTemplateCell >─ StockElement (Restrict)
  └─< PosSession
 
 JournalEntry ─── Budget (optional)
@@ -728,31 +728,52 @@ template yet (selling is a later part of the POS chain).
 | `id` | String (cuid) | |
 | `editionId` | String | FK → Edition, `Cascade` |
 | `name` | String | |
+| `pages` | `PosTemplatePage[]` | Always at least one — created with the template |
 | `cells` | `PosTemplateCell[]` | |
 
 Unique on `(editionId, name)` — one template name per edition, caught in the action before the
 index can throw.
 
-### `PosTemplateCell`
-One tile of the stack. `position` is a **dense 0-based index into the template's order** and stays
-dense: adding appends, removing closes the gap, and a reorder rewrites the whole run. Nothing here
-knows about pages — where the page breaks fall is decided when the till draws it, from the column
-count that device sells at (`app/lib/pos-layout.ts`).
+### `PosTemplatePage`
+A named page of a template — "Beers", "Softs", "Deposits" — drawn as one tab on the till and one
+accordion in the editor. **Pages do not move**: `position` is the order they were added in, dense
+and 0-based, and only closes up when one is removed. A page is removed only while it holds no tile,
+and never the last one. A page longer than the device's grid still overflows onto further screens
+of that page (`tillScreens()` in `app/lib/pos-layout.ts`).
 
 | Field | Type | Notes |
 |---|---|---|
 | `id` | String (cuid) | |
 | `templateId` | String | FK → PosTemplate, `Cascade` |
-| `position` | Int | Dense 0-based order index — no holes |
+| `position` | Int | Dense 0-based, fixed order |
+| `title` | String? | Null draws as "Page n" |
+| `cells` | `PosTemplateCell[]` | |
+
+Unique on `(templateId, position)`. The migration that introduced pages gave every existing
+template one untitled page holding all its tiles, in the order they had.
+
+### `PosTemplateCell`
+One tile of a page's stack. `position` is a **dense 0-based index into its page's order** and stays
+dense: adding appends to a page, removing closes the gap, and a reorder rewrites the whole layout —
+which page every tile is on, and where. Where a long page overflows onto a second screen is decided
+when the till draws it, from the column count that device sells at (`app/lib/pos-layout.ts`).
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String (cuid) | |
+| `templateId` | String | FK → PosTemplate, `Cascade` — kept beside `pageId` so a template-wide renumber is one `updateMany` |
+| `pageId` | String | FK → PosTemplatePage, `Cascade` (a page is only deleted empty) |
+| `position` | Int | Dense 0-based order index within the page — no holes |
 | `kind` | `PosCellKind` | `ARTICLE` (default) or `SPACER` — blank space that holds a slot so what follows starts on the next row or page |
 | `elementId` | String? | FK → StockElement, **`Restrict`** — an article a template sells cannot be deleted under it. Null on a `SPACER` |
 | `label` | String | Snapshot of the article's name when the tile was made, then free text. Renaming the article does not rewrite it. `""` on a `SPACER` |
 | `price` | Decimal(10,2) | On the cell, never on the article. **Negative is legal** — a deposit handed back. `0` on a `SPACER` |
 
-Unique on `(templateId, position)` — one tile per place in the order. It is a plain, non-deferrable
+Unique on `(pageId, position)` — one tile per place in a page's order. It is a plain, non-deferrable
 index, so PostgreSQL checks it row by row inside an `UPDATE`: every renumbering (the reorder action,
-the remove action, and the migration that made positions dense) **parks the whole template above
-`1000000` first**, then writes the final positions into free space. Shifting in place would collide
+the remove action, a tile edited onto another page, and the migration that made positions dense)
+**parks the whole template above `1000000` first**, then writes the final page and position of each
+tile into free space. Shifting in place would collide
 with the rows that had not moved yet.
 
 Prisma's `Restrict` on `elementId` is backed by an explicit count check in `deleteArticleAction`, so

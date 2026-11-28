@@ -12,6 +12,7 @@ import {
   Field,
   Input,
   Modal,
+  Select,
   Suggest,
   cn,
   type SuggestOption,
@@ -82,13 +83,18 @@ type Props = {
   articles: ArticleOption[];
   units: UnitOption[];
   conversions: ConversionOption[];
+  /** Every page of the template, already titled — the picker lists them in order. */
+  pages: { id: string; label: string }[];
+  /** The page the tile is on, or — for a new tile — the page it is added to by default. */
+  pageId: string;
   open: boolean;
-  /** The tile being edited, or null to add one to the end of the stack. */
+  /** The tile being edited, or null to add one to the end of a page. */
   cell: EditorCell | null;
   onClose: () => void;
 };
 
 type Draft = {
+  pageId: string;
   kind: "ARTICLE" | "SPACER";
   elementId: string;
   articleQuery: string;
@@ -97,7 +103,7 @@ type Draft = {
   color: PosCellColor | null;
 };
 
-const blank: Draft = { kind: "ARTICLE", elementId: "", articleQuery: "", label: "", price: "", color: null };
+const blank: Omit<Draft, "pageId"> = { kind: "ARTICLE", elementId: "", articleQuery: "", label: "", price: "", color: null };
 
 /**
  * What a tile is, in one dialog — the same one for adding and for editing, the
@@ -127,6 +133,8 @@ export function TileFormModal({
   articles,
   units,
   conversions,
+  pages,
+  pageId,
   open,
   cell,
   onClose,
@@ -175,13 +183,14 @@ export function TileFormModal({
   // article-form-modal).
   const cellKey = open ? (cell?.id ?? "new") : null;
   const [formKey, setFormKey] = useState<string | null>(null);
-  const [form, setForm] = useState<Draft>(blank);
+  const [form, setForm] = useState<Draft>({ ...blank, pageId });
 
   if (cellKey !== formKey) {
     setFormKey(cellKey);
     setForm(
       cell
         ? {
+            pageId,
             kind: cell.kind,
             elementId: cell.elementId ?? "",
             articleQuery:
@@ -190,7 +199,7 @@ export function TileFormModal({
             price: cell.price,
             color: cell.color,
           }
-        : blank,
+        : { ...blank, pageId },
     );
   }
 
@@ -212,7 +221,7 @@ export function TileFormModal({
 
   function pickArticle(option: SuggestOption) {
     if (option.id === SPACER_OPTION_ID) {
-      setForm({ ...blank, kind: "SPACER", articleQuery: copy.whitespace });
+      setForm((current) => ({ ...blank, pageId: current.pageId, kind: "SPACER", articleQuery: copy.whitespace }));
       return;
     }
 
@@ -287,6 +296,25 @@ export function TileFormModal({
           <input type="hidden" name="templateId" value={templateId} />
           {cell ? <input type="hidden" name="cellId" value={cell.id} /> : null}
           <input type="hidden" name="kind" value={form.kind} />
+
+          {/* Picking another page on an edit sends the tile to the end of it. */}
+          {pages.length > 1 ? (
+            <Field label={copy.page}>
+              <Select
+                name="pageId"
+                value={form.pageId}
+                onChange={(event) => setForm((current) => ({ ...current, pageId: event.target.value }))}
+              >
+                {pages.map((page) => (
+                  <option key={page.id} value={page.id}>
+                    {page.label}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          ) : (
+            <input type="hidden" name="pageId" value={form.pageId} />
+          )}
 
           <Field label={copy.article}>
             <input type="hidden" name="elementId" value={isSpacer ? "" : form.elementId} />

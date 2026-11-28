@@ -17,6 +17,15 @@ const prisma = {
     delete: vi.fn(),
     count: vi.fn(),
   },
+  posTemplatePage: {
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+  },
   posSession: { count: vi.fn() },
   stockElement: { findUnique: vi.fn() },
   // The reorder and remove paths rewrite positions inside a transaction. The
@@ -38,6 +47,9 @@ const {
   updatePosTemplateCellAction,
   removePosTemplateCellAction,
   reorderPosTemplateCellsAction,
+  addPosTemplatePageAction,
+  renamePosTemplatePageAction,
+  removePosTemplatePageAction,
 } = await import("./actions");
 
 function form(overrides: Record<string, string> = {}): FormData {
@@ -49,6 +61,7 @@ function form(overrides: Record<string, string> = {}): FormData {
 function cellForm(overrides: Record<string, string> = {}): FormData {
   return form({
     templateId: "tpl_1",
+    pageId: "page_1",
     elementId: "el_1",
     label: "Beer 3dl",
     price: "4.50",
@@ -64,13 +77,24 @@ beforeEach(() => {
   prisma.posTemplate.create.mockResolvedValue({ id: "tpl_1" });
   prisma.posTemplate.update.mockResolvedValue({ id: "tpl_1" });
   prisma.posTemplate.delete.mockResolvedValue({ id: "tpl_1" });
-  prisma.posTemplateCell.findUnique.mockResolvedValue({ id: "cell_1", templateId: "tpl_1", position: 0 });
+  prisma.posTemplateCell.findUnique.mockResolvedValue({ id: "cell_1", templateId: "tpl_1", pageId: "page_1", position: 0 });
   prisma.posTemplateCell.findMany.mockResolvedValue([{ id: "cell_1" }, { id: "cell_2" }]);
   prisma.posTemplateCell.create.mockResolvedValue({ id: "cell_1" });
   prisma.posTemplateCell.update.mockResolvedValue({ id: "cell_1" });
   prisma.posTemplateCell.updateMany.mockResolvedValue({ count: 2 });
   prisma.posTemplateCell.delete.mockResolvedValue({ id: "cell_1" });
   prisma.posTemplateCell.count.mockResolvedValue(3);
+  prisma.posTemplatePage.findUnique.mockResolvedValue({ id: "page_1", templateId: "tpl_1" });
+  // One page holding both tiles: what `storedLayout()` reads, and what the
+  // reorder validates the page list against.
+  prisma.posTemplatePage.findMany.mockResolvedValue([
+    { id: "page_1", cells: [{ id: "cell_1" }, { id: "cell_2" }] },
+  ]);
+  prisma.posTemplatePage.create.mockResolvedValue({ id: "page_2" });
+  prisma.posTemplatePage.update.mockResolvedValue({ id: "page_1" });
+  prisma.posTemplatePage.updateMany.mockResolvedValue({ count: 1 });
+  prisma.posTemplatePage.delete.mockResolvedValue({ id: "page_2" });
+  prisma.posTemplatePage.count.mockResolvedValue(2);
   prisma.posSession.count.mockResolvedValue(0);
   prisma.stockElement.findUnique.mockResolvedValue({ id: "el_1" });
   prisma.$transaction.mockImplementation((run: (tx: typeof prisma) => unknown) => run(prisma));
@@ -89,7 +113,10 @@ describe("every POS template action is admin-only", () => {
     ["add cell", () => addPosTemplateCellAction({ error: null }, cellForm())],
     ["update cell", () => updatePosTemplateCellAction({ error: null }, cellForm({ cellId: "cell_1" }))],
     ["remove cell", () => removePosTemplateCellAction({ error: null }, form({ templateId: "tpl_1", cellId: "cell_1" }))],
-    ["reorder cells", () => reorderPosTemplateCellsAction("tpl_1", ["cell_2", "cell_1"])],
+    ["reorder cells", () => reorderPosTemplateCellsAction("tpl_1", [{ pageId: "page_1", cellIds: ["cell_2", "cell_1"] }])],
+    ["add page", () => addPosTemplatePageAction({ error: null }, form({ templateId: "tpl_1", title: "Softs" }))],
+    ["rename page", () => renamePosTemplatePageAction({ error: null }, form({ templateId: "tpl_1", pageId: "page_1" }))],
+    ["remove page", () => removePosTemplatePageAction({ error: null }, form({ templateId: "tpl_1", pageId: "page_1" }))],
   ])("%s refuses a non-admin", async (_name, run) => {
     requireAdmin.mockRejectedValue(new Error("Unauthorized."));
     expect(await run()).toEqual({ error: "Unauthorized." });
@@ -100,6 +127,9 @@ describe("every POS template action is admin-only", () => {
     expect(prisma.posTemplateCell.update).not.toHaveBeenCalled();
     expect(prisma.posTemplateCell.updateMany).not.toHaveBeenCalled();
     expect(prisma.posTemplateCell.delete).not.toHaveBeenCalled();
+    expect(prisma.posTemplatePage.create).not.toHaveBeenCalled();
+    expect(prisma.posTemplatePage.update).not.toHaveBeenCalled();
+    expect(prisma.posTemplatePage.delete).not.toHaveBeenCalled();
   });
 });
 
@@ -114,7 +144,10 @@ describe("createPosTemplateAction", () => {
   it("creates the template and revalidates the list", async () => {
     const result = await createPosTemplateAction({ error: null }, form({ name: "Bar 1" }));
     expect(result).toEqual({ error: null });
-    expect(prisma.posTemplate.create).toHaveBeenCalledWith({ data: { editionId: "ed_1", name: "Bar 1" } });
+    // Born with one untitled page, so there is always somewhere to add a tile.
+    expect(prisma.posTemplate.create).toHaveBeenCalledWith({
+      data: { editionId: "ed_1", name: "Bar 1", pages: { create: { position: 0 } } },
+    });
     expect(revalidatePath).toHaveBeenCalledWith("/pos/templates");
   });
 });
@@ -193,7 +226,8 @@ describe("addPosTemplateCellAction", () => {
     expect(prisma.posTemplateCell.create).toHaveBeenCalledWith({
       data: {
         templateId: "tpl_1",
-        position: 3, // the three tiles already there
+        pageId: "page_1",
+        position: 3, // the three tiles already on that page
         kind: "ARTICLE",
         elementId: "el_1",
         label: "Beer 3dl",
@@ -201,7 +235,15 @@ describe("addPosTemplateCellAction", () => {
         color: null,
       },
     });
+    expect(prisma.posTemplateCell.count).toHaveBeenCalledWith({ where: { pageId: "page_1" } });
     expect(revalidatePath).toHaveBeenCalledWith("/pos/templates/tpl_1");
+  });
+
+  it("refuses a page that belongs to another template", async () => {
+    prisma.posTemplatePage.findUnique.mockResolvedValue({ id: "page_1", templateId: "tpl_other" });
+    const result = await addPosTemplateCellAction({ error: null }, cellForm());
+    expect(result.error).toMatch(/that page no longer exists/i);
+    expect(prisma.posTemplateCell.create).not.toHaveBeenCalled();
   });
 
   it("stores the color a form picked", async () => {
@@ -234,6 +276,7 @@ describe("addPosTemplateCellAction", () => {
     expect(prisma.posTemplateCell.create).toHaveBeenCalledWith({
       data: {
         templateId: "tpl_1",
+        pageId: "page_1",
         position: 3,
         kind: "SPACER",
         elementId: null,
@@ -258,7 +301,7 @@ describe("updatePosTemplateCellAction", () => {
   beforeEach(templateIsInEdition);
 
   it("refuses a tile that belongs to another template", async () => {
-    prisma.posTemplateCell.findUnique.mockResolvedValue({ id: "cell_1", templateId: "tpl_other", position: 0 });
+    prisma.posTemplateCell.findUnique.mockResolvedValue({ id: "cell_1", templateId: "tpl_other", pageId: "page_1", position: 0 });
     const result = await updatePosTemplateCellAction({ error: null }, cellForm({ cellId: "cell_1" }));
     expect(result.error).toMatch(/no longer exists/i);
     expect(prisma.posTemplateCell.update).not.toHaveBeenCalled();
@@ -271,6 +314,30 @@ describe("updatePosTemplateCellAction", () => {
       where: { id: "cell_1" },
       data: { kind: "ARTICLE", elementId: "el_1", label: "Beer 3dl", price: "5.00", color: null },
     });
+  });
+
+  it("moves the tile to the end of another page and closes the gap it leaves", async () => {
+    prisma.posTemplatePage.findUnique.mockResolvedValue({ id: "page_2", templateId: "tpl_1" });
+    prisma.posTemplatePage.findMany.mockResolvedValue([
+      { id: "page_1", cells: [{ id: "cell_1" }, { id: "cell_2" }] },
+      { id: "page_2", cells: [{ id: "cell_3" }] },
+    ]);
+
+    const result = await updatePosTemplateCellAction({ error: null }, cellForm({ cellId: "cell_1", pageId: "page_2" }));
+
+    expect(result).toEqual({ error: null });
+    expect(prisma.posTemplateCell.update.mock.calls.slice(1).map((call) => call[0])).toEqual([
+      { where: { id: "cell_2" }, data: { pageId: "page_1", position: 0 } },
+      { where: { id: "cell_3" }, data: { pageId: "page_2", position: 0 } },
+      { where: { id: "cell_1" }, data: { pageId: "page_2", position: 1 } },
+    ]);
+  });
+
+  it("refuses a move onto a page of another template", async () => {
+    prisma.posTemplatePage.findUnique.mockResolvedValue({ id: "page_9", templateId: "tpl_other" });
+    const result = await updatePosTemplateCellAction({ error: null }, cellForm({ cellId: "cell_1", pageId: "page_9" }));
+    expect(result.error).toMatch(/that page no longer exists/i);
+    expect(prisma.posTemplateCell.update).not.toHaveBeenCalled();
   });
 
   it("turns a tile into a spacer", async () => {
@@ -286,28 +353,28 @@ describe("removePosTemplateCellAction", () => {
   beforeEach(templateIsInEdition);
 
   it("refuses a tile that belongs to another template", async () => {
-    prisma.posTemplateCell.findUnique.mockResolvedValue({ id: "cell_1", templateId: "tpl_other", position: 0 });
+    prisma.posTemplateCell.findUnique.mockResolvedValue({ id: "cell_1", templateId: "tpl_other", pageId: "page_1", position: 0 });
     const result = await removePosTemplateCellAction({ error: null }, form({ templateId: "tpl_1", cellId: "cell_1" }));
     expect(result.error).toMatch(/no longer exists/i);
     expect(prisma.posTemplateCell.delete).not.toHaveBeenCalled();
   });
 
   it("deletes the tile and closes the gap it leaves", async () => {
-    prisma.posTemplateCell.findMany.mockResolvedValue([{ id: "cell_2" }, { id: "cell_3" }]);
+    prisma.posTemplatePage.findMany.mockResolvedValue([{ id: "page_1", cells: [{ id: "cell_2" }, { id: "cell_3" }] }]);
 
     const result = await removePosTemplateCellAction({ error: null }, form({ templateId: "tpl_1", cellId: "cell_1" }));
 
     expect(result).toEqual({ error: null });
     expect(prisma.posTemplateCell.delete).toHaveBeenCalledWith({ where: { id: "cell_1" } });
     // Parked out of the way first, then renumbered from zero — the unique index
-    // on (templateId, position) is checked row by row.
+    // on (pageId, position) is checked row by row.
     expect(prisma.posTemplateCell.updateMany).toHaveBeenCalledWith({
       where: { templateId: "tpl_1" },
       data: { position: { increment: 1_000_000 } },
     });
     expect(prisma.posTemplateCell.update.mock.calls.map((call) => call[0])).toEqual([
-      { where: { id: "cell_2" }, data: { position: 0 } },
-      { where: { id: "cell_3" }, data: { position: 1 } },
+      { where: { id: "cell_2" }, data: { pageId: "page_1", position: 0 } },
+      { where: { id: "cell_3" }, data: { pageId: "page_1", position: 1 } },
     ]);
   });
 });
@@ -315,33 +382,49 @@ describe("removePosTemplateCellAction", () => {
 describe("reorderPosTemplateCellsAction", () => {
   beforeEach(templateIsInEdition);
 
+  const onPage = (...cellIds: string[]) => [{ pageId: "page_1", cellIds }];
+
   it("refuses an order that is missing a tile", async () => {
-    const result = await reorderPosTemplateCellsAction("tpl_1", ["cell_1"]);
+    const result = await reorderPosTemplateCellsAction("tpl_1", onPage("cell_1"));
     expect(result.error).toMatch(/out of date/i);
     expect(prisma.posTemplateCell.updateMany).not.toHaveBeenCalled();
   });
 
   it("refuses an order naming a tile that is not on the template", async () => {
-    const result = await reorderPosTemplateCellsAction("tpl_1", ["cell_1", "cell_9"]);
+    const result = await reorderPosTemplateCellsAction("tpl_1", onPage("cell_1", "cell_9"));
     expect(result.error).toMatch(/out of date/i);
     expect(prisma.posTemplateCell.update).not.toHaveBeenCalled();
   });
 
   it("refuses an order that names the same tile twice", async () => {
-    const result = await reorderPosTemplateCellsAction("tpl_1", ["cell_1", "cell_1"]);
+    const result = await reorderPosTemplateCellsAction("tpl_1", onPage("cell_1", "cell_1"));
+    expect(result.error).toMatch(/out of date/i);
+    expect(prisma.posTemplateCell.update).not.toHaveBeenCalled();
+  });
+
+  it("refuses a layout naming a page that is not on the template", async () => {
+    const result = await reorderPosTemplateCellsAction("tpl_1", [
+      { pageId: "page_1", cellIds: ["cell_1"] },
+      { pageId: "page_9", cellIds: ["cell_2"] },
+    ]);
     expect(result.error).toMatch(/out of date/i);
     expect(prisma.posTemplateCell.update).not.toHaveBeenCalled();
   });
 
   it("refuses a template from another edition", async () => {
     prisma.posTemplate.findUnique.mockResolvedValue({ id: "tpl_1", editionId: "ed_other" });
-    const result = await reorderPosTemplateCellsAction("tpl_1", ["cell_2", "cell_1"]);
+    const result = await reorderPosTemplateCellsAction("tpl_1", onPage("cell_2", "cell_1"));
     expect(result.error).toMatch(/no longer exists/i);
     expect(prisma.posTemplateCell.updateMany).not.toHaveBeenCalled();
   });
 
-  it("parks the stack, then writes the given order back as 0..n-1", async () => {
-    const result = await reorderPosTemplateCellsAction("tpl_1", ["cell_2", "cell_1"]);
+  it("parks the template, then writes each page's order back as 0..n-1", async () => {
+    prisma.posTemplatePage.findMany.mockResolvedValue([{ id: "page_1" }, { id: "page_2" }]);
+
+    const result = await reorderPosTemplateCellsAction("tpl_1", [
+      { pageId: "page_1", cellIds: ["cell_2"] },
+      { pageId: "page_2", cellIds: ["cell_1"] },
+    ]);
 
     expect(result).toEqual({ error: null });
     expect(prisma.posTemplateCell.updateMany).toHaveBeenCalledWith({
@@ -349,9 +432,74 @@ describe("reorderPosTemplateCellsAction", () => {
       data: { position: { increment: 1_000_000 } },
     });
     expect(prisma.posTemplateCell.update.mock.calls.map((call) => call[0])).toEqual([
-      { where: { id: "cell_2" }, data: { position: 0 } },
-      { where: { id: "cell_1" }, data: { position: 1 } },
+      { where: { id: "cell_2" }, data: { pageId: "page_1", position: 0 } },
+      { where: { id: "cell_1" }, data: { pageId: "page_2", position: 0 } },
     ]);
     expect(revalidatePath).toHaveBeenCalledWith("/pos/templates/tpl_1");
+  });
+});
+
+describe("addPosTemplatePageAction", () => {
+  beforeEach(templateIsInEdition);
+
+  it("appends a page after the last one, a blank title stored as none", async () => {
+    const result = await addPosTemplatePageAction({ error: null }, form({ templateId: "tpl_1", title: "  " }));
+    expect(result).toEqual({ error: null });
+    expect(prisma.posTemplatePage.create).toHaveBeenCalledWith({
+      data: { templateId: "tpl_1", position: 2, title: null },
+    });
+  });
+
+  it("refuses a template from another edition", async () => {
+    prisma.posTemplate.findUnique.mockResolvedValue({ id: "tpl_1", editionId: "ed_other" });
+    const result = await addPosTemplatePageAction({ error: null }, form({ templateId: "tpl_1", title: "Softs" }));
+    expect(result.error).toMatch(/no longer exists/i);
+    expect(prisma.posTemplatePage.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("renamePosTemplatePageAction", () => {
+  beforeEach(templateIsInEdition);
+
+  it("sets the title, trimmed", async () => {
+    await renamePosTemplatePageAction({ error: null }, form({ templateId: "tpl_1", pageId: "page_1", title: " Beers " }));
+    expect(prisma.posTemplatePage.update).toHaveBeenCalledWith({ where: { id: "page_1" }, data: { title: "Beers" } });
+  });
+
+  it("refuses a page of another template", async () => {
+    prisma.posTemplatePage.findUnique.mockResolvedValue({ id: "page_1", templateId: "tpl_other" });
+    const result = await renamePosTemplatePageAction({ error: null }, form({ templateId: "tpl_1", pageId: "page_1" }));
+    expect(result.error).toMatch(/that page no longer exists/i);
+    expect(prisma.posTemplatePage.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("removePosTemplatePageAction", () => {
+  beforeEach(templateIsInEdition);
+
+  const removing = () => removePosTemplatePageAction({ error: null }, form({ templateId: "tpl_1", pageId: "page_2" }));
+
+  it("refuses the last page of a template", async () => {
+    prisma.posTemplatePage.count.mockResolvedValue(1);
+    expect((await removing()).error).toMatch(/at least one page/i);
+    expect(prisma.posTemplatePage.delete).not.toHaveBeenCalled();
+  });
+
+  it("refuses a page that still has tiles", async () => {
+    prisma.posTemplateCell.count.mockResolvedValue(1);
+    expect((await removing()).error).toMatch(/still has tiles/i);
+    expect(prisma.posTemplatePage.delete).not.toHaveBeenCalled();
+  });
+
+  it("deletes an empty page and closes the gap in the page order", async () => {
+    prisma.posTemplateCell.count.mockResolvedValue(0);
+    prisma.posTemplatePage.findMany.mockResolvedValue([{ id: "page_1" }, { id: "page_3" }]);
+
+    expect(await removing()).toEqual({ error: null });
+    expect(prisma.posTemplatePage.delete).toHaveBeenCalledWith({ where: { id: "page_2" } });
+    expect(prisma.posTemplatePage.update.mock.calls.map((call) => call[0])).toEqual([
+      { where: { id: "page_1" }, data: { position: 0 } },
+      { where: { id: "page_3" }, data: { position: 1 } },
+    ]);
   });
 });

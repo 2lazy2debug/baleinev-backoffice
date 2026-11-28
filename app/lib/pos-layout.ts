@@ -75,3 +75,27 @@ export function tilesOnPage<T>(tiles: T[], page: number, columns: number): T[] {
   const perPage = tilesPerPage(columns);
   return tiles.slice(page * perPage, page * perPage + perPage);
 }
+
+/** One screen of the till: which named page, and which overflow screen of it. */
+export type TillScreen = { page: number; sub: number };
+
+/**
+ * Every screen the till can show, in the order the pager walks them.
+ *
+ * A template is a list of **named pages**, each its own stack. A page longer
+ * than this device's grid overflows onto further screens of the same page, so
+ * the pager steps through every screen of a page before it reaches the next
+ * one, and a page tab jumps to that page's first screen. An empty page is still
+ * one screen — the custom-sale slot is always there.
+ */
+export function tillScreens(tileCounts: number[], columns: number): TillScreen[] {
+  return tileCounts.flatMap((count, page) =>
+    Array.from({ length: pageCount(count, columns) }, (_, sub) => ({ page, sub })),
+  );
+}
+
+/** The display name of a page: its title, or "Page n" from the caller's pattern. */
+export function pageTitle(title: string | null, index: number, fallback: string): string {
+  const trimmed = title?.trim();
+  return trimmed ? trimmed : fallback.replace("{n}", String(index + 1));
+}
